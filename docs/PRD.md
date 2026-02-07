@@ -691,11 +691,13 @@ Pesos do Score Golden Ratio:
 - Avaliação (nova avaliação)
 - Evolução (histórico + gráficos)
 - Coach IA (treino + dieta)
+- Hall dos Deuses
+- Ranking Personais
 - Sistema: Perfil, Configurações, Sair
 
 **Header:**
 - Breadcrumb (VITRU IA / Seção atual)
-- Botão "REALIZAR AVALIAÇÃO IA" (sempre acessível)
+- Botão "CONVERSAR COM COACH IA" (sempre acessível para dúvidas rápidas)
 - Notificações
 
 **Footer:**

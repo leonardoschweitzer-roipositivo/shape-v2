@@ -1,13 +1,13 @@
 import React from 'react';
-import { Bell, Camera } from 'lucide-react';
+import { Bell, Bot } from 'lucide-react';
 
 interface HeaderProps {
-  onOpenAssessment?: () => void;
+  onOpenCoach?: () => void;
   title?: string;
   userProfile?: string;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onOpenAssessment, title = "INÍCIO", userProfile = 'atleta' }) => {
+export const Header: React.FC<HeaderProps> = ({ onOpenCoach, title = "INÍCIO", userProfile = 'atleta' }) => {
   const getProfileLabel = () => {
     switch (userProfile) {
       case 'academia': return 'ACADEMIA';
@@ -35,11 +35,11 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAssessment, title = "INÍC
         </button>
 
         <button
-          onClick={onOpenAssessment}
+          onClick={onOpenCoach}
           className="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-[#0A0F1C] rounded-lg font-bold text-sm transition-all shadow-[0_0_15px_rgba(0,201,167,0.3)] hover:shadow-[0_0_20px_rgba(0,201,167,0.5)] transform hover:scale-105 active:scale-95"
         >
-          <Camera size={18} />
-          <span>REALIZAR AVALIAÇÃO IA</span>
+          <Bot size={18} />
+          <span>CONVERSAR COM COACH IA</span>
         </button>
       </div>
     </header>

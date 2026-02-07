@@ -9,15 +9,17 @@ import { Evolution } from './components/Evolution';
 import { HallDosDeuses } from './components/HallDosDeuses';
 import { Login } from './components/Login';
 import { AssessmentPage } from './components/AssessmentPage';
+import { CoachModal } from './components/CoachModal';
 import { DashboardView } from './src/components/templates/DashboardView/DashboardView';
 import { ProfileType } from './components/ProfileSelector';
 
-type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students';
+type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userProfile, setUserProfile] = useState<ProfileType>('atleta');
   const [isAssessmentOpen, setIsAssessmentOpen] = useState(false);
+  const [isCoachModalOpen, setIsCoachModalOpen] = useState(false);
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
 
   const handleLogin = (profile: ProfileType) => {
@@ -72,6 +74,7 @@ const App: React.FC = () => {
       case 'design-system': return 'DESIGN SYSTEM';
       case 'trainers': return 'PERSONAIS';
       case 'students': return 'ALUNOS';
+      case 'trainers-ranking': return 'RANKING PERSONAIS';
       default: return currentView.toUpperCase();
     }
   }
@@ -94,7 +97,7 @@ const App: React.FC = () => {
 
         {/* Global Header - Persistent across all views */}
         <Header
-          onOpenAssessment={() => setIsAssessmentOpen(true)}
+          onOpenCoach={() => setIsCoachModalOpen(true)}
           title={getPageTitle()}
           userProfile={userProfile}
         />
@@ -112,6 +115,11 @@ const App: React.FC = () => {
         isOpen={isAssessmentOpen}
         onClose={() => setIsAssessmentOpen(false)}
         onConfirm={handleAssessmentSubmit}
+      />
+
+      <CoachModal
+        isOpen={isCoachModalOpen}
+        onClose={() => setIsCoachModalOpen(false)}
       />
     </div>
   );

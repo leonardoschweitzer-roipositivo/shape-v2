@@ -10,7 +10,8 @@ import {
   LogOut,
   Users,
   GraduationCap,
-  Layers
+  Layers,
+  Award
 } from 'lucide-react';
 import { ProfileType } from './ProfileSelector';
 
@@ -61,8 +62,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView = 'dashboard', onN
     { icon: LayoutDashboard, label: 'Início', id: 'dashboard' },
     { icon: Activity, label: 'Avaliação', id: 'assessment' },
     { icon: TrendingUp, label: 'Evolução', id: 'evolution' },
-    { icon: Trophy, label: 'Hall dos Deuses', id: 'hall' },
     { icon: Bot, label: 'Coach IA', id: 'coach', isPro: true },
+    { icon: Trophy, label: 'Hall dos Deuses', id: 'hall' },
+    { icon: Award, label: 'Ranking Personais', id: 'trainers-ranking' },
   ];
 
   if (userProfile === 'academia') {

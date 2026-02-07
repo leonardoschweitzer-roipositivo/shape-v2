@@ -58,12 +58,12 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                             <div className="w-12 h-1 bg-primary mb-6"></div>
                             <h1 className="text-5xl font-bold leading-tight tracking-tight">
                                 A Matemática do <br />
-                                Físico Perfeito
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-emerald-300">Físico Perfeito</span>
                             </h1>
                         </div>
 
                         <p className="text-gray-400 text-lg leading-relaxed max-w-lg">
-                            As proporções vitruvianas de Da Vinci, decodificadas e aplicadas no seu físico por Inteligência Artificial.
+                            Inspirado na harmonia vitruviana de Da Vinci, evoluído para a estética moderna e aplicado no seu corpo por Inteligência Artificial.
                         </p>
 
                         <div className="flex gap-4 pt-4">
