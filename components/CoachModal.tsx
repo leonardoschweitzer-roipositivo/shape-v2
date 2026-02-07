@@ -31,18 +31,30 @@ export const CoachModal: React.FC<CoachModalProps> = ({ isOpen, onClose }) => {
             {/* Modal Content */}
             <div className="relative bg-[#131B2C] border border-white/10 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-fade-in-up">
 
-                {/* Header */}
+                {/* Header with Vitrúvio */}
                 <div className="p-6 border-b border-white/5 flex items-start justify-between bg-[#131B2C]">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
-                            <Bot className="text-primary" size={20} />
+                    <div className="flex items-start gap-4 group">
+                        <div className="relative shrink-0">
+                            <div className="absolute inset-0 bg-primary/20 rounded-full blur-md group-hover:blur-lg transition-all"></div>
+                            <img
+                                src="/images/vitruvio-avatar.png"
+                                alt="Vitrúvio Coach"
+                                className="relative w-12 h-12 rounded-full border border-primary/30 object-cover"
+                            />
+                            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-primary rounded-full border-2 border-[#131B2C] flex items-center justify-center">
+                                <div className="w-1.5 h-1.5 bg-[#131B2C] rounded-full animate-pulse"></div>
+                            </div>
                         </div>
-                        <div>
-                            <h2 className="text-lg font-bold text-white tracking-wide flex items-center gap-2">
-                                COACH IA
-                                <Sparkles size={14} className="text-secondary animate-pulse" />
+                        <div className="flex flex-col gap-1">
+                            <h2 className="text-sm font-bold text-primary uppercase tracking-widest flex items-center gap-2">
+                                Vitrúvio
+                                <span className="w-1.5 h-1.5 rounded-full bg-primary/50"></span>
+                                Coach IA
+                                <Sparkles size={12} className="text-secondary animate-pulse" />
                             </h2>
-                            <p className="text-xs text-gray-400">Dúvida rápida sobre seu físico ou treino?</p>
+                            <p className="text-sm text-gray-300 leading-relaxed italic max-w-xs">
+                                "Olá! Sou o Vitrúvio. Meu propósito é transformar seus dados em um plano de ação para atingir o seu físico ideal."
+                            </p>
                         </div>
                     </div>
                     <button

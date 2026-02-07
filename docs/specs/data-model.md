@@ -2,9 +2,9 @@
 
 ## Documento de Modelo de Dados
 
-**Versão:** 1.0  
+**Versão:** 2.0  
 **Data:** Fevereiro 2026  
-**Projeto:** VITRU IA (Sistema de Análise de Proporções Corporais)
+**Projeto:** VITRU IA (A Matemática do Físico Perfeito)
 
 ---
 
@@ -114,6 +114,107 @@ enum PlanType {
 }
 
 // ============================================
+// ENUMS - VITRÚVIO (PERFIL DE SAÚDE)
+// ============================================
+
+enum RotinaDiaria {
+  SEDENTARIA        // Trabalho sentado, pouco movimento
+  LEVE              // Trabalho sentado, caminha às vezes
+  MODERADA          // Trabalho em pé, movimento moderado
+  ATIVA             // Trabalho físico leve
+  MUITO_ATIVA       // Trabalho físico intenso
+}
+
+enum QualidadeSono {
+  RUIM
+  REGULAR
+  BOA
+  EXCELENTE
+}
+
+enum NivelEstresse {
+  BAIXO
+  MODERADO
+  ALTO
+  MUITO_ALTO
+}
+
+enum ExperienciaTreino {
+  INICIANTE         // < 1 ano
+  INTERMEDIARIO     // 1-3 anos
+  AVANCADO          // 3-5 anos
+  EXPERIENTE        // 5-10 anos
+  VETERANO          // 10+ anos
+}
+
+enum LocalTreino {
+  ACADEMIA_COMPLETA
+  ACADEMIA_SIMPLES
+  HOME_GYM
+  CASA_BASICO       // Só peso corporal / elásticos
+  MISTO
+}
+
+enum TipoDieta {
+  SEM_RESTRICAO
+  VEGETARIANA
+  VEGANA
+  PESCETARIANA
+  LOW_CARB
+  CETOGENICA
+  MEDITERRANEA
+  FLEXIVEL          // IIFYM
+  OUTRA
+}
+
+enum OrcamentoAlimentacao {
+  BAIXO             // Precisa economizar
+  MODERADO          // Normal
+  ALTO              // Pode investir mais
+  SEM_LIMITE        // Orçamento não é problema
+}
+
+enum ObjetivoPrincipal {
+  ESTETICA          // Melhorar aparência
+  HIPERTROFIA       // Ganhar massa muscular
+  DEFINICAO         // Perder gordura mantendo músculo
+  RECOMPOSICAO      // Perder gordura e ganhar músculo
+  FORCA             // Ficar mais forte
+  SAUDE             // Melhorar saúde geral
+  COMPETICAO        // Preparar para competição
+  MANUTENCAO        // Manter físico atual
+}
+
+enum PrazoObjetivo {
+  TRES_MESES
+  SEIS_MESES
+  UM_ANO
+  DOIS_ANOS
+  SEM_PRAZO
+}
+
+enum HorarioTreino {
+  MANHA_CEDO        // 5h-7h
+  MANHA             // 7h-11h
+  ALMOCO            // 11h-14h
+  TARDE             // 14h-18h
+  NOITE             // 18h-22h
+  MADRUGADA         // 22h-5h
+  FLEXIVEL
+}
+
+enum Severidade {
+  LEVE
+  MODERADA
+  GRAVE
+}
+
+enum ChatRole {
+  USER
+  ASSISTANT
+}
+
+// ============================================
 // USER & AUTHENTICATION
 // ============================================
 
@@ -163,6 +264,15 @@ model User {
   // Convites enviados
   invitesSent   Invite[]    @relation("InviteSender")
   
+  // Relations - VITRÚVIO (NOVO)
+  condicoesSaude    CondicaoSaude[]
+  lesoes            Lesao[]
+  medicamentos      Medicamento[]
+  suplementos       Suplemento[]
+  planosTreino      PlanoTreino[]
+  planosAlimentares PlanoAlimentar[]
+  chatConversations ChatConversation[]
+  
   @@index([role])
   @@index([personalId])
   @@map("users")
@@ -189,32 +299,87 @@ model Session {
 
 ```prisma
 // ============================================
-// PROFILE (Dados pessoais e estruturais)
+// PROFILE (Dados pessoais, estruturais e VITRÚVIO)
 // ============================================
 
 model Profile {
   id              String   @id @default(cuid())
   userId          String   @unique
   
-  // Dados Pessoais
+  // ====== DADOS PESSOAIS ======
   birthDate       DateTime?
   gender          Gender   @default(MALE)
   
-  // Medidas Estruturais (não mudam)
+  // ====== MEDIDAS ESTRUTURAIS (não mudam) ======
   altura          Float?   // cm
   punho           Float?   // cm
   tornozelo       Float?   // cm
   joelho          Float?   // cm
   pelve           Float?   // cm
   
-  // Preferências
+  // ====== PERFIL DE VIDA (VITRÚVIO) ======
+  profissao           String?
+  rotinaDiaria        RotinaDiaria?
+  horasSono           Float?
+  qualidadeSono       QualidadeSono?
+  nivelEstresse       NivelEstresse?
+  horasTrabalho       Float?
+  trabalhoFisico      Boolean   @default(false)
+  
+  // ====== EXPERIÊNCIA DE TREINO (VITRÚVIO) ======
+  tempoTreinando          ExperienciaTreino?
+  frequenciaTreinoAtual   Int?
+  frequenciaTreinoDesejada Int?
+  duracaoTreinoMax        Int?       // minutos
+  localTreino             LocalTreino?
+  equipamentos            String[]
+  treinoAtual             String?    // descrição do treino atual
+  
+  // ====== ALIMENTAÇÃO (VITRÚVIO) ======
+  dietaAtual              TipoDieta?
+  refeicoesdia            Int?
+  cozinha                 Boolean?
+  tempoPreparoRefeicao    Int?       // minutos
+  orcamentoAlimentacao    OrcamentoAlimentacao?
+  alimentosEvitar         String[]
+  alimentosPreferidos     String[]
+  alergias                String[]
+  fazJejum                Boolean   @default(false)
+  horarioJejum            String?    // "16:8", "20:4", etc
+  
+  // ====== OBJETIVOS (VITRÚVIO) ======
+  objetivoPrincipal       ObjetivoPrincipal?
+  objetivoEspecifico      String?
+  prazo                   PrazoObjetivo?
+  prioridades             String[]
+  competicao              Boolean   @default(false)
+  categoriaInteresse      String?
+  
+  // ====== DISPONIBILIDADE (VITRÚVIO) ======
+  diasDisponiveisTreino   String[]   // ["segunda", "terca", ...]
+  horarioPreferido        HorarioTreino?
+  treinarEmCasa           Boolean   @default(false)
+  
+  // ====== HISTÓRICO ======
+  pesoMaximoHistorico     Float?
+  pesoMinimoHistorico     Float?
+  melhorFormaFisica       String?
+  tentativasAnteriores    String?
+  
+  // ====== ERGOGÊNICOS (confidencial) ======
+  usaEsteroides           Boolean   @default(false)
+  trt                     Boolean   @default(false)
+  esteroidesDetalhes      String?   // Criptografado
+  
+  // ====== PREFERÊNCIAS ======
   unitSystem      UnitSystem @default(METRIC)
   preferredMethod ProportionMethod @default(GOLDEN_RATIO)
   
-  // Timestamps
+  // ====== TIMESTAMPS ======
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   
+  // ====== RELATIONS ======
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@map("profiles")
@@ -652,6 +817,322 @@ enum AchievementCategory {
 }
 ```
 
+### 2.11 VITRÚVIO - Health Profile (NOVO)
+
+```prisma
+// ============================================
+// CONDIÇÕES DE SAÚDE (VITRÚVIO)
+// ============================================
+
+model CondicaoSaude {
+  id              String      @id @default(cuid())
+  userId          String
+  
+  nome            String          // "Diabetes tipo 2", "Hipertensão", etc
+  severidade      Severidade      @default(LEVE)
+  controlada      Boolean         @default(false)
+  medicacao       String?         // Medicamento usado para esta condição
+  observacoes     String?
+  
+  ativo           Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@map("condicoes_saude")
+}
+
+// ============================================
+// LESÕES (VITRÚVIO)
+// ============================================
+
+model Lesao {
+  id              String      @id @default(cuid())
+  userId          String
+  
+  local           String          // "Ombro esquerdo", "Joelho direito"
+  tipo            String          // "Tendinite", "Hérnia de disco", "Ruptura"
+  dataOcorrencia  DateTime?
+  recuperada      Boolean         @default(false)
+  restricoes      String[]        // ["Evitar press acima da cabeça", "Não fazer agachamento profundo"]
+  observacoes     String?
+  
+  ativo           Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@map("lesoes")
+}
+
+// ============================================
+// MEDICAMENTOS (VITRÚVIO)
+// ============================================
+
+model Medicamento {
+  id              String      @id @default(cuid())
+  userId          String
+  
+  nome            String          // "Losartana", "Metformina"
+  principioAtivo  String?         // "Losartana potássica"
+  dosagem         String          // "50mg", "500mg"
+  frequencia      String          // "1x ao dia", "2x ao dia"
+  horario         String?         // "Manhã", "Noite"
+  motivo          String          // "Pressão alta", "Diabetes"
+  efeitosColaterais String[]      // Efeitos que o usuário sente
+  
+  ativo           Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@map("medicamentos")
+}
+
+// ============================================
+// SUPLEMENTOS (VITRÚVIO)
+// ============================================
+
+model Suplemento {
+  id              String      @id @default(cuid())
+  userId          String
+  
+  nome            String          // "Whey Protein", "Creatina"
+  marca           String?
+  dosagem         String          // "30g", "5g"
+  frequencia      String          // "Pós-treino", "Diário"
+  objetivo        String          // "Aumento de proteína", "Força"
+  
+  ativo           Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@map("suplementos")
+}
+```
+
+### 2.12 VITRÚVIO - Planos (NOVO)
+
+```prisma
+// ============================================
+// PLANO DE TREINO (VITRÚVIO)
+// ============================================
+
+model PlanoTreino {
+  id              String      @id @default(cuid())
+  userId          String
+  
+  // Metadata
+  titulo          String          // "Plano Hipertrofia - Foco V-Taper"
+  descricao       String?
+  versao          Int             @default(1)
+  
+  // Configuração
+  divisao         String          // "PPL", "UPPER_LOWER", "FULL_BODY"
+  diasPorSemana   Int
+  duracaoSemanas  Int             @default(8)
+  
+  // Conteúdo (JSON)
+  dias            Json            // Array de DiaTreino
+  prioridades     Json            // { musculosFoco, correcaoSimetria, manutencao }
+  progressao      Json            // { semana1a2, semana3a4, ... }
+  alertas         Json?           // Alertas de segurança
+  
+  // Baseado em avaliação
+  measurementId   String?         // Avaliação que gerou o plano
+  
+  // Status
+  ativo           Boolean         @default(true)
+  iniciadoEm      DateTime?
+  finalizadoEm    DateTime?
+  
+  // Timestamps
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([measurementId])
+  @@map("planos_treino")
+}
+
+// ============================================
+// PLANO ALIMENTAR (VITRÚVIO)
+// ============================================
+
+model PlanoAlimentar {
+  id              String      @id @default(cuid())
+  userId          String
+  
+  // Metadata
+  titulo          String          // "Plano Superávit Moderado"
+  descricao       String?
+  versao          Int             @default(1)
+  
+  // Calorias e Macros
+  tdee            Int             // Gasto energético calculado
+  caloriasMeta    Int             // kcal/dia alvo
+  proteina        Int             // gramas/dia
+  carboidrato     Int             // gramas/dia
+  gordura         Int             // gramas/dia
+  
+  // Fase da dieta
+  fase            String          // "SUPERAVIT_MODERADO", "DEFICIT_LEVE", etc
+  
+  // Conteúdo (JSON)
+  refeicoes       Json            // Array de Refeicao com opções
+  timing          Json?           // Pre/Pos treino
+  suplementacao   Json?           // Suplementos recomendados
+  listaCompras    Json?           // Lista de compras semanal
+  alertas         Json?           // Alertas nutricionais (alergias, interações)
+  
+  // Ajustes
+  ajusteDiasTreino    Json?       // Calorias/macros em dias de treino
+  ajusteDiasDescanso  Json?       // Calorias/macros em dias de descanso
+  
+  // Baseado em avaliação
+  measurementId   String?         // Avaliação que gerou o plano
+  
+  // Status
+  ativo           Boolean         @default(true)
+  iniciadoEm      DateTime?
+  finalizadoEm    DateTime?
+  
+  // Timestamps
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([measurementId])
+  @@map("planos_alimentares")
+}
+```
+
+### 2.13 VITRÚVIO - Chat (NOVO)
+
+```prisma
+// ============================================
+// CHAT VITRÚVIO
+// ============================================
+
+model ChatConversation {
+  id              String      @id @default(cuid())
+  userId          String
+  
+  // Metadata
+  topic           String?         // Resumo do assunto
+  resolved        Boolean         @default(false)
+  
+  // Contadores
+  messageCount    Int             @default(0)
+  
+  // Timestamps
+  startedAt       DateTime        @default(now())
+  lastMessageAt   DateTime        @default(now())
+  
+  // Relations
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages        ChatMessage[]
+  
+  @@index([userId])
+  @@map("chat_conversations")
+}
+
+model ChatMessage {
+  id              String      @id @default(cuid())
+  conversationId  String
+  
+  // Conteúdo
+  role            ChatRole        // USER ou ASSISTANT
+  content         String          @db.Text
+  
+  // Metadata
+  contextType     String?         // "general", "training", "nutrition", "health"
+  relatedDataId   String?         // ID de medição, plano, etc
+  
+  // Ações sugeridas (JSON)
+  suggestedActions Json?
+  
+  // Tokens usados (para controle de custo)
+  tokensUsed      Int?
+  
+  // Feedback
+  helpful         Boolean?
+  feedbackAt      DateTime?
+  
+  // Timestamps
+  createdAt       DateTime        @default(now())
+  
+  conversation    ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  @@index([conversationId])
+  @@index([createdAt])
+  @@map("chat_messages")
+}
+
+// ============================================
+// AI INSIGHTS (VITRÚVIO)
+// ============================================
+
+model AIInsight {
+  id              String      @id @default(cuid())
+  userId          String
+  
+  // Tipo e prioridade
+  type            String          // "progress", "warning", "tip", "achievement", etc
+  priority        String          // "high", "medium", "low"
+  
+  // Conteúdo
+  title           String
+  message         String
+  shortMessage    String?
+  
+  // Metadata
+  metric          String?         // Métrica relacionada
+  value           Float?          // Valor relacionado
+  change          Float?          // Mudança relacionada
+  
+  // Visual
+  icon            String?
+  color           String?
+  
+  // Ação
+  actionLabel     String?
+  actionHref      String?
+  
+  // Controle
+  dismissed       Boolean         @default(false)
+  dismissedAt     DateTime?
+  viewed          Boolean         @default(false)
+  viewedAt        DateTime?
+  clicked         Boolean         @default(false)
+  clickedAt       DateTime?
+  
+  // Expiração
+  expiresAt       DateTime?
+  
+  // Timestamps
+  createdAt       DateTime        @default(now())
+  
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("ai_insights")
+}
+```
+
 ---
 
 ## 3. TYPES TYPESCRIPT
@@ -712,6 +1193,60 @@ export interface Profile {
   pelve: number | null
   unitSystem: UnitSystem
   preferredMethod: ProportionMethod
+  
+  // VITRÚVIO - Perfil de Vida
+  profissao: string | null
+  rotinaDiaria: RotinaDiaria | null
+  horasSono: number | null
+  qualidadeSono: QualidadeSono | null
+  nivelEstresse: NivelEstresse | null
+  horasTrabalho: number | null
+  trabalhoFisico: boolean
+  
+  // VITRÚVIO - Experiência de Treino
+  tempoTreinando: ExperienciaTreino | null
+  frequenciaTreinoAtual: number | null
+  frequenciaTreinoDesejada: number | null
+  duracaoTreinoMax: number | null
+  localTreino: LocalTreino | null
+  equipamentos: string[]
+  treinoAtual: string | null
+  
+  // VITRÚVIO - Alimentação
+  dietaAtual: TipoDieta | null
+  refeicoesdia: number | null
+  cozinha: boolean | null
+  tempoPreparoRefeicao: number | null
+  orcamentoAlimentacao: OrcamentoAlimentacao | null
+  alimentosEvitar: string[]
+  alimentosPreferidos: string[]
+  alergias: string[]
+  fazJejum: boolean
+  horarioJejum: string | null
+  
+  // VITRÚVIO - Objetivos
+  objetivoPrincipal: ObjetivoPrincipal | null
+  objetivoEspecifico: string | null
+  prazo: PrazoObjetivo | null
+  prioridades: string[]
+  competicao: boolean
+  categoriaInteresse: string | null
+  
+  // VITRÚVIO - Disponibilidade
+  diasDisponiveisTreino: string[]
+  horarioPreferido: HorarioTreino | null
+  treinarEmCasa: boolean
+  
+  // VITRÚVIO - Histórico
+  pesoMaximoHistorico: number | null
+  pesoMinimoHistorico: number | null
+  melhorFormaFisica: string | null
+  tentativasAnteriores: string | null
+  
+  // VITRÚVIO - Ergogênicos
+  usaEsteroides: boolean
+  trt: boolean
+  
   createdAt: Date
   updatedAt: Date
 }
@@ -719,6 +1254,19 @@ export interface Profile {
 export type Gender = 'MALE' | 'FEMALE' | 'OTHER'
 export type UnitSystem = 'METRIC' | 'IMPERIAL'
 export type ProportionMethod = 'GOLDEN_RATIO' | 'CLASSIC_PHYSIQUE' | 'MENS_PHYSIQUE'
+
+// VITRÚVIO Enums
+export type RotinaDiaria = 'SEDENTARIA' | 'LEVE' | 'MODERADA' | 'ATIVA' | 'MUITO_ATIVA'
+export type QualidadeSono = 'RUIM' | 'REGULAR' | 'BOA' | 'EXCELENTE'
+export type NivelEstresse = 'BAIXO' | 'MODERADO' | 'ALTO' | 'MUITO_ALTO'
+export type ExperienciaTreino = 'INICIANTE' | 'INTERMEDIARIO' | 'AVANCADO' | 'EXPERIENTE' | 'VETERANO'
+export type LocalTreino = 'ACADEMIA_COMPLETA' | 'ACADEMIA_SIMPLES' | 'HOME_GYM' | 'CASA_BASICO' | 'MISTO'
+export type TipoDieta = 'SEM_RESTRICAO' | 'VEGETARIANA' | 'VEGANA' | 'PESCETARIANA' | 'LOW_CARB' | 'CETOGENICA' | 'MEDITERRANEA' | 'FLEXIVEL' | 'OUTRA'
+export type OrcamentoAlimentacao = 'BAIXO' | 'MODERADO' | 'ALTO' | 'SEM_LIMITE'
+export type ObjetivoPrincipal = 'ESTETICA' | 'HIPERTROFIA' | 'DEFINICAO' | 'RECOMPOSICAO' | 'FORCA' | 'SAUDE' | 'COMPETICAO' | 'MANUTENCAO'
+export type PrazoObjetivo = 'TRES_MESES' | 'SEIS_MESES' | 'UM_ANO' | 'DOIS_ANOS' | 'SEM_PRAZO'
+export type HorarioTreino = 'MANHA_CEDO' | 'MANHA' | 'ALMOCO' | 'TARDE' | 'NOITE' | 'MADRUGADA' | 'FLEXIVEL'
+export type Severidade = 'LEVE' | 'MODERADA' | 'GRAVE'
 ```
 
 ### 3.2 Personal Types (NOVO)
@@ -1112,6 +1660,470 @@ export interface UserAchievement {
   achievementId: string
   unlockedAt: Date
   achievement: Achievement
+}
+```
+
+### 3.5 VITRÚVIO Types (NOVO)
+
+```typescript
+// types/coach-ia.ts
+
+// ============================================
+// CONDIÇÕES DE SAÚDE
+// ============================================
+
+export interface CondicaoSaude {
+  id: string
+  userId: string
+  nome: string
+  severidade: Severidade
+  controlada: boolean
+  medicacao: string | null
+  observacoes: string | null
+  ativo: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface CondicaoSaudeInput {
+  nome: string
+  severidade?: Severidade
+  controlada?: boolean
+  medicacao?: string
+  observacoes?: string
+}
+
+// ============================================
+// LESÕES
+// ============================================
+
+export interface Lesao {
+  id: string
+  userId: string
+  local: string
+  tipo: string
+  dataOcorrencia: Date | null
+  recuperada: boolean
+  restricoes: string[]
+  observacoes: string | null
+  ativo: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface LesaoInput {
+  local: string
+  tipo: string
+  dataOcorrencia?: Date
+  recuperada?: boolean
+  restricoes?: string[]
+  observacoes?: string
+}
+
+// ============================================
+// MEDICAMENTOS
+// ============================================
+
+export interface Medicamento {
+  id: string
+  userId: string
+  nome: string
+  principioAtivo: string | null
+  dosagem: string
+  frequencia: string
+  horario: string | null
+  motivo: string
+  efeitosColaterais: string[]
+  ativo: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface MedicamentoInput {
+  nome: string
+  principioAtivo?: string
+  dosagem: string
+  frequencia: string
+  horario?: string
+  motivo: string
+  efeitosColaterais?: string[]
+}
+
+// ============================================
+// SUPLEMENTOS
+// ============================================
+
+export interface Suplemento {
+  id: string
+  userId: string
+  nome: string
+  marca: string | null
+  dosagem: string
+  frequencia: string
+  objetivo: string
+  ativo: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface SuplementoInput {
+  nome: string
+  marca?: string
+  dosagem: string
+  frequencia: string
+  objetivo: string
+}
+
+// ============================================
+// PLANO DE TREINO
+// ============================================
+
+export interface PlanoTreino {
+  id: string
+  userId: string
+  titulo: string
+  descricao: string | null
+  versao: number
+  divisao: string
+  diasPorSemana: number
+  duracaoSemanas: number
+  dias: DiaTreino[]
+  prioridades: PrioridadesTreino
+  progressao: ProgressaoTreino
+  alertas: string[] | null
+  measurementId: string | null
+  ativo: boolean
+  iniciadoEm: Date | null
+  finalizadoEm: Date | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface DiaTreino {
+  dia: string
+  nome: string
+  gruposMusculares: string[]
+  duracaoEstimada: number
+  exercicios: Exercicio[]
+  observacoes: string[]
+}
+
+export interface Exercicio {
+  nome: string
+  musculoAlvo: string
+  musculosSecundarios?: string[]
+  series: number
+  repeticoes: string
+  descanso: number
+  execucao: string
+  dicasForma?: string[]
+  substituicao?: string
+  contraindicado?: string[]
+}
+
+export interface PrioridadesTreino {
+  musculosFoco: string[]
+  correcaoSimetria: CorrecaoSimetria[]
+  manutencao: string[]
+}
+
+export interface CorrecaoSimetria {
+  musculo: string
+  ladoMenor: 'esquerdo' | 'direito'
+  estrategia: string
+  seriesExtras?: number
+}
+
+export interface ProgressaoTreino {
+  semana1a2: string
+  semana3a4: string
+  semana5a6: string
+  semana7a8: string
+  deload: string
+}
+
+// ============================================
+// PLANO ALIMENTAR
+// ============================================
+
+export interface PlanoAlimentar {
+  id: string
+  userId: string
+  titulo: string
+  descricao: string | null
+  versao: number
+  tdee: number
+  caloriasMeta: number
+  proteina: number
+  carboidrato: number
+  gordura: number
+  fase: FaseDieta
+  refeicoes: Refeicao[]
+  timing: TimingNutricional | null
+  suplementacao: SuplementacaoRecomendada | null
+  listaCompras: string[] | null
+  alertas: AlertaNutricional[] | null
+  ajusteDiasTreino: AjusteDia | null
+  ajusteDiasDescanso: AjusteDia | null
+  measurementId: string | null
+  ativo: boolean
+  iniciadoEm: Date | null
+  finalizadoEm: Date | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type FaseDieta = 
+  | 'SUPERAVIT_AGRESSIVO'
+  | 'SUPERAVIT_MODERADO'
+  | 'SUPERAVIT_LEVE'
+  | 'MANUTENCAO'
+  | 'DEFICIT_LEVE'
+  | 'DEFICIT_MODERADO'
+  | 'DEFICIT_AGRESSIVO'
+  | 'RECOMPOSICAO'
+
+export interface Refeicao {
+  numero: number
+  nome: string
+  horarioSugerido: string
+  calorias: number
+  macros: { proteina: number; carboidrato: number; gordura: number }
+  opcoes: OpcaoRefeicao[]
+}
+
+export interface OpcaoRefeicao {
+  nome: string
+  alimentos: AlimentoQuantidade[]
+  tempoPreparo: number
+  dificuldade: 'facil' | 'media' | 'dificil'
+  custo: 'baixo' | 'medio' | 'alto'
+  macros: { proteina: number; carboidrato: number; gordura: number }
+  calorias: number
+}
+
+export interface AlimentoQuantidade {
+  alimento: string
+  quantidade: number
+  unidade: string
+  observacao?: string
+}
+
+export interface TimingNutricional {
+  preWorkout: { tempo: string; composicao: string; exemplo: string }
+  posWorkout: { tempo: string; composicao: string; exemplo: string }
+  antesDeDoimir?: { tempo: string; composicao: string; exemplo: string }
+}
+
+export interface SuplementacaoRecomendada {
+  essenciais: SuplementoRecomendado[]
+  opcionais: SuplementoRecomendado[]
+  evitar: string[]
+}
+
+export interface SuplementoRecomendado {
+  nome: string
+  dosagem: string
+  horario: string
+  motivo: string
+}
+
+export interface AlertaNutricional {
+  tipo: 'saude' | 'interacao' | 'alergia' | 'restricao'
+  titulo: string
+  descricao: string
+  acao?: string
+}
+
+export interface AjusteDia {
+  calorias: number
+  proteina: number
+  carboidrato: number
+  gordura: number
+}
+
+// ============================================
+// CHAT
+// ============================================
+
+export interface ChatConversation {
+  id: string
+  userId: string
+  topic: string | null
+  resolved: boolean
+  messageCount: number
+  startedAt: Date
+  lastMessageAt: Date
+}
+
+export interface ChatMessage {
+  id: string
+  conversationId: string
+  role: 'USER' | 'ASSISTANT'
+  content: string
+  contextType: string | null
+  relatedDataId: string | null
+  suggestedActions: ChatAction[] | null
+  tokensUsed: number | null
+  helpful: boolean | null
+  feedbackAt: Date | null
+  createdAt: Date
+}
+
+export interface ChatAction {
+  label: string
+  action: string
+  params?: Record<string, any>
+}
+
+export interface SendMessageInput {
+  conversationId?: string
+  content: string
+  contextType?: 'general' | 'training' | 'nutrition' | 'health' | 'analysis'
+  relatedDataId?: string
+}
+
+// ============================================
+// AI INSIGHTS
+// ============================================
+
+export type InsightType = 
+  | 'progress'
+  | 'achievement'
+  | 'warning'
+  | 'tip'
+  | 'motivation'
+  | 'reminder'
+  | 'comparison'
+  | 'projection'
+  | 'education'
+  | 'training_adjustment'
+  | 'diet_adjustment'
+  | 'health_alert'
+  | 'recovery'
+  | 'sleep'
+  | 'stress'
+  | 'plateau'
+  | 'deload'
+
+export interface AIInsight {
+  id: string
+  userId: string
+  type: InsightType
+  priority: 'high' | 'medium' | 'low'
+  title: string
+  message: string
+  shortMessage: string | null
+  metric: string | null
+  value: number | null
+  change: number | null
+  icon: string | null
+  color: string | null
+  actionLabel: string | null
+  actionHref: string | null
+  dismissed: boolean
+  viewed: boolean
+  clicked: boolean
+  expiresAt: Date | null
+  createdAt: Date
+}
+
+// ============================================
+// CONTEXTO COMPLETO PARA IA
+// ============================================
+
+export interface AIUserContext {
+  // Identificação
+  nome: string
+  idade: number
+  genero: Gender
+  
+  // Físico
+  fisico: {
+    altura: number
+    peso: number | null
+    gordura: number | null
+    massaMagra: number | null
+  }
+  
+  // Avaliação
+  avaliacao: {
+    scoreGeral: number | null
+    classificacao: string | null
+    ratio: number | null
+    metodo: ProportionMethod
+    pontosFracos: string[]
+    pontosFortes: string[]
+    assimetrias: string[]
+  }
+  
+  // Vida
+  vida: {
+    profissao: string | null
+    rotina: RotinaDiaria | null
+    horasSono: number | null
+    estresse: NivelEstresse | null
+  }
+  
+  // Saúde
+  saude: {
+    condicoes: CondicaoSaude[]
+    lesoes: Lesao[]
+    alergias: string[]
+  }
+  
+  // Fármacos
+  farmacos: {
+    medicamentos: Medicamento[]
+    suplementos: Suplemento[]
+    usaEsteroides: boolean
+    trt: boolean
+  }
+  
+  // Treino
+  treino: {
+    experiencia: ExperienciaTreino | null
+    frequencia: number | null
+    duracao: number | null
+    local: LocalTreino | null
+    equipamentos: string[]
+    diasDisponiveis: string[]
+  }
+  
+  // Alimentação
+  alimentacao: {
+    dieta: TipoDieta | null
+    refeicoes: number | null
+    cozinha: boolean | null
+    orcamento: OrcamentoAlimentacao | null
+    evitar: string[]
+    preferidos: string[]
+    alergias: string[]
+  }
+  
+  // Objetivo
+  objetivo: {
+    principal: ObjetivoPrincipal | null
+    especifico: string | null
+    prazo: PrazoObjetivo | null
+    prioridades: string[]
+  }
+  
+  // Métricas calculadas
+  metricas: {
+    tmb: number
+    tdee: number
+    proteinaMinima: number
+    proteinaIdeal: number
+  }
+  
+  // Restrições consolidadas
+  restricoes: {
+    exercicios: string[]
+    movimentos: string[]
+    alimentos: string[]
+    alertas: string[]
+  }
 }
 ```
 
@@ -1561,5 +2573,5 @@ main()
 
 ---
 
-**VITRU IA Data Model**  
+**VITRU IA Data Model v2.0**  
 *PostgreSQL • Prisma • Zod • TypeScript • Multi-User*

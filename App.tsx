@@ -10,6 +10,7 @@ import { HallDosDeuses } from './components/HallDosDeuses';
 import { Login } from './components/Login';
 import { AssessmentPage } from './components/AssessmentPage';
 import { CoachModal } from './components/CoachModal';
+import { CoachIA } from './components/CoachIA';
 import { DashboardView } from './src/components/templates/DashboardView/DashboardView';
 import { ProfileType } from './components/ProfileSelector';
 
@@ -47,9 +48,10 @@ const App: React.FC = () => {
         return <Evolution />;
       case 'hall':
         return <HallDosDeuses />;
+      case 'coach':
+        return <CoachIA onOpenChat={() => setIsCoachModalOpen(true)} />;
       case 'trainers':
       case 'students':
-      case 'coach':
       case 'profile':
       case 'settings':
         return (

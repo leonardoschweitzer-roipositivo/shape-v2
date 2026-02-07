@@ -1,37 +1,43 @@
-# SPEC: AI Coach - VITRU IA
+# SPEC: VITRÚVIO - VITRU IA (v2.0)
 
-## Documento de Especificação do Coach IA
+## Documento de Especificação do VITRÚVIO
 
-**Versão:** 1.0  
+**Versão:** 2.0  
 **Data:** Fevereiro 2026  
-**Projeto:** VITRU IA (Sistema de Análise de Proporções Corporais)
+**Projeto:** VITRU IA (A Matemática do Físico Perfeito)
 
 ---
 
 ## 1. VISÃO GERAL
 
-O **Coach IA** é o diferencial competitivo do VITRU IA. Não somos apenas uma calculadora de proporções - somos um **coach virtual inteligente** que analisa, orienta e motiva o atleta em sua jornada para o físico ideal.
+O **VITRÚVIO** é o diferencial competitivo do VITRU IA. Não somos apenas uma calculadora de proporções - somos um **coach virtual inteligente** que analisa, orienta e motiva o atleta em sua jornada para o físico ideal.
 
-### 1.1 Missão do Coach IA
+### 1.0 Origem do Nome
 
-> "Transformar dados em insights acionáveis que ajudem o atleta a entender seu corpo, acompanhar seu progresso e tomar decisões informadas sobre treino e dieta."
+> **VITRÚVIO** é inspirado em **Marcus Vitruvius Pollio**, o arquiteto romano do século I a.C. que definiu as proporções ideais do corpo humano em sua obra "De Architectura". Seus estudos sobre simetria e proporção inspiraram Leonardo da Vinci a criar o icônico **Homem Vitruviano** - a representação perfeita das proporções humanas que fundamenta toda a filosofia do VITRU IA.
 
-### 1.2 Princípios do Coach IA
+### 1.1 Missão do VITRÚVIO
+
+> "Transformar dados em planos de ação personalizados que ajudem o atleta a entender seu corpo, otimizar seu treino e dieta, e atingir seu físico ideal da forma mais eficiente possível."
+
+### 1.2 Princípios do VITRÚVIO
 
 | Princípio | Descrição |
 |-----------|-----------|
-| **Personalizado** | Cada análise é única para o usuário |
-| **Acionável** | Sempre termina com "o que fazer agora" |
+| **Personalizado** | Cada análise considera o contexto completo do usuário |
+| **Acionável** | Sempre gera planos concretos de treino e dieta |
+| **Seguro** | Considera saúde, lesões e medicamentos |
 | **Motivador** | Celebra vitórias, mesmo pequenas |
 | **Honesto** | Aponta problemas sem ser desmotivador |
 | **Educativo** | Explica o "porquê" das recomendações |
-| **Contextual** | Considera histórico, metas e preferências |
+| **Contextual** | Considera histórico, metas, rotina e limitações |
 
-### 1.3 Capacidades do Coach IA
+### 1.3 Capacidades do VITRÚVIO (v2.0)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        COACH IA VITRU IA                         │
+│                         VITRÚVIO v2.0                           │
+│                    Coach IA do VITRU IA                         │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  📊 ANÁLISE           📈 EVOLUÇÃO          🎯 RECOMENDAÇÕES     │
@@ -40,1364 +46,1837 @@ O **Coach IA** é o diferencial competitivo do VITRU IA. Não somos apenas uma c
 │  • Estética           • Projeções          • Prioridades       │
 │  • Diagnóstico        • Marcos             • Metas             │
 │                                                                 │
+│  🏋️ PLANO DE TREINO   🥗 PLANO ALIMENTAR   👤 CONTEXTO RICO    │
+│  • Divisão semanal    • Calorias/macros    • Saúde/lesões      │
+│  • Exercícios foco    • Refeições          • Medicamentos      │
+│  • Correção simetria  • Timing nutrientes  • Rotina de vida    │
+│  • Progressão         • Suplementação      • Disponibilidade   │
+│                                                                 │
 │  💬 COMUNICAÇÃO       🏆 MOTIVAÇÃO         ⚠️ ALERTAS          │
 │  • Insights diários   • Conquistas         • Assimetrias       │
 │  • Relatórios         • Streaks            • Regressões        │
-│  • Respostas          • Celebrações        • Inconsistências   │
+│  • Chat interativo    • Celebrações        • Saúde/segurança   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 1.4 Fluxo Principal (NOVO)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    JORNADA COMPLETA DO USUÁRIO                  │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  1️⃣ ONBOARDING COMPLETO                                         │
+│     └─▶ Coleta contexto rico (saúde, vida, objetivos)          │
+│                              ▼                                  │
+│  2️⃣ AVALIAÇÃO IA                                                │
+│     └─▶ Usuário insere medidas corporais                       │
+│                              ▼                                  │
+│  3️⃣ RESULTADOS                                                  │
+│     └─▶ Scores, proporções, simetria, diagnóstico              │
+│                              ▼                                  │
+│  4️⃣ VITRÚVIO PROCESSA                                           │
+│     └─▶ Cruza resultados + contexto completo                   │
+│                              ▼                                  │
+│  5️⃣ PLANO PERSONALIZADO                                         │
+│     └─▶ Treino específico + Dieta específica + Timeline        │
+│                              ▼                                  │
+│  6️⃣ ACOMPANHAMENTO                                              │
+│     └─▶ Insights diários, ajustes, reavaliações               │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 2. ARQUITETURA DO SISTEMA
+## 2. PERFIL COMPLETO DO USUÁRIO (NOVO)
 
-### 2.1 Pipeline de Processamento
+### 2.1 UserHealthProfile
 
-```
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│   DADOS DO   │────▶│  ANÁLISE E   │────▶│   GERAÇÃO    │
-│   USUÁRIO    │     │  CÁLCULOS    │     │  DE TEXTO    │
-└──────────────┘     └──────────────┘     └──────────────┘
-       │                    │                    │
-       │                    │                    │
-       ▼                    ▼                    ▼
-  • Medidas            • Scores            • Templates
-  • Histórico          • Tendências        • LLM (GPT-4)
-  • Metas              • Gaps              • Personalização
-  • Preferências       • Alertas           • Tom de voz
-```
-
-### 2.2 Componentes
+O VITRÚVIO precisa de um contexto rico para gerar recomendações precisas e seguras.
 
 ```typescript
-// Estrutura do sistema de IA
+interface UserHealthProfile {
+  // ============================================
+  // DADOS BÁSICOS
+  // ============================================
+  idade: number
+  genero: 'masculino' | 'feminino' | 'outro'
+  altura: number                      // cm
+  pesoAtual: number                   // kg
+  
+  // ============================================
+  // COMPOSIÇÃO CORPORAL
+  // ============================================
+  gorduraCorporal?: number            // %
+  pesoMeta?: number                   // kg
+  massaMagra?: number                 // kg (calculado)
+  
+  // ============================================
+  // PERFIL DE VIDA
+  // ============================================
+  profissao: string                   // "Programador", "Pedreiro", etc
+  rotinaDiaria: RotinaDiaria          // Nível de atividade no trabalho
+  horasSono: number                   // Média por noite
+  qualidadeSono: 'ruim' | 'regular' | 'boa' | 'excelente'
+  nivelEstresse: NivelEstresse
+  horasTrabalho: number               // Horas por dia
+  trabalhoFisico: boolean             // Se trabalho envolve esforço físico
+  
+  // ============================================
+  // SAÚDE E CONDIÇÕES MÉDICAS
+  // ============================================
+  condicoesSaude: CondicaoSaude[]
+  lesoes: Lesao[]
+  alergias: string[]
+  restricoesMovimento: string[]       // "Não pode fazer supino", etc
+  
+  // ============================================
+  // FÁRMACOS E SUPLEMENTOS
+  // ============================================
+  medicamentos: Medicamento[]
+  suplementos: Suplemento[]
+  usaEsteroides: boolean
+  trt: boolean                        // Terapia de reposição de testosterona
+  esteroidesDetalhes?: string         // Confidencial
+  
+  // ============================================
+  // EXPERIÊNCIA DE TREINO
+  // ============================================
+  tempoTreinando: ExperienciaTreino
+  frequenciaTreinoAtual: number       // Dias por semana atual
+  frequenciaTreinoDesejada: number    // Dias que quer/pode treinar
+  duracaoTreinoMax: number            // Minutos máximo por sessão
+  localTreino: LocalTreino
+  equipamentosDisponiveis: string[]   // Lista de equipamentos
+  treinoAtual?: string                // Descrição do treino atual
+  
+  // ============================================
+  // PREFERÊNCIAS ALIMENTARES
+  // ============================================
+  dietaAtual: TipoDieta
+  refeicoesdia: number                // Quantas refeições faz/quer fazer
+  cozinha: boolean                    // Sabe/pode cozinhar
+  tempoPreparoRefeicao: number        // Minutos disponíveis
+  orcamentoAlimentacao: Orcamento
+  alimentosEvitar: string[]           // Não gosta ou não pode
+  alimentosPreferidos: string[]       // Prefere comer
+  fazJejum: boolean
+  horarioJejum?: string               // "16:8", "20:4", etc
+  
+  // ============================================
+  // OBJETIVOS
+  // ============================================
+  objetivoPrincipal: ObjetivoPrincipal
+  objetivoEspecifico: string          // Texto livre
+  prazo: PrazoObjetivo
+  prioridades: string[]               // ["Aumentar ombros", "Reduzir cintura"]
+  competicao: boolean                 // Pretende competir?
+  categoriaInteresse?: string         // "Classic Physique", "Men's Physique"
+  
+  // ============================================
+  // DISPONIBILIDADE
+  // ============================================
+  diasDisponiveisTreino: DiaSemana[]
+  horarioPreferido: HorarioTreino
+  tempoMaximoTreino: number           // Minutos
+  treinarEmCasa: boolean              // Pode/quer treinar em casa também
+  
+  // ============================================
+  // HISTÓRICO
+  // ============================================
+  pesoMaximoHistorico?: number
+  pesoMinimoHistorico?: number
+  melhorFormaFisica?: string          // Descrição de quando estava melhor
+  tentativasAnteriores?: string       // O que já tentou e não funcionou
+}
+```
 
+### 2.2 Tipos Auxiliares
+
+```typescript
+// Enums de Rotina
+enum RotinaDiaria {
+  SEDENTARIA = 'sedentaria',          // Trabalho sentado, pouco movimento
+  LEVE = 'leve',                      // Trabalho sentado, caminha às vezes
+  MODERADA = 'moderada',              // Trabalho em pé, movimento moderado
+  ATIVA = 'ativa',                    // Trabalho físico leve
+  MUITO_ATIVA = 'muito_ativa'         // Trabalho físico intenso
+}
+
+enum NivelEstresse {
+  BAIXO = 'baixo',
+  MODERADO = 'moderado',
+  ALTO = 'alto',
+  MUITO_ALTO = 'muito_alto'
+}
+
+// Saúde
+interface CondicaoSaude {
+  nome: string                        // "Diabetes tipo 2"
+  severidade: 'leve' | 'moderada' | 'grave'
+  controlada: boolean
+  medicacao?: string                  // Medicamento usado
+  observacoes?: string
+}
+
+interface Lesao {
+  local: string                       // "Ombro esquerdo"
+  tipo: string                        // "Tendinite"
+  dataOcorrencia?: Date
+  recuperada: boolean
+  restricoes: string[]                // ["Evitar press acima da cabeça"]
+  observacoes?: string
+}
+
+interface Medicamento {
+  nome: string                        // "Losartana"
+  principioAtivo?: string             // "Losartana potássica"
+  dosagem: string                     // "50mg"
+  frequencia: string                  // "1x ao dia"
+  horario?: string                    // "Manhã"
+  motivo: string                      // "Pressão alta"
+  efeitosColaterais?: string[]        // Efeitos que o usuário sente
+}
+
+interface Suplemento {
+  nome: string                        // "Whey Protein"
+  marca?: string
+  dosagem: string                     // "30g"
+  frequencia: string                  // "Pós-treino"
+  objetivo: string                    // "Aumento de proteína"
+}
+
+// Treino
+enum ExperienciaTreino {
+  INICIANTE = 'iniciante',            // < 1 ano
+  INTERMEDIARIO = 'intermediario',    // 1-3 anos
+  AVANCADO = 'avancado',              // 3-5 anos
+  EXPERIENTE = 'experiente',          // 5-10 anos
+  VETERANO = 'veterano'               // 10+ anos
+}
+
+enum LocalTreino {
+  ACADEMIA_COMPLETA = 'academia_completa',
+  ACADEMIA_SIMPLES = 'academia_simples',
+  HOME_GYM = 'home_gym',
+  CASA_BASICO = 'casa_basico',        // Só peso corporal / elásticos
+  MISTO = 'misto'
+}
+
+// Alimentação
+enum TipoDieta {
+  SEM_RESTRICAO = 'sem_restricao',
+  VEGETARIANA = 'vegetariana',
+  VEGANA = 'vegana',
+  PESCETARIANA = 'pescetariana',
+  LOW_CARB = 'low_carb',
+  CETOGENICA = 'cetogenica',
+  MEDITERRANEA = 'mediterranea',
+  FLEXIVEL = 'flexivel',              // IIFYM
+  OUTRA = 'outra'
+}
+
+enum Orcamento {
+  BAIXO = 'baixo',                    // Precisa economizar
+  MODERADO = 'moderado',              // Normal
+  ALTO = 'alto',                      // Pode investir mais
+  SEM_LIMITE = 'sem_limite'           // Orçamento não é problema
+}
+
+// Objetivos
+enum ObjetivoPrincipal {
+  ESTETICA = 'estetica',              // Melhorar aparência
+  HIPERTROFIA = 'hipertrofia',        // Ganhar massa muscular
+  DEFINICAO = 'definicao',            // Perder gordura mantendo músculo
+  RECOMPOSICAO = 'recomposicao',      // Perder gordura e ganhar músculo
+  FORCA = 'forca',                    // Ficar mais forte
+  SAUDE = 'saude',                    // Melhorar saúde geral
+  COMPETICAO = 'competicao',          // Preparar para competição
+  MANUTENCAO = 'manutencao'           // Manter físico atual
+}
+
+enum PrazoObjetivo {
+  CURTO = '3meses',
+  MEDIO = '6meses',
+  LONGO = '1ano',
+  MUITO_LONGO = '2anos',
+  SEM_PRAZO = 'sem_prazo'
+}
+
+enum HorarioTreino {
+  MANHA_CEDO = 'manha_cedo',          // 5h-7h
+  MANHA = 'manha',                    // 7h-11h
+  ALMOCO = 'almoco',                  // 11h-14h
+  TARDE = 'tarde',                    // 14h-18h
+  NOITE = 'noite',                    // 18h-22h
+  MADRUGADA = 'madrugada',            // 22h-5h
+  FLEXIVEL = 'flexivel'
+}
+
+type DiaSemana = 'segunda' | 'terca' | 'quarta' | 'quinta' | 'sexta' | 'sabado' | 'domingo'
+```
+
+### 2.3 Schema Prisma (Adições)
+
+```prisma
+// ============================================
+// PROFILE (Expandido)
+// ============================================
+
+model Profile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  
+  // Dados Básicos (existente)
+  birthDate       DateTime?
+  gender          Gender   @default(MALE)
+  altura          Float?
+  punho           Float?
+  tornozelo       Float?
+  joelho          Float?
+  pelve           Float?
+  
+  // NOVO: Perfil de Vida
+  profissao           String?
+  rotinaDiaria        RotinaDiaria?
+  horasSono           Float?
+  qualidadeSono       QualidadeSono?
+  nivelEstresse       NivelEstresse?
+  horasTrabalho       Float?
+  trabalhoFisico      Boolean   @default(false)
+  
+  // NOVO: Experiência de Treino
+  tempoTreinando          ExperienciaTreino?
+  frequenciaTreinoAtual   Int?
+  frequenciaTreinoDesejada Int?
+  duracaoTreinoMax        Int?
+  localTreino             LocalTreino?
+  equipamentos            String[]
+  treinoAtual             String?
+  
+  // NOVO: Alimentação
+  dietaAtual              TipoDieta?
+  refeicoesdia            Int?
+  cozinha                 Boolean?
+  tempoPreparoRefeicao    Int?
+  orcamentoAlimentacao    Orcamento?
+  alimentosEvitar         String[]
+  alimentosPreferidos     String[]
+  fazJejum                Boolean   @default(false)
+  horarioJejum            String?
+  
+  // NOVO: Objetivos
+  objetivoPrincipal       ObjetivoPrincipal?
+  objetivoEspecifico      String?
+  prazo                   PrazoObjetivo?
+  prioridades             String[]
+  competicao              Boolean   @default(false)
+  categoriaInteresse      String?
+  
+  // NOVO: Disponibilidade
+  diasDisponiveisTreino   String[]
+  horarioPreferido        HorarioTreino?
+  treinarEmCasa           Boolean   @default(false)
+  
+  // NOVO: Histórico
+  pesoMaximoHistorico     Float?
+  pesoMinimoHistorico     Float?
+  melhorFormaFisica       String?
+  tentativasAnteriores    String?
+  
+  // NOVO: Ergogênicos
+  usaEsteroides           Boolean   @default(false)
+  trt                     Boolean   @default(false)
+  esteroidesDetalhes      String?   // Criptografado
+  
+  // Preferências (existente)
+  unitSystem      UnitSystem @default(METRIC)
+  preferredMethod ProportionMethod @default(GOLDEN_RATIO)
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("profiles")
+}
+
+// ============================================
+// CONDIÇÕES DE SAÚDE (NOVO)
+// ============================================
+
+model CondicaoSaude {
+  id              String   @id @default(cuid())
+  userId          String
+  
+  nome            String
+  severidade      Severidade  @default(LEVE)
+  controlada      Boolean     @default(false)
+  medicacao       String?
+  observacoes     String?
+  
+  ativo           Boolean     @default(true)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("condicoes_saude")
+}
+
+// ============================================
+// LESÕES (NOVO)
+// ============================================
+
+model Lesao {
+  id              String   @id @default(cuid())
+  userId          String
+  
+  local           String              // "Ombro esquerdo"
+  tipo            String              // "Tendinite"
+  dataOcorrencia  DateTime?
+  recuperada      Boolean   @default(false)
+  restricoes      String[]            // Exercícios a evitar
+  observacoes     String?
+  
+  ativo           Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("lesoes")
+}
+
+// ============================================
+// MEDICAMENTOS (NOVO)
+// ============================================
+
+model Medicamento {
+  id              String   @id @default(cuid())
+  userId          String
+  
+  nome            String
+  principioAtivo  String?
+  dosagem         String
+  frequencia      String
+  horario         String?
+  motivo          String
+  efeitosColaterais String[]
+  
+  ativo           Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("medicamentos")
+}
+
+// ============================================
+// SUPLEMENTOS (NOVO)
+// ============================================
+
+model Suplemento {
+  id              String   @id @default(cuid())
+  userId          String
+  
+  nome            String
+  marca           String?
+  dosagem         String
+  frequencia      String
+  objetivo        String
+  
+  ativo           Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("suplementos")
+}
+
+// ============================================
+// ENUMS NOVOS
+// ============================================
+
+enum RotinaDiaria {
+  SEDENTARIA
+  LEVE
+  MODERADA
+  ATIVA
+  MUITO_ATIVA
+}
+
+enum QualidadeSono {
+  RUIM
+  REGULAR
+  BOA
+  EXCELENTE
+}
+
+enum NivelEstresse {
+  BAIXO
+  MODERADO
+  ALTO
+  MUITO_ALTO
+}
+
+enum ExperienciaTreino {
+  INICIANTE
+  INTERMEDIARIO
+  AVANCADO
+  EXPERIENTE
+  VETERANO
+}
+
+enum LocalTreino {
+  ACADEMIA_COMPLETA
+  ACADEMIA_SIMPLES
+  HOME_GYM
+  CASA_BASICO
+  MISTO
+}
+
+enum TipoDieta {
+  SEM_RESTRICAO
+  VEGETARIANA
+  VEGANA
+  PESCETARIANA
+  LOW_CARB
+  CETOGENICA
+  MEDITERRANEA
+  FLEXIVEL
+  OUTRA
+}
+
+enum Orcamento {
+  BAIXO
+  MODERADO
+  ALTO
+  SEM_LIMITE
+}
+
+enum ObjetivoPrincipal {
+  ESTETICA
+  HIPERTROFIA
+  DEFINICAO
+  RECOMPOSICAO
+  FORCA
+  SAUDE
+  COMPETICAO
+  MANUTENCAO
+}
+
+enum PrazoObjetivo {
+  TRES_MESES
+  SEIS_MESES
+  UM_ANO
+  DOIS_ANOS
+  SEM_PRAZO
+}
+
+enum HorarioTreino {
+  MANHA_CEDO
+  MANHA
+  ALMOCO
+  TARDE
+  NOITE
+  MADRUGADA
+  FLEXIVEL
+}
+
+enum Severidade {
+  LEVE
+  MODERADA
+  GRAVE
+}
+```
+
+---
+
+## 3. ARQUITETURA DO SISTEMA (Atualizada)
+
+### 3.1 Pipeline de Processamento
+
+```
+┌──────────────────┐     ┌──────────────────┐     ┌──────────────────┐
+│  DADOS COMPLETOS │────▶│  ANÁLISE E       │────▶│  GERAÇÃO DE      │
+│  DO USUÁRIO      │     │  CRUZAMENTO      │     │  PLANOS          │
+└──────────────────┘     └──────────────────┘     └──────────────────┘
+        │                        │                        │
+        ▼                        ▼                        ▼
+  • Medidas corporais      • Scores proporções     • Plano de treino
+  • Perfil de saúde        • Gaps identificados    • Plano alimentar
+  • Condições médicas      • Prioridades           • Recomendações
+  • Medicamentos           • Restrições saúde      • Timeline
+  • Rotina de vida         • Análise de risco      • Alertas segurança
+  • Objetivos              • Contexto cruzado      • Ajustes periódicos
+```
+
+### 3.2 Componentes do Sistema
+
+```typescript
 interface AICoachSystem {
-  // Analisadores
+  // ============================================
+  // COLETORES DE CONTEXTO (NOVO)
+  // ============================================
+  collectors: {
+    profile: ProfileCollector           // Coleta dados do perfil
+    health: HealthCollector             // Coleta condições de saúde
+    medications: MedicationCollector    // Coleta medicamentos
+    lifestyle: LifestyleCollector       // Coleta dados de rotina
+    goals: GoalCollector                // Coleta objetivos
+  }
+  
+  // ============================================
+  // ANALISADORES
+  // ============================================
   analyzers: {
-    proportions: ProportionAnalyzer      // Analisa proporções vs ideais
-    symmetry: SymmetryAnalyzer           // Analisa simetria bilateral
-    evolution: EvolutionAnalyzer         // Analisa tendências temporais
-    aesthetic: AestheticAnalyzer         // Diagnóstico estético geral
+    proportions: ProportionAnalyzer     // Analisa proporções vs ideais
+    symmetry: SymmetryAnalyzer          // Analisa simetria bilateral
+    evolution: EvolutionAnalyzer        // Analisa tendências temporais
+    aesthetic: AestheticAnalyzer        // Diagnóstico estético geral
+    risk: RiskAnalyzer                  // NOVO: Analisa riscos de saúde
+    readiness: ReadinessAnalyzer        // NOVO: Analisa prontidão para treino
   }
   
-  // Geradores de conteúdo
+  // ============================================
+  // GERADORES DE CONTEÚDO
+  // ============================================
   generators: {
-    insights: InsightGenerator           // Gera insights diários
-    reports: ReportGenerator             // Gera relatórios semanais
-    recommendations: RecommendationGenerator  // Gera recomendações
-    alerts: AlertGenerator               // Gera alertas
+    insights: InsightGenerator          // Gera insights diários
+    reports: ReportGenerator            // Gera relatórios semanais
+    recommendations: RecommendationGenerator
+    alerts: AlertGenerator
+    
+    // NOVOS
+    training: TrainingPlanGenerator     // Gera plano de treino
+    nutrition: NutritionPlanGenerator   // Gera plano alimentar
+    periodization: PeriodizationGenerator // Gera periodização
   }
   
-  // Personalizador
+  // ============================================
+  // PERSONALIZADOR
+  // ============================================
   personalizer: {
-    tone: ToneAdapter                    // Adapta tom de voz
-    context: ContextBuilder              // Constrói contexto
-    history: HistoryManager              // Gerencia histórico
+    tone: ToneAdapter                   // Adapta tom de voz
+    context: ContextBuilder             // Constrói contexto completo
+    history: HistoryManager             // Gerencia histórico
+    safety: SafetyChecker               // NOVO: Verifica segurança
+  }
+}
+```
+
+### 3.3 Context Builder (NOVO)
+
+O Context Builder é responsável por montar o contexto completo para a IA.
+
+```typescript
+class ContextBuilder {
+  
+  async buildFullContext(userId: string): Promise<AIContext> {
+    // Buscar todos os dados do usuário
+    const [
+      user,
+      profile,
+      condicoes,
+      lesoes,
+      medicamentos,
+      suplementos,
+      latestMeasurement,
+      measurementHistory,
+      scores,
+      goals
+    ] = await Promise.all([
+      this.getUser(userId),
+      this.getProfile(userId),
+      this.getCondicoesSaude(userId),
+      this.getLesoes(userId),
+      this.getMedicamentos(userId),
+      this.getSuplementos(userId),
+      this.getLatestMeasurement(userId),
+      this.getMeasurementHistory(userId, 90), // últimos 90 dias
+      this.getLatestScores(userId),
+      this.getGoals(userId)
+    ])
+    
+    // Calcular métricas derivadas
+    const idade = this.calcularIdade(profile.birthDate)
+    const tmb = this.calcularTMB(profile, latestMeasurement)
+    const tdee = this.calcularTDEE(tmb, profile.rotinaDiaria, profile.frequenciaTreinoAtual)
+    const nivelExperiencia = this.classificarExperiencia(profile.tempoTreinando)
+    
+    // Identificar restrições
+    const restricoes = this.identificarRestricoes(lesoes, condicoes, medicamentos)
+    
+    // Montar contexto estruturado
+    return {
+      // Identificação
+      nome: user.name,
+      idade,
+      genero: profile.gender,
+      
+      // Físico atual
+      fisico: {
+        altura: profile.altura,
+        peso: latestMeasurement?.peso,
+        gordura: latestMeasurement?.gorduraCorporal,
+        massaMagra: this.calcularMassaMagra(latestMeasurement),
+      },
+      
+      // Resultados da avaliação
+      avaliacao: {
+        scoreGeral: scores?.scoreTotal,
+        classificacao: scores?.classificacao,
+        ratio: this.calcularRatio(latestMeasurement, profile),
+        metodo: profile.preferredMethod,
+        pontosFracos: this.identificarPontosFracos(scores),
+        pontosFortes: this.identificarPontosFortes(scores),
+        assimetrias: this.identificarAssimetrias(latestMeasurement),
+      },
+      
+      // Contexto de vida
+      vida: {
+        profissao: profile.profissao,
+        rotina: profile.rotinaDiaria,
+        horasSono: profile.horasSono,
+        qualidadeSono: profile.qualidadeSono,
+        estresse: profile.nivelEstresse,
+        horasTrabalho: profile.horasTrabalho,
+      },
+      
+      // Saúde
+      saude: {
+        condicoes: condicoes.filter(c => c.ativo),
+        lesoes: lesoes.filter(l => l.ativo && !l.recuperada),
+        lesoesRecuperadas: lesoes.filter(l => l.recuperada),
+        alergias: profile.alergias || [],
+        restricoesMovimento: restricoes.movimento,
+      },
+      
+      // Fármacos
+      farmacos: {
+        medicamentos: medicamentos.filter(m => m.ativo),
+        suplementos: suplementos.filter(s => s.ativo),
+        usaEsteroides: profile.usaEsteroides,
+        trt: profile.trt,
+        interacoesAlerta: this.verificarInteracoes(medicamentos, suplementos),
+      },
+      
+      // Treino
+      treino: {
+        experiencia: profile.tempoTreinando,
+        nivelExperiencia,
+        frequenciaAtual: profile.frequenciaTreinoAtual,
+        frequenciaDesejada: profile.frequenciaTreinoDesejada,
+        duracaoMax: profile.duracaoTreinoMax,
+        local: profile.localTreino,
+        equipamentos: profile.equipamentos || [],
+        diasDisponiveis: profile.diasDisponiveisTreino || [],
+        horario: profile.horarioPreferido,
+        treinoAtual: profile.treinoAtual,
+      },
+      
+      // Alimentação
+      alimentacao: {
+        dieta: profile.dietaAtual,
+        refeicoes: profile.refeicoesdia,
+        cozinha: profile.cozinha,
+        tempoPreparo: profile.tempoPreparoRefeicao,
+        orcamento: profile.orcamentoAlimentacao,
+        evitar: profile.alimentosEvitar || [],
+        preferidos: profile.alimentosPreferidos || [],
+        jejum: profile.fazJejum,
+        horarioJejum: profile.horarioJejum,
+        alergias: profile.alergias || [],
+      },
+      
+      // Objetivos
+      objetivo: {
+        principal: profile.objetivoPrincipal,
+        especifico: profile.objetivoEspecifico,
+        prazo: profile.prazo,
+        prioridades: profile.prioridades || [],
+        competicao: profile.competicao,
+        categoria: profile.categoriaInteresse,
+        metas: goals,
+      },
+      
+      // Métricas calculadas
+      metricas: {
+        tmb,
+        tdee,
+        caloriasGanho: tdee + 300,
+        caloriasPerca: tdee - 500,
+        caloriasManutencao: tdee,
+        proteinaMinima: latestMeasurement?.peso * 1.6,
+        proteinaIdeal: latestMeasurement?.peso * 2.0,
+        proteinaMaxima: latestMeasurement?.peso * 2.4,
+      },
+      
+      // Restrições consolidadas
+      restricoes: {
+        exercicios: restricoes.exercicios,
+        movimentos: restricoes.movimento,
+        alimentos: restricoes.alimentos,
+        intensidade: restricoes.intensidade,
+        alertas: restricoes.alertas,
+      },
+      
+      // Histórico
+      historico: {
+        medicoes: measurementHistory.length,
+        tendencia: this.calcularTendencia(measurementHistory),
+        melhorScore: this.getMelhorScore(measurementHistory),
+        consistencia: this.calcularConsistencia(measurementHistory),
+      },
+    }
+  }
+  
+  private identificarRestricoes(
+    lesoes: Lesao[],
+    condicoes: CondicaoSaude[],
+    medicamentos: Medicamento[]
+  ): Restricoes {
+    const restricoes: Restricoes = {
+      exercicios: [],
+      movimento: [],
+      alimentos: [],
+      intensidade: null,
+      alertas: [],
+    }
+    
+    // Restrições por lesões
+    for (const lesao of lesoes.filter(l => !l.recuperada)) {
+      restricoes.exercicios.push(...(lesao.restricoes || []))
+      restricoes.alertas.push(`Lesão ativa: ${lesao.tipo} em ${lesao.local}`)
+    }
+    
+    // Restrições por condições de saúde
+    for (const condicao of condicoes) {
+      if (condicao.nome.toLowerCase().includes('cardíac') || 
+          condicao.nome.toLowerCase().includes('coração')) {
+        restricoes.intensidade = 'moderada'
+        restricoes.alertas.push('Condição cardíaca: evitar intensidade muito alta')
+      }
+      
+      if (condicao.nome.toLowerCase().includes('diabetes')) {
+        restricoes.alertas.push('Diabetes: monitorar glicemia, evitar jejum prolongado')
+      }
+      
+      if (condicao.nome.toLowerCase().includes('pressão') ||
+          condicao.nome.toLowerCase().includes('hipertensão')) {
+        restricoes.alertas.push('Hipertensão: evitar valsalva excessiva, monitorar pressão')
+      }
+    }
+    
+    // Restrições por medicamentos
+    for (const med of medicamentos) {
+      if (med.nome.toLowerCase().includes('anticoagulante')) {
+        restricoes.alertas.push('Anticoagulante: cuidado com impactos e lesões')
+      }
+      
+      if (med.motivo.toLowerCase().includes('pressão')) {
+        restricoes.alertas.push('Medicamento para pressão: monitorar durante treino')
+      }
+    }
+    
+    return restricoes
   }
 }
 ```
 
 ---
 
-## 3. TIPOS DE ANÁLISE
+## 4. GERAÇÃO DE PLANO DE TREINO (NOVO)
 
-### 3.1 Análise de Proporções
-
-**Objetivo:** Avaliar quão próximo o usuário está das proporções ideais.
+### 4.1 Estrutura do Plano de Treino
 
 ```typescript
-interface ProportionAnalysis {
-  method: ProportionMethod              // Golden Ratio, Classic, Men's
+interface PlanoTreino {
+  // Metadata
+  id: string
+  userId: string
+  criadoEm: Date
+  validoAte: Date                     // Quando deve ser reavaliado
+  versao: number
   
-  // Score geral
-  overallScore: number                  // 0-100
-  classification: ScoreClassification   // ELITE, AVANÇADO, etc.
+  // Visão geral
+  visaoGeral: {
+    titulo: string                    // "Plano Hipertrofia - Foco V-Taper"
+    descricao: string
+    duracao: string                   // "8 semanas"
+    objetivo: string
+    divisao: DivisaoTreino
+    diasPorSemana: number
+  }
   
-  // Por proporção (as 9)
-  proportions: Array<{
-    id: string                          // 'ombros', 'peitoral', etc.
-    nome: string                        // 'Ombros (V-Taper)'
-    atual: number                       // 120 cm
-    ideal: number                       // 132.7 cm
-    score: number                       // 0-100
-    gap: number                         // -12.7 cm
-    gapPercent: number                  // -9.6%
-    status: 'excellent' | 'good' | 'attention' | 'critical'
-    priority: number                    // 1-9 (prioridade de foco)
-  }>
+  // Dias de treino
+  dias: DiaTreino[]
   
-  // Insights gerados
-  insights: {
-    strengths: string[]                 // Pontos fortes
-    weaknesses: string[]                // Pontos a melhorar
-    focus: string                       // Foco recomendado
+  // Prioridades baseadas na avaliação
+  prioridades: {
+    musculosFoco: string[]            // ["Deltóide lateral", "Peitoral superior"]
+    correcaoSimetria: CorrecaoSimetria[]
+    manutencao: string[]              // Músculos para manter
+  }
+  
+  // Progressão
+  progressao: {
+    semana1a2: string                 // Descrição da fase
+    semana3a4: string
+    semana5a6: string
+    semana7a8: string
+    deload: string                    // Quando e como fazer deload
+  }
+  
+  // Alertas de segurança
+  alertas: AlertaSeguranca[]
+  
+  // Ajustes personalizados
+  ajustes: {
+    porLesao: AjusteLesao[]
+    porCondicao: AjusteCondicao[]
+    porMedicamento: AjusteMedicamento[]
   }
 }
+
+interface DiaTreino {
+  dia: DiaSemana
+  nome: string                        // "Push A - Ênfase Ombros"
+  gruposMusculares: string[]
+  duracaoEstimada: number             // minutos
+  
+  aquecimento: Exercicio[]
+  exerciciosPrincipais: Exercicio[]
+  exerciciosAcessorios: Exercicio[]
+  finalizacao: Exercicio[]
+  
+  observacoes: string[]
+  substituicoes: Substituicao[]       // Alternativas se não tiver equipamento
+}
+
+interface Exercicio {
+  id: string
+  nome: string                        // "Desenvolvimento com halteres"
+  musculoAlvo: string                 // "Deltóide anterior"
+  musculosSecundarios: string[]       // ["Tríceps", "Peitoral superior"]
+  
+  // Execução
+  series: number
+  repeticoes: string                  // "8-12" ou "12-15" ou "até falha"
+  descanso: number                    // segundos
+  cadencia?: string                   // "3-1-2" (excêntrico-pausa-concêntrico)
+  
+  // Técnicas especiais
+  tecnica?: TecnicaEspecial           // "Drop-set", "Rest-pause", etc.
+  
+  // Intensidade
+  intensidade: string                 // "RPE 8" ou "70% 1RM"
+  progressaoSemanal?: string          // "+2.5kg por semana"
+  
+  // Instruções
+  execucao: string                    // Como executar corretamente
+  dicasForma: string[]                // Dicas de forma
+  errosComuns: string[]               // O que evitar
+  
+  // Substituições
+  substituicoes: string[]             // Exercícios alternativos
+  
+  // Segurança
+  contraindicado?: string[]           // Lesões que impedem este exercício
+  cuidados?: string[]                 // Cuidados especiais
+}
+
+interface CorrecaoSimetria {
+  musculo: string                     // "Braço"
+  ladoMenor: 'esquerdo' | 'direito'
+  diferencaPercent: number
+  estrategia: string                  // "Iniciar séries pelo lado menor"
+  exerciciosUnilaterais: string[]
+  seriesExtras: number                // Séries extras para o lado menor
+}
+
+type DivisaoTreino = 
+  | 'FULL_BODY'           // Corpo todo (iniciantes, 2-3x/sem)
+  | 'UPPER_LOWER'         // Superior/Inferior (intermediário, 4x/sem)
+  | 'PPL'                 // Push/Pull/Legs (avançado, 6x/sem)
+  | 'PPLX2'               // PPL 2x por semana
+  | 'BRO_SPLIT'           // 1 músculo por dia (5x/sem)
+  | 'ARNOLD_SPLIT'        // Peito+Costas, Ombros+Braços, Pernas
+  | 'CUSTOM'              // Personalizado
+
+type TecnicaEspecial = 
+  | 'DROP_SET'
+  | 'REST_PAUSE'
+  | 'MIOTREPS'
+  | 'SUPERSET'
+  | 'GIANT_SET'
+  | 'CLUSTER'
+  | 'TEMPO'
+  | 'ISOMETRICO'
 ```
 
-**Prompt Template para Análise de Proporções:**
+### 4.2 Prompt para Geração de Treino
 
 ```typescript
-const PROPORTION_ANALYSIS_PROMPT = `
-Você é o Coach IA do VITRU IA, especialista em análise de proporções corporais.
+const TRAINING_PLAN_PROMPT = `
+Você é VITRÚVIO, o coach de IA do VITRU IA. Seu nome é uma homenagem a Marcus Vitruvius Pollio, 
+o arquiteto romano que definiu as proporções ideais do corpo humano. Você é especialista em criar 
+planos de treino personalizados para otimização de proporções corporais e estética.
 
-## CONTEXTO DO USUÁRIO
-- Nome: {{userName}}
-- Método preferido: {{preferredMethod}}
-- Objetivo: {{userGoal}}
-- Nível: {{userLevel}}
+## CONTEXTO COMPLETO DO USUÁRIO
+{{userContext}}
 
-## MEDIDAS ATUAIS
-{{currentMeasurements}}
+## RESULTADOS DA AVALIAÇÃO
+Score Geral: {{scoreGeral}} ({{classificacao}})
+Ratio Ombro/Cintura: {{ratio}}
 
-## PROPORÇÕES CALCULADAS
-{{proportionScores}}
+### Pontos Fracos (PRIORIDADE)
+{{pontosFracos}}
 
-## HISTÓRICO (últimos 3 meses)
-{{measurementHistory}}
+### Pontos Fortes (MANTER)
+{{pontosFortes}}
+
+### Assimetrias a Corrigir
+{{assimetrias}}
+
+## RESTRIÇÕES IMPORTANTES
+{{restricoes}}
 
 ## INSTRUÇÕES
-Analise as proporções do usuário e gere:
 
-1. **DIAGNÓSTICO GERAL** (2-3 frases)
-   - Status atual vs ideal
-   - Principal destaque positivo
-   - Principal ponto de atenção
+Crie um plano de treino completo considerando:
 
-2. **PONTOS FORTES** (lista de 2-3 itens)
-   - Quais proporções estão boas ou excelentes
-   - Por que isso é positivo
+### 1. DIVISÃO DE TREINO
+- Considere a experiência: {{experiencia}}
+- Dias disponíveis: {{diasDisponiveis}}
+- Duração máxima: {{duracaoMax}} minutos
+- Local: {{localTreino}}
+- Equipamentos: {{equipamentos}}
 
-3. **PONTOS DE ATENÇÃO** (lista de 2-3 itens)
-   - Quais proporções precisam de foco
-   - Quanto falta para o ideal
+### 2. PRIORIZAÇÃO
+- Foque nos pontos fracos identificados na avaliação
+- Os músculos prioritários devem:
+  - Ser treinados primeiro no dia (quando mais energia)
+  - Ter mais volume semanal (séries totais)
+  - Usar técnicas intensificadoras
 
-4. **RECOMENDAÇÃO PRINCIPAL** (1 frase acionável)
-   - O que o usuário deve focar AGORA
-   - Seja específico (ex: "deltóide lateral" não apenas "ombros")
+### 3. CORREÇÃO DE SIMETRIA
+Para cada assimetria > 5%:
+- Incluir exercícios unilaterais
+- Lado menor inicia o movimento
+- 1-2 séries extras para o lado menor
 
-## TOM DE VOZ
-- Motivador mas honesto
-- Técnico mas acessível
-- Personalizado (use o nome do usuário)
-- Sempre termine com encorajamento
+### 4. SEGURANÇA
+{{alertasSaude}}
+- Respeitar todas as lesões e restrições
+- Ajustar intensidade conforme condições médicas
+- Considerar interações com medicamentos
 
-## FORMATO
-Responda em JSON:
-{
-  "diagnostico": "string",
-  "pontosFortes": ["string"],
-  "pontosAtencao": ["string"],
-  "recomendacao": "string",
-  "motivacao": "string"
-}
-`
-```
+### 5. PROGRESSÃO
+- Semanas 1-2: Adaptação (RPE 7)
+- Semanas 3-4: Progressão (RPE 8)
+- Semanas 5-6: Intensificação (RPE 8-9)
+- Semana 7-8: Pico + Deload
 
----
+### 6. FORMATO DE RESPOSTA
+Para cada exercício, forneça:
+- Nome do exercício
+- Músculo alvo
+- Séries x Repetições
+- Descanso
+- Técnica de execução (breve)
+- Substituição se não tiver equipamento
 
-### 3.2 Análise de Simetria
-
-**Objetivo:** Identificar e quantificar assimetrias bilaterais.
-
-```typescript
-interface SymmetryAnalysis {
-  // Score geral de simetria
-  overallScore: number                  // 0-100 (100 = perfeitamente simétrico)
-  grade: Grade                          // A+, A, B, C, D, E
-  
-  // Por grupo muscular
-  muscles: Array<{
-    muscle: string                      // 'braço', 'coxa', 'panturrilha'
-    left: number                        // 41.0 cm
-    right: number                       // 44.5 cm
-    difference: number                  // 3.5 cm
-    differencePercent: number           // 8.5%
-    dominantSide: 'left' | 'right' | 'equal'
-    status: 'symmetric' | 'moderate' | 'asymmetric'
-    concern: boolean                    // true se > 5%
-  }>
-  
-  // Análise
-  analysis: {
-    worstAsymmetry: string              // Qual músculo tem maior assimetria
-    pattern: string                     // "Dominância direita consistente"
-    possibleCauses: string[]            // Possíveis causas
-    recommendations: string[]           // Recomendações específicas
-  }
-}
-```
-
-**Thresholds de Simetria:**
-
-| Status | Diferença | Ação Recomendada |
-|--------|-----------|------------------|
-| symmetric | < 3% | Manter equilíbrio |
-| moderate | 3-5% | Monitorar, ajustes leves |
-| asymmetric | > 5% | Foco em correção, exercícios unilaterais |
-
-**Prompt Template para Análise de Simetria:**
-
-```typescript
-const SYMMETRY_ANALYSIS_PROMPT = `
-Você é o Coach IA do VITRU IA, especialista em simetria corporal.
-
-## DADOS DE SIMETRIA
-{{symmetryData}}
-
-## HISTÓRICO DE SIMETRIA
-{{symmetryHistory}}
-
-## INSTRUÇÕES
-Analise a simetria bilateral do usuário:
-
-1. **STATUS GERAL**
-   - Classificação (Excelente/Boa/Moderada/Preocupante)
-   - Padrão observado (ex: dominância direita)
-
-2. **ASSIMETRIAS IDENTIFICADAS**
-   - Liste cada assimetria > 3%
-   - Indique o lado dominante
-   - Classifique a severidade
-
-3. **POSSÍVEIS CAUSAS**
-   - Sugira causas comuns (trabalho, esporte, lesão antiga)
-
-4. **PLANO DE CORREÇÃO**
-   - Exercícios unilaterais recomendados
-   - Qual lado iniciar o exercício
-   - Frequência sugerida
-
-## TOM
-- Não alarmista
-- Educativo
-- Prático
+## RESTRIÇÕES ABSOLUTAS
+- NUNCA prescreva exercícios contraindicados para as lesões listadas
+- SEMPRE reduza intensidade se houver condição cardíaca
+- CONSIDERE efeitos de medicamentos na performance
+- ADAPTE para os equipamentos disponíveis
 
 ## FORMATO JSON
 {
-  "statusGeral": "string",
-  "padrao": "string",
-  "assimetrias": [{"musculo": "string", "diferenca": "string", "severidade": "string"}],
-  "causasPossiveis": ["string"],
-  "planoCorrecao": ["string"]
+  "visaoGeral": {
+    "titulo": "string",
+    "descricao": "string",
+    "duracao": "string",
+    "divisao": "string",
+    "diasPorSemana": number
+  },
+  "prioridades": {
+    "musculosFoco": ["string"],
+    "correcaoSimetria": [{"musculo": "string", "estrategia": "string"}],
+    "manutencao": ["string"]
+  },
+  "dias": [
+    {
+      "dia": "string",
+      "nome": "string",
+      "gruposMusculares": ["string"],
+      "duracaoEstimada": number,
+      "exercicios": [
+        {
+          "nome": "string",
+          "musculoAlvo": "string",
+          "series": number,
+          "repeticoes": "string",
+          "descanso": number,
+          "execucao": "string",
+          "substituicao": "string"
+        }
+      ],
+      "observacoes": ["string"]
+    }
+  ],
+  "progressao": {
+    "descricao": "string",
+    "semanasAdaptacao": "string",
+    "semanasProgressao": "string",
+    "deload": "string"
+  },
+  "alertasSeguranca": ["string"]
 }
 `
 ```
 
 ---
 
-### 3.3 Análise de Evolução
+## 5. GERAÇÃO DE PLANO ALIMENTAR (NOVO)
 
-**Objetivo:** Identificar tendências e projetar progresso futuro.
-
-```typescript
-interface EvolutionAnalysis {
-  period: '7d' | '30d' | '90d' | '180d' | '1y'
-  
-  // Tendência geral
-  trend: 'improving' | 'stable' | 'declining'
-  trendScore: number                    // -100 a +100
-  
-  // Por métrica
-  metrics: Array<{
-    metric: string                      // 'ombros', 'cintura', 'scoreTotal'
-    startValue: number
-    endValue: number
-    change: number
-    changePercent: number
-    trend: 'up' | 'down' | 'stable'
-    isPositive: boolean                 // up é bom para ombros, ruim para cintura
-    velocity: number                    // cm/mês ou pontos/mês
-    projection30d: number               // projeção para 30 dias
-  }>
-  
-  // Marcos atingidos
-  milestones: Array<{
-    date: Date
-    description: string                 // "Atingiu ratio 1.5"
-    type: 'proportion' | 'measurement' | 'score' | 'consistency'
-  }>
-  
-  // Análise
-  analysis: {
-    bestProgress: string                // Métrica com melhor evolução
-    needsAttention: string              // Métrica estagnada ou regredindo
-    consistency: number                 // 0-100 (frequência de medições)
-    projectedGoalDate: Date | null      // Quando atingirá a meta
-  }
-}
-```
-
-**Prompt Template para Análise de Evolução:**
+### 5.1 Estrutura do Plano Alimentar
 
 ```typescript
-const EVOLUTION_ANALYSIS_PROMPT = `
-Você é o Coach IA do VITRU IA, especialista em análise de progresso.
-
-## DADOS DE EVOLUÇÃO ({{period}})
-{{evolutionData}}
-
-## METAS DO USUÁRIO
-{{userGoals}}
-
-## FREQUÊNCIA DE MEDIÇÕES
-{{measurementFrequency}}
-
-## INSTRUÇÕES
-Analise a evolução do usuário:
-
-1. **RESUMO DO PERÍODO**
-   - Tendência geral (melhorando/estável/regredindo)
-   - Principal conquista do período
-   - Principal desafio
-
-2. **DESTAQUES POSITIVOS**
-   - Métricas que mais evoluíram
-   - Celebre o progresso (mesmo pequeno)
-
-3. **PONTOS DE ATENÇÃO**
-   - Métricas estagnadas ou regredindo
-   - Possíveis causas
-
-4. **PROJEÇÃO**
-   - Se mantiver o ritmo, quando atingirá a meta?
-   - O que pode acelerar o progresso?
-
-5. **CONSISTÊNCIA**
-   - Avalie a frequência de medições
-   - Sugira melhorias se necessário
-
-## TOM
-- Celebratório para conquistas
-- Construtivo para desafios
-- Baseado em dados, não achismos
-
-## FORMATO JSON
-{
-  "resumo": "string",
-  "tendencia": "improving|stable|declining",
-  "destaquesPositivos": ["string"],
-  "pontosAtencao": ["string"],
-  "projecao": "string",
-  "consistencia": "string",
-  "motivacao": "string"
-}
-`
-```
-
----
-
-### 3.4 Diagnóstico Estético
-
-**Objetivo:** Avaliação visual geral do físico do atleta.
-
-```typescript
-interface AestheticDiagnosis {
-  // Classificação geral
-  bodyType: 'ectomorph' | 'mesomorph' | 'endomorph' | 'mixed'
-  aestheticScore: number                // 0-100
-  grade: Grade
+interface PlanoAlimentar {
+  // Metadata
+  id: string
+  userId: string
+  criadoEm: Date
+  validoAte: Date
+  versao: number
   
-  // Avaliações específicas
-  assessments: {
-    vTaper: {
-      score: number
-      ratio: number                     // ombro/cintura
-      classification: 'narrow' | 'moderate' | 'wide' | 'extreme'
-      description: string
-    }
-    
-    waist: {
-      score: number
-      ratio: number                     // cintura/altura
-      classification: 'tight' | 'athletic' | 'average' | 'wide'
-      description: string
-    }
-    
-    armBalance: {
-      score: number
-      ratio: number                     // bíceps/antebraço
-      classification: 'balanced' | 'bicep_dominant' | 'forearm_dominant'
-      description: string
-    }
-    
-    legBalance: {
-      score: number
-      ratio: number                     // coxa/panturrilha
-      classification: 'balanced' | 'quad_dominant' | 'calf_dominant'
-      description: string
-    }
-    
-    triad: {
-      score: number
-      values: { neck: number, arm: number, calf: number }
-      classification: 'harmonious' | 'imbalanced'
-      description: string
-    }
+  // Visão geral
+  visaoGeral: {
+    titulo: string                    // "Plano Hipertrofia - Superávit Moderado"
+    objetivo: string                  // "Ganho de massa com mínimo de gordura"
+    faseDieta: FaseDieta
+    duracaoSugerida: string
   }
   
-  // Diagnóstico textual
-  diagnosis: {
-    summary: string                     // Resumo em 2-3 frases
-    strengths: string[]                 // Pontos fortes estéticos
-    improvements: string[]              // O que melhorar
-    bodyTypeAdvice: string              // Conselho baseado no biotipo
-    competitionCategory: string         // Categoria sugerida (se aplicável)
+  // Calorias e macros
+  calorias: {
+    tdee: number                      // Gasto energético total
+    meta: number                      // Calorias alvo
+    ajuste: string                    // "+300kcal (superávit moderado)"
+  }
+  
+  macros: {
+    proteina: MacroConfig
+    carboidrato: MacroConfig
+    gordura: MacroConfig
+  }
+  
+  // Distribuição
+  distribuicao: {
+    refeicoesdia: number
+    timing: TimingNutricional
+    refeicoes: Refeicao[]
+  }
+  
+  // Suplementação
+  suplementacao: {
+    essenciais: SuplementoRecomendado[]
+    opcionais: SuplementoRecomendado[]
+    evitar: string[]                  // Suplementos a evitar por saúde
+  }
+  
+  // Hidratação
+  hidratacao: {
+    aguaDiaria: number                // litros
+    observacoes: string
+  }
+  
+  // Ajustes
+  ajustes: {
+    diasTreino: AjusteDia
+    diasDescanso: AjusteDia
+    finaisSemana: string
+  }
+  
+  // Alertas
+  alertas: AlertaNutricional[]
+  
+  // Lista de compras sugerida
+  listaCompras: ItemCompra[]
+}
+
+interface MacroConfig {
+  gramas: number
+  gramasKg: number                    // Por kg de peso corporal
+  calorias: number
+  percentual: number
+  fontesPrincipais: string[]
+}
+
+interface TimingNutricional {
+  preWorkout: {
+    tempo: string                     // "1-2h antes"
+    composicao: string                // "Carboidrato complexo + proteína leve"
+    exemplo: string
+  }
+  intraWorkout?: {
+    necessario: boolean
+    composicao?: string
+    exemplo?: string
+  }
+  posWorkout: {
+    tempo: string                     // "Até 2h após"
+    composicao: string                // "Proteína rápida + carboidrato"
+    exemplo: string
+  }
+  antesDeDoimir: {
+    tempo: string
+    composicao: string
+    exemplo: string
   }
 }
+
+interface Refeicao {
+  numero: number
+  nome: string                        // "Café da manhã"
+  horarioSugerido: string             // "7:00"
+  calorias: number
+  macros: { proteina: number; carboidrato: number; gordura: number }
+  
+  opcoes: OpcaoRefeicao[]             // 2-3 opções por refeição
+  
+  observacoes?: string
+}
+
+interface OpcaoRefeicao {
+  nome: string                        // "Opção 1 - Ovos com aveia"
+  alimentos: AlimentoQuantidade[]
+  tempoPreparo: number                // minutos
+  dificuldade: 'facil' | 'media' | 'dificil'
+  custo: 'baixo' | 'medio' | 'alto'
+  
+  macros: { proteina: number; carboidrato: number; gordura: number }
+  calorias: number
+}
+
+interface AlimentoQuantidade {
+  alimento: string
+  quantidade: number
+  unidade: string                     // "g", "ml", "unidade", "xícara"
+  observacao?: string                 // "cozido", "cru", etc.
+}
+
+interface SuplementoRecomendado {
+  nome: string
+  dosagem: string
+  horario: string
+  motivo: string
+  essencial: boolean
+  custoMensal?: string
+}
+
+interface AlertaNutricional {
+  tipo: 'saude' | 'interacao' | 'alergia' | 'restricao'
+  titulo: string
+  descricao: string
+  acao: string
+}
+
+type FaseDieta = 
+  | 'SUPERAVIT_AGRESSIVO'    // +500kcal
+  | 'SUPERAVIT_MODERADO'     // +300kcal
+  | 'SUPERAVIT_LEVE'         // +150kcal
+  | 'MANUTENCAO'             // TDEE
+  | 'DEFICIT_LEVE'           // -300kcal
+  | 'DEFICIT_MODERADO'       // -500kcal
+  | 'DEFICIT_AGRESSIVO'      // -750kcal
+  | 'RECOMPOSICAO'           // Cíclico
 ```
 
-**Prompt Template para Diagnóstico Estético:**
+### 5.2 Prompt para Geração de Dieta
 
 ```typescript
-const AESTHETIC_DIAGNOSIS_PROMPT = `
-Você é o Coach IA do VITRU IA, especialista em estética corporal e fisiculturismo.
+const NUTRITION_PLAN_PROMPT = `
+Você é VITRÚVIO, o coach de IA do VITRU IA. Seu nome é uma homenagem a Marcus Vitruvius Pollio, 
+o arquiteto romano que definiu as proporções ideais do corpo humano. Você é especialista em 
+nutrição esportiva focada em otimização de composição corporal e estética.
 
-## DADOS DO USUÁRIO
+## CONTEXTO COMPLETO DO USUÁRIO
+{{userContext}}
+
+## DADOS FÍSICOS
+- Peso atual: {{peso}} kg
 - Altura: {{altura}} cm
-- Peso: {{peso}} kg
 - Gordura corporal: {{gordura}}%
+- Massa magra estimada: {{massaMagra}} kg
 
-## PROPORÇÕES ATUAIS
-{{proportions}}
+## MÉTRICAS CALCULADAS
+- TMB: {{tmb}} kcal
+- TDEE: {{tdee}} kcal
+- Proteína mínima: {{proteinaMin}}g (1.6g/kg)
+- Proteína ideal: {{proteinaIdeal}}g (2.0g/kg)
 
-## RATIOS CALCULADOS
-- V-Taper (ombro/cintura): {{vTaperRatio}}
-- Cintura/Altura: {{waistHeightRatio}}
-- Tríade: Pescoço {{neck}} / Braço {{arm}} / Panturrilha {{calf}}
+## OBJETIVO
+{{objetivoPrincipal}}: {{objetivoEspecifico}}
+Prazo: {{prazo}}
 
-## MÉTODO PREFERIDO
-{{preferredMethod}}
+## PREFERÊNCIAS ALIMENTARES
+- Dieta atual: {{dietaAtual}}
+- Refeições por dia: {{refeicoesdia}}
+- Sabe cozinhar: {{cozinha}}
+- Tempo para preparar: {{tempoPreparo}} minutos
+- Orçamento: {{orcamento}}
+- Faz jejum: {{fazJejum}} {{horarioJejum}}
+
+### Alimentos a EVITAR (não gosta ou não pode)
+{{alimentosEvitar}}
+
+### Alimentos PREFERIDOS
+{{alimentosPreferidos}}
+
+### Alergias/Intolerâncias
+{{alergias}}
+
+## CONDIÇÕES DE SAÚDE RELEVANTES
+{{condicoesSaude}}
+
+## MEDICAMENTOS QUE AFETAM DIETA
+{{medicamentosRelevantes}}
+
+## SUPLEMENTOS ATUAIS
+{{suplementosAtuais}}
 
 ## INSTRUÇÕES
-Faça um diagnóstico estético completo:
 
-1. **BIOTIPO**
-   - Classifique o biotipo (ecto/meso/endo/misto)
-   - Explique as características observadas
+Crie um plano alimentar completo considerando:
 
-2. **V-TAPER**
-   - Avalie a proporção ombro/cintura
-   - Compare com o ideal do método escolhido
-   - Dê nota e classificação
+### 1. CALORIAS
+- Calcule o ajuste calórico baseado no objetivo
+- Superávit para ganho: +200 a +400kcal
+- Déficit para perda: -300 a -500kcal
+- Considere o nível de atividade e metabolismo
 
-3. **HARMONIA GERAL**
-   - Avalie o equilíbrio entre partes superiores e inferiores
-   - Identifique grupos dominantes ou deficientes
+### 2. MACRONUTRIENTES
+- Proteína: 1.8-2.2g/kg para hipertrofia
+- Gordura: mínimo 0.8g/kg para saúde hormonal
+- Carboidrato: restante das calorias
 
-4. **TRÍADE (Pescoço/Braço/Panturrilha)**
-   - Avalie a harmonia entre os três
-   - Identifique qual está defasado
+### 3. RESTRIÇÕES DE SAÚDE
+{{restricoesSaude}}
+- Diabetes: controlar índice glicêmico, distribuir carboidratos
+- Hipertensão: limitar sódio
+- Colesterol: limitar gorduras saturadas
+- Problemas renais: ajustar proteína se necessário
 
-5. **CATEGORIA SUGERIDA**
-   - Baseado no físico, qual categoria de competição seria ideal?
-   - Golden Ratio / Classic Physique / Men's Physique
+### 4. PRATICIDADE
+- Refeições simples se pouco tempo
+- Meal prep se disponível
+- Opções econômicas se orçamento baixo
+- Considerar rotina de trabalho
 
-6. **PLANO DE AÇÃO**
-   - Top 3 prioridades para melhorar a estética
+### 5. TIMING NUTRICIONAL
+- Pré-treino: energia para performance
+- Pós-treino: recuperação e síntese proteica
+- Antes de dormir: proteína lenta (se aplicável)
 
-## TOM
-- Técnico e preciso
-- Objetivo mas encorajador
-- Use termos de fisiculturismo quando apropriado
+### 6. SUPLEMENTAÇÃO
+- Avaliar necessidade real
+- Considerar custo-benefício
+- Verificar interações com medicamentos
+- Nunca substituir alimentação
+
+## RESTRIÇÕES ABSOLUTAS
+- NUNCA inclua alimentos que o usuário é alérgico
+- RESPEITE a dieta escolhida (vegana, vegetariana, etc.)
+- CONSIDERE interações medicamento-alimento
+- AJUSTE para condições de saúde específicas
 
 ## FORMATO JSON
 {
-  "biotipo": "string",
-  "biotipoDescricao": "string",
-  "vTaper": {"nota": number, "classificacao": "string", "analise": "string"},
-  "harmonia": "string",
-  "triade": {"nota": number, "analise": "string"},
-  "categoriaSugerida": "string",
-  "categoriaJustificativa": "string",
-  "prioridades": ["string", "string", "string"],
-  "resumoFinal": "string"
+  "visaoGeral": {
+    "titulo": "string",
+    "objetivo": "string",
+    "faseDieta": "string",
+    "duracaoSugerida": "string"
+  },
+  "calorias": {
+    "tdee": number,
+    "meta": number,
+    "ajuste": "string"
+  },
+  "macros": {
+    "proteina": {"gramas": number, "gramasKg": number, "calorias": number, "percentual": number},
+    "carboidrato": {"gramas": number, "gramasKg": number, "calorias": number, "percentual": number},
+    "gordura": {"gramas": number, "gramasKg": number, "calorias": number, "percentual": number}
+  },
+  "distribuicao": {
+    "refeicoesdia": number,
+    "timing": {
+      "preWorkout": {"tempo": "string", "composicao": "string", "exemplo": "string"},
+      "posWorkout": {"tempo": "string", "composicao": "string", "exemplo": "string"}
+    }
+  },
+  "refeicoes": [
+    {
+      "numero": number,
+      "nome": "string",
+      "horarioSugerido": "string",
+      "calorias": number,
+      "opcoes": [
+        {
+          "nome": "string",
+          "alimentos": [{"alimento": "string", "quantidade": number, "unidade": "string"}],
+          "tempoPreparo": number,
+          "macros": {"proteina": number, "carboidrato": number, "gordura": number}
+        }
+      ]
+    }
+  ],
+  "suplementacao": {
+    "essenciais": [{"nome": "string", "dosagem": "string", "horario": "string", "motivo": "string"}],
+    "opcionais": [{"nome": "string", "dosagem": "string", "motivo": "string"}],
+    "evitar": ["string"]
+  },
+  "hidratacao": {
+    "litrosDia": number,
+    "observacoes": "string"
+  },
+  "alertas": [{"tipo": "string", "titulo": "string", "descricao": "string"}],
+  "listaComprasSemanal": ["string"]
 }
 `
 ```
 
 ---
 
-## 4. GERAÇÃO DE INSIGHTS
+## 6. TIPOS DE ANÁLISE (Mantido + Expandido)
 
-### 4.1 Tipos de Insights
+### 6.1 Análise de Proporções
+*(Mantido da versão anterior)*
+
+### 6.2 Análise de Simetria
+*(Mantido da versão anterior)*
+
+### 6.3 Análise de Evolução
+*(Mantido da versão anterior)*
+
+### 6.4 Diagnóstico Estético
+*(Mantido da versão anterior)*
+
+### 6.5 Análise de Risco (NOVO)
+
+```typescript
+interface RiskAnalysis {
+  // Score de risco geral
+  overallRisk: 'baixo' | 'moderado' | 'alto' | 'muito_alto'
+  riskScore: number                   // 0-100
+  
+  // Riscos por categoria
+  riscos: {
+    cardiovascular: RiscoCategoria
+    musculoesqueletico: RiscoCategoria
+    metabolico: RiscoCategoria
+    farmacologico: RiscoCategoria
+  }
+  
+  // Recomendações de segurança
+  recomendacoes: {
+    obrigatorias: string[]            // DEVE fazer
+    sugeridas: string[]               // DEVERIA fazer
+    evitar: string[]                  // NÃO deve fazer
+  }
+  
+  // Exames sugeridos
+  examesSugeridos: string[]
+  
+  // Acompanhamento profissional
+  profissionaisRecomendados: string[] // "Cardiologista", "Fisioterapeuta"
+}
+
+interface RiscoCategoria {
+  nivel: 'baixo' | 'moderado' | 'alto'
+  fatores: string[]
+  mitigacao: string[]
+}
+```
+
+---
+
+## 7. GERAÇÃO DE INSIGHTS (Expandido)
+
+### 7.1 Novos Tipos de Insights
 
 ```typescript
 type InsightType = 
-  | 'progress'          // Progresso positivo
-  | 'achievement'       // Conquista/marco atingido
-  | 'warning'           // Alerta de regressão ou problema
-  | 'tip'               // Dica de treino/dieta
-  | 'motivation'        // Mensagem motivacional
-  | 'reminder'          // Lembrete (medir, etc.)
-  | 'comparison'        // Comparativo (vs mês passado, vs ideal)
-  | 'projection'        // Projeção de quando atingirá meta
-  | 'education'         // Conteúdo educativo
-
-interface Insight {
-  id: string
-  type: InsightType
-  priority: 'high' | 'medium' | 'low'
+  // Existentes
+  | 'progress'
+  | 'achievement'
+  | 'warning'
+  | 'tip'
+  | 'motivation'
+  | 'reminder'
+  | 'comparison'
+  | 'projection'
+  | 'education'
   
-  // Conteúdo
-  title: string                         // "Seus ombros estão evoluindo!"
-  message: string                       // Texto completo
-  shortMessage?: string                 // Versão curta para cards
-  
-  // Metadata
-  metric?: string                       // Métrica relacionada
-  value?: number                        // Valor relacionado
-  change?: number                       // Mudança relacionada
-  
-  // Visual
-  icon: string                          // Emoji ou ícone
-  color: string                         // Cor do card
-  
-  // Ação
-  action?: {
-    label: string                       // "Ver detalhes"
-    href: string                        // "/evolution/ombros"
-  }
-  
-  // Controle
-  dismissible: boolean
-  expiresAt?: Date
-  createdAt: Date
-}
+  // NOVOS
+  | 'training_adjustment'     // Ajuste no treino sugerido
+  | 'diet_adjustment'         // Ajuste na dieta sugerido
+  | 'health_alert'            // Alerta de saúde
+  | 'supplement_reminder'     // Lembrete de suplemento
+  | 'recovery'                // Dica de recuperação
+  | 'sleep'                   // Insight sobre sono
+  | 'stress'                  // Insight sobre estresse
+  | 'plateau'                 // Detectou platô
+  | 'deload'                  // Sugestão de deload
 ```
 
-### 4.2 Engine de Geração de Insights
+### 7.2 Insights Contextuais (NOVO)
 
 ```typescript
-class InsightGenerator {
-  
-  async generateDailyInsights(userId: string): Promise<Insight[]> {
-    const userData = await this.getUserData(userId)
-    const insights: Insight[] = []
-    
-    // 1. CONQUISTAS (prioridade máxima)
-    const achievements = this.checkAchievements(userData)
-    insights.push(...achievements.map(a => this.createAchievementInsight(a)))
-    
-    // 2. ALERTAS (prioridade alta)
-    const alerts = this.checkAlerts(userData)
-    insights.push(...alerts.map(a => this.createAlertInsight(a)))
-    
-    // 3. PROGRESSO (prioridade média)
-    const progress = this.analyzeProgress(userData)
-    if (progress.hasSignificantProgress) {
-      insights.push(this.createProgressInsight(progress))
-    }
-    
-    // 4. DICAS (prioridade média)
-    const tip = await this.generatePersonalizedTip(userData)
-    insights.push(tip)
-    
-    // 5. LEMBRETES (prioridade baixa)
-    const reminders = this.checkReminders(userData)
-    insights.push(...reminders)
-    
-    // 6. MOTIVAÇÃO (sempre incluir pelo menos uma)
-    if (!insights.some(i => i.type === 'motivation')) {
-      insights.push(await this.generateMotivation(userData))
-    }
-    
-    // Ordenar por prioridade e limitar
-    return this.prioritizeAndLimit(insights, userData.isPro ? 10 : 3)
-  }
-  
-  private checkAchievements(userData: UserData): Achievement[] {
-    const { latestMeasurement, previousMeasurement, scores } = userData
-    const achievements: Achievement[] = []
-    
-    // Verificar marcos de ratio
-    const ratioMilestones = [1.3, 1.4, 1.5, 1.55, 1.6, 1.618]
-    for (const milestone of ratioMilestones) {
-      if (scores.ratio >= milestone && 
-          (!previousMeasurement || previousMeasurement.ratio < milestone)) {
-        achievements.push({
-          type: 'ratio_milestone',
-          value: milestone,
-          message: `Você atingiu o ratio ${milestone}!`
-        })
-      }
-    }
-    
-    // Verificar marcos de score
-    const scoreMilestones = [60, 70, 80, 85, 90, 95]
-    for (const milestone of scoreMilestones) {
-      if (scores.scoreTotal >= milestone &&
-          (!previousMeasurement || previousMeasurement.scoreTotal < milestone)) {
-        achievements.push({
-          type: 'score_milestone',
-          value: milestone,
-          message: `Você atingiu ${milestone} pontos!`
-        })
-      }
-    }
-    
-    // Verificar medidas no ideal
-    for (const prop of scores.proportions) {
-      if (prop.score >= 95 && prop.previousScore < 95) {
-        achievements.push({
-          type: 'proportion_ideal',
-          metric: prop.id,
-          message: `Seu ${prop.nome} atingiu o ideal!`
-        })
-      }
-    }
-    
-    return achievements
-  }
-  
-  private checkAlerts(userData: UserData): Alert[] {
-    const alerts: Alert[] = []
-    const { latestMeasurement, previousMeasurement, daysSinceLastMeasurement } = userData
-    
-    // Alerta de medição atrasada
-    if (daysSinceLastMeasurement > 14) {
-      alerts.push({
-        type: 'measurement_overdue',
-        priority: 'high',
-        message: `Já se passaram ${daysSinceLastMeasurement} dias desde sua última medição.`
-      })
-    }
-    
-    // Alerta de regressão
-    if (previousMeasurement) {
-      const regressions = this.findRegressions(latestMeasurement, previousMeasurement)
-      for (const regression of regressions) {
-        if (regression.changePercent < -5) {
-          alerts.push({
-            type: 'regression',
-            priority: 'medium',
-            metric: regression.metric,
-            message: `Sua ${regression.metric} diminuiu ${Math.abs(regression.change)}cm.`
-          })
-        }
-      }
-    }
-    
-    // Alerta de assimetria
-    const asymmetries = this.findAsymmetries(latestMeasurement)
-    for (const asymmetry of asymmetries) {
-      if (asymmetry.differencePercent > 7) {
-        alerts.push({
-          type: 'asymmetry',
-          priority: 'medium',
-          metric: asymmetry.muscle,
-          message: `Assimetria de ${asymmetry.differencePercent.toFixed(1)}% detectada nos ${asymmetry.muscle}.`
-        })
-      }
-    }
-    
-    return alerts
-  }
-}
-```
+// Insights que usam o contexto completo do usuário
 
-### 4.3 Templates de Insights por Tipo
-
-```typescript
-const INSIGHT_TEMPLATES = {
-  // PROGRESSO
-  progress: {
-    significant: [
-      "🚀 {{metric}} em alta! +{{change}}cm no último mês.",
-      "📈 Seu {{metric}} cresceu {{changePercent}}%! Continue assim!",
-      "💪 Evolução consistente: {{metric}} de {{previous}} para {{current}}cm.",
-    ],
-    moderate: [
-      "👍 Progresso estável em {{metric}}: +{{change}}cm.",
-      "📊 {{metric}} evoluindo gradualmente. Paciência!",
-    ],
+const CONTEXTUAL_INSIGHTS = {
+  // Baseado em sono
+  poorSleep: {
+    condition: (ctx) => ctx.vida.horasSono < 6 || ctx.vida.qualidadeSono === 'ruim',
+    insight: {
+      type: 'sleep',
+      title: 'Sono prejudicando ganhos',
+      message: 'Seu sono de {{horasSono}}h pode estar limitando seus resultados. ' +
+               'A síntese proteica muscular acontece principalmente durante o sono profundo.',
+      action: 'Ver dicas de sono',
+      priority: 'high'
+    }
   },
   
-  // CONQUISTAS
-  achievement: {
-    ratio: [
-      "🏆 MARCO ATINGIDO! Seu ratio chegou a {{value}}!",
-      "⭐ Parabéns! Você desbloqueou o ratio {{value}}!",
-      "🎯 Ratio {{value}} conquistado! Rumo ao Golden!",
-    ],
-    score: [
-      "🥇 Você atingiu {{value}} pontos! Nível {{classification}}!",
-      "🌟 Score {{value}}! Você está no top!",
-    ],
-    proportion: [
-      "✨ Seu {{metric}} atingiu a proporção ideal!",
-      "🎉 {{metric}} perfeito! Proporção Golden alcançada!",
-    ],
+  // Baseado em estresse
+  highStress: {
+    condition: (ctx) => ctx.vida.estresse === 'alto' || ctx.vida.estresse === 'muito_alto',
+    insight: {
+      type: 'stress',
+      title: 'Estresse elevado detectado',
+      message: 'O cortisol elevado pode dificultar ganho muscular e facilitar acúmulo de gordura. ' +
+               'Considere técnicas de relaxamento.',
+      action: 'Ver técnicas anti-estresse',
+      priority: 'medium'
+    }
   },
   
-  // ALERTAS
-  warning: {
-    regression: [
-      "⚠️ Atenção: {{metric}} diminuiu {{change}}cm.",
-      "📉 {{metric}} em queda. Vamos reverter isso!",
-    ],
-    asymmetry: [
-      "⚖️ Assimetria detectada: {{muscle}} com {{difference}}cm de diferença.",
-      "🔍 Lado {{dominantSide}} dominante em {{muscle}}. Considere exercícios unilaterais.",
-    ],
-    overdue: [
-      "📏 Hora de medir! Última medição há {{days}} dias.",
-      "⏰ Não perca o ritmo! Registre suas medidas.",
-    ],
+  // Baseado em medicamentos
+  medicationInteraction: {
+    condition: (ctx) => ctx.farmacos.interacoesAlerta.length > 0,
+    insight: {
+      type: 'health_alert',
+      title: 'Atenção com suplementação',
+      message: 'Alguns suplementos podem interagir com {{medicamento}}. ' +
+               'Consulte seu médico antes de iniciar nova suplementação.',
+      action: 'Ver detalhes',
+      priority: 'high'
+    }
   },
   
-  // DICAS
-  tip: {
-    training: [
-      "💡 Dica: Para melhorar {{metric}}, foque em {{exercise}}.",
-      "🏋️ Sugestão: {{exercise}} 3x por semana para {{metric}}.",
-    ],
-    diet: [
-      "🥗 Para definir {{metric}}, mantenha déficit calórico leve.",
-      "💧 Hidratação ajuda na definição muscular!",
-    ],
-    general: [
-      "📝 Medir sempre no mesmo horário aumenta a precisão.",
-      "😴 Descanso é parte do treino. 7-9h de sono por noite.",
-    ],
+  // Baseado em platô
+  plateau: {
+    condition: (ctx) => ctx.historico.tendencia === 'estagnado' && ctx.historico.medicoes >= 4,
+    insight: {
+      type: 'plateau',
+      title: 'Possível platô detectado',
+      message: 'Suas medidas estão estagnadas há {{semanas}} semanas. ' +
+               'Pode ser hora de ajustar treino ou dieta.',
+      action: 'Ver sugestões de quebra de platô',
+      priority: 'high'
+    }
   },
   
-  // MOTIVAÇÃO
-  motivation: {
-    general: [
-      "🔥 Você está no caminho certo! Continue!",
-      "💪 Consistência é a chave. Você está indo bem!",
-      "🌟 Cada medição é um passo rumo ao seu objetivo!",
-      "🎯 Foco no processo, os resultados virão!",
-    ],
-    specific: [
-      "🏆 Faltam apenas {{gap}}cm nos {{metric}} para o ideal!",
-      "📈 No ritmo atual, você atinge sua meta em {{days}} dias!",
-      "⭐ Seu {{metric}} já está melhor que {{percentile}}% dos usuários!",
-    ],
-  },
-  
-  // EDUCATIVO
-  education: {
-    proportion: [
-      "📚 Você sabia? A proporção áurea (1.618) aparece na natureza e na arte.",
-      "🧠 O V-taper ideal é quando os ombros são 1.618x a cintura.",
-    ],
-    training: [
-      "📖 Dica de treino: Exercícios compostos constroem mais massa.",
-      "💡 Progressão de carga: aumente 2-5% por semana.",
-    ],
+  // Sugestão de deload
+  needsDeload: {
+    condition: (ctx) => ctx.treino.semanasConsecutivas >= 6 && !ctx.treino.fezDeloadRecente,
+    insight: {
+      type: 'deload',
+      title: 'Hora do deload?',
+      message: 'Você está há {{semanas}} semanas treinando intenso. ' +
+               'Uma semana de deload pode potencializar seus ganhos.',
+      action: 'Ver como fazer deload',
+      priority: 'medium'
+    }
   },
 }
 ```
 
 ---
 
-## 5. RELATÓRIOS
+## 8. INTERFACE DE CHAT (NOVO)
 
-### 5.1 Relatório Semanal
+### 8.1 Estrutura do Chat
 
 ```typescript
-interface WeeklyReport {
-  // Período
-  weekStart: Date
-  weekEnd: Date
+interface ChatMessage {
+  id: string
+  conversationId: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: Date
   
-  // Resumo executivo
-  summary: {
-    title: string                       // "SIMETRIA DO FÍSICO PERFEITO"
-    headline: string                    // Frase de destaque
-    overallTrend: 'improving' | 'stable' | 'declining'
+  // Metadata
+  context?: {
+    type: 'general' | 'training' | 'nutrition' | 'health' | 'analysis'
+    relatedData?: string              // ID de medição, plano, etc.
   }
   
-  // Métricas da semana
-  metrics: {
-    measurementsTaken: number           // Quantas medições
-    scoreChange: number                 // Mudança no score
-    ratioChange: number                 // Mudança no ratio
-    bestImprovement: { metric: string, change: number }
-    needsAttention: { metric: string, reason: string }
-  }
+  // Ações sugeridas pelo assistant
+  suggestedActions?: Array<{
+    label: string
+    action: string                    // 'generate_plan', 'show_analysis', etc.
+    params?: Record<string, any>
+  }>
   
-  // Análise da IA
-  aiAnalysis: {
-    strengths: string[]                 // O que está bom
-    improvements: string[]              // O que melhorar
-    focus: string                       // Foco da próxima semana
-    prediction: string                  // Projeção
+  // Feedback do usuário
+  feedback?: {
+    helpful: boolean
+    timestamp: Date
   }
-  
-  // Conquistas da semana
-  achievements: Achievement[]
-  
-  // Plano para próxima semana
-  nextWeekPlan: {
-    priority1: string
-    priority2: string
-    priority3: string
-    reminder: string
-  }
+}
+
+interface Conversation {
+  id: string
+  userId: string
+  startedAt: Date
+  lastMessageAt: Date
+  messageCount: number
+  topic?: string                      // Resumo do assunto
+  resolved: boolean
 }
 ```
 
-**Prompt para Relatório Semanal:**
+### 8.2 System Prompt do Chat
 
 ```typescript
-const WEEKLY_REPORT_PROMPT = `
-Você é o Coach IA do VITRU IA gerando o relatório semanal.
+const CHAT_SYSTEM_PROMPT = `
+Você é VITRÚVIO, o coach de IA do VITRU IA. Seu nome é uma homenagem a Marcus Vitruvius Pollio, 
+o arquiteto romano que definiu as proporções ideais do corpo humano - os mesmos princípios que 
+inspiraram o Homem Vitruviano de Da Vinci. Você é especialista em análise de proporções corporais, 
+treino e nutrição para fisiculturismo estético.
 
-## DADOS DA SEMANA
-- Período: {{weekStart}} a {{weekEnd}}
-- Medições realizadas: {{measurementCount}}
-- Score inicial: {{scoreStart}} → Score final: {{scoreEnd}}
-- Ratio inicial: {{ratioStart}} → Ratio final: {{ratioEnd}}
+## SEU CONTEXTO DO USUÁRIO
+{{userContext}}
 
-## EVOLUÇÃO POR MÉTRICA
-{{metricsEvolution}}
+## SUAS CAPACIDADES
+1. Responder dúvidas sobre treino, dieta e proporções
+2. Explicar resultados da avaliação
+3. Sugerir ajustes no plano atual
+4. Dar dicas de execução de exercícios
+5. Orientar sobre nutrição
+6. Motivar e acompanhar o progresso
 
-## METAS DO USUÁRIO
-{{userGoals}}
+## SUAS LIMITAÇÕES
+1. NÃO é médico - sempre sugira consultar profissionais para questões de saúde
+2. NÃO pode prescrever medicamentos ou dosagens
+3. NÃO pode diagnosticar condições médicas
+4. DEVE respeitar as restrições de saúde do usuário
 
-## CONQUISTAS DA SEMANA
-{{achievements}}
+## REGRAS DE SEGURANÇA
+- Se o usuário perguntar sobre esteroides: orientar sobre riscos, nunca incentivar
+- Se detectar sinais de distúrbio alimentar: sugerir acompanhamento psicológico
+- Se houver lesão ativa: sempre priorizar recuperação sobre progresso
+- Se houver condição de saúde: considerar nas recomendações
 
-## INSTRUÇÕES
-Gere um relatório semanal motivador e acionável:
+## TOM DE VOZ
+- Técnico mas acessível
+- Motivador mas realista
+- Personalizado (use o nome do usuário)
+- Empático e compreensivo
+- Direto ao ponto
 
-1. **TÍTULO IMPACTANTE**
-   - Uma frase que resuma a semana
-   - Positivo se houve progresso
-   - Construtivo se houve desafios
+## FORMATO DE RESPOSTAS
+- Respostas concisas para perguntas simples
+- Respostas estruturadas para perguntas complexas
+- Sempre ofereça próximos passos quando relevante
+- Use bullet points para listas
+- Use emojis com moderação para engajar
 
-2. **RESUMO EXECUTIVO** (2-3 frases)
-   - O que aconteceu de mais importante
-   - Número-chave da semana
+## CONTEXTO DA CONVERSA
+{{conversationHistory}}
 
-3. **DESTAQUES POSITIVOS** (2-3 itens)
-   - Celebre as vitórias
-   - Seja específico com números
-
-4. **PONTOS DE ATENÇÃO** (1-2 itens)
-   - O que precisa de foco
-   - Sem ser alarmista
-
-5. **PLANO PARA PRÓXIMA SEMANA**
-   - 3 prioridades claras e acionáveis
-   - Específicas, não genéricas
-
-6. **MENSAGEM FINAL**
-   - Motivação personalizada
-   - Encorajamento para continuar
-
-## TOM
-- Celebratório mas realista
-- Coach de elite conversando com atleta
-- Usa dados para embasar
-
-## FORMATO JSON
-{
-  "titulo": "string",
-  "resumo": "string",
-  "destaquesPositivos": ["string"],
-  "pontosAtencao": ["string"],
-  "planoProximaSemana": {
-    "prioridade1": "string",
-    "prioridade2": "string",
-    "prioridade3": "string"
-  },
-  "mensagemFinal": "string"
-}
+Responda à mensagem do usuário de forma útil e personalizada.
 `
 ```
 
-### 5.2 Relatório Mensal (PRO)
-
-```typescript
-interface MonthlyReport {
-  // Período
-  month: string                         // "Janeiro 2026"
-  
-  // Métricas do mês
-  summary: {
-    measurementsTaken: number
-    averageScore: number
-    scoreChange: number
-    ratioChange: number
-    consistencyScore: number            // 0-100
-  }
-  
-  // Gráficos de evolução
-  charts: {
-    scoreEvolution: ChartData
-    ratioEvolution: ChartData
-    measurementsEvolution: ChartData
-    bodyComposition: ChartData
-  }
-  
-  // Comparativo
-  comparison: {
-    vsLastMonth: ComparisonData
-    vsThreeMonthsAgo: ComparisonData
-    vsBestMonth: ComparisonData
-  }
-  
-  // Análise profunda
-  deepAnalysis: {
-    bodyTypeAnalysis: string
-    proportionAnalysis: string
-    symmetryAnalysis: string
-    progressionRate: string
-    plateauRisk: string
-  }
-  
-  // Projeções
-  projections: {
-    nextMonthPrediction: string
-    goalAchievementDate: Date | null
-    recommendedAdjustments: string[]
-  }
-}
-```
-
 ---
 
-## 6. RECOMENDAÇÕES PERSONALIZADAS
+## 9. LIMITES FREE vs PRO (Atualizado)
 
-### 6.1 Sistema de Recomendações
-
-```typescript
-interface RecommendationEngine {
-  // Gera recomendações baseadas no contexto
-  generateRecommendations(context: UserContext): Recommendation[]
-}
-
-interface Recommendation {
-  id: string
-  type: 'training' | 'diet' | 'recovery' | 'measurement' | 'goal'
-  priority: 'high' | 'medium' | 'low'
-  
-  // Conteúdo
-  title: string
-  description: string
-  rationale: string                     // Por que esta recomendação
-  
-  // Detalhes (para treino)
-  training?: {
-    muscleGroup: string
-    exercises: string[]
-    sets: string
-    reps: string
-    frequency: string
-  }
-  
-  // Detalhes (para dieta)
-  diet?: {
-    focus: 'bulk' | 'cut' | 'maintain'
-    calorieAdjustment: string
-    macroFocus: string
-    tips: string[]
-  }
-  
-  // Ação
-  action?: {
-    label: string
-    href: string
-  }
-}
-```
-
-### 6.2 Lógica de Recomendações
-
-```typescript
-function generateTrainingRecommendations(
-  userData: UserData
-): TrainingRecommendation[] {
-  const recommendations: TrainingRecommendation[] = []
-  const { scores, symmetry, goals } = userData
-  
-  // 1. Baseado no maior gap de proporção
-  const biggestGap = findBiggestGap(scores.proportions)
-  recommendations.push({
-    priority: 'high',
-    title: `Foco em ${biggestGap.nome}`,
-    description: `Seu ${biggestGap.nome} está ${biggestGap.gapPercent}% abaixo do ideal.`,
-    training: getTrainingPlan(biggestGap.id),
-  })
-  
-  // 2. Baseado em assimetria
-  const worstAsymmetry = findWorstAsymmetry(symmetry)
-  if (worstAsymmetry && worstAsymmetry.differencePercent > 5) {
-    recommendations.push({
-      priority: 'high',
-      title: `Corrigir assimetria em ${worstAsymmetry.muscle}`,
-      description: `Diferença de ${worstAsymmetry.difference}cm entre lados.`,
-      training: getUnilateralPlan(worstAsymmetry.muscle, worstAsymmetry.dominantSide),
-    })
-  }
-  
-  // 3. Baseado na meta ativa
-  const activeGoal = goals.find(g => g.status === 'IN_PROGRESS')
-  if (activeGoal) {
-    recommendations.push({
-      priority: 'medium',
-      title: `Acelerar progresso em ${activeGoal.targetMetric}`,
-      description: `Faltam ${activeGoal.targetValue - activeGoal.currentValue}cm para sua meta.`,
-      training: getIntensifiedPlan(activeGoal.targetMetric),
-    })
-  }
-  
-  return recommendations
-}
-
-// Mapeamento de exercícios por grupo muscular
-const EXERCISE_DATABASE = {
-  ombros: {
-    primary: ['Desenvolvimento militar', 'Elevação lateral', 'Elevação frontal'],
-    secondary: ['Face pull', 'Remada alta'],
-    tips: ['Foque na porção lateral para aumentar largura', 'Use drop sets nas elevações laterais'],
-  },
-  peitoral: {
-    primary: ['Supino reto', 'Supino inclinado', 'Crucifixo'],
-    secondary: ['Crossover', 'Flexão'],
-    tips: ['Varie os ângulos para desenvolvimento completo', 'Foque na contração no pico do movimento'],
-  },
-  braco: {
-    primary: ['Rosca direta', 'Rosca martelo', 'Rosca concentrada'],
-    secondary: ['Rosca scott', 'Rosca inversa'],
-    tips: ['Controle a fase excêntrica', 'Não use impulso'],
-  },
-  // ... outros grupos
-}
-```
-
----
-
-## 7. PERSONALIZAÇÃO
-
-### 7.1 Perfil de Personalização
-
-```typescript
-interface PersonalizationProfile {
-  // Tom de voz
-  tonePreference: 'motivacional' | 'tecnico' | 'amigavel' | 'direto'
-  
-  // Nível de detalhe
-  detailLevel: 'resumido' | 'moderado' | 'detalhado'
-  
-  // Frequência de comunicação
-  communicationFrequency: 'diaria' | 'semanal' | 'quando_relevante'
-  
-  // Preferências de conteúdo
-  contentPreferences: {
-    wantsTips: boolean
-    wantsMotivation: boolean
-    wantsEducation: boolean
-    wantsComparisons: boolean
-  }
-  
-  // Contexto
-  trainingExperience: 'iniciante' | 'intermediario' | 'avancado'
-  primaryGoal: 'estetica' | 'competicao' | 'saude' | 'forca'
-  
-  // Histórico de interação
-  dismissedInsightTypes: InsightType[]
-  preferredInsightTypes: InsightType[]
-}
-```
-
-### 7.2 Adaptação de Tom
-
-```typescript
-const TONE_ADAPTERS = {
-  motivacional: {
-    prefix: ['Incrível!', 'Fantástico!', 'Você está arrasando!', 'Parabéns!'],
-    suffix: ['Continue assim!', 'Você consegue!', 'Rumo ao topo!', 'Nada pode te parar!'],
-    emoji: true,
-    exclamation: true,
-  },
-  
-  tecnico: {
-    prefix: ['Análise:', 'Dados indicam:', 'Observação:', 'Resultado:'],
-    suffix: ['', 'Ajuste conforme necessário.', 'Monitore nas próximas semanas.'],
-    emoji: false,
-    exclamation: false,
-  },
-  
-  amigavel: {
-    prefix: ['E aí!', 'Olha só,', 'Boas notícias:', 'Ei,'],
-    suffix: ['Tamo junto!', 'Qualquer coisa, estou aqui.', 'Bora!'],
-    emoji: true,
-    exclamation: false,
-  },
-  
-  direto: {
-    prefix: ['', '', '', ''],
-    suffix: ['', '', ''],
-    emoji: false,
-    exclamation: false,
-  },
-}
-
-function adaptTone(message: string, tone: TonePreference): string {
-  const adapter = TONE_ADAPTERS[tone]
-  
-  let adapted = message
-  
-  // Adicionar prefixo aleatório
-  if (adapter.prefix.length > 0) {
-    const prefix = adapter.prefix[Math.floor(Math.random() * adapter.prefix.length)]
-    if (prefix) adapted = `${prefix} ${adapted}`
-  }
-  
-  // Adicionar sufixo aleatório
-  if (adapter.suffix.length > 0) {
-    const suffix = adapter.suffix[Math.floor(Math.random() * adapter.suffix.length)]
-    if (suffix) adapted = `${adapted} ${suffix}`
-  }
-  
-  // Remover emojis se necessário
-  if (!adapter.emoji) {
-    adapted = adapted.replace(/[\u{1F600}-\u{1F64F}]/gu, '')
-  }
-  
-  // Ajustar exclamações
-  if (!adapter.exclamation) {
-    adapted = adapted.replace(/!/g, '.')
-  }
-  
-  return adapted.trim()
-}
-```
-
----
-
-## 8. LIMITES FREE vs PRO
-
-### 8.1 Tabela de Features
+### 9.1 Tabela de Features
 
 | Feature | Free | PRO |
 |---------|------|-----|
 | **Insights diários** | 3 | Ilimitados |
-| **Tipos de insight** | progress, tip, reminder | Todos os tipos |
+| **Tipos de insight** | Básicos | Todos (incluindo contextuais) |
 | **Relatório semanal** | Resumido | Completo |
 | **Relatório mensal** | ❌ | ✅ |
 | **Análise de proporções** | Score geral | Breakdown completo |
 | **Análise de simetria** | Básica (2 músculos) | Completa (todos) |
 | **Análise de evolução** | 30 dias | Histórico completo |
 | **Diagnóstico estético** | ❌ | ✅ |
-| **Recomendações de treino** | Genéricas | Personalizadas |
+| **Análise de risco** | ❌ | ✅ |
 | **Projeções** | ❌ | ✅ |
-| **Chat com Coach IA** | ❌ | ✅ |
+| **Chat com VITRÚVIO** | 5 msgs/dia | Ilimitado |
+| **Plano de Treino** | Genérico | Personalizado completo |
+| **Plano Alimentar** | Macros básicos | Completo com refeições |
+| **Ajustes de plano** | ❌ | ✅ (ilimitados) |
 | **Exportar relatórios** | ❌ | ✅ (PDF) |
-
-### 8.2 Implementação de Limites
-
-```typescript
-function getInsightsForUser(userId: string): Promise<Insight[]> {
-  const user = await getUser(userId)
-  const allInsights = await generateAllInsights(userId)
-  
-  if (user.isPro) {
-    return allInsights
-  }
-  
-  // Free: limitar quantidade e tipos
-  const freeAllowedTypes: InsightType[] = ['progress', 'tip', 'reminder', 'motivation']
-  
-  return allInsights
-    .filter(i => freeAllowedTypes.includes(i.type))
-    .slice(0, 3)
-}
-
-function getWeeklyReport(userId: string): Promise<WeeklyReport> {
-  const user = await getUser(userId)
-  const fullReport = await generateWeeklyReport(userId)
-  
-  if (user.isPro) {
-    return fullReport
-  }
-  
-  // Free: retornar versão resumida
-  return {
-    ...fullReport,
-    aiAnalysis: {
-      strengths: fullReport.aiAnalysis.strengths.slice(0, 1),
-      improvements: fullReport.aiAnalysis.improvements.slice(0, 1),
-      focus: fullReport.aiAnalysis.focus,
-      prediction: '🔒 Disponível no PRO',
-    },
-    nextWeekPlan: {
-      priority1: fullReport.nextWeekPlan.priority1,
-      priority2: '🔒 Disponível no PRO',
-      priority3: '🔒 Disponível no PRO',
-      reminder: fullReport.nextWeekPlan.reminder,
-    },
-  }
-}
-```
-
-### 8.3 Upsell Points
-
-```typescript
-const UPSELL_TRIGGERS = {
-  // Quando mostrar upsell para PRO
-  triggers: [
-    {
-      condition: 'user_tries_blocked_feature',
-      message: 'Desbloqueie análises avançadas com o VITRU IA PRO',
-      feature: 'Diagnóstico estético completo',
-    },
-    {
-      condition: 'user_has_10_measurements',
-      message: 'Você tem dados suficientes para projeções! Upgrade para ver.',
-      feature: 'Projeções de progresso',
-    },
-    {
-      condition: 'user_score_above_80',
-      message: 'Seu físico está avançado! Desbloqueie análises de competição.',
-      feature: 'Análise de categoria',
-    },
-    {
-      condition: 'high_asymmetry_detected',
-      message: 'Detectamos assimetrias. Veja análise completa no PRO.',
-      feature: 'Análise de simetria completa',
-    },
-  ],
-}
-```
+| **Histórico de planos** | ❌ | ✅ |
 
 ---
 
-## 9. INTEGRAÇÃO COM LLM
+## 10. INTEGRAÇÃO COM LLM (Atualizado)
 
-### 9.1 Configuração
+### 10.1 Configuração
 
 ```typescript
-interface LLMConfig {
-  provider: 'openai' | 'anthropic'
-  model: string                         // 'gpt-4-turbo' ou 'claude-3-opus'
-  temperature: number                   // 0.7 para criatividade moderada
-  maxTokens: number                     // Limite de resposta
-  systemPrompt: string                  // Prompt do sistema
-}
-
 const AI_COACH_CONFIG: LLMConfig = {
-  provider: 'openai',
-  model: 'gpt-4-turbo',
+  provider: 'anthropic',              // ou 'openai'
+  model: 'claude-3-5-sonnet',         // ou 'gpt-4-turbo'
   temperature: 0.7,
-  maxTokens: 1000,
-  systemPrompt: `
-    Você é o Coach IA do VITRU IA, um assistente especializado em 
-    análise de proporções corporais e fisiculturismo estético.
-    
-    Sua personalidade:
-    - Motivador mas realista
-    - Técnico mas acessível
-    - Sempre baseado em dados
-    - Encorajador mas honesto
-    
-    Você conhece profundamente:
-    - Proporção Áurea (Golden Ratio) - 1.618
-    - Métodos: Golden Ratio, Classic Physique, Men's Physique
-    - Anatomia e grupos musculares
-    - Treinamento de hipertrofia
-    - Nutrição esportiva básica
-    
-    Sempre responda em português brasileiro.
-    Sempre formate respostas em JSON quando solicitado.
-  `,
+  maxTokens: 4000,                    // Aumentado para planos completos
+  systemPrompt: COACH_SYSTEM_PROMPT,
+}
+
+// Modelos por tipo de tarefa
+const MODEL_CONFIG = {
+  chat: { model: 'claude-3-5-sonnet', maxTokens: 1000 },
+  analysis: { model: 'claude-3-5-sonnet', maxTokens: 2000 },
+  trainingPlan: { model: 'claude-3-5-sonnet', maxTokens: 4000 },
+  nutritionPlan: { model: 'claude-3-5-sonnet', maxTokens: 4000 },
+  insights: { model: 'claude-3-haiku', maxTokens: 500 },  // Mais rápido/barato
 }
 ```
 
-### 9.2 Chamada ao LLM
+### 10.2 Rate Limiting e Custos
 
 ```typescript
-async function callCoachAI(
-  prompt: string,
-  context: UserContext
-): Promise<AIResponse> {
-  const fullPrompt = buildPromptWithContext(prompt, context)
-  
-  const response = await openai.chat.completions.create({
-    model: AI_COACH_CONFIG.model,
-    temperature: AI_COACH_CONFIG.temperature,
-    max_tokens: AI_COACH_CONFIG.maxTokens,
-    messages: [
-      { role: 'system', content: AI_COACH_CONFIG.systemPrompt },
-      { role: 'user', content: fullPrompt },
-    ],
-  })
-  
-  const content = response.choices[0].message.content
-  
-  // Parse JSON se necessário
-  try {
-    return JSON.parse(content)
-  } catch {
-    return { text: content }
+const RATE_LIMITS = {
+  free: {
+    chatMessagesPerDay: 5,
+    plansPerMonth: 1,
+    analysisPerDay: 3,
+  },
+  pro: {
+    chatMessagesPerDay: null,         // Ilimitado
+    plansPerMonth: null,              // Ilimitado
+    analysisPerDay: null,             // Ilimitado
   }
-}
-```
-
-### 9.3 Cache e Otimização
-
-```typescript
-// Cache de respostas da IA para economizar chamadas
-const AI_CACHE_CONFIG = {
-  // Insights diários: cache por 6 horas
-  dailyInsights: { ttl: 6 * 60 * 60 * 1000 },
-  
-  // Relatório semanal: cache por 24 horas
-  weeklyReport: { ttl: 24 * 60 * 60 * 1000 },
-  
-  // Análise de proporções: invalidar quando houver nova medição
-  proportionAnalysis: { ttl: null, invalidateOn: 'new_measurement' },
-  
-  // Dicas genéricas: cache por 7 dias
-  genericTips: { ttl: 7 * 24 * 60 * 60 * 1000 },
 }
 ```
 
 ---
 
-## 10. MÉTRICAS E MONITORAMENTO
+## 11. MÉTRICAS E MONITORAMENTO (Expandido)
 
-### 10.1 KPIs do Coach IA
+### 11.1 KPIs do VITRÚVIO
 
 | Métrica | Descrição | Meta |
 |---------|-----------|------|
 | Insight Click Rate | % de insights clicados | > 30% |
 | Report Open Rate | % de relatórios abertos | > 60% |
-| Recommendation Follow Rate | % de recomendações seguidas | > 20% |
-| User Satisfaction | NPS do Coach IA | > 50 |
-| Retention Impact | Retenção de usuários que usam IA vs não | +20% |
+| Plan Completion Rate | % de planos seguidos | > 40% |
+| Chat Satisfaction | NPS do chat | > 50 |
+| Training Adherence | % de treinos completados | > 70% |
+| Diet Adherence | % de dieta seguida | > 60% |
+| Retention Impact | Retenção PRO vs Free | +30% |
+| Results Achievement | % que atingiu metas | > 25% |
 
-### 10.2 Logging
+---
 
-```typescript
-interface AICoachLog {
-  userId: string
-  timestamp: Date
-  action: 'insight_generated' | 'insight_viewed' | 'insight_clicked' | 
-          'report_generated' | 'report_viewed' |
-          'recommendation_generated' | 'recommendation_followed'
-  insightId?: string
-  insightType?: InsightType
-  metadata?: Record<string, unknown>
-}
+## 12. FLUXO DE COLETA DE DADOS
+
+### 12.1 Onboarding Expandido
+
+```
+ETAPA 1: DADOS BÁSICOS
+├── Nome, email, senha
+├── Gênero, data de nascimento
+└── Altura
+
+ETAPA 2: PERFIL DE VIDA
+├── Profissão
+├── Rotina diária (sedentária → muito ativa)
+├── Horas de sono
+├── Nível de estresse
+└── Horas de trabalho
+
+ETAPA 3: SAÚDE
+├── Condições de saúde (lista com busca)
+├── Lesões atuais ou passadas
+├── Alergias alimentares
+└── Restrições de movimento
+
+ETAPA 4: MEDICAMENTOS
+├── Medicamentos em uso
+├── Dosagem e frequência
+├── Suplementos atuais
+└── Uso de ergogênicos (opcional/confidencial)
+
+ETAPA 5: EXPERIÊNCIA
+├── Tempo de treino
+├── Frequência atual
+├── Local de treino
+├── Equipamentos disponíveis
+└── Treino atual (descrição)
+
+ETAPA 6: ALIMENTAÇÃO
+├── Tipo de dieta
+├── Refeições por dia
+├── Sabe cozinhar
+├── Tempo para preparar
+├── Orçamento
+├── Alimentos a evitar
+└── Alimentos preferidos
+
+ETAPA 7: OBJETIVOS
+├── Objetivo principal
+├── Objetivo específico (texto)
+├── Prazo
+├── Prioridades (ranking)
+├── Pretende competir?
+└── Categoria de interesse
+
+ETAPA 8: DISPONIBILIDADE
+├── Dias disponíveis para treino
+├── Horário preferido
+├── Tempo máximo por sessão
+└── Pode treinar em casa?
+
+ETAPA 9: MEDIDAS ESTRUTURAIS
+├── Punho, tornozelo, joelho, pelve
+└── (medidas que não mudam)
+
+ETAPA 10: PRIMEIRA AVALIAÇÃO
+├── Peso atual
+├── Medidas variáveis
+└── Fotos (opcional)
 ```
 
 ---
 
-## 11. CHANGELOG
+## 13. CHANGELOG
 
 | Versão | Data | Alterações |
 |--------|------|------------|
-| 1.0 | Fev/2026 | Versão inicial do AI Coach |
+| 1.0 | Fev/2026 | Versão inicial do VITRÚVIO |
+| 2.0 | Fev/2026 | UserHealthProfile completo, Plano de Treino, Plano Alimentar, Chat, Análise de Risco, Insights Contextuais |
 
 ---
 
-**VITRU IA AI Coach**  
-*Análise • Insights • Motivação • Personalização*
+**VITRÚVIO - Coach IA do VITRU IA v2.0**  
+*Inspirado em Marcus Vitruvius Pollio • Análise • Treino • Dieta • Personalização Total*
