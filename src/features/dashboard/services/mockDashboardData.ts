@@ -83,6 +83,24 @@ export const mockDashboardData: DashboardResponse = {
         overallTrend: 'improving'
     },
 
+    bodyComposition: {
+        weight: {
+            current: 84.5,
+            start: 80.0,
+            goal: 88.0,
+            trend: 1.2,
+            unit: 'kg'
+        },
+        bodyFat: {
+            current: 11.2,
+            start: 14.5,
+            goal: 10.0,
+            trend: -0.8,
+            unit: '%',
+            classification: 'Atleta'
+        }
+    },
+
     heatmap: {
         mode: 'score',
         regions: {

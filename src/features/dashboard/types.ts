@@ -211,6 +211,24 @@ export interface DashboardResponse {
 
     evolution: EvolutionData;
 
+    bodyComposition: {
+        weight: {
+            current: number;
+            start: number;
+            goal: number;
+            trend: number;
+            unit: string;
+        };
+        bodyFat: {
+            current: number;
+            start: number;
+            goal: number;
+            trend: number;
+            unit: string;
+            classification: string;
+        };
+    };
+
     heatmap: BodyHeatmapData;
 
     metricsGrid: MetricCardData[];

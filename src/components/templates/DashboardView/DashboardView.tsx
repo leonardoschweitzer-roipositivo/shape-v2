@@ -11,9 +11,10 @@ import { MetricsGrid } from '../../../../components/MetricsGrid';
 import { InsightCard } from '../../molecules/InsightCard/InsightCard';
 import { AchievementsCard } from '../../molecules/AchievementsCard/AchievementsCard';
 import { SymmetryWidget } from '../../molecules/SymmetryWidget/SymmetryWidget';
+import { BodyCompositionCard } from '../../molecules/BodyCompositionCard/BodyCompositionCard';
 import { DashboardLoading } from '../../organisms/DashboardLoading/DashboardLoading';
 import { DashboardError } from '../../organisms/DashboardError/DashboardError';
-import { Target, BarChart2, Ruler, Zap, Trophy, Scale, Layout } from 'lucide-react';
+import { Target, BarChart2, Ruler, Zap, Trophy, Scale, Layout, Activity } from 'lucide-react';
 
 const SectionHeader: React.FC<{
     icon: React.ReactNode;
@@ -94,6 +95,40 @@ export const DashboardView: React.FC = () => {
                         <EvolutionCard data={data.evolution} />
                     </div>
                 </section>
+
+                <div className="h-px w-full bg-white/5" />
+
+                {/* Body Composition Row */}
+                {data.bodyComposition && (
+                    <section>
+                        <SectionHeader
+                            icon={<Scale size={22} />}
+                            title="Composição Corporal"
+                            subtitle="Acompanhamento de peso e gordura corporal"
+                        />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <BodyCompositionCard
+                                title="Peso Corporal"
+                                current={data.bodyComposition.weight.current}
+                                start={data.bodyComposition.weight.start}
+                                goal={data.bodyComposition.weight.goal}
+                                unit={data.bodyComposition.weight.unit}
+                                trend={data.bodyComposition.weight.trend}
+                                icon={<Scale size={16} />}
+                            />
+                            <BodyCompositionCard
+                                title="Gordura Corporal"
+                                current={data.bodyComposition.bodyFat.current}
+                                start={data.bodyComposition.bodyFat.start}
+                                goal={data.bodyComposition.bodyFat.goal}
+                                unit={data.bodyComposition.bodyFat.unit}
+                                trend={data.bodyComposition.bodyFat.trend}
+                                classification={data.bodyComposition.bodyFat.classification}
+                                icon={<Activity size={16} />}
+                            />
+                        </div>
+                    </section>
+                )}
 
                 <div className="h-px w-full bg-white/5" />
 
