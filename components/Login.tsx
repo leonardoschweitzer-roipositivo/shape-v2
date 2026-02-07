@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { ProfileSelector, ProfileType } from './ProfileSelector';
 import {
     Building2,
     User,
@@ -19,7 +20,7 @@ interface LoginProps {
     onLogin: () => void;
 }
 
-type ProfileType = 'academia' | 'personal' | 'atleta';
+
 
 export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     const [profile, setProfile] = useState<ProfileType>('atleta');
@@ -92,44 +93,10 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
                     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
                         {/* Profile Selector */}
-                        <div className="space-y-3">
-                            <label className="text-xs text-gray-400 font-medium ml-1">Selecione seu perfil</label>
-                            <div className="grid grid-cols-3 gap-3">
-                                <button
-                                    type="button"
-                                    onClick={() => setProfile('academia')}
-                                    className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${profile === 'academia'
-                                        ? 'bg-white/5 border-primary text-primary shadow-[0_0_15px_rgba(0,201,167,0.1)]'
-                                        : 'bg-transparent border-white/5 text-gray-500 hover:border-white/10 hover:bg-white/[0.02]'
-                                        }`}
-                                >
-                                    <Building2 size={20} />
-                                    <span className="text-xs font-medium">Academia</span>
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setProfile('personal')}
-                                    className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${profile === 'personal'
-                                        ? 'bg-white/5 border-primary text-primary shadow-[0_0_15px_rgba(0,201,167,0.1)]'
-                                        : 'bg-transparent border-white/5 text-gray-500 hover:border-white/10 hover:bg-white/[0.02]'
-                                        }`}
-                                >
-                                    <User size={20} />
-                                    <span className="text-xs font-medium">Personal</span>
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setProfile('atleta')}
-                                    className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${profile === 'atleta'
-                                        ? 'bg-white/5 border-primary text-primary shadow-[0_0_15px_rgba(0,201,167,0.1)]'
-                                        : 'bg-transparent border-white/5 text-gray-500 hover:border-white/10 hover:bg-white/[0.02]'
-                                        }`}
-                                >
-                                    <Dumbbell size={20} />
-                                    <span className="text-xs font-medium">Atleta</span>
-                                </button>
-                            </div>
-                        </div>
+                        <ProfileSelector
+                            selected={profile}
+                            onSelect={setProfile}
+                        />
 
                         {/* Inputs */}
                         <div className="space-y-4">

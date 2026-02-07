@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { GlassPanel } from './GlassPanel';
 import { Eye, Pencil, Trash2, ChevronLeft, ChevronRight, CalendarPlus, Sparkles, TrendingDown } from 'lucide-react';
 
-interface Assessment {
+export interface Assessment {
     id: string;
     date: string;
     timeAgo: string;
@@ -13,7 +13,7 @@ interface Assessment {
 }
 
 // Mock data para demonstração
-const mockAssessments: Assessment[] = [
+export const mockAssessments: Assessment[] = [
     {
         id: '1',
         date: '15 Out 2023',
@@ -60,12 +60,16 @@ const getScoreColor = (score: number): { bg: string; text: string; border: strin
     return { bg: 'bg-[#3D1F1F]', text: 'text-[#F87171]', border: 'border-[#F87171]/30' };
 };
 
-export const AssessmentList: React.FC = () => {
+interface AssessmentListProps {
+    assessments?: Assessment[];
+}
+
+export const AssessmentList: React.FC<AssessmentListProps> = ({ assessments = mockAssessments }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 4;
-    const totalPages = Math.ceil(mockAssessments.length / itemsPerPage);
+    const totalPages = Math.ceil(assessments.length / itemsPerPage);
 
-    const currentAssessments = mockAssessments.slice(
+    const currentAssessments = assessments.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
@@ -178,7 +182,7 @@ export const AssessmentList: React.FC = () => {
                 {/* Table Footer - Pagination */}
                 <div className="flex items-center justify-between px-6 py-4 border-t border-white/10 bg-[#0D1320]">
                     <div className="text-xs text-gray-500">
-                        Mostrando 1 a {currentAssessments.length} de {mockAssessments.length} registros
+                        Mostrando 1 a {currentAssessments.length} de {assessments.length} registros
                     </div>
                     <div className="flex items-center gap-2">
                         <button
@@ -194,8 +198,8 @@ export const AssessmentList: React.FC = () => {
                                 key={page}
                                 onClick={() => setCurrentPage(page)}
                                 className={`w-8 h-8 rounded-lg text-xs font-bold transition-all ${currentPage === page
-                                        ? 'bg-primary text-[#0A0F1C]'
-                                        : 'border border-white/10 text-gray-500 hover:text-white hover:bg-white/5'
+                                    ? 'bg-primary text-[#0A0F1C]'
+                                    : 'border border-white/10 text-gray-500 hover:text-white hover:bg-white/5'
                                     }`}
                             >
                                 {page}

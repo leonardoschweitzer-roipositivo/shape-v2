@@ -1,7 +1,7 @@
 # SHAPE-V — Design System Specification
 
-**Versão:** 1.0  
-**Data:** 06/02/2026  
+**Versão:** 1.1  
+**Data:** 07/02/2026  
 **Referência:** PRD v1.0
 
 ---
@@ -131,6 +131,22 @@ Campo de entrada padronizado.
 | **Outline** | `bg-white/5 border-white/10 text-primary` | Badges informativos |
 | **Warning** | `bg-orange-400/10 text-orange-400 border-orange-400/30` | Alertas de assimetria |
 | **Pro Badge** | `bg-secondary/20 text-secondary border-secondary/20` | Features premium |
+
+### 4.5 ProfileSelector
+
+Seletor de perfil (Academia, Personal, Atleta) com ícones e estados de seleção.
+
+```typescript
+<ProfileSelector
+  selected={selectedProfile}
+  onSelect={setSelectedProfile}
+/>
+```
+
+**Opções:**
+- Academia (Building2)
+- Personal (User)
+- Atleta (Dumbbell)
 
 ---
 
@@ -317,9 +333,29 @@ Widget de análise completa da IA em largura total.
 
 ---
 
-## 9. Efeitos Visuais
+## 9. Listas & Tabelas
 
-### 9.1 Shadows
+### 9.1 AssessmentList
+
+Lista de avaliações físicas com histórico, scores e status de assimetria.
+
+```typescript
+<AssessmentList assessments={assessmentsData} />
+```
+
+**Colunas:**
+- Data da Avaliação (com indicador visual)
+- Peso (kg)
+- Gordura (%)
+- Shape-V Score (com color coding)
+- Assimetria Média (%)
+- Ações (Visualizar, Editar, Excluir)
+
+---
+
+## 10. Efeitos Visuais
+
+### 10.1 Shadows
 
 | Nome | CSS | Uso |
 |------|-----|-----|
@@ -327,26 +363,26 @@ Widget de análise completa da IA em largura total.
 | **Glow Secondary** | `shadow-[0_0_20px_rgba(124,58,237,0.3)]` | Elementos purple |
 | **Glow Success** | `shadow-[0_0_10px_rgba(74,222,128,0.1)]` | Badges de sucesso |
 
-### 9.2 Glassmorphism
+### 10.2 Glassmorphism
 
 - Background: `rgba(255, 255, 255, 0.05)` ou `bg-white/5`
 - Border: `border border-white/10`
 - Backdrop: `backdrop-blur-md`
 
-### 9.3 Transições
+### 10.3 Transições
 
 - Default: `transition-all` ou `transition-colors`
 - Hovers: Levantar opacidade, adicionar glow
 
 ---
 
-## 10. Ícones
+## 11. Ícones
 
-### 10.1 Biblioteca
+### 11.1 Biblioteca
 
 **Lucide React** — Biblioteca de ícones.
 
-### 10.2 Ícones Principais
+### 11.2 Ícones Principais
 
 | Categoria | Ícones |
 |-----------|--------|
@@ -356,7 +392,7 @@ Widget de análise completa da IA em largura total.
 | **Métricas** | `Activity`, `Ruler`, `Dumbbell`, `Utensils` |
 | **Corpo** | `Accessibility`, `Footprints`, `Hand` |
 
-### 10.3 Tamanhos
+### 11.3 Tamanhos
 
 | Size | Pixels | Uso |
 |------|--------|-----|
@@ -366,9 +402,9 @@ Widget de análise completa da IA em largura total.
 
 ---
 
-## 11. Responsividade
+## 12. Responsividade
 
-### 11.1 Breakpoints
+### 12.1 Breakpoints
 
 | Nome | Largura | Prefixo Tailwind |
 |------|---------|------------------|
@@ -377,14 +413,14 @@ Widget de análise completa da IA em largura total.
 | Desktop | 1024px+ | `lg:` |
 | Wide | 1280px+ | `xl:` |
 
-### 11.2 Grid System
+### 12.2 Grid System
 
 - **1 coluna**: Mobile
 - **2 colunas**: `md:grid-cols-2`
 - **3 colunas**: `lg:grid-cols-3`
 - **4 colunas**: `xl:grid-cols-4`
 
-### 11.3 Container
+### 12.3 Container
 
 ```html
 <div className="max-w-7xl mx-auto px-4 md:px-8">
@@ -392,9 +428,9 @@ Widget de análise completa da IA em largura total.
 
 ---
 
-## 12. Componentes Disponíveis
+## 13. Componentes Disponíveis
 
-### 12.1 Lista de Componentes
+### 13.1 Lista de Componentes
 
 | Arquivo | Componentes Exportados |
 |---------|------------------------|
@@ -406,24 +442,26 @@ Widget de análise completa da IA em largura total.
 | `AssessmentCharts.tsx` | `RadarChart`, `BodyFatGauge`, `AsymmetryRadar` |
 | `AssessmentCards.tsx` | `MassCard`, `ProportionCard`, `AsymmetryCard`, `ScoreWidget`, `AiAnalysisWidget`, `ProportionAiAnalysisCard`, `AiInsightCard` |
 | `EvolutionCharts.tsx` | `GoldenEvolutionChart`, `MeasuresChart`, `WeightChart`, `BodyFatChart`, `AsymmetryScannerChart` |
+| `AssessmentList.tsx` | `AssessmentList` |
+| `ProfileSelector.tsx` | `ProfileSelector` |
 
 ---
 
-## 13. Boas Práticas
+## 14. Boas Práticas
 
-### 13.1 Acessibilidade
+### 14.1 Acessibilidade
 
 - Contraste mínimo WCAG AA para texto sobre fundos escuros
 - Labels em todos os inputs
 - Focus states visíveis
 
-### 13.2 Performance
+### 14.2 Performance
 
 - Ícones Lucide são tree-shakeable
 - Charts Recharts com lazy loading quando possível
 - Imagens com lazy loading nativo
 
-### 13.3 Consistência
+### 14.3 Consistência
 
 - Usar sempre as CSS variables definidas
 - Manter espaçamentos consistentes (múltiplos de 4px)
@@ -431,4 +469,4 @@ Widget de análise completa da IA em largura total.
 
 ---
 
-**Versão 1.0 — Baseado em `components/DesignSystem.tsx`**
+**Versão 1.1 — Baseado em `components/DesignSystem.tsx`**

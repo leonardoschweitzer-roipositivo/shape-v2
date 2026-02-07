@@ -17,8 +17,11 @@ import {
   BodyFatChart,
   AsymmetryScannerChart
 } from './EvolutionCharts';
+import { AssessmentList } from './AssessmentList';
+import { ProfileSelector } from './ProfileSelector';
 
 export const DesignSystem: React.FC = () => {
+  const [selectedProfile, setSelectedProfile] = React.useState<'academia' | 'personal' | 'atleta'>('atleta');
   return (
     <div className="w-full flex-1 overflow-y-auto p-8 custom-scrollbar bg-background-dark pb-20">
       <div className="max-w-7xl mx-auto flex flex-col gap-16">
@@ -217,6 +220,17 @@ export const DesignSystem: React.FC = () => {
                 </span>
               </div>
             </GlassPanel>
+
+            {/* Profile Selector */}
+            <GlassPanel className="p-8 rounded-2xl flex flex-col gap-6 lg:col-span-2">
+              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Seletores</h3>
+              <div className="max-w-md">
+                <ProfileSelector
+                  selected={selectedProfile}
+                  onSelect={setSelectedProfile}
+                />
+              </div>
+            </GlassPanel>
           </div>
         </section>
 
@@ -412,6 +426,18 @@ export const DesignSystem: React.FC = () => {
                 </span>
               }
             />
+          </div>
+        </section>
+
+        {/* 9. LISTS & TABLES */}
+        <section className="flex flex-col gap-8">
+          <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+            <span className="w-8 h-1 bg-white/20 rounded-full"></span>
+            09. Listas & Tabelas
+          </h2>
+
+          <div className="flex flex-col gap-6">
+            <AssessmentList />
           </div>
         </section>
 

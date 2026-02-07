@@ -2,16 +2,13 @@ import React, { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
-import { HeroCard } from './components/HeroCard';
-import { RatioCard, HeatmapCard, ScoreCard } from './components/KpiCard';
-import { MetricsGrid } from './components/MetricsGrid';
 import { AssessmentModal } from './components/AssessmentModal';
 import { AssessmentResults } from './components/AssessmentResults';
 import { DesignSystem } from './components/DesignSystem';
 import { Evolution } from './components/Evolution';
 import { Login } from './components/Login';
-
 import { AssessmentPage } from './components/AssessmentPage';
+import { DashboardView } from './src/components/templates/DashboardView/DashboardView';
 
 type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'coach' | 'profile' | 'settings' | 'assessment';
 
@@ -52,34 +49,10 @@ const App: React.FC = () => {
         );
       case 'dashboard':
       default:
-        return (
-          <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth custom-scrollbar flex flex-col">
-            <div className="max-w-7xl mx-auto flex flex-col gap-8 pb-10 flex-1 w-full">
-              {/* Page Title */}
-              <div className="flex flex-col animate-fade-in-up">
-                <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight uppercase">INÍCIO</h2>
-                <p className="text-gray-400 mt-2 font-light">Visão geral da sua simetria e progresso atual.</p>
-              </div>
-
-              <div className="h-px w-full bg-white/10" />
-
-              {/* Hero Section */}
-              <HeroCard />
-
-              {/* KPI Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <RatioCard />
-                <HeatmapCard />
-                <ScoreCard />
-              </div>
-
-              {/* Detailed Metrics */}
-              <MetricsGrid />
-            </div>
-          </div>
-        );
+        return <DashboardView />;
     }
   };
+
 
   const getPageTitle = () => {
     switch (currentView) {
