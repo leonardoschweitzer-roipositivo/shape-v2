@@ -35,6 +35,11 @@ export interface ProportionIdeals {
         valor_ideal: number;
         regra: string;
     };
+    coxa_panturrilha?: {  // Proporção #8: Coxa = Panturrilha × 1.5
+        coxa_ideal: number;
+        panturrilha_ref: number;
+        ratio: number;
+    };
     peso_maximo?: number; // Apenas para Classic Physique
 }
 
@@ -51,6 +56,7 @@ export interface ProportionScore {
     antebraco: number;
     cintura: number;
     coxa: number;
+    coxa_panturrilha: number;  // Proporção #8
     panturrilha: number;
     pescoco: number;
     triade: number;

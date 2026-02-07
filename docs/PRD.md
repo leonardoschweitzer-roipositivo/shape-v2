@@ -238,13 +238,11 @@ CBum é o maior campeão da história da categoria Classic Physique (6 títulos 
 |---|-----------|---------|----------------|
 | 1 | **V-Taper (Ombros)** | Cintura × 1.70 | V-Taper mais agressivo |
 | 2 | **Peitoral** | Punho × 7.0 | Peitoral maior |
-| 3 | **Braço** | (Altura/185) × 50cm | Escalado do CBum |
-| 4 | **Antebraço** | Braço × 0.80 | 80% do braço |
-| 5 | **Tríade** | Pescoço ≈ Braço ≈ Panturrilha | Harmonia |
-| 6 | **Cintura** | Altura × 0.42 | Super apertada |
-| 7 | **Coxa** | Cintura × 0.97 | Proporcional à cintura |
-| 8 | **Coxa/Panturrilha** | Coxa = Panturrilha × 1.5 | Proporção de pernas |
-| 9 | **Panturrilha** | Braço × 0.96 | Quase igual ao braço |
+| 3 | **Antebraço** | Braço × 0.80 | 80% do braço |
+| 4 | **Tríade** | Pescoço ≈ Braço ≈ Panturrilha | Harmonia |
+| 5 | **Cintura** | Altura × 0.42 | Super apertada |
+| 6 | **Coxa/Panturrilha** | Coxa = Panturrilha × 1.5 | Proporção de pernas |
+| 7 | **Panturrilha** | Braço × 0.96 | Quase igual ao braço |
 
 *Como funciona:* O sistema escala as medidas de CBum proporcionalmente à altura do usuário. Um usuário de 1.70m terá metas ajustadas usando o fator `(Altura/185)`.
 
@@ -272,13 +270,11 @@ A Men's Physique é uma categoria que não possui um expoente único e dominante
 |---|-----------|---------|------------|
 | 1 | **V-Taper (Ombros)** | Cintura × 1.55 | V-Taper mais suave |
 | 2 | **Peitoral** | Punho × 6.2 | Peitoral moderado |
-| 3 | **Braço** | (Altura/178) × 43cm | Escalado do Ryan Terry |
-| 4 | **Antebraço** | Braço × 0.80 | 80% do braço |
-| 5 | **Tríade** | N/A | Não aplicável - foco em upper body |
-| 6 | **Cintura** | Altura × 0.455 | Menos extrema que Classic |
-| 7 | **Coxa** | N/A | Não julgada (board shorts) |
-| 8 | **Coxa/Panturrilha** | N/A | Não julgada (board shorts) |
-| 9 | **Panturrilha** | Tornozelo × 1.8 | Estética geral, menos ênfase |
+| 3 | **Antebraço** | Braço × 0.80 | 80% do braço |
+| 4 | **Tríade** | N/A | Não aplicável - foco em upper body |
+| 5 | **Cintura** | Altura × 0.455 | Menos extrema que Classic |
+| 6 | **Coxa/Panturrilha** | N/A | Não julgada (board shorts) |
+| 7 | **Panturrilha** | Tornozelo × 1.8 | Estética geral, menos ênfase |
 
 *Como funciona:* O sistema calcula metas baseadas em ratios ideais da categoria, ajustados à estrutura óssea do usuário. Como não há um físico singular de referência, as metas são derivadas de médias dos top competidores e dos critérios de julgamento da IFBB.
 

@@ -1,11 +1,12 @@
 import React from 'react';
-import { 
-  LayoutDashboard, 
-  TrendingUp, 
-  Bot, 
-  User, 
-  Settings, 
-  LogOut 
+import {
+  LayoutDashboard,
+  TrendingUp,
+  Activity,
+  Bot,
+  User,
+  Settings,
+  LogOut
 } from 'lucide-react';
 
 interface NavItemProps {
@@ -20,7 +21,7 @@ interface NavItemProps {
 const NavItem: React.FC<NavItemProps> = ({ icon: Icon, label, isActive, isPro, isLogout, onClick }) => {
   const baseClasses = "flex items-center gap-3 px-4 py-3 rounded-lg transition-all group cursor-pointer";
   const activeClasses = "bg-primary/10 border border-primary/20 text-primary shadow-[0_0_10px_rgba(0,201,167,0.1)]";
-  const inactiveClasses = isLogout 
+  const inactiveClasses = isLogout
     ? "text-red-400/80 hover:text-red-400 hover:bg-red-500/10 mt-2"
     : "text-gray-400 hover:text-white hover:bg-white/5";
 
@@ -44,8 +45,9 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ currentView = 'dashboard', onNavigate }) => {
   const mainNavItems = [
-    { icon: LayoutDashboard, label: 'Momento', id: 'dashboard' },
+    { icon: LayoutDashboard, label: 'Início', id: 'dashboard' },
     { icon: TrendingUp, label: 'Evolução', id: 'evolution' },
+    { icon: Activity, label: 'Avaliação IA', id: 'assessment' },
     { icon: Bot, label: 'Coach IA', id: 'coach', isPro: true },
   ];
 
@@ -69,9 +71,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView = 'dashboard', onN
         <nav className="flex flex-col gap-2">
           <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 px-2">Menu Principal</p>
           {mainNavItems.map((item, index) => (
-            <NavItem 
-              key={index} 
-              {...item} 
+            <NavItem
+              key={index}
+              {...item}
               isActive={currentView === item.id}
               onClick={() => onNavigate && onNavigate(item.id)}
             />

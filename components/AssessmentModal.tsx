@@ -1,34 +1,12 @@
 import React from 'react';
-import { X, Sparkles, ArrowRight, Scale, Ruler, Activity, GitCommit, Layers } from 'lucide-react';
-import { InputField } from './InputField';
+import { X, Activity } from 'lucide-react';
+import { AssessmentForm } from './AssessmentForm';
 
 interface AssessmentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
 }
-
-const SymmetryRow: React.FC<{ label: string }> = ({ label }) => (
-  <div className="grid grid-cols-[1fr_auto_1fr] gap-4 items-center">
-    <div className="relative">
-      <input type="number" className="w-full bg-[#0A0F1C] border border-white/10 rounded-lg px-4 py-2.5 text-right text-white placeholder-gray-700 focus:border-primary/50 focus:outline-none text-sm font-mono" placeholder="00.0" />
-    </div>
-
-    <span className="text-gray-400 text-sm font-medium w-32 text-center">{label}</span>
-
-    <div className="relative">
-      <input type="number" className="w-full bg-[#0A0F1C] border border-white/10 rounded-lg px-4 py-2.5 text-left text-white placeholder-gray-700 focus:border-primary/50 focus:outline-none text-sm font-mono" placeholder="00.0" />
-    </div>
-  </div>
-);
-
-// Simple icon component for Trunk section
-const UserIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-    <circle cx="12" cy="7" r="4" />
-  </svg>
-);
 
 export const AssessmentModal: React.FC<AssessmentModalProps> = ({ isOpen, onClose, onConfirm }) => {
   if (!isOpen) return null;
@@ -45,7 +23,7 @@ export const AssessmentModal: React.FC<AssessmentModalProps> = ({ isOpen, onClos
       <div className="relative bg-[#131B2C] border border-white/10 w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-fade-in-up">
 
         {/* Header */}
-        <div className="p-6 border-b border-white/5 flex items-start justify-between bg-[#131B2C] z-10">
+        <div className="p-6 border-b border-white/5 flex items-start justify-between bg-[#131B2C] z-10 shrink-0">
           <div>
             <div className="flex items-center gap-3 mb-1">
               <Activity className="text-primary" size={20} />
@@ -66,109 +44,24 @@ export const AssessmentModal: React.FC<AssessmentModalProps> = ({ isOpen, onClos
           </div>
         </div>
 
-        {/* Scrollable Form Area */}
-        <div className="overflow-y-auto p-6 md:p-8 space-y-10 custom-scrollbar">
-
-          {/* Section 1: Grid Layout */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Basics */}
-            <div className="space-y-4">
-              <h3 className="text-xs font-bold text-gray-300 uppercase tracking-widest flex items-center gap-2">
-                <Scale size={14} /> Básicas
-              </h3>
-              <div className="h-[1px] w-full bg-white/5"></div>
-              <div className="space-y-4">
-                <InputField label="Idade" unit="anos" placeholder="00" />
-                <InputField label="Altura" unit="cm" placeholder="000" />
-                <InputField label="Peso" unit="kg" placeholder="00.0" />
-              </div>
-            </div>
-
-            {/* Trunk */}
-            <div className="space-y-4">
-              <h3 className="text-xs font-bold text-gray-300 uppercase tracking-widest flex items-center gap-2">
-                <UserIcon /> Tronco
-              </h3>
-              <div className="h-[1px] w-full bg-white/5"></div>
-              <div className="space-y-4">
-                <InputField label="Pescoço" unit="cm" />
-                <InputField label="Ombros" unit="cm" />
-                <InputField label="Peitoral" unit="cm" />
-              </div>
-            </div>
-
-            {/* Core */}
-            <div className="space-y-4">
-              <h3 className="text-xs font-bold text-gray-300 uppercase tracking-widest flex items-center gap-2">
-                <Layers size={14} /> Core
-              </h3>
-              <div className="h-[1px] w-full bg-white/5"></div>
-              <div className="space-y-4">
-                <InputField label="Cintura" unit="cm" />
-                <InputField label="Quadril" unit="cm" />
-              </div>
-            </div>
-          </div>
-
-          {/* Section 2: Symmetry */}
-          <div className="space-y-6">
-            <h3 className="text-xs font-bold text-gray-300 uppercase tracking-widest flex items-center gap-2">
-              <GitCommit size={14} /> Simetria de Membros
-            </h3>
-            <div className="bg-[#0A0F1C]/50 rounded-xl p-6 border border-white/5">
-              <div className="grid grid-cols-[1fr_auto_1fr] gap-4 mb-4 px-1">
-                <span className="text-[10px] font-bold text-primary uppercase text-right">Esquerda (cm)</span>
-                <span className="text-[10px] font-bold text-gray-500 uppercase text-center w-32">Região</span>
-                <span className="text-[10px] font-bold text-primary uppercase text-left">Direita (cm)</span>
-              </div>
-
-              <div className="space-y-3">
-                <SymmetryRow label="Braço (Relaxado)" />
-                <SymmetryRow label="Antebraço" />
-                <SymmetryRow label="Punho" />
-                <SymmetryRow label="Coxa" />
-                <SymmetryRow label="Joelho" />
-                <SymmetryRow label="Panturrilha" />
-                <SymmetryRow label="Tornozelo" />
-              </div>
-            </div>
-          </div>
-
-          {/* Section 3: Skinfolds */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-gray-300 uppercase tracking-widest flex items-center gap-2">
-                <Ruler size={14} /> Protocolo 7 Dobras
-              </h3>
-              <span className="text-[10px] font-bold text-secondary uppercase">Unidade: MM</span>
-            </div>
-            <div className="h-[1px] w-full bg-white/5"></div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <InputField label="Subescapular" placeholder="0" />
-              <InputField label="Tricipital" placeholder="0" />
-              <InputField label="Peitoral" placeholder="0" />
-              <InputField label="Axilar Média" placeholder="0" />
-              <InputField label="Supra-ilíaca" placeholder="0" />
-              <InputField label="Abdominal" placeholder="0" />
-              <InputField label="Coxa" placeholder="0" />
-            </div>
-          </div>
-
+        {/* Form Content */}
+        <div className="flex-1 overflow-hidden">
+          {/* Pass isModal=true so the form knows it's inside a modal (e.g. padding adjustments if needed, though we handled most structure here or in form). 
+                 Wait, I put the scrolling Logic INSIDE AssessmentForm. 
+                 If AssessmentModal has a header and footer, AssessmentForm shouldn't duplicate the footer actions if I want them fixed.
+                 But AssessmentForm HAS the footer action. 
+                 So in AssessmentModal, I should probably render AssessmentForm without the header/footer from AssessmentModal if I want to reuse exactly?
+                 Actually, AssessmentModal has a custom Header with X close button. AssessmentForm has no X button.
+                 So AssessmentModal keeps its Header.
+                 AssessmentForm has the content + footer button.
+                 So I should render AssessmentForm inside the modal body.
+                 But AssessmentModal was flex flex-col with overflow hidden on the container, and scroll on the body.
+                 I need to make sure AssessmentForm handles scrolling or fits in.
+                 In `AssessmentForm`, I set `overflow-y-auto` on the middle div.
+                 So if I put `AssessmentForm` in a flex-1 container, it should work.
+             */}
+          <AssessmentForm onConfirm={onConfirm} isModal={true} />
         </div>
-
-        {/* Footer Actions */}
-        <div className="p-6 border-t border-white/5 bg-[#131B2C] flex justify-end">
-          <button
-            onClick={onConfirm}
-            className="flex items-center gap-2 px-8 py-4 bg-primary hover:bg-primary/90 text-[#0A0F1C] rounded-xl font-bold text-sm transition-all shadow-[0_0_20px_rgba(0,201,167,0.2)] hover:shadow-[0_0_30px_rgba(0,201,167,0.4)] transform hover:scale-[1.02] active:scale-[0.98]"
-          >
-            <Sparkles size={18} />
-            <span>Realizar Avaliação IA</span>
-            <ArrowRight size={18} />
-          </button>
-        </div>
-
       </div>
     </div>
   );

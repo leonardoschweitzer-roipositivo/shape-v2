@@ -58,13 +58,11 @@ Para calcular TODAS as proporções nos 3 métodos, o usuário deve fornecer:
 |---|-----------|-------------------|-------------------------|-------------------------|----------------------------|
 | 1 | **Ombros** | Ombro + Cintura | `1.618 × Cintura` | `1.70 × Cintura` | `1.55 × Cintura` |
 | 2 | **Peitoral** | Peitoral + Punho | `6.5 × Punho` | `7.0 × Punho` | `6.2 × Punho` |
-| 3 | **Braço** | Braço + Punho | `2.52 × Punho` | `(Altura/185) × 50cm` | `(Altura/178) × 43cm` |
-| 4 | **Antebraço** | Antebraço + Braço | `0.80 × Braço` | `0.80 × Braço` | `0.80 × Braço` |
-| 5 | **Tríade** | Pescoço + Braço + Panturrilha | `1:1:1 (Igualdade)` | `~1:1:1 (Harmonia)` | N/A |
-| 6 | **Cintura** | Cintura + Pelve | `0.86 × Pelve` | `0.42 × Altura` | `0.455 × Altura` |
-| 7 | **Coxa** | Coxa + Joelho + Cintura | `1.75 × Joelho` | `0.97 × Cintura` | N/A (Não julgada) |
-| 8 | **Coxa/Panturrilha** | Coxa + Panturrilha | `Coxa = 1.5 × Panturrilha` | `Coxa = 1.5 × Panturrilha` | N/A (Não julgada) |
-| 9 | **Panturrilha** | Panturrilha + Tornozelo | `1.92 × Tornozelo` | `0.96 × Braço` | Estética Geral |
+| 3 | **Antebraço** | Antebraço + Braço | `0.80 × Braço` | `0.80 × Braço` | `0.80 × Braço` |
+| 4 | **Tríade** | Pescoço + Braço + Panturrilha | `1:1:1 (Igualdade)` | `~1:1:1 (Harmonia)` | N/A |
+| 5 | **Cintura** | Cintura + Pelve | `0.86 × Pelve` | `0.42 × Altura` | `0.455 × Altura` |
+| 6 | **Coxa/Panturrilha** | Coxa + Panturrilha | `Coxa = 1.5 × Panturrilha` | `Coxa = 1.5 × Panturrilha` | N/A (Não julgada) |
+| 7 | **Panturrilha** | Panturrilha + Tornozelo | `1.92 × Tornozelo` | `0.96 × Braço` | Estética Geral |
 
 ---
 
@@ -580,13 +578,11 @@ function calcularScoreMensPhysique(medidas) {
 |---|-----------|--------------|------------------|----------------|
 | 1 | **Ombros** | `Cintura × 1.618` | `Cintura × 1.70` | `Cintura × 1.55` |
 | 2 | **Peitoral** | `Punho × 6.5` | `Punho × 7.0` | `Punho × 6.2` |
-| 3 | **Braço** | `Punho × 2.52` | `(Altura/185) × 50` | `(Altura/178) × 43` |
-| 4 | **Antebraço** | `Braço × 0.80` | `Braço × 0.80` | `Braço × 0.80` |
-| 5 | **Tríade** | `Pesc = Braço = Pant` | `≈ 1:1:1` | `N/A` |
-| 6 | **Cintura** | `Pelve × 0.86` | `Altura × 0.42` | `Altura × 0.455` |
-| 7 | **Coxa** | `Joelho × 1.75` | `Cintura × 0.97` | `N/A` |
-| 8 | **Coxa/Pant** | `Coxa = Pant × 1.5` | `Coxa = Pant × 1.5` | `N/A` |
-| 9 | **Panturrilha** | `Tornozelo × 1.92` | `Braço × 0.96` | Estética |
+| 3 | **Antebraço** | `Braço × 0.80` | `Braço × 0.80` | `Braço × 0.80` |
+| 4 | **Tríade** | `Pesc = Braço = Pant` | `≈ 1:1:1` | `N/A` |
+| 5 | **Cintura** | `Pelve × 0.86` | `Altura × 0.42` | `Altura × 0.455` |
+| 6 | **Coxa/Pant** | `Coxa = Pant × 1.5` | `Coxa = Pant × 1.5` | `N/A` |
+| 7 | **Panturrilha** | `Tornozelo × 1.92` | `Braço × 0.96` | Estética |
 
 ### 7.2 Medidas Necessárias por Método
 

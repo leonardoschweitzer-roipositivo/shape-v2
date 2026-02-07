@@ -35,6 +35,14 @@ export const GoldenEvolutionChart = () => {
         <line x1="0" y1="150" x2="1000" y2="150" stroke="#FFFFFF" strokeOpacity="0.05" strokeDasharray="4 4" />
         <line x1="0" y1="250" x2="1000" y2="250" stroke="#FFFFFF" strokeOpacity="0.05" strokeDasharray="4 4" />
 
+        {/* Vertical Grid Lines */}
+        <line x1="0" y1="0" x2="0" y2="300" stroke="#FFFFFF" strokeOpacity="0.05" strokeDasharray="4 4" />
+        <line x1="200" y1="0" x2="200" y2="300" stroke="#FFFFFF" strokeOpacity="0.05" strokeDasharray="4 4" />
+        <line x1="400" y1="0" x2="400" y2="300" stroke="#FFFFFF" strokeOpacity="0.05" strokeDasharray="4 4" />
+        <line x1="600" y1="0" x2="600" y2="300" stroke="#FFFFFF" strokeOpacity="0.05" strokeDasharray="4 4" />
+        <line x1="800" y1="0" x2="800" y2="300" stroke="#FFFFFF" strokeOpacity="0.05" strokeDasharray="4 4" />
+        <line x1="1000" y1="0" x2="1000" y2="300" stroke="#FFFFFF" strokeOpacity="0.05" strokeDasharray="4 4" />
+
         {/* Target Line (Golden Ratio 1.618) */}
         <line x1="0" y1="80" x2="1000" y2="80" stroke="#F59E0B" strokeWidth="2" strokeDasharray="6 4" strokeOpacity="0.8" />
         <text x="1000" y="80" fill="#F59E0B" fontSize="10" textAnchor="end" alignmentBaseline="middle" dx="20">PHI</text>
@@ -102,6 +110,17 @@ export const MeasuresChart = ({ selectedMeasure = 'chest' }: { selectedMeasure?:
   return (
     <div className="w-full h-full relative">
       <svg className="w-full h-full overflow-visible" viewBox="0 0 400 200" preserveAspectRatio="none">
+        {/* Grid Lines */}
+        <line x1="0" y1="50" x2="400" y2="50" stroke="#FFFFFF" strokeOpacity="0.05" strokeDasharray="2 2" />
+        <line x1="0" y1="100" x2="400" y2="100" stroke="#FFFFFF" strokeOpacity="0.05" strokeDasharray="2 2" />
+        <line x1="0" y1="150" x2="400" y2="150" stroke="#FFFFFF" strokeOpacity="0.05" strokeDasharray="2 2" />
+
+        {/* Vertical Grid Lines */}
+        <line x1="0" y1="0" x2="0" y2="200" stroke="#FFFFFF" strokeOpacity="0.05" strokeDasharray="2 2" />
+        <line x1="133.3" y1="0" x2="133.3" y2="200" stroke="#FFFFFF" strokeOpacity="0.05" strokeDasharray="2 2" />
+        <line x1="266.6" y1="0" x2="266.6" y2="200" stroke="#FFFFFF" strokeOpacity="0.05" strokeDasharray="2 2" />
+        <line x1="400" y1="0" x2="400" y2="200" stroke="#FFFFFF" strokeOpacity="0.05" strokeDasharray="2 2" />
+
         {/* Selected Measure Line */}
         <path
           d={getPath()}
@@ -142,6 +161,17 @@ export const WeightChart = ({ selectedMetric = 'all' }: WeightChartProps) => {
   return (
     <div className="w-full h-full relative">
       <svg className="w-full h-full overflow-visible" viewBox="0 0 400 200" preserveAspectRatio="none">
+        {/* Grid Lines */}
+        <line x1="0" y1="50" x2="400" y2="50" stroke="#FFFFFF" strokeOpacity="0.05" strokeDasharray="2 2" />
+        <line x1="0" y1="100" x2="400" y2="100" stroke="#FFFFFF" strokeOpacity="0.05" strokeDasharray="2 2" />
+        <line x1="0" y1="150" x2="400" y2="150" stroke="#FFFFFF" strokeOpacity="0.05" strokeDasharray="2 2" />
+
+        {/* Vertical Grid Lines */}
+        <line x1="0" y1="0" x2="0" y2="200" stroke="#FFFFFF" strokeOpacity="0.05" strokeDasharray="2 2" />
+        <line x1="133.3" y1="0" x2="133.3" y2="200" stroke="#FFFFFF" strokeOpacity="0.05" strokeDasharray="2 2" />
+        <line x1="266.6" y1="0" x2="266.6" y2="200" stroke="#FFFFFF" strokeOpacity="0.05" strokeDasharray="2 2" />
+        <line x1="400" y1="0" x2="400" y2="200" stroke="#FFFFFF" strokeOpacity="0.05" strokeDasharray="2 2" />
+
         {/* Total Weight (Dashed White) */}
         {showTotal && (
           <path
@@ -189,46 +219,113 @@ export const WeightChart = ({ selectedMetric = 'all' }: WeightChartProps) => {
 };
 
 // 4. Body Fat Sparkline
-export const BodyFatChart = () => {
+export const BodyFatChart = ({ method = 'marinha' }: { method?: string }) => {
+  // Mock data variance based on method
+  const value = method === 'marinha' ? '10.5' : '12.8';
+  const meta = method === 'marinha' ? '8.0%' : '10.0%';
+  const diff = method === 'marinha' ? '-1.2%' : '-0.8%';
+  const pathD = method === 'marinha'
+    ? "M0 35 L 400 75"
+    : "M0 45 L 200 60 L 400 65";
+
   return (
     <div className="w-full h-[120px] relative mt-2 flex flex-col justify-end">
+      <div className="absolute top-0 right-0">
+        <span className="px-2 py-0.5 rounded bg-[#2E1065] text-[#A78BFA] text-[10px] font-bold border border-[#5B21B6]">{diff}</span>
+      </div>
       <div className="absolute inset-0">
         <svg className="w-full h-full overflow-visible" viewBox="0 0 400 100" preserveAspectRatio="none">
           <GradientDefs />
+
+          {/* Grid Lines */}
+          <line x1="0" y1="25" x2="400" y2="25" stroke="#FFFFFF" strokeOpacity="0.05" strokeDasharray="2 2" />
+          <line x1="0" y1="50" x2="400" y2="50" stroke="#FFFFFF" strokeOpacity="0.05" strokeDasharray="2 2" />
+          <line x1="0" y1="75" x2="400" y2="75" stroke="#FFFFFF" strokeOpacity="0.05" strokeDasharray="2 2" />
+
+          {/* Vertical Grid Lines */}
+          <line x1="0" y1="0" x2="0" y2="100" stroke="#FFFFFF" strokeOpacity="0.05" strokeDasharray="2 2" />
+          <line x1="100" y1="0" x2="100" y2="100" stroke="#FFFFFF" strokeOpacity="0.05" strokeDasharray="2 2" />
+          <line x1="200" y1="0" x2="200" y2="100" stroke="#FFFFFF" strokeOpacity="0.05" strokeDasharray="2 2" />
+          <line x1="300" y1="0" x2="300" y2="100" stroke="#FFFFFF" strokeOpacity="0.05" strokeDasharray="2 2" />
+          <line x1="400" y1="0" x2="400" y2="100" stroke="#FFFFFF" strokeOpacity="0.05" strokeDasharray="2 2" />
+
           <path
-            d="M0 35 L 400 75"
+            d={pathD}
             fill="none"
             stroke="url(#grad-chart-purple)"
             strokeWidth="3"
           />
           <path
-            d="M0 35 L 400 75 V 100 H 0 Z"
+            d={`${pathD} V 100 H 0 Z`}
             fill="url(#grad-fill-purple)"
             stroke="none"
           />
-          <circle cx="400" cy="75" r="4" fill="#FFFFFF" stroke="#7C3AED" strokeWidth="2" />
+          <circle cx="400" cy={method === 'marinha' ? 75 : 65} r="4" fill="#FFFFFF" stroke="#7C3AED" strokeWidth="2" />
         </svg>
       </div>
 
       <div className="flex justify-between items-end relative z-10">
-        <div className="text-4xl font-bold text-white tracking-tighter">10.5<span className="text-lg text-gray-500 ml-0.5">%</span></div>
-        <div className="text-xs text-gray-500 font-medium mb-1">Meta: 8.0%</div>
+        <div className="text-4xl font-bold text-white tracking-tighter">{value}<span className="text-lg text-gray-500 ml-0.5">%</span></div>
+        <div className="text-xs text-gray-500 font-medium mb-1">Meta: {meta}</div>
       </div>
     </div>
   );
 };
 
 // 5. Asymmetry Scanner Chart
-export const AsymmetryScannerChart = () => {
+export const AsymmetryScannerChart = ({ member = 'arm' }: { member?: string }) => {
   // Data: + is Right dominance (Green), - is Left dominance (Red)
-  const data = [
-    { month: 'JAN', val: 20 },
-    { month: 'FEV', val: 5 },
-    { month: 'MAR', val: 5 },
-    { month: 'ABR', val: -30 },
-    { month: 'MAI', val: 10 },
-    { month: 'JUN', val: -5 },
-  ];
+  const getMockData = () => {
+    switch (member) {
+      case 'arm':
+        return [
+          { month: 'JAN', val: 20 },
+          { month: 'FEV', val: 5 },
+          { month: 'MAR', val: 5 },
+          { month: 'ABR', val: -30 },
+          { month: 'MAI', val: 10 },
+          { month: 'JUN', val: -5 },
+        ];
+      case 'forearm':
+        return [
+          { month: 'JAN', val: 10 },
+          { month: 'FEV', val: 15 },
+          { month: 'MAR', val: 8 },
+          { month: 'ABR', val: 5 },
+          { month: 'MAI', val: 3 },
+          { month: 'JUN', val: 2 },
+        ];
+      case 'thigh':
+        return [
+          { month: 'JAN', val: -15 },
+          { month: 'FEV', val: -10 },
+          { month: 'MAR', val: -5 },
+          { month: 'ABR', val: -20 },
+          { month: 'MAI', val: -8 },
+          { month: 'JUN', val: -2 },
+        ];
+      case 'calf':
+        return [
+          { month: 'JAN', val: 5 },
+          { month: 'FEV', val: 5 },
+          { month: 'MAR', val: 0 },
+          { month: 'ABR', val: -5 },
+          { month: 'MAI', val: -2 },
+          { month: 'JUN', val: 1 },
+        ];
+      default:
+        return [
+          { month: 'JAN', val: 5 },
+          { month: 'FEV', val: 3 },
+          { month: 'MAR', val: 2 },
+          { month: 'ABR', val: 1 },
+          { month: 'MAI', val: 0 },
+          { month: 'JUN', val: 0 },
+        ];
+    }
+  };
+
+  const data = getMockData();
 
   return (
     <div className="w-full h-[150px] relative mt-8 flex flex-col justify-end">
@@ -236,17 +333,24 @@ export const AsymmetryScannerChart = () => {
         {/* Center Axis */}
         <div className="absolute w-full h-[1px] bg-gray-700"></div>
 
+        {/* Vertical Grid Lines (Simulated with absolute divs) */}
+        <div className="absolute inset-x-0 inset-y-0 flex justify-between px-4 pointer-events-none opacity-10">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="w-[1px] h-full border-l border-dashed border-white"></div>
+          ))}
+        </div>
+
         {/* Bars */}
         <div className="w-full flex justify-between px-4 relative z-10 h-full items-center">
           {data.map((d, i) => (
             <div key={i} className="flex flex-col items-center group cursor-pointer">
-              <div className="relative h-[100px] w-4 flex items-center justify-center">
+              <div className="relative h-[100px] w-4">
                 <div
-                  className={`w-3 rounded-full transition-all duration-300 ${d.val > 0 ? 'bg-primary shadow-[0_0_10px_rgba(0,201,167,0.4)]' : 'bg-red-400/80 shadow-[0_0_10px_rgba(248,113,113,0.3)]'}`}
+                  className={`w-3 rounded-full absolute left-1/2 -translate-x-1/2 transition-all duration-300 ${d.val > 0 ? 'bg-primary shadow-[0_0_10px_rgba(0,201,167,0.4)]' : d.val < 0 ? 'bg-red-400/80 shadow-[0_0_10px_rgba(248,113,113,0.3)]' : 'bg-gray-500'}`}
                   style={{
-                    height: `${Math.abs(d.val)}%`,
-                    marginBottom: d.val > 0 ? `${Math.abs(d.val)}%` : '0',
-                    marginTop: d.val < 0 ? `${Math.abs(d.val)}%` : '0'
+                    height: `${Math.max(2, Math.abs(d.val))}%`,
+                    bottom: d.val > 0 ? '50%' : d.val === 0 ? '49%' : 'auto',
+                    top: d.val < 0 ? '50%' : 'auto',
                   }}
                 ></div>
               </div>
@@ -254,7 +358,7 @@ export const AsymmetryScannerChart = () => {
 
               {/* Hover Tooltip */}
               <div className="absolute -top-8 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-800 border border-white/10 px-2 py-1 rounded text-[10px] whitespace-nowrap z-20 pointer-events-none">
-                {d.val > 0 ? `Dir +${d.val}%` : `Esq ${d.val}%`}
+                {d.val > 0 ? `Dir +${d.val}%` : d.val < 0 ? `Esq ${d.val}%` : 'Simétrico'}
               </div>
             </div>
           ))}

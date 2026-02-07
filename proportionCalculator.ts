@@ -26,9 +26,10 @@ const GOLDEN_RATIO = {
     PHI: 1.618,
     PEITO_PUNHO: 6.5,
     BRACO_PUNHO: 2.52,
-    ANTEBRACO_PEITO: 0.29,
+    ANTEBRACO_BRACO: 0.80,       // Antebraço = Braço × 0.80
     CINTURA_PELVIS: 0.86,
     COXA_JOELHO: 1.75,
+    COXA_PANTURRILHA: 1.5,       // Coxa = Panturrilha × 1.5
     PANTURRILHA_TORNOZELO: 1.92,
     PESCOCO_CABECA: 0.79
 };
@@ -105,19 +106,25 @@ export function calcularIdeaisGoldenRatio(medidas: UserMeasurements): Proportion
     const { cintura, punho, pelvis, joelho, tornozelo, cabeca } = medidas;
     const peitoIdeal = punho * GOLDEN_RATIO.PEITO_PUNHO;
     const bracoIdeal = punho * GOLDEN_RATIO.BRACO_PUNHO;
+    const panturrilhaIdeal = tornozelo * GOLDEN_RATIO.PANTURRILHA_TORNOZELO;
 
     return {
         ombros: cintura * GOLDEN_RATIO.PHI,
         peito: peitoIdeal,
         braco: bracoIdeal,
-        antebraco: peitoIdeal * GOLDEN_RATIO.ANTEBRACO_PEITO,
+        antebraco: bracoIdeal * GOLDEN_RATIO.ANTEBRACO_BRACO,  // Antebraço = Braço × 0.80
         cintura: pelvis * GOLDEN_RATIO.CINTURA_PELVIS,
         coxa: joelho * GOLDEN_RATIO.COXA_JOELHO,
-        panturrilha: tornozelo * GOLDEN_RATIO.PANTURRILHA_TORNOZELO,
+        panturrilha: panturrilhaIdeal,
         pescoco: cabeca * GOLDEN_RATIO.PESCOCO_CABECA,
         triade: {
             valor_ideal: bracoIdeal,
             regra: "Braço, Panturrilha e Pescoço devem ser iguais"
+        },
+        coxa_panturrilha: {
+            coxa_ideal: panturrilhaIdeal * GOLDEN_RATIO.COXA_PANTURRILHA,
+            panturrilha_ref: panturrilhaIdeal,
+            ratio: GOLDEN_RATIO.COXA_PANTURRILHA
         }
     };
 }
@@ -206,6 +213,14 @@ function calcularScoreTriade(braco: number, panturrilha: number, pescoco: number
     return percentual * (peso / 100);
 }
 
+function calcularScoreCoxaPanturrilha(coxa: number, panturrilha: number, ratioIdeal: number, peso: number): number {
+    // Proporção atual
+    const ratioAtual = coxa / panturrilha;
+    // Score baseado em quão perto está do ideal (1.5)
+    const percentual = Math.min(100, Math.max(0, (1 - Math.abs(ratioAtual - ratioIdeal) / ratioIdeal) * 100));
+    return percentual * (peso / 100);
+}
+
 function calcularDiferencas(atuais: UserMeasurements, ideais: ProportionIdeals): Record<string, ProportionDiff> {
     const diffs: Record<string, ProportionDiff> = {};
 
@@ -245,54 +260,61 @@ export function calcularProportions(
     switch (mode) {
         case 'golden':
             ideais = calcularIdeaisGoldenRatio(medidas);
+            // Pesos spec v2.0 (Total = 100)
             pesos = {
-                ombros: 20,
-                peito: 15,
-                braco: 15,
+                ombros: 18,
+                peito: 14,
+                braco: 14,
                 antebraco: 5,
-                cintura: 15,
+                triade: 10,
+                cintura: 12,
                 coxa: 10,
-                panturrilha: 8,
-                pescoco: 5,
-                triade: 7
+                coxa_panturrilha: 8,
+                panturrilha: 9
             };
             break;
 
         case 'classic':
             ideais = calcularIdeaisClassicPhysique(medidas);
+            // Pesos spec v2.0 (Total = 100)
             pesos = {
-                ombros: 20,
-                peito: 15,
-                braco: 18,
+                ombros: 18,
+                peito: 14,
+                braco: 16,
                 antebraco: 4,
-                cintura: 18,
+                triade: 8,
+                cintura: 16,
                 coxa: 10,
-                panturrilha: 7,
-                pescoco: 3,
-                triade: 5
+                coxa_panturrilha: 6,
+                panturrilha: 8
             };
             break;
 
         case 'mens':
             ideais = calcularIdeaisMensPhysique(medidas);
+            // Pesos spec v2.0 (Total = 100) - Coxa, Coxa/Panturrilha e Tríade N/A
             pesos = {
                 ombros: 25,
-                peito: 20,
+                peito: 22,
                 braco: 25,
-                antebraco: 5,
-                cintura: 15,
+                antebraco: 6,
+                triade: 0,
+                cintura: 17,
                 coxa: 0,
-                panturrilha: 5,
-                pescoco: 5,
-                triade: 0
+                coxa_panturrilha: 0,
+                panturrilha: 5
             };
             notas = {
                 coxa: "Não julgada - usa board shorts",
+                coxa_panturrilha: "Não julgada - usa board shorts",
+                triade: "Não aplicável nesta categoria",
                 panturrilha: "Estética geral, menos ênfase",
                 foco: "Deltoides, braços e V-taper moderado"
             };
             break;
     }
+
+    const coxaPanturrilhaRatio = ideais.coxa_panturrilha?.ratio || 1.5;
 
     const scores: ProportionScore = {
         ombros: calcularScoreProporcional(medidas.ombros, ideais.ombros, pesos.ombros),
@@ -303,8 +325,11 @@ export function calcularProportions(
         coxa: ideais.coxa !== null
             ? calcularScoreProporcional(medidas.coxa, ideais.coxa, pesos.coxa)
             : 0,
+        coxa_panturrilha: mode !== 'mens'
+            ? calcularScoreCoxaPanturrilha(medidas.coxa, medidas.panturrilha, coxaPanturrilhaRatio, pesos.coxa_panturrilha)
+            : 0,
         panturrilha: calcularScoreProporcional(medidas.panturrilha, ideais.panturrilha, pesos.panturrilha),
-        pescoco: calcularScoreProporcional(medidas.pescoco, ideais.pescoco, pesos.pescoco),
+        pescoco: calcularScoreProporcional(medidas.pescoco, ideais.pescoco, 0), // Pescoço incluído na Tríade
         triade: mode !== 'mens'
             ? calcularScoreTriade(medidas.braco, medidas.panturrilha, medidas.pescoco, pesos.triade)
             : 0

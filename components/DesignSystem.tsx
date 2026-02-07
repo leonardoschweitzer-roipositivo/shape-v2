@@ -24,12 +24,14 @@ export const DesignSystem: React.FC = () => {
       <div className="max-w-7xl mx-auto flex flex-col gap-16">
 
         {/* Header */}
-        <div className="flex flex-col gap-2 border-b border-white/10 pb-8">
+        <div className="flex flex-col gap-2">
           <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight">DESIGN SYSTEM</h1>
           <p className="text-gray-400 font-light text-lg">
             Guia oficial de identidade visual, componentes e biblioteca de widgets da aplicação SHAPE-V.
           </p>
         </div>
+
+        <div className="h-px w-full bg-white/10" />
 
         {/* 1. CORES */}
         <section className="flex flex-col gap-8">

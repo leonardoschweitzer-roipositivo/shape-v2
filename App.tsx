@@ -11,7 +11,9 @@ import { DesignSystem } from './components/DesignSystem';
 import { Evolution } from './components/Evolution';
 import { Login } from './components/Login';
 
-type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'coach' | 'profile' | 'settings';
+import { AssessmentPage } from './components/AssessmentPage';
+
+type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'coach' | 'profile' | 'settings' | 'assessment';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -34,6 +36,8 @@ const App: React.FC = () => {
     switch (currentView) {
       case 'results':
         return <AssessmentResults onBack={() => setCurrentView('dashboard')} />;
+      case 'assessment':
+        return <AssessmentPage onConfirm={handleAssessmentSubmit} />;
       case 'design-system':
         return <DesignSystem />;
       case 'evolution':
@@ -53,9 +57,11 @@ const App: React.FC = () => {
             <div className="max-w-7xl mx-auto flex flex-col gap-8 pb-10 flex-1 w-full">
               {/* Page Title */}
               <div className="flex flex-col animate-fade-in-up">
-                <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight">MOMENTO</h2>
+                <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight uppercase">INÍCIO</h2>
                 <p className="text-gray-400 mt-2 font-light">Visão geral da sua simetria e progresso atual.</p>
               </div>
+
+              <div className="h-px w-full bg-white/10" />
 
               {/* Hero Section */}
               <HeroCard />
@@ -77,9 +83,10 @@ const App: React.FC = () => {
 
   const getPageTitle = () => {
     switch (currentView) {
-      case 'dashboard': return 'MOMENTO';
+      case 'dashboard': return 'INÍCIO';
       case 'results': return 'RESULTADOS';
       case 'evolution': return 'EVOLUÇÃO';
+      case 'assessment': return 'AVALIAÇÃO IA';
       case 'design-system': return 'DESIGN SYSTEM';
       default: return currentView.toUpperCase();
     }
