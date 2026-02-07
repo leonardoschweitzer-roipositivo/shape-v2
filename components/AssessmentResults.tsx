@@ -498,7 +498,7 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({ onBack }) 
     };
 
     return (
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth custom-scrollbar flex flex-col bg-background-dark">
+        <div className="flex-1 p-4 md:p-8 flex flex-col bg-background-dark">
             <div className="max-w-7xl mx-auto flex flex-col gap-8 pb-10 flex-1 w-full">
                 {/* Header Section */}
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">

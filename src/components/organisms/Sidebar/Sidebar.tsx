@@ -6,7 +6,8 @@ import {
   Bot,
   User,
   Settings,
-  LogOut
+  LogOut,
+  Layers
 } from 'lucide-react';
 
 interface NavItemProps {
@@ -54,17 +55,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView = 'dashboard', onN
   const systemNavItems = [
     { icon: User, label: 'Perfil', id: 'profile' },
     { icon: Settings, label: 'Configurações', id: 'settings' },
+    { icon: Layers, label: 'Design System', id: 'design-system' },
   ];
 
   return (
     <aside className="w-64 flex-shrink-0 hidden md:flex flex-col justify-between border-r border-card-border bg-[#0A0F1C] h-full">
       <div className="flex flex-col p-6 gap-8">
         {/* Logo */}
-        <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-[#0A0F1C] font-bold text-xl shadow-lg shadow-primary/20">
-            V
-          </div>
-          <h1 className="text-xl font-bold tracking-wider text-white">VITRU IA</h1>
+        <div className="flex items-center">
+          <img src="/logo-vitru.png" alt="VITRU IA Logo" className="h-[1.8rem] w-auto" />
         </div>
 
         {/* Main Nav */}
@@ -85,7 +84,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView = 'dashboard', onN
       <div className="flex flex-col p-6 gap-2 border-t border-card-border bg-[#0A0F1C]">
         <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 px-2">Sistema</p>
         {systemNavItems.map((item, index) => (
-          <NavItem key={index} {...item} />
+          <NavItem
+            key={index}
+            {...item}
+            isActive={currentView === item.id}
+            onClick={() => onNavigate && onNavigate(item.id)}
+          />
         ))}
         <NavItem icon={LogOut} label="Sair" isLogout />
       </div>

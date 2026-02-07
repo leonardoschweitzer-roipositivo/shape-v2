@@ -42,7 +42,7 @@ export const DashboardView: React.FC<{ userProfile?: ProfileType }> = ({ userPro
 
     if (isLoading) {
         return (
-            <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth custom-scrollbar flex flex-col">
+            <div className="flex-1 p-4 md:p-8 flex flex-col">
                 <div className="max-w-7xl mx-auto flex flex-col gap-8 pb-10 flex-1 w-full">
                     {/* Title Skeleton */}
                     <div className="flex flex-col animate-pulse">
@@ -58,7 +58,7 @@ export const DashboardView: React.FC<{ userProfile?: ProfileType }> = ({ userPro
 
     if (error || !data) {
         return (
-            <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth custom-scrollbar flex flex-col">
+            <div className="flex-1 p-4 md:p-8 flex flex-col">
                 <DashboardError />
             </div>
         );
@@ -67,7 +67,7 @@ export const DashboardView: React.FC<{ userProfile?: ProfileType }> = ({ userPro
     const heroContent = getHeroContent(data);
 
     return (
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth custom-scrollbar flex flex-col">
+        <div className="flex-1 p-4 md:p-8 flex flex-col">
             <div className="max-w-7xl mx-auto flex flex-col gap-8 pb-10 flex-1 w-full">
 
                 {/* Header Section */}

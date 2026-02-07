@@ -303,7 +303,7 @@ export const HallDosDeuses: React.FC = () => {
     const displayRankings = selectedTab === 'principais' ? rankingsPrincipais : rankingsEspeciais;
 
     return (
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth custom-scrollbar flex flex-col">
+        <div className="flex-1 p-4 md:p-8 flex flex-col">
             <div className="max-w-7xl mx-auto flex flex-col gap-8 pb-10 flex-1 w-full">
                 {/* Header Section */}
                 <div className="flex flex-col animate-fade-in-up">

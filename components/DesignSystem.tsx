@@ -21,7 +21,7 @@ import { ProfileSelector } from './ProfileSelector';
 export const DesignSystem: React.FC = () => {
   const [selectedProfile, setSelectedProfile] = React.useState<'academia' | 'personal' | 'atleta'>('atleta');
   return (
-    <div className="w-full flex-1 overflow-y-auto p-8 custom-scrollbar bg-background-dark pb-20">
+    <div className="w-full flex-1 p-8 bg-background-dark pb-20">
       <div className="max-w-7xl mx-auto flex flex-col gap-16">
 
         {/* Header */}
@@ -344,7 +344,15 @@ export const DesignSystem: React.FC = () => {
             {/* Main Chart */}
             <GlassPanel className="p-6 rounded-2xl h-[350px]">
               <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Golden Evolution Chart</h3>
-              <GoldenEvolutionChart />
+              <GoldenEvolutionChart
+                data={[
+                  { date: 'Jan', ratio: 1.45 },
+                  { date: 'Fev', ratio: 1.48 },
+                  { date: 'Mar', ratio: 1.52 },
+                  { date: 'Abr', ratio: 1.56 }
+                ]}
+                selectedMetrics={[{ id: 'ratio', label: 'Shape-V Ratio', color: '#00C9A7', unit: '', yAxisId: 'left' }]}
+              />
             </GlassPanel>
 
             {/* Secondary Charts Grid */}

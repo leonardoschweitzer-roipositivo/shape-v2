@@ -100,13 +100,10 @@ const App: React.FC = () => {
         />
 
         {/* Content Area - Flex container to manage scrolling independently */}
-        <div className="flex-1 overflow-hidden relative flex flex-col">
+        <div className="flex-1 overflow-y-auto relative flex flex-col custom-scrollbar">
           {renderContent()}
 
-          {/* Footer - Only shown in dashboard or design system view to avoid double scrollbars in results which has its own layout */}
-          {currentView !== 'results' && (
-            <Footer onOpenDesignSystem={() => setCurrentView('design-system')} />
-          )}
+          <Footer onOpenDesignSystem={() => setCurrentView('design-system')} />
         </div>
       </main>
 

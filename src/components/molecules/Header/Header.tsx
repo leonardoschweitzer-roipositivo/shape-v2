@@ -10,8 +10,6 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAssessment, title = "INÍC
   return (
     <header className="h-20 w-full flex-shrink-0 flex items-center justify-between px-8 border-b border-card-border bg-[#0A0F1C]/90 backdrop-blur-md z-30">
       <div className="flex items-center gap-2 text-sm font-medium">
-        <span className="text-gray-500">VITRU IA</span>
-        <span className="text-gray-600">/</span>
         <span className="text-white tracking-wide font-semibold uppercase">{title}</span>
       </div>
 

@@ -49,9 +49,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 {/* Content Container */}
                 <div className="relative z-10 p-12 flex flex-col items-start max-w-xl">
                     {/* Logo */}
-                    <div className="absolute top-12 left-12 flex items-center gap-2">
-                        <Hexagon className="text-primary fill-primary/20" size={24} />
-                        <span className="font-bold text-xl tracking-wider">VITRU IA</span>
+                    <div className="absolute top-12 left-12">
+                        <img src="/logo-vitru.png" alt="VITRU IA Logo" className="h-[1.8rem] w-auto" />
                     </div>
 
                     <div className="mt-24 space-y-6">
