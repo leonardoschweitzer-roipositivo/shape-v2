@@ -1,5 +1,5 @@
 /**
- * Funções Utilitárias de Cálculo - SHAPE-V
+ * Funções Utilitárias de Cálculo - VITRU IA
  * 
  * Funções puras reutilizáveis para cálculos de score e proporções.
  * @see docs/specs/code-style.md - Seção 4.2

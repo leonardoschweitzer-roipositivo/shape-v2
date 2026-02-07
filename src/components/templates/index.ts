@@ -1,5 +1,5 @@
 /**
- * Templates - SHAPE-V Design System
+ * Templates - VITRU IA Design System
  * 
  * Layouts de página completos.
  * 

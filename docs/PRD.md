@@ -94,7 +94,7 @@ Uma plataforma que:
 
 | Tipo | Papel | Acesso |
 |------|-------|--------|
-| **Admin Plataforma** | Administrador SHAPE-V | Gestão global, métricas, billing |
+| **Admin Plataforma** | Administrador VITRU IA | Gestão global, métricas, billing |
 | **Academia** | Empresa/CNPJ | Cadastra e gerencia personais/professores, vê métricas agregadas |
 | **Personal/Professor** | Profissional de educação física | Cadastra e gerencia alunos, realiza avaliações, acessa Coach IA |
 | **Aluno (via Personal)** | Aluno vinculado a um personal/academia | Visualiza suas avaliações e evolução (read-only ou conforme permissão) |
@@ -694,7 +694,7 @@ Pesos do Score Golden Ratio:
 - Sistema: Perfil, Configurações, Sair
 
 **Header:**
-- Breadcrumb (SHAPE-V / Seção atual)
+- Breadcrumb (VITRU IA / Seção atual)
 - Botão "REALIZAR AVALIAÇÃO IA" (sempre acessível)
 - Notificações
 

@@ -1,5 +1,5 @@
 /**
- * Components - SHAPE-V Design System
+ * Components - VITRU IA Design System
  * 
  * Exportação centralizada de todos os componentes organizados por atomic design.
  * 

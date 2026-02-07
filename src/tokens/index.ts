@@ -1,5 +1,5 @@
 /**
- * Design Tokens - SHAPE-V
+ * Design Tokens - VITRU IA
  * 
  * Exportação centralizada de todos os tokens do design system.
  * 

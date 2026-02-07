@@ -1,5 +1,5 @@
 /**
- * Cálculos Classic Physique - SHAPE-V
+ * Cálculos Classic Physique - VITRU IA
  * 
  * Funções de cálculo de proporções ideais baseadas em Chris Bumstead.
  * Referência: Chris Bumstead (6x Mr. Olympia Classic Physique)

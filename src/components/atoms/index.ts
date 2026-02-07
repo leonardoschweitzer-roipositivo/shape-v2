@@ -1,5 +1,5 @@
 /**
- * Atoms - SHAPE-V Design System
+ * Atoms - VITRU IA Design System
  * 
  * Componentes básicos e reutilizáveis.
  */

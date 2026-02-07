@@ -1,5 +1,5 @@
 /**
- * Tokens de Cores - SHAPE-V Design System
+ * Tokens de Cores - VITRU IA Design System
  * 
  * Paleta de cores centralizada para toda a aplicação.
  * @see docs/specs/design-system.md
@@ -50,7 +50,7 @@ export const colors = {
         disabled: '#6B7280',
     },
 
-    // === PROPORTIONS (específico SHAPE-V) ===
+    // === PROPORTIONS (específico VITRU IA) ===
     proportions: {
         /** Dourado - Golden Ratio */
         golden: '#FFD700',

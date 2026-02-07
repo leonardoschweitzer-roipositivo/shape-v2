@@ -1,5 +1,5 @@
 /**
- * Tokens de Sombras - SHAPE-V Design System
+ * Tokens de Sombras - VITRU IA Design System
  * 
  * Sombras e efeitos de glow para dark theme.
  * @see docs/specs/design-system.md

@@ -1,7 +1,7 @@
 /**
  * Button - Atom Component
  * 
- * Botão padronizado com variantes do SHAPE-V.
+ * Botão padronizado com variantes do VITRU IA.
  * @see docs/specs/design-system.md
  */
 

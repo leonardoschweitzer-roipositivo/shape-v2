@@ -1,5 +1,5 @@
 /**
- * Organisms - SHAPE-V Design System
+ * Organisms - VITRU IA Design System
  * 
  * Composição de molecules em seções completas.
  */

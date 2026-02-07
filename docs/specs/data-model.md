@@ -1561,10 +1561,5 @@ main()
 
 ---
 
-<<<<<<< HEAD
 **VITRU IA Data Model**  
-*PostgreSQL • Prisma • Zod • TypeScript*
-=======
-**SHAPE-V Data Model**  
 *PostgreSQL • Prisma • Zod • TypeScript • Multi-User*
->>>>>>> ef32451231e4a686ebf7866076b2111b5eebda4d

@@ -15,7 +15,7 @@ export interface GlassPanelProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 /**
- * Container glassmorphism padrão do SHAPE-V
+ * Container glassmorphism padrão do VITRU IA
  * 
  * @example
  * <GlassPanel className="p-8 rounded-2xl">

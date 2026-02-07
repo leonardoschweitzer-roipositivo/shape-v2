@@ -1,7 +1,7 @@
 /**
  * InputField - Atom Component
  * 
- * Campo de entrada padronizado para o SHAPE-V.
+ * Campo de entrada padronizado para o VITRU IA.
  * @see docs/specs/design-system.md
  */
 

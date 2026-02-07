@@ -2402,10 +2402,5 @@ X-RateLimit-Reset: 1707300000  # Unix timestamp
 
 ---
 
-<<<<<<< HEAD
 **VITRU IA API**  
-*REST • JWT • Rate Limited • Typed*
-=======
-**SHAPE-V API**  
 *REST • JWT • Rate Limited • Multi-User*
->>>>>>> ef32451231e4a686ebf7866076b2111b5eebda4d

@@ -1,5 +1,5 @@
 /**
- * Tokens de Animação - SHAPE-V Design System
+ * Tokens de Animação - VITRU IA Design System
  * 
  * Durações, easings e transições padronizadas.
  * @see docs/specs/design-system.md

@@ -1,5 +1,5 @@
 /**
- * Cálculos Golden Ratio - SHAPE-V
+ * Cálculos Golden Ratio - VITRU IA
  * 
  * Funções de cálculo de proporções ideais baseadas no Golden Ratio.
  * Referências: Steve Reeves, John McCallum

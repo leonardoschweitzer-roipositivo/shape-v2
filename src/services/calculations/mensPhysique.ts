@@ -1,5 +1,5 @@
 /**
- * Cálculos Men's Physique - SHAPE-V
+ * Cálculos Men's Physique - VITRU IA
  * 
  * Funções de cálculo de proporções ideais baseadas em Ryan Terry.
  * Referência: Ryan Terry (3x Mr. Olympia Men's Physique)

@@ -1,5 +1,5 @@
 /**
- * Tokens de Tipografia - SHAPE-V Design System
+ * Tokens de Tipografia - VITRU IA Design System
  * 
  * Fontes, tamanhos e estilos de texto centralizados.
  * @see docs/specs/design-system.md

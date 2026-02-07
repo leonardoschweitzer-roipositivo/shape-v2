@@ -1,5 +1,5 @@
 /**
- * Constantes de Proporções Corporais - SHAPE-V
+ * Constantes de Proporções Corporais - VITRU IA
  * 
  * Constantes centralizadas para todos os métodos de cálculo.
  * @see docs/specs/calculo-proporcoes.md v2.0

@@ -1,5 +1,5 @@
 /**
- * Services de Cálculo - SHAPE-V
+ * Services de Cálculo - VITRU IA
  * 
  * Exportação centralizada de todas as funções de cálculo de proporções.
  * 

@@ -1,5 +1,5 @@
 /**
- * Molecules - SHAPE-V Design System
+ * Molecules - VITRU IA Design System
  * 
  * Composição de atoms em componentes maiores.
  */

@@ -1,5 +1,5 @@
 /**
- * Tokens de Espaçamento - SHAPE-V Design System
+ * Tokens de Espaçamento - VITRU IA Design System
  * 
  * Sistema de espaçamento baseado em múltiplos de 4px.
  * @see docs/specs/design-system.md

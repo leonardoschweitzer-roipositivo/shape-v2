@@ -1,5 +1,5 @@
 /**
- * Tokens de Bordas - SHAPE-V Design System
+ * Tokens de Bordas - VITRU IA Design System
  * 
  * Border radius e width padronizados.
  * @see docs/specs/design-system.md
