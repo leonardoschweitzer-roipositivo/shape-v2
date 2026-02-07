@@ -836,32 +836,56 @@ interface ProportionResult {
   status: 'deficit' | 'on_track' | 'exceeded'
 }
 
-// Ratios por modo de comparação
+// Ratios por modo de comparação (conforme spec calculo-proporcoes.md v2.0)
 const MODE_CONFIGS = {
   golden_ratio: {
-    vtaper_target: GOLDEN_RATIO,
-    arm_wrist_mult: 2.52,
-    calf_ankle_mult: 1.92,
-    thigh_knee_mult: 1.75,
-    chest_waist_mult: 1.48,
-    score_weights: { proportions: 0.40, symmetry: 0.35, composition: 0.25 },
+    vtaper_target: GOLDEN_RATIO,     // 1.618 - Ombros = Cintura × 1.618
+    chest_wrist_mult: 6.5,           // Peitoral = Punho × 6.5
+    arm_wrist_mult: 2.52,            // Braço = Punho × 2.52
+    forearm_arm_mult: 0.80,          // Antebraço = Braço × 0.80
+    waist_pelvis_mult: 0.86,         // Cintura = Pelve × 0.86
+    thigh_knee_mult: 1.75,           // Coxa = Joelho × 1.75
+    thigh_calf_ratio: 1.5,           // Coxa = Panturrilha × 1.5
+    calf_ankle_mult: 1.92,           // Panturrilha = Tornozelo × 1.92
+    triad_enabled: true,             // Pescoço ≈ Braço ≈ Panturrilha
+    score_weights: { 
+      ombros: 18, peitoral: 14, braco: 14, antebraco: 5, triade: 10,
+      cintura: 12, coxa: 10, coxa_panturrilha: 8, panturrilha: 9
+    },
   },
   classic_physique: {
-    vtaper_target: 1.82,
-    arm_wrist_mult: 2.68,
-    calf_ankle_mult: 2.08,
-    thigh_knee_mult: 1.86,
-    chest_waist_mult: 1.71,
-    score_weights: { proportions: 0.40, symmetry: 0.30, composition: 0.30 },
+    vtaper_target: 1.70,             // Ombros = Cintura × 1.70 (mais agressivo)
+    chest_wrist_mult: 7.0,           // Peitoral = Punho × 7.0
+    arm_formula: 'height',           // Braço = (Altura/185) × 50cm
+    arm_ref_height: 185,
+    arm_ref_size: 50,
+    forearm_arm_mult: 0.80,          // Antebraço = Braço × 0.80
+    waist_height_mult: 0.42,         // Cintura = Altura × 0.42 (super apertada)
+    thigh_waist_mult: 0.97,          // Coxa = Cintura × 0.97
+    thigh_calf_ratio: 1.5,           // Coxa = Panturrilha × 1.5
+    calf_arm_mult: 0.96,             // Panturrilha = Braço × 0.96
+    triad_enabled: true,             // ~1:1:1 (harmonia)
+    score_weights: { 
+      ombros: 18, peitoral: 14, braco: 16, antebraco: 4, triade: 8,
+      cintura: 16, coxa: 10, coxa_panturrilha: 6, panturrilha: 8
+    },
   },
   mens_physique: {
-    vtaper_target: 1.65,
-    arm_wrist_mult: 2.40,
-    calf_ankle_mult: 1.85,
-    thigh_knee_mult: 1.65,
-    chest_waist_mult: 1.55,
-    score_weights: { proportions: 0.45, symmetry: 0.25, composition: 0.30 },
-    body_weights: { upper: 0.70, core: 0.20, lower: 0.10 },
+    vtaper_target: 1.55,             // Ombros = Cintura × 1.55 (mais suave)
+    chest_wrist_mult: 6.2,           // Peitoral = Punho × 6.2
+    arm_formula: 'height',           // Braço = (Altura/178) × 43cm
+    arm_ref_height: 178,
+    arm_ref_size: 43,
+    forearm_arm_mult: 0.80,          // Antebraço = Braço × 0.80
+    waist_height_mult: 0.455,        // Cintura = Altura × 0.455
+    calf_ankle_mult: 1.8,            // Panturrilha = Tornozelo × 1.8 (estética)
+    triad_enabled: false,            // N/A - foco em upper body
+    thigh_enabled: false,            // N/A - não julgada (board shorts)
+    thigh_calf_enabled: false,       // N/A - não julgada
+    score_weights: { 
+      ombros: 25, peitoral: 22, braco: 25, antebraco: 6, triade: 0,
+      cintura: 17, coxa: 0, coxa_panturrilha: 0, panturrilha: 5
+    },
   },
 } as const
 
@@ -1055,11 +1079,33 @@ REGRAS:
 6. Nunca recomende substâncias farmacológicas. Foque em treino, dieta e suplementação básica.
 7. Use markdown para formatar a resposta (headers, bold, listas).
 
-REFERÊNCIAS DE PROPORÇÕES:
-- Golden Ratio: Todas as razões entre segmentos corporais devem tender a 1.618
-- Steve Reeves: Braço = Pulso × 2.52, Panturrilha = Tornozelo × 1.92, Pescoço ≈ Braço ≈ Panturrilha
-- CBum (Classic Physique): V-Taper ~1.82, Braço/Pulso ~2.68, ênfase em volume com estética
-- Men's Physique: V-Taper ≥1.65, foco em upper body, cintura mínima, condicionamento limpo
+REFERÊNCIAS DE PROPORÇÕES (spec v2.0):
+
+GOLDEN RATIO (9 Proporções):
+- Ombros = Cintura × 1.618
+- Peitoral = Punho × 6.5
+- Braço = Punho × 2.52
+- Antebraço = Braço × 0.80
+- Tríade: Pescoço ≈ Braço ≈ Panturrilha (1:1:1)
+- Cintura = Pelve × 0.86
+- Coxa = Joelho × 1.75
+- Coxa/Panturrilha: Coxa = Panturrilha × 1.5
+- Panturrilha = Tornozelo × 1.92
+
+CLASSIC PHYSIQUE (CBum, 185cm):
+- Ombros = Cintura × 1.70 (V-Taper mais agressivo)
+- Peitoral = Punho × 7.0
+- Braço = (Altura/185) × 50cm
+- Cintura = Altura × 0.42 (super apertada!)
+- Coxa = Cintura × 0.97
+- Panturrilha = Braço × 0.96
+
+MEN'S PHYSIQUE (Ryan Terry, 178cm):
+- Ombros = Cintura × 1.55 (V-Taper mais suave)
+- Peitoral = Punho × 6.2
+- Braço = (Altura/178) × 43cm
+- Cintura = Altura × 0.455
+- Coxa, Coxa/Panturrilha, Tríade: N/A (não julgadas, usa board shorts)
 
 ESCALA SHAPE-V:
 - Bloco (ratio < 1.2): Sem definição de V-Taper

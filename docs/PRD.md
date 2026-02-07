@@ -232,20 +232,21 @@ CBum é o maior campeão da história da categoria Classic Physique (6 títulos 
 | BF% (stage) | ~3-4% | Condição de palco |
 | FFMI | ~29.2 | Índice de massa livre de gordura |
 
-*Proporções-chave CBum:*
+*Proporções-chave CBum (conforme spec v2.0):*
 
-| Proporção | Valor CBum | vs Golden Ratio (1.618) |
-|-----------|-----------|----------------------|
-| V-Taper (Ombros/Cintura) | ~1.82 | Acima do golden ratio — V-Taper mais extremo |
-| Peitoral/Cintura | ~1.71 | Próximo do golden ratio |
-| Coxa/Cintura | ~1.00 | — |
+| # | Proporção | Fórmula | vs Golden Ratio |
+|---|-----------|---------|----------------|
+| 1 | **V-Taper (Ombros)** | Cintura × 1.70 | V-Taper mais agressivo |
+| 2 | **Peitoral** | Punho × 7.0 | Peitoral maior |
+| 3 | **Braço** | (Altura/185) × 50cm | Escalado do CBum |
+| 4 | **Antebraço** | Braço × 0.80 | 80% do braço |
+| 5 | **Tríade** | Pescoço ≈ Braço ≈ Panturrilha | Harmonia |
+| 6 | **Cintura** | Altura × 0.42 | Super apertada |
+| 7 | **Coxa** | Cintura × 0.97 | Proporcional à cintura |
+| 8 | **Coxa/Panturrilha** | Coxa = Panturrilha × 1.5 | Proporção de pernas |
+| 9 | **Panturrilha** | Braço × 0.96 | Quase igual ao braço |
 
-*Como funciona:* O sistema escala as medidas de CBum proporcionalmente à estrutura óssea do usuário (usando pulso, tornozelo e altura como referência de frame size). Assim, um usuário de 1.70m não terá como meta os mesmos centímetros absolutos de CBum (1.85m), mas sim as mesmas *proporções* ajustadas ao seu frame.
-
-```
-Meta_Ajustada = Medida_CBum × (Frame_Usuário / Frame_CBum)
-Frame = f(pulso, tornozelo, altura)
-```
+*Como funciona:* O sistema escala as medidas de CBum proporcionalmente à altura do usuário. Um usuário de 1.70m terá metas ajustadas usando o fator `(Altura/185)`.
 
 **🏖️ Referência Men's Physique — Padrão da Categoria**
 
@@ -265,14 +266,19 @@ A Men's Physique é uma categoria que não possui um expoente único e dominante
 | BF% ideal | 5-7% (condição de palco, ligeiramente menos seco que Classic) |
 | Condicionamento | Pele fina, vascularidade moderada, aspecto "limpo" |
 
-*Proporções-alvo Men's Physique:*
+*Proporções-alvo Men's Physique (conforme spec v2.0):*
 
-| Proporção | Target MP | Observação |
-|-----------|----------|------------|
-| V-Taper (Ombros/Cintura) | ≥ 1.65 | Proporção de ombro/cintura é o principal fator |
-| Peitoral/Cintura | ~1.55 | Peito cheio mas sem massa excessiva |
-| Braço | Proporcional | Braço não deve dominar o visual |
-| Cintura | Mínima absoluta | Prioridade máxima da categoria |
+| # | Proporção | Fórmula | Observação |
+|---|-----------|---------|------------|
+| 1 | **V-Taper (Ombros)** | Cintura × 1.55 | V-Taper mais suave |
+| 2 | **Peitoral** | Punho × 6.2 | Peitoral moderado |
+| 3 | **Braço** | (Altura/178) × 43cm | Escalado do Ryan Terry |
+| 4 | **Antebraço** | Braço × 0.80 | 80% do braço |
+| 5 | **Tríade** | N/A | Não aplicável - foco em upper body |
+| 6 | **Cintura** | Altura × 0.455 | Menos extrema que Classic |
+| 7 | **Coxa** | N/A | Não julgada (board shorts) |
+| 8 | **Coxa/Panturrilha** | N/A | Não julgada (board shorts) |
+| 9 | **Panturrilha** | Tornozelo × 1.8 | Estética geral, menos ênfase |
 
 *Como funciona:* O sistema calcula metas baseadas em ratios ideais da categoria, ajustados à estrutura óssea do usuário. Como não há um físico singular de referência, as metas são derivadas de médias dos top competidores e dos critérios de julgamento da IFBB.
 
@@ -312,18 +318,19 @@ Para cada proporção (independente do modo de comparação selecionado):
 - Target GOLDEN indicado
 - Status textual (ex: "QUASE LÁ (1.56)", "EM PROGRESSO (81%)")
 
-**Proporções calculadas:**
+**Proporções calculadas (9 métricas conforme spec v2.0):**
 
-| Proporção | Fórmula | Target |
-|-----------|---------|--------|
-| **Shape-V (V-Taper Index)** | Ombros ÷ Cintura | 1.618 (Golden Ratio) |
-| **Poder de Tronco (Peitoral)** | Peitoral absoluto | Meta Reeves baseada em estrutura óssea |
-| **Braço** | Braço absoluto | Meta Reeves (ex: 34.2cm) |
-| **Proporção Braço/Antebraço** | Braço ÷ Antebraço | ~1.618 |
-| **Proporção Coxa/Joelho** | Coxa ÷ Joelho | ~1.618 |
-| **Proporção Coxa/Panturrilha** | Coxa ÷ Panturrilha | ~1.618 |
-| **Proporção Panturrilha/Tornozelo** | Panturrilha ÷ Tornozelo | ~1.618 |
-| **Trindade Clássica** | Pescoço ≈ Braço ≈ Panturrilha | Igualdade entre os três |
+| # | Proporção | Partes Envolvidas | Golden Ratio | Classic (CBum) | Men's Physique |
+|---|-----------|-------------------|--------------|----------------|----------------|
+| 1 | **Ombros** | Ombro + Cintura | `1.618 × Cintura` | `1.70 × Cintura` | `1.55 × Cintura` |
+| 2 | **Peitoral** | Peitoral + Punho | `6.5 × Punho` | `7.0 × Punho` | `6.2 × Punho` |
+| 3 | **Braço** | Braço + Punho | `2.52 × Punho` | `(Altura/185) × 50cm` | `(Altura/178) × 43cm` |
+| 4 | **Antebraço** | Antebraço + Braço | `0.80 × Braço` | `0.80 × Braço` | `0.80 × Braço` |
+| 5 | **Tríade** | Pescoço + Braço + Panturrilha | `1:1:1 (Igualdade)` | `~1:1:1 (Harmonia)` | N/A |
+| 6 | **Cintura** | Cintura + Pelve | `0.86 × Pelve` | `0.42 × Altura` | `0.455 × Altura` |
+| 7 | **Coxa** | Coxa + Joelho + Cintura | `1.75 × Joelho` | `0.97 × Cintura` | N/A |
+| 8 | **Coxa/Panturrilha** | Coxa + Panturrilha | `Coxa = 1.5 × Pant` | `Coxa = 1.5 × Pant` | N/A |
+| 9 | **Panturrilha** | Panturrilha + Tornozelo | `1.92 × Tornozelo` | `0.96 × Braço` | Estética Geral |
 
 **Aba 3 — Análise de Assimetrias**
 
@@ -538,13 +545,18 @@ Sugestão de pesos: w1=0.40, w2=0.35, w3=0.25
 Grade: A (80-100), B (60-79), C (40-59), D (20-39), E (0-19)
 ```
 
-**Metas Steve Reeves (baseadas em estrutura óssea):**
+**Metas Golden Ratio / Steve Reeves (baseadas em estrutura óssea):**
 ```
-Meta Braço = Pulso × 2.52
-Meta Panturrilha = Tornozelo × 1.92
-Meta Pescoço ≈ Braço ≈ Panturrilha (Trindade Clássica)
-Meta Peitoral = Cintura × 1.48 (ou baseada em medida de tórax)
-Meta Coxa = Joelho × 1.75
+# 9 Proporções (conforme spec v2.0)
+1. Ombros = Cintura × 1.618 (PHI)
+2. Peitoral = Punho × 6.5
+3. Braço = Punho × 2.52
+4. Antebraço = Braço × 0.80
+5. Tríade: Pescoço ≈ Braço ≈ Panturrilha (1:1:1)
+6. Cintura = Pelve × 0.86
+7. Coxa = Joelho × 1.75
+8. Coxa/Panturrilha: Coxa = Panturrilha × 1.5
+9. Panturrilha = Tornozelo × 1.92
 ```
 
 **Ajuste de Metas por Modo de Comparação:**
@@ -556,40 +568,80 @@ Frame Index = (Pulso_cm + Tornozelo_cm + Altura_cm) / 3
 Fator de Escala = Frame_Index_Usuário / Frame_Index_Referência
 ```
 
-*Referência Classic Physique (CBum):*
+*Referência Classic Physique (CBum - spec v2.0):*
 ```
-Frame_CBum = (19.0 + 24.5 + 185) / 3 = 76.17
-Ratios_CBum:
-  V-Taper (Ombros/Cintura) = ~1.82
-  Peitoral/Cintura = ~1.71
-  Braço_target = Pulso_usuario × 2.68  (CBum: ~51/19 = 2.68)
-  Panturrilha_target = Tornozelo_usuario × 2.08
-  Coxa_target = Joelho_usuario × 1.86
+REFERÊNCIA: Chris Bumstead (185cm, 6x Olympia)
+
+Constantes Classic Physique:
+  OMBROS_CINTURA = 1.70          # V-Taper mais agressivo
+  PEITO_PUNHO = 7.0              # Peitoral maior
+  CINTURA_ALTURA = 0.42          # Cintura super apertada
+  COXA_CINTURA = 0.97            # Coxas proporcionais à cintura
+  COXA_PANTURRILHA = 1.5         # Proporção coxa/panturrilha
+  PANTURRILHA_BRACO = 0.96       # Quase iguais
+  ANTEBRACO_BRACO = 0.80         # 80% do braço
+
+Fórmulas de cálculo:
+  1. Ombros = Cintura × 1.70
+  2. Peitoral = Punho × 7.0
+  3. Braço = (Altura / 185) × 50cm
+  4. Antebraço = Braço × 0.80
+  5. Tríade: ~1:1:1 (harmonia)
+  6. Cintura = Altura × 0.42
+  7. Coxa = Cintura × 0.97
+  8. Coxa/Pant: Coxa = Panturrilha × 1.5
+  9. Panturrilha = Braço × 0.96
 ```
 
-*Referência Men's Physique (Padrão Categoria):*
+*Referência Men's Physique (Ryan Terry - spec v2.0):*
 ```
-Ratios_MP:
-  V-Taper (Ombros/Cintura) = ≥ 1.65
-  Peitoral/Cintura = ~1.55
-  Braço_target = Pulso_usuario × 2.40  (braço proporcional, não massivo)
-  Panturrilha_target = Tornozelo_usuario × 1.85
-  Coxa_target = não priorizado (mas Joelho × 1.65 como referência)
+REFERÊNCIA: Ryan Terry (178cm, 3x Olympia)
+
+Constantes Men's Physique:
+  OMBROS_CINTURA = 1.55          # V-Taper mais suave
+  PEITO_PUNHO = 6.2              # Peitoral moderado
+  CINTURA_ALTURA = 0.455         # Cintura menos extrema
+  ANTEBRACO_BRACO = 0.80         # 80% do braço
+
+Fórmulas de cálculo:
+  1. Ombros = Cintura × 1.55
+  2. Peitoral = Punho × 6.2
+  3. Braço = (Altura / 178) × 43cm
+  4. Antebraço = Braço × 0.80
+  5. Tríade: N/A (foco em upper body)
+  6. Cintura = Altura × 0.455
+  7. Coxa: N/A (não julgada - board shorts)
+  8. Coxa/Pant: N/A (não julgada)
+  9. Panturrilha = Tornozelo × 1.8 (estética geral)
+
 Pesos do Score MP:
-  Upper Body (V-Taper, ombros, costas, peito, braços) = 70%
-  Core (cintura, abs) = 20%
-  Lower Body = 10%
+  Upper Body = 70% (ombros, braços, peitoral)
+  Core = 17% (cintura)
+  Lower Body = 5% (panturrilha apenas)
 ```
 
-*Referência Golden Ratio (Padrão):*
+*Referência Golden Ratio (Padrão - spec v2.0):*
 ```
-Ratios_GR:
-  Todas as proporções target = 1.618
-  Braço_target = Pulso × 2.52 (Steve Reeves)
-  Panturrilha_target = Tornozelo × 1.92
-  Coxa_target = Joelho × 1.75
-Pesos do Score GR:
-  Proporções = 40%, Simetria = 35%, Composição = 25%
+Constantes Golden Ratio:
+  PHI = 1.618                    # Proporção Áurea
+  PEITO_PUNHO = 6.5              # Multiplicador peitoral
+  BRACO_PUNHO = 2.52             # Multiplicador braço
+  ANTEBRACO_BRACO = 0.80         # 80% do braço
+  CINTURA_PELVE = 0.86           # Proporção cintura
+  COXA_JOELHO = 1.75             # Multiplicador coxa
+  COXA_PANTURRILHA = 1.5         # Proporção coxa/panturrilha
+  PANTURRILHA_TORNOZELO = 1.92   # Multiplicador panturrilha
+
+Pesos do Score Golden Ratio:
+  Ombros = 18%
+  Peitoral = 14%
+  Braço = 14%
+  Antebraço = 5%
+  Tríade = 10%
+  Cintura = 12% (INVERTIDO - menor é melhor)
+  Coxa = 10%
+  Coxa/Panturrilha = 8%
+  Panturrilha = 9%
 ```
 
 ### 7.4 Integração com IA (Coach IA)
