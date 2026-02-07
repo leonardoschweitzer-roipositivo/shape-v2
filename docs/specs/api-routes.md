@@ -99,7 +99,8 @@ Content-Type: application/json
 {
   "email": "user@example.com",
   "password": "minimo8chars",
-  "name": "João Silva"  // opcional
+  "name": "João Silva",           // opcional
+  "role": "ATHLETE"               // ATHLETE | PERSONAL | ACADEMY (default: ATHLETE)
 }
 
 // Response 201 Created
@@ -110,12 +111,18 @@ Content-Type: application/json
       "id": "usr_abc123",
       "email": "user@example.com",
       "name": "João Silva",
+      "role": "ATHLETE",
+      "plan": "FREE",
       "createdAt": "2026-02-07T12:00:00Z"
     },
     "tokens": {
       "accessToken": "eyJhbG...",
       "refreshToken": "eyJhbG...",
       "expiresIn": 3600
+    },
+    "onboarding": {
+      "nextStep": "profile-basic",  // ou "personal-profile" / "academy-profile"
+      "isComplete": false
     }
   }
 }
@@ -147,7 +154,8 @@ Content-Type: application/json
       "id": "usr_abc123",
       "email": "user@example.com",
       "name": "João Silva",
-      "isPro": false,
+      "role": "ATHLETE",
+      "plan": "FREE",
       "profile": { ... }  // se existir
     },
     "tokens": {
@@ -1292,9 +1300,990 @@ Content-Type: application/json
 
 ---
 
-## 10. RATE LIMITING
+## 10. PERSONAL (NOVO)
 
-### 10.1 Limites por Endpoint
+Endpoints para Personal Trainers gerenciarem seus atletas.
+
+> ⚠️ **Requer `role: PERSONAL`**
+
+### 10.1 Dashboard do Personal
+
+#### GET /personal/dashboard
+
+Retorna dados consolidados do personal.
+
+```typescript
+// Request
+GET /personal/dashboard
+Authorization: Bearer <token>
+
+// Response 200 OK
+{
+  "success": true,
+  "data": {
+    "summary": {
+      "totalAthletes": 12,
+      "activeAthletes": 10,
+      "measuredThisWeek": 8,
+      "averageScore": 76.5,
+      "scoreChange": 2.3
+    },
+    "needsAttention": [
+      {
+        "athleteId": "usr_123",
+        "name": "João Silva",
+        "reason": "NO_MEASUREMENT",
+        "daysSinceLastMeasurement": 18,
+        "lastScore": 72
+      },
+      {
+        "athleteId": "usr_456",
+        "name": "Maria Santos",
+        "reason": "HIGH_ASYMMETRY",
+        "asymmetryPercent": 9.2,
+        "muscle": "braco"
+      }
+    ],
+    "topPerformers": [
+      {
+        "athleteId": "usr_789",
+        "name": "Ana Lima",
+        "score": 92,
+        "rank": 1
+      }
+    ],
+    "recentActivity": [
+      {
+        "type": "MEASUREMENT",
+        "athleteId": "usr_123",
+        "athleteName": "João Silva",
+        "timestamp": "2026-02-07T10:00:00Z"
+      }
+    ]
+  }
+}
+```
+
+### 13.2 Gerenciamento de Atletas
+
+#### GET /personal/athletes
+
+Lista atletas do personal.
+
+```typescript
+// Request
+GET /personal/athletes?page=1&limit=10&status=active&search=joao
+Authorization: Bearer <token>
+
+// Query params
+// - page: número da página (default: 1)
+// - limit: itens por página (default: 10, max: 50)
+// - status: 'all' | 'active' | 'inactive' (default: 'all')
+// - search: busca por nome ou email
+// - sortBy: 'name' | 'score' | 'lastMeasurement' (default: 'name')
+// - sortOrder: 'asc' | 'desc' (default: 'asc')
+
+// Response 200 OK
+{
+  "success": true,
+  "data": [
+    {
+      "id": "usr_123",
+      "name": "João Silva",
+      "email": "joao@email.com",
+      "avatarUrl": "https://...",
+      "status": "active",
+      "latestMeasurement": {
+        "date": "2026-02-05T10:00:00Z",
+        "score": 78,
+        "ratio": 1.52
+      },
+      "createdAt": "2025-06-01T00:00:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 12,
+    "totalPages": 2
+  }
+}
+```
+
+#### GET /personal/athletes/:id
+
+Detalhe de um atleta específico.
+
+```typescript
+// Request
+GET /personal/athletes/usr_123
+Authorization: Bearer <token>
+
+// Response 200 OK
+{
+  "success": true,
+  "data": {
+    "athlete": {
+      "id": "usr_123",
+      "name": "João Silva",
+      "email": "joao@email.com",
+      "avatarUrl": "https://...",
+      "createdAt": "2025-06-01T00:00:00Z"
+    },
+    "profile": {
+      "birthDate": "1990-05-15",
+      "gender": "MALE",
+      "altura": 180,
+      "punho": 17.5,
+      "tornozelo": 23,
+      "joelho": 38,
+      "pelve": 98
+    },
+    "latestMeasurement": {
+      "id": "msr_abc",
+      "date": "2026-02-05T10:00:00Z",
+      "measurements": { ... },
+      "scores": { ... }
+    },
+    "stats": {
+      "totalMeasurements": 24,
+      "currentScore": 78,
+      "scoreChange30d": 5,
+      "currentRatio": 1.52,
+      "ratioChange30d": 0.08,
+      "streak": 3,
+      "memberSince": "2025-06-01"
+    }
+  }
+}
+
+// Errors
+403 - FORBIDDEN: Atleta não pertence a este personal
+404 - NOT_FOUND: Atleta não encontrado
+```
+
+#### POST /personal/athletes/:id/measurements
+
+Registra medição para um atleta.
+
+```typescript
+// Request
+POST /personal/athletes/usr_123/measurements
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "measuredAt": "2026-02-07T10:00:00Z",  // opcional, default: now
+  "cintura": 82,
+  "ombros": 120,
+  "peitoral": 108,
+  "braco": 38,
+  "antebraco": 30,
+  "pescoco": 40,
+  "coxa": 60,
+  "panturrilha": 38,
+  "peso": 85,                  // opcional
+  "gorduraCorporal": 12,       // opcional
+  "bracoEsquerdo": 37.5,       // opcional (bilateral)
+  "bracoDireito": 38.5,        // opcional
+  "notes": "Medição pós-treino" // opcional
+}
+
+// Response 201 Created
+{
+  "success": true,
+  "data": {
+    "measurement": {
+      "id": "msr_xyz",
+      "userId": "usr_123",
+      "registeredById": "usr_personal_456",  // ID do personal
+      "measuredAt": "2026-02-07T10:00:00Z",
+      "source": "PERSONAL_ENTRY",
+      // ... measurements
+    },
+    "scores": {
+      "GOLDEN_RATIO": { "scoreTotal": 80, "classificacao": "INTERMEDIARIO" },
+      "CLASSIC_PHYSIQUE": { "scoreTotal": 78, ... },
+      "MENS_PHYSIQUE": { "scoreTotal": 82, ... }
+    },
+    "changes": {
+      "score": { "previous": 78, "current": 80, "change": 2 },
+      "ratio": { "previous": 1.50, "current": 1.52, "change": 0.02 }
+    }
+  }
+}
+
+// Errors
+400 - VALIDATION_ERROR: Dados inválidos
+403 - FORBIDDEN: Atleta não pertence a este personal
+404 - NOT_FOUND: Atleta não encontrado
+422 - PROFILE_INCOMPLETE: Atleta não completou perfil estrutural
+```
+
+#### DELETE /personal/athletes/:id
+
+Remove vínculo com atleta.
+
+```typescript
+// Request
+DELETE /personal/athletes/usr_123
+Authorization: Bearer <token>
+
+// Response 200 OK
+{
+  "success": true,
+  "data": {
+    "message": "Vínculo removido com sucesso",
+    "athleteId": "usr_123"
+  }
+}
+
+// Nota: Não deleta o atleta, apenas remove o vínculo
+// O atleta pode continuar usando o app independentemente
+```
+
+### 13.3 Convites para Atletas
+
+#### POST /personal/invites
+
+Convida novo atleta.
+
+```typescript
+// Request
+POST /personal/invites
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "email": "novo.atleta@email.com",
+  "name": "Carlos Santos",        // opcional
+  "message": "Olá Carlos! ..."    // opcional
+}
+
+// Response 201 Created
+{
+  "success": true,
+  "data": {
+    "invite": {
+      "id": "inv_abc123",
+      "email": "novo.atleta@email.com",
+      "name": "Carlos Santos",
+      "status": "PENDING",
+      "expiresAt": "2026-02-14T12:00:00Z",
+      "createdAt": "2026-02-07T12:00:00Z"
+    }
+  }
+}
+
+// Errors
+400 - VALIDATION_ERROR: Email inválido
+409 - ALREADY_ATHLETE: Email já é atleta deste personal
+409 - INVITE_EXISTS: Convite pendente já existe para este email
+403 - LIMIT_REACHED: Limite de atletas atingido (upgrade plano)
+```
+
+#### GET /personal/invites
+
+Lista convites enviados.
+
+```typescript
+// Request
+GET /personal/invites?status=pending
+Authorization: Bearer <token>
+
+// Response 200 OK
+{
+  "success": true,
+  "data": [
+    {
+      "id": "inv_abc123",
+      "email": "atleta@email.com",
+      "name": "Carlos Santos",
+      "status": "PENDING",
+      "expiresAt": "2026-02-14T12:00:00Z",
+      "createdAt": "2026-02-07T12:00:00Z"
+    }
+  ]
+}
+```
+
+#### DELETE /personal/invites/:id
+
+Cancela convite.
+
+```typescript
+// Request
+DELETE /personal/invites/inv_abc123
+Authorization: Bearer <token>
+
+// Response 200 OK
+{
+  "success": true,
+  "data": {
+    "message": "Convite cancelado"
+  }
+}
+```
+
+### 10.4 Relatórios do Personal
+
+#### GET /personal/reports
+
+Relatório consolidado.
+
+```typescript
+// Request
+GET /personal/reports?period=30d
+Authorization: Bearer <token>
+
+// Query params
+// - period: '7d' | '30d' | '90d' | '1y' (default: '30d')
+
+// Response 200 OK
+{
+  "success": true,
+  "data": {
+    "period": {
+      "start": "2026-01-07",
+      "end": "2026-02-07",
+      "label": "Últimos 30 dias"
+    },
+    "summary": {
+      "athletesActive": 10,
+      "athletesNew": 2,
+      "measurementsTotal": 45,
+      "averageScore": 76.5,
+      "averageScoreChange": 2.3
+    },
+    "topEvolutions": [
+      { "athleteId": "usr_1", "name": "Ana", "scoreChange": 8 },
+      { "athleteId": "usr_2", "name": "Carlos", "scoreChange": 6 }
+    ],
+    "needsAttention": [
+      { "athleteId": "usr_3", "name": "João", "reason": "NO_MEASUREMENT", "days": 18 }
+    ],
+    "scoreDistribution": {
+      "ELITE": 1,
+      "AVANCADO": 3,
+      "INTERMEDIARIO": 4,
+      "INICIANTE": 2,
+      "DESENVOLVIMENTO": 0
+    }
+  }
+}
+```
+
+### 10.5 Perfil do Personal
+
+#### GET /personal/profile
+
+Retorna perfil do personal.
+
+```typescript
+// Request
+GET /personal/profile
+Authorization: Bearer <token>
+
+// Response 200 OK
+{
+  "success": true,
+  "data": {
+    "id": "prs_abc123",
+    "userId": "usr_abc",
+    "cref": "012345-G/SP",
+    "specialties": ["Hipertrofia", "Emagrecimento"],
+    "bio": "Personal trainer com 10 anos de experiência...",
+    "phone": "+5511999999999",
+    "academyId": null,         // ou ID se vinculado
+    "maxAthletes": 50,
+    "currentAthletes": 12,
+    "plan": "PERSONAL_PRO",
+    "planExpiresAt": "2026-12-31"
+  }
+}
+```
+
+#### PATCH /personal/profile
+
+Atualiza perfil do personal.
+
+```typescript
+// Request
+PATCH /personal/profile
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "cref": "012345-G/SP",
+  "specialties": ["Hipertrofia", "Emagrecimento", "Funcional"],
+  "bio": "Personal trainer...",
+  "phone": "+5511999999999"
+}
+
+// Response 200 OK
+{
+  "success": true,
+  "data": {
+    // ... perfil atualizado
+  }
+}
+```
+
+---
+
+## 11. ACADEMY (NOVO)
+
+Endpoints para Academias gerenciarem personais e visualizarem atletas.
+
+> ⚠️ **Requer `role: ACADEMY`**
+
+### 14.1 Dashboard da Academia
+
+#### GET /academy/dashboard
+
+Retorna dados consolidados da academia.
+
+```typescript
+// Request
+GET /academy/dashboard
+Authorization: Bearer <token>
+
+// Response 200 OK
+{
+  "success": true,
+  "data": {
+    "summary": {
+      "totalPersonals": 8,
+      "activePersonals": 8,
+      "totalAthletes": 94,
+      "activeAthletes": 87,
+      "measuredThisWeek": 67,
+      "averageScore": 74.2,
+      "scoreChange": 1.8
+    },
+    "personalRanking": [
+      {
+        "personalId": "prs_1",
+        "name": "Carlos Lima",
+        "athleteCount": 15,
+        "averageScore": 82.3,
+        "rank": 1
+      },
+      {
+        "personalId": "prs_2",
+        "name": "Ana Souza",
+        "athleteCount": 12,
+        "averageScore": 78.5,
+        "rank": 2
+      }
+    ],
+    "scoreDistribution": {
+      "ELITE": 5,
+      "AVANCADO": 21,
+      "INTERMEDIARIO": 42,
+      "INICIANTE": 19,
+      "DESENVOLVIMENTO": 7
+    },
+    "alerts": [
+      {
+        "type": "PERSONAL_INACTIVE",
+        "personalId": "prs_5",
+        "name": "Maria Costa",
+        "message": "3 alunos inativos há 2+ semanas"
+      },
+      {
+        "type": "LIMIT_NEAR",
+        "personalId": "prs_3",
+        "name": "João Silva",
+        "message": "Limite de alunos: 10/10"
+      }
+    ],
+    "recentActivity": [
+      {
+        "type": "NEW_ATHLETE",
+        "personalName": "Carlos Lima",
+        "athleteName": "Pedro Santos",
+        "timestamp": "2026-02-07T10:00:00Z"
+      }
+    ]
+  }
+}
+```
+
+### 14.2 Gerenciamento de Personais
+
+#### GET /academy/personals
+
+Lista personais da academia.
+
+```typescript
+// Request
+GET /academy/personals?page=1&limit=10
+Authorization: Bearer <token>
+
+// Response 200 OK
+{
+  "success": true,
+  "data": [
+    {
+      "id": "prs_123",
+      "userId": "usr_abc",
+      "name": "Carlos Lima",
+      "email": "carlos@academia.com",
+      "avatarUrl": "https://...",
+      "cref": "012345-G/SP",
+      "specialties": ["Hipertrofia"],
+      "athleteCount": 15,
+      "maxAthletes": 20,
+      "averageScore": 82.3,
+      "lastActivity": "2026-02-07T10:00:00Z",
+      "status": "active",
+      "createdAt": "2022-03-15T00:00:00Z"
+    }
+  ],
+  "pagination": { ... }
+}
+```
+
+#### GET /academy/personals/:id
+
+Detalhe de um personal.
+
+```typescript
+// Request
+GET /academy/personals/prs_123
+Authorization: Bearer <token>
+
+// Response 200 OK
+{
+  "success": true,
+  "data": {
+    "personal": {
+      "id": "prs_123",
+      "name": "Carlos Lima",
+      "email": "carlos@academia.com",
+      "cref": "012345-G/SP",
+      "specialties": ["Hipertrofia", "Funcional"],
+      "bio": "...",
+      "phone": "+5511999999999",
+      "athleteCount": 15,
+      "maxAthletes": 20,
+      "averageScore": 82.3,
+      "createdAt": "2022-03-15T00:00:00Z"
+    },
+    "athletes": [
+      {
+        "id": "usr_1",
+        "name": "Lucas Alves",
+        "score": 88,
+        "ratio": 1.55,
+        "lastMeasurement": "2026-02-07",
+        "status": "active"
+      }
+    ],
+    "stats": {
+      "totalMeasurements30d": 45,
+      "athletesActive": 14,
+      "athletesInactive": 1,
+      "topPerformer": { "name": "Lucas Alves", "score": 88 },
+      "averageImprovement": 2.1
+    }
+  }
+}
+```
+
+#### PATCH /academy/personals/:id
+
+Atualiza configurações do personal.
+
+```typescript
+// Request
+PATCH /academy/personals/prs_123
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "maxAthletes": 25  // Aumentar limite
+}
+
+// Response 200 OK
+{
+  "success": true,
+  "data": {
+    // ... personal atualizado
+  }
+}
+```
+
+#### DELETE /academy/personals/:id
+
+Remove vínculo com personal.
+
+```typescript
+// Request
+DELETE /academy/personals/prs_123
+Authorization: Bearer <token>
+
+// Response 200 OK
+{
+  "success": true,
+  "data": {
+    "message": "Vínculo removido com sucesso"
+  }
+}
+
+// Nota: Não deleta o personal, apenas remove da academia
+// Os atletas do personal são desvinculados da academia também
+```
+
+### 11.3 Visualização de Atletas
+
+#### GET /academy/athletes
+
+Lista todos atletas da academia (de todos os personais).
+
+```typescript
+// Request
+GET /academy/athletes?page=1&limit=20&personalId=prs_123
+Authorization: Bearer <token>
+
+// Query params
+// - personalId: filtrar por personal específico
+// - status: 'all' | 'active' | 'inactive'
+// - search: busca por nome
+// - sortBy: 'name' | 'score' | 'personal' | 'lastMeasurement'
+
+// Response 200 OK
+{
+  "success": true,
+  "data": [
+    {
+      "id": "usr_123",
+      "name": "Lucas Alves",
+      "email": "lucas@email.com",
+      "personal": {
+        "id": "prs_1",
+        "name": "Carlos Lima"
+      },
+      "score": 88,
+      "ratio": 1.55,
+      "lastMeasurement": "2026-02-07",
+      "status": "active"
+    }
+  ],
+  "pagination": { ... }
+}
+```
+
+#### GET /academy/athletes/:id
+
+Detalhe de um atleta (read-only).
+
+```typescript
+// Request
+GET /academy/athletes/usr_123
+Authorization: Bearer <token>
+
+// Response 200 OK
+{
+  "success": true,
+  "data": {
+    "athlete": { ... },
+    "profile": { ... },
+    "personal": {
+      "id": "prs_1",
+      "name": "Carlos Lima"
+    },
+    "latestMeasurement": { ... },
+    "stats": { ... }
+  }
+}
+
+// Nota: Academia pode VER mas não pode EDITAR atletas
+// Edições são feitas pelo Personal responsável
+```
+
+### 11.4 Convites para Personais
+
+#### POST /academy/invites
+
+Convida novo personal.
+
+```typescript
+// Request
+POST /academy/invites
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "email": "novo.personal@email.com",
+  "name": "Roberto Santos",           // opcional
+  "cref": "098765-G/SP",              // opcional
+  "maxAthletes": 20,                  // limite de alunos
+  "message": "Convite para..."        // opcional
+}
+
+// Response 201 Created
+{
+  "success": true,
+  "data": {
+    "invite": {
+      "id": "inv_xyz",
+      "email": "novo.personal@email.com",
+      "role": "PERSONAL",
+      "status": "PENDING",
+      "maxAthletes": 20,
+      "expiresAt": "2026-02-14T12:00:00Z"
+    }
+  }
+}
+
+// Errors
+403 - LIMIT_REACHED: Limite de personais atingido
+409 - ALREADY_PERSONAL: Já é personal desta academia
+409 - INVITE_EXISTS: Convite pendente existe
+```
+
+#### GET /academy/invites
+
+Lista convites enviados.
+
+```typescript
+// Request
+GET /academy/invites?status=pending
+Authorization: Bearer <token>
+
+// Response 200 OK
+{
+  "success": true,
+  "data": [ ... ]
+}
+```
+
+#### DELETE /academy/invites/:id
+
+Cancela convite.
+
+```typescript
+// Request
+DELETE /academy/invites/inv_xyz
+Authorization: Bearer <token>
+
+// Response 200 OK
+{
+  "success": true,
+  "data": {
+    "message": "Convite cancelado"
+  }
+}
+```
+
+### 11.5 Relatórios da Academia
+
+#### GET /academy/reports
+
+Relatório consolidado.
+
+```typescript
+// Request
+GET /academy/reports?period=30d
+Authorization: Bearer <token>
+
+// Response 200 OK
+{
+  "success": true,
+  "data": {
+    "period": { ... },
+    "summary": {
+      "personals": 8,
+      "athletes": 94,
+      "measurementsTotal": 312,
+      "averageScore": 74.2,
+      "churnRate": 2.1
+    },
+    "personalRanking": [ ... ],
+    "scoreDistribution": { ... },
+    "trends": {
+      "athleteGrowth": 8,      // novos atletas no período
+      "scoreImprovement": 1.8  // melhoria média de score
+    }
+  }
+}
+```
+
+#### GET /academy/reports/export
+
+Exporta relatório em PDF/CSV.
+
+```typescript
+// Request
+GET /academy/reports/export?format=pdf&period=30d
+Authorization: Bearer <token>
+
+// Response 200 OK
+// Content-Type: application/pdf
+// Content-Disposition: attachment; filename="relatorio-academia-2026-02.pdf"
+```
+
+### 11.6 Perfil da Academia
+
+#### GET /academy/profile
+
+Retorna perfil da academia.
+
+```typescript
+// Request
+GET /academy/profile
+Authorization: Bearer <token>
+
+// Response 200 OK
+{
+  "success": true,
+  "data": {
+    "id": "acd_abc123",
+    "businessName": "Academia Fitness Pro",
+    "legalName": "Fitness Pro LTDA",
+    "cnpj": "12.345.678/0001-00",
+    "phone": "+5511999999999",
+    "email": "contato@fitnesspro.com",
+    "website": "https://fitnesspro.com",
+    "address": "Rua das Academias, 123",
+    "city": "São Paulo",
+    "state": "SP",
+    "zipCode": "01234-567",
+    "logoUrl": "https://...",
+    "primaryColor": "#00C9A7",
+    "maxPersonals": 20,
+    "currentPersonals": 8,
+    "plan": "ACADEMY_PRO",
+    "planExpiresAt": "2026-12-31"
+  }
+}
+```
+
+#### PATCH /academy/profile
+
+Atualiza perfil da academia.
+
+```typescript
+// Request
+PATCH /academy/profile
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "businessName": "Academia Fitness Pro",
+  "phone": "+5511999999999",
+  "logoUrl": "https://...",
+  "primaryColor": "#00C9A7"
+}
+
+// Response 200 OK
+{
+  "success": true,
+  "data": { ... }
+}
+```
+
+---
+
+## 12. INVITES (NOVO)
+
+Endpoints públicos e privados para gerenciamento de convites.
+
+### 15.1 Aceitar Convite (Público)
+
+#### GET /invites/:token
+
+Verifica convite (público, sem auth).
+
+```typescript
+// Request
+GET /invites/abc123xyz
+// Sem Authorization header
+
+// Response 200 OK
+{
+  "success": true,
+  "data": {
+    "invite": {
+      "id": "inv_abc",
+      "email": "convidado@email.com",
+      "name": "João Silva",
+      "role": "ATHLETE",           // ou "PERSONAL"
+      "status": "PENDING",
+      "expiresAt": "2026-02-14T12:00:00Z"
+    },
+    "invitedBy": {
+      "name": "Carlos Lima",
+      "role": "PERSONAL",          // ou "ACADEMY"
+      "businessName": null         // ou nome da academia
+    },
+    "existingAccount": false       // true se email já tem conta
+  }
+}
+
+// Errors
+404 - NOT_FOUND: Convite não encontrado
+410 - EXPIRED: Convite expirado
+```
+
+#### POST /invites/:token/accept
+
+Aceita convite.
+
+```typescript
+// Request - Usuário novo (cria conta)
+POST /invites/abc123xyz/accept
+Content-Type: application/json
+
+{
+  "name": "João Silva",
+  "password": "minimo8chars"
+}
+
+// Request - Usuário existente (faz login)
+POST /invites/abc123xyz/accept
+Content-Type: application/json
+
+{
+  "password": "senhaexistente"
+}
+
+// Response 200 OK
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": "usr_new123",
+      "email": "convidado@email.com",
+      "name": "João Silva",
+      "role": "ATHLETE"
+    },
+    "tokens": {
+      "accessToken": "eyJ...",
+      "refreshToken": "eyJ...",
+      "expiresIn": 3600
+    },
+    "linkedTo": {
+      "type": "PERSONAL",
+      "id": "prs_abc",
+      "name": "Carlos Lima"
+    }
+  }
+}
+
+// Errors
+400 - VALIDATION_ERROR: Dados inválidos
+401 - INVALID_PASSWORD: Senha incorreta (usuário existente)
+410 - EXPIRED: Convite expirado
+```
+
+---
+
+## 13. RATE LIMITING
+
+### 13.1 Limites por Endpoint
 
 | Endpoint | Limite Free | Limite PRO |
 |----------|------------|------------|
@@ -1305,7 +2294,7 @@ Content-Type: application/json
 | Outros GET | 100/min | 500/min |
 | Outros POST/PATCH | 30/min | 100/min |
 
-### 10.2 Headers de Rate Limit
+### 13.2 Headers de Rate Limit
 
 ```http
 X-RateLimit-Limit: 100
@@ -1313,7 +2302,7 @@ X-RateLimit-Remaining: 95
 X-RateLimit-Reset: 1707300000  # Unix timestamp
 ```
 
-### 10.3 Resposta de Rate Limit
+### 13.3 Resposta de Rate Limit
 
 ```typescript
 // Response 429 Too Many Requests
@@ -1331,7 +2320,7 @@ X-RateLimit-Reset: 1707300000  # Unix timestamp
 
 ## 11. CÓDIGOS DE ERRO
 
-### 11.1 Tabela de Erros
+### 14.1 Tabela de Erros
 
 | Código | HTTP | Descrição |
 |--------|------|-----------|
@@ -1348,7 +2337,7 @@ X-RateLimit-Reset: 1707300000  # Unix timestamp
 | `RATE_LIMIT_EXCEEDED` | 429 | Limite de requisições |
 | `INTERNAL_ERROR` | 500 | Erro interno do servidor |
 
-### 11.2 Formato de Erro
+### 14.2 Formato de Erro
 
 ```typescript
 {
@@ -1376,9 +2365,9 @@ X-RateLimit-Reset: 1707300000  # Unix timestamp
 
 ---
 
-## 12. WEBHOOKS (Futuro)
+## 15. WEBHOOKS (Futuro)
 
-### 12.1 Eventos Disponíveis
+### 15.1 Eventos Disponíveis
 
 | Evento | Descrição |
 |--------|-----------|
@@ -1387,7 +2376,7 @@ X-RateLimit-Reset: 1707300000  # Unix timestamp
 | `goal.completed` | Meta atingida |
 | `subscription.changed` | Assinatura alterada |
 
-### 12.2 Payload de Webhook
+### 15.2 Payload de Webhook
 
 ```typescript
 {
@@ -1404,13 +2393,14 @@ X-RateLimit-Reset: 1707300000  # Unix timestamp
 
 ---
 
-## 13. CHANGELOG
+## 16. CHANGELOG
 
 | Versão | Data | Alterações |
 |--------|------|------------|
 | 1.0 | Fev/2026 | Versão inicial da API |
+| 1.1 | Fev/2026 | Adicionado: Rotas Personal (seção 10), Academy (seção 11), Invites (seção 12) |
 
 ---
 
 **SHAPE-V API**  
-*REST • JWT • Rate Limited • Typed*
+*REST • JWT • Rate Limited • Multi-User*
