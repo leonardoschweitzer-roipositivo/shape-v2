@@ -1,4 +1,4 @@
-# SHAPE-V — Product Requirements Document (PRD)
+# VITRU IA — Product Requirements Document (PRD)
 
 **Versão:** 1.0  
 **Data:** 06/02/2026  
@@ -11,7 +11,7 @@
 
 ### 1.1 Propósito
 
-SHAPE-V é uma plataforma SaaS B2B2C de avaliação física inteligente focada na **estética clássica masculina** (físico "Deus Grego"). A aplicação utiliza IA para analisar proporções áureas corporais, assimetrias bilaterais e composição corporal, gerando planos de treino e dieta personalizados para que o usuário evolua em direção ao ideal das proporções clássicas (Golden Ratio 1.618).
+VITRU IA é uma plataforma SaaS B2B2C de avaliação física inteligente focada na **estética clássica masculina** (físico "Deus Grego"). A aplicação utiliza IA para analisar proporções áureas corporais, assimetrias bilaterais e composição corporal, gerando planos de treino e dieta personalizados para que o usuário evolua em direção ao ideal das proporções clássicas (Golden Ratio 1.618).
 
 ### 1.2 Problema
 
@@ -29,8 +29,8 @@ Uma plataforma que:
 
 ### 1.4 Nome e Identidade
 
-- **Nome:** SHAPE-V (referência ao V-Taper / Shape em "V")
-- **Tagline:** "Aesthetic Architect — A Matemática do Físico Clássico Validada pela Ciência e Inteligência Artificial"
+- **Nome:** VITRU IA (referência a Vitrúvio e suas proporções perfeitas + Inteligência Artificial)
+- **Tagline:** "A Matemática do Físico Perfeito — As proporções vitruvianas de Da Vinci, decodificadas e aplicadas no seu físico por Inteligência Artificial."
 - **Escala Shape-V:** Bloco → Normal → Atlético → Estético → Freak
 - **Target Golden Ratio:** 1.618
 
@@ -377,7 +377,7 @@ Histórico completo de avaliações e progresso físico.
 Assistente inteligente para periodização de treino e dieta.
 
 **Seção: Consultoria Inteligente**
-"Nossa IA cruza seus dados biométricos com as proporções da Era de Ouro para gerar um plano de ação completo: Diagnóstico, Treino e Nutrição."
+"Nossa IA cruza seus dados biométricos com as proporções de Vitrúvio e a Era de Ouro para gerar um plano de ação completo: Diagnóstico, Treino e Nutrição."
 
 **3 Pilares:**
 
@@ -687,7 +687,8 @@ Pesos do Score Golden Ratio:
 ### 8.2 Navegação
 
 **Menu lateral (sidebar):**
-- Momento (dashboard)
+- Início (dashboard)
+- Avaliação (nova avaliação)
 - Evolução (histórico + gráficos)
 - Coach IA (treino + dieta)
 - Sistema: Perfil, Configurações, Sair

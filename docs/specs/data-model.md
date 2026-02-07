@@ -1,16 +1,16 @@
-# SPEC: Data Model - SHAPE-V
+# SPEC: Data Model - VITRU IA
 
 ## Documento de Modelo de Dados
 
 **Versão:** 1.0  
 **Data:** Fevereiro 2026  
-**Projeto:** SHAPE-V (Sistema de Análise de Proporções Corporais)
+**Projeto:** VITRU IA (Sistema de Análise de Proporções Corporais)
 
 ---
 
 ## 1. VISÃO GERAL
 
-Este documento define a estrutura de dados completa do SHAPE-V, incluindo schema do banco de dados, tipos TypeScript, validações Zod e relacionamentos entre entidades.
+Este documento define a estrutura de dados completa do VITRU IA, incluindo schema do banco de dados, tipos TypeScript, validações Zod e relacionamentos entre entidades.
 
 ### 1.1 Stack de Dados
 
@@ -1183,5 +1183,5 @@ main()
 
 ---
 
-**SHAPE-V Data Model**  
+**VITRU IA Data Model**  
 *PostgreSQL • Prisma • Zod • TypeScript*

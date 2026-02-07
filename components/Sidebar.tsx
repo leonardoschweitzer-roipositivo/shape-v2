@@ -3,11 +3,15 @@ import {
   LayoutDashboard,
   TrendingUp,
   Activity,
+  Trophy,
   Bot,
   User,
   Settings,
-  LogOut
+  LogOut,
+  Users,
+  GraduationCap
 } from 'lucide-react';
+import { ProfileType } from './ProfileSelector';
 
 interface NavItemProps {
   icon: React.ElementType;
@@ -41,15 +45,35 @@ const NavItem: React.FC<NavItemProps> = ({ icon: Icon, label, isActive, isPro, i
 interface SidebarProps {
   currentView?: string;
   onNavigate?: (view: string) => void;
+  userProfile?: ProfileType;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ currentView = 'dashboard', onNavigate }) => {
-  const mainNavItems = [
+interface NavItemData {
+  icon: any;
+  label: string;
+  id: string;
+  isPro?: boolean;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ currentView = 'dashboard', onNavigate, userProfile = 'atleta' }) => {
+  const mainNavItems: NavItemData[] = [
     { icon: LayoutDashboard, label: 'Início', id: 'dashboard' },
+    { icon: Activity, label: 'Avaliação', id: 'assessment' },
     { icon: TrendingUp, label: 'Evolução', id: 'evolution' },
-    { icon: Activity, label: 'Avaliação IA', id: 'assessment' },
+    { icon: Trophy, label: 'Hall dos Deuses', id: 'hall' },
     { icon: Bot, label: 'Coach IA', id: 'coach', isPro: true },
   ];
+
+  if (userProfile === 'academia') {
+    mainNavItems.push(
+      { icon: GraduationCap, label: 'Personais', id: 'trainers' },
+      { icon: Users, label: 'Alunos', id: 'students' },
+    );
+  } else if (userProfile === 'personal') {
+    mainNavItems.push(
+      { icon: Users, label: 'Alunos', id: 'students' },
+    );
+  }
 
   const systemNavItems = [
     { icon: User, label: 'Perfil', id: 'profile' },
@@ -64,7 +88,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView = 'dashboard', onN
           <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-[#0A0F1C] font-bold text-xl shadow-lg shadow-primary/20">
             V
           </div>
-          <h1 className="text-xl font-bold tracking-wider text-white">SHAPE-V</h1>
+          <h1 className="text-xl font-bold tracking-wider text-white">VITRU IA</h1>
         </div>
 
         {/* Main Nav */}

@@ -17,7 +17,7 @@ import {
 import { InputField } from './InputField';
 
 interface LoginProps {
-    onLogin: () => void;
+    onLogin: (profile: ProfileType) => void;
 }
 
 
@@ -30,7 +30,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onLogin();
+        onLogin(profile);
     };
 
     return (
@@ -51,7 +51,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     {/* Logo */}
                     <div className="absolute top-12 left-12 flex items-center gap-2">
                         <Hexagon className="text-primary fill-primary/20" size={24} />
-                        <span className="font-bold text-xl tracking-wider">SHAPE-V</span>
+                        <span className="font-bold text-xl tracking-wider">VITRU IA</span>
                     </div>
 
                     <div className="mt-24 space-y-6">
@@ -59,13 +59,12 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                             <div className="w-12 h-1 bg-primary mb-6"></div>
                             <h1 className="text-5xl font-bold leading-tight tracking-tight">
                                 A Matemática do <br />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-emerald-300">Físico</span>{' '}
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary to-purple-400">Clássico</span>
+                                Físico Perfeito
                             </h1>
                         </div>
 
                         <p className="text-gray-400 text-lg leading-relaxed max-w-lg">
-                            Validada pela Ciência e Inteligência Artificial. Alcance a proporção áurea com análises de simetria bilateral em tempo real.
+                            As proporções vitruvianas de Da Vinci, decodificadas e aplicadas no seu físico por Inteligência Artificial.
                         </p>
 
                         <div className="flex gap-4 pt-4">
@@ -170,7 +169,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     </div>
 
                     <div className="text-center">
-                        <p className="text-[10px] text-gray-700">© 2024 SHAPE-V AI Analytics.</p>
+                        <p className="text-[10px] text-gray-700">© 2024 VITRU IA AI Analytics.</p>
                     </div>
                 </div>
             </div>

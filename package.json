@@ -1,7 +1,8 @@
 {
-  "name": "shape-v-dashboard",
+  "name": "vitru-ia-dashboard",
   "private": true,
   "version": "0.0.0",
+  "description": "VITRU IA - Plataforma de avaliação física baseada nas proporções de Vitrúvio e IA",
   "type": "module",
   "scripts": {
     "dev": "vite",

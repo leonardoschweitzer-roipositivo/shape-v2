@@ -1,16 +1,16 @@
-# SPEC: Dashboard - SHAPE-V
+# SPEC: Dashboard - VITRU IA
 
 ## Documento de Especificação do Dashboard
 
 **Versão:** 1.0  
 **Data:** Fevereiro 2026  
-**Projeto:** SHAPE-V (Sistema de Análise de Proporções Corporais)
+**Projeto:** VITRU IA (Sistema de Análise de Proporções Corporais)
 
 ---
 
 ## 1. VISÃO GERAL
 
-Este documento especifica o Dashboard principal do atleta/aluno no SHAPE-V, definindo widgets, hierarquia visual, dados necessários e interações.
+Este documento especifica o Dashboard principal do atleta/aluno no VITRU IA, definindo widgets, hierarquia visual, dados necessários e interações.
 
 ### 1.1 Objetivos do Dashboard
 
@@ -324,7 +324,7 @@ interface RatioCardProps {
 
 ```
 ┌─────────────────────────────────────────┐
-│  SHAPE-V RATIO                     📊   │
+│  VITRU IA RATIO                     📊   │
 │                                         │
 │  1.56  / 1.618                          │
 │  ═══════════════════                    │
@@ -963,7 +963,7 @@ Quando o usuário ainda não tem medidas:
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                                                                 │
-│                     👋 BEM-VINDO AO SHAPE-V                     │
+│                     👋 BEM-VINDO AO VITRU IA                     │
 │                                                                 │
 │          Vamos configurar seu perfil para calcular              │
 │              suas proporções ideais personalizadas              │
@@ -1209,5 +1209,5 @@ Além das cores, usar:
 
 ---
 
-**SHAPE-V Dashboard Specification**  
+**VITRU IA Dashboard Specification**  
 *Focado em Progresso • Ação • Motivação*

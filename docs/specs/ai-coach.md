@@ -1,16 +1,16 @@
-# SPEC: AI Coach - SHAPE-V
+# SPEC: AI Coach - VITRU IA
 
 ## Documento de Especificação do Coach IA
 
 **Versão:** 1.0  
 **Data:** Fevereiro 2026  
-**Projeto:** SHAPE-V (Sistema de Análise de Proporções Corporais)
+**Projeto:** VITRU IA (Sistema de Análise de Proporções Corporais)
 
 ---
 
 ## 1. VISÃO GERAL
 
-O **Coach IA** é o diferencial competitivo do SHAPE-V. Não somos apenas uma calculadora de proporções - somos um **coach virtual inteligente** que analisa, orienta e motiva o atleta em sua jornada para o físico ideal.
+O **Coach IA** é o diferencial competitivo do VITRU IA. Não somos apenas uma calculadora de proporções - somos um **coach virtual inteligente** que analisa, orienta e motiva o atleta em sua jornada para o físico ideal.
 
 ### 1.1 Missão do Coach IA
 
@@ -31,7 +31,7 @@ O **Coach IA** é o diferencial competitivo do SHAPE-V. Não somos apenas uma ca
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        COACH IA SHAPE-V                         │
+│                        COACH IA VITRU IA                         │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  📊 ANÁLISE           📈 EVOLUÇÃO          🎯 RECOMENDAÇÕES     │
@@ -141,7 +141,7 @@ interface ProportionAnalysis {
 
 ```typescript
 const PROPORTION_ANALYSIS_PROMPT = `
-Você é o Coach IA do SHAPE-V, especialista em análise de proporções corporais.
+Você é o Coach IA do VITRU IA, especialista em análise de proporções corporais.
 
 ## CONTEXTO DO USUÁRIO
 - Nome: {{userName}}
@@ -242,7 +242,7 @@ interface SymmetryAnalysis {
 
 ```typescript
 const SYMMETRY_ANALYSIS_PROMPT = `
-Você é o Coach IA do SHAPE-V, especialista em simetria corporal.
+Você é o Coach IA do VITRU IA, especialista em simetria corporal.
 
 ## DADOS DE SIMETRIA
 {{symmetryData}}
@@ -334,7 +334,7 @@ interface EvolutionAnalysis {
 
 ```typescript
 const EVOLUTION_ANALYSIS_PROMPT = `
-Você é o Coach IA do SHAPE-V, especialista em análise de progresso.
+Você é o Coach IA do VITRU IA, especialista em análise de progresso.
 
 ## DADOS DE EVOLUÇÃO ({{period}})
 {{evolutionData}}
@@ -453,7 +453,7 @@ interface AestheticDiagnosis {
 
 ```typescript
 const AESTHETIC_DIAGNOSIS_PROMPT = `
-Você é o Coach IA do SHAPE-V, especialista em estética corporal e fisiculturismo.
+Você é o Coach IA do VITRU IA, especialista em estética corporal e fisiculturismo.
 
 ## DADOS DO USUÁRIO
 - Altura: {{altura}} cm
@@ -846,7 +846,7 @@ interface WeeklyReport {
 
 ```typescript
 const WEEKLY_REPORT_PROMPT = `
-Você é o Coach IA do SHAPE-V gerando o relatório semanal.
+Você é o Coach IA do VITRU IA gerando o relatório semanal.
 
 ## DADOS DA SEMANA
 - Período: {{weekStart}} a {{weekEnd}}
@@ -1246,7 +1246,7 @@ const UPSELL_TRIGGERS = {
   triggers: [
     {
       condition: 'user_tries_blocked_feature',
-      message: 'Desbloqueie análises avançadas com o SHAPE-V PRO',
+      message: 'Desbloqueie análises avançadas com o VITRU IA PRO',
       feature: 'Diagnóstico estético completo',
     },
     {
@@ -1289,7 +1289,7 @@ const AI_COACH_CONFIG: LLMConfig = {
   temperature: 0.7,
   maxTokens: 1000,
   systemPrompt: `
-    Você é o Coach IA do SHAPE-V, um assistente especializado em 
+    Você é o Coach IA do VITRU IA, um assistente especializado em 
     análise de proporções corporais e fisiculturismo estético.
     
     Sua personalidade:
@@ -1399,5 +1399,5 @@ interface AICoachLog {
 
 ---
 
-**SHAPE-V AI Coach**  
+**VITRU IA AI Coach**  
 *Análise • Insights • Motivação • Personalização*

@@ -1,5 +1,5 @@
 {
-  "name": "SHAPE-V Dashboard",
-  "description": "A high-fidelity fitness analytics dashboard featuring AI-driven body symmetry analysis, dark mode aesthetics, and data visualizations.",
+  "name": "VITRU IA Dashboard",
+  "description": "Plataforma de avaliação física inteligente baseada nas proporções de Vitrúvio e IA, com análise de simetria corporal e visualizações de dados.",
   "requestFramePermissions": []
 }

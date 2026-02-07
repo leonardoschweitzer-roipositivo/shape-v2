@@ -1,4 +1,4 @@
-# SHAPE-V — Design System Specification
+# VITRU IA — Design System Specification
 
 **Versão:** 1.1  
 **Data:** 07/02/2026  
@@ -8,7 +8,7 @@
 
 ## 1. Visão Geral
 
-O Design System do SHAPE-V foi projetado para uma interface **dark-first**, otimizada para uso em ambientes de academia e treino. Prioriza alta legibilidade em fundo escuro, contraste vibrante e efeitos de glassmorphism que transmitem modernidade e sofisticação.
+O Design System do VITRU IA foi projetado para uma interface **dark-first**, otimizada para uso em ambientes de academia e treino. Prioriza alta legibilidade em fundo escuro, contraste vibrante e efeitos de glassmorphism que transmitem modernidade e sofisticação.
 
 ---
 
@@ -264,7 +264,7 @@ Card complexo de proporção áurea com overlay visual.
 ```typescript
 <ProportionCard
   title="Shape-V"
-  badge="ESCALA SHAPE-V"
+  badge="ESCALA VITRU IA"
   metrics={[
     { label: 'Ombros', value: '133cm' }, 
     { label: 'Cintura', value: '85cm' }

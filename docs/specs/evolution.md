@@ -1,10 +1,10 @@
-# SPEC: Evolution (Evolução) - SHAPE-V
+# SPEC: Evolution (Evolução) - VITRU IA
 
 ## Documento de Especificação da Página de Evolução
 
 **Versão:** 1.0  
 **Data:** Fevereiro 2026  
-**Projeto:** SHAPE-V (Sistema de Análise de Proporções Corporais)
+**Projeto:** VITRU IA (Sistema de Análise de Proporções Corporais)
 
 ---
 
@@ -105,7 +105,7 @@ interface EvolutionFilters {
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  ←  SHAPE-V / EVOLUÇÃO                    [🔔] [REALIZAR AVAL.] │
+│  ←  VITRU IA / EVOLUÇÃO                    [🔔] [REALIZAR AVAL.] │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  EVOLUÇÃO                                                       │
@@ -132,7 +132,7 @@ interface EvolutionFilters {
 │  Comparativo: Jan/2023 → Jun/2023 (6 meses)                     │
 │                                                                 │
 │  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐│
-│  │ SHAPE-V     │ │ SCORE       │ │ MELHOR      │ │ ATENÇÃO     ││
+│  │ VITRU IA     │ │ SCORE       │ │ MELHOR      │ │ ATENÇÃO     ││
 │  │ RATIO       │ │ GERAL       │ │ EVOLUÇÃO    │ │             ││
 │  │             │ │             │ │             │ │             ││
 │  │   +0.12     │ │   +8        │ │   Ombros    │ │  Cintura    ││
@@ -155,7 +155,7 @@ interface PeriodSummaryProps {
   
   kpis: {
     ratio: {
-      label: string         // "SHAPE-V RATIO"
+      label: string         // "VITRU IA RATIO"
       startValue: number    // 1.49
       endValue: number      // 1.61
       change: number        // +0.12
@@ -299,7 +299,7 @@ function calculatePeriodKPIs(
   
   return {
     ratio: {
-      label: 'SHAPE-V RATIO',
+      label: 'VITRU IA RATIO',
       startValue: firstMeasurement.ratio,
       endValue: lastMeasurement.ratio,
       change: ratioChange,
@@ -653,7 +653,7 @@ async function generateEvolutionInsight(
   const analysis = analyzeEvolution(measurements)
   
   const prompt = `
-    Você é o Coach IA do SHAPE-V analisando a evolução do usuário.
+    Você é o Coach IA do VITRU IA analisando a evolução do usuário.
     
     ## DADOS DO PERÍODO (${period.label})
     - Medições: ${measurements.length}
@@ -1517,5 +1517,5 @@ export function useEvolutionInsight(period: Period) {
 
 ---
 
-**SHAPE-V Evolution Page**  
+**VITRU IA Evolution Page**  
 *Progresso • Tendências • Insights • Motivação*

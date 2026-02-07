@@ -4,15 +4,30 @@ import { Bell, Camera } from 'lucide-react';
 interface HeaderProps {
   onOpenAssessment?: () => void;
   title?: string;
+  userProfile?: string;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onOpenAssessment, title = "INÍCIO" }) => {
+export const Header: React.FC<HeaderProps> = ({ onOpenAssessment, title = "INÍCIO", userProfile = 'atleta' }) => {
+  const getProfileLabel = () => {
+    switch (userProfile) {
+      case 'academia': return 'ACADEMIA';
+      case 'personal': return 'PERSONAL';
+      case 'atleta': return 'ATLETA';
+      default: return userProfile.toUpperCase();
+    }
+  };
+
   return (
     <header className="h-20 w-full flex-shrink-0 flex items-center justify-between px-8 border-b border-card-border bg-[#0A0F1C]/90 backdrop-blur-md z-30">
-      <div className="flex items-center gap-2 text-sm font-medium">
-        <span className="text-gray-500">SHAPE-V</span>
-        <span className="text-gray-600">/</span>
-        <span className="text-white tracking-wide font-semibold uppercase">{title}</span>
+      <div className="flex items-center gap-4 text-sm font-medium">
+        <div className="flex items-center gap-2">
+          <span className="text-gray-500">VITRU IA</span>
+          <span className="text-gray-600">/</span>
+          <span className="text-white tracking-wide font-semibold uppercase">{title}</span>
+        </div>
+        <div className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] text-gray-400 font-bold tracking-widest">
+          {getProfileLabel()}
+        </div>
       </div>
 
       <div className="flex items-center gap-4">

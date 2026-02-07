@@ -1,22 +1,22 @@
-# SPEC: API Routes - SHAPE-V
+# SPEC: API Routes - VITRU IA
 
 ## Documento de Especificação de API
 
 **Versão:** 1.0  
 **Data:** Fevereiro 2026  
-**Projeto:** SHAPE-V (Sistema de Análise de Proporções Corporais)
+**Projeto:** VITRU IA (Sistema de Análise de Proporções Corporais)
 
 ---
 
 ## 1. VISÃO GERAL
 
-Este documento define todos os endpoints da API REST do SHAPE-V, incluindo contratos de request/response, autenticação, rate limiting e tratamento de erros.
+Este documento define todos os endpoints da API REST do VITRU IA, incluindo contratos de request/response, autenticação, rate limiting e tratamento de erros.
 
 ### 1.1 Base URL
 
 ```
-Production:  https://api.shape-v.com/v1
-Staging:     https://api.staging.shape-v.com/v1
+Production:  https://api.vitru.ai/v1
+Staging:     https://api.staging.vitru.ai/v1
 Development: http://localhost:3000/api/v1
 ```
 
@@ -1138,8 +1138,8 @@ FormData:
   "success": true,
   "data": {
     "id": "photo_abc123",
-    "url": "https://cdn.shape-v.com/photos/...",
-    "thumbnailUrl": "https://cdn.shape-v.com/thumbs/...",
+    "url": "https://cdn.vitru.ai/photos/...",
+    "thumbnailUrl": "https://cdn.vitru.ai/thumbs/...",
     "pose": "RELAXED",
     "angle": "FRONT",
     "measurementId": "msr_abc123",
@@ -1412,5 +1412,5 @@ X-RateLimit-Reset: 1707300000  # Unix timestamp
 
 ---
 
-**SHAPE-V API**  
+**VITRU IA API**  
 *REST • JWT • Rate Limited • Typed*

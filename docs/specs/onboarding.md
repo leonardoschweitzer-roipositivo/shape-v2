@@ -1,10 +1,10 @@
-# SPEC: Onboarding - SHAPE-V
+# SPEC: Onboarding - VITRU IA
 
 ## Documento de Especificação do Onboarding
 
 **Versão:** 1.0  
 **Data:** Fevereiro 2026  
-**Projeto:** SHAPE-V (Sistema de Análise de Proporções Corporais)
+**Projeto:** VITRU IA (Sistema de Análise de Proporções Corporais)
 
 ---
 
@@ -173,7 +173,7 @@ type ExperienceLevel =
 ```
 ┌─────────────────────────────────────────┐
 │                                         │
-│              [LOGO SHAPE-V]             │
+│              [LOGO VITRU IA]             │
 │                                         │
 │         ━━━━━━━━━━━━━━━━━━━━           │
 │                                         │
@@ -1008,7 +1008,7 @@ function FirstMeasurementScreen({ onComplete, onSkip, onBack }: FirstMeasurement
 │                                         │
 │            🎉 PARABÉNS, JOÃO!           │
 │                                         │
-│         SEU SHAPE-V ESTÁ PRONTO         │
+│         SEU VITRU IA ESTÁ PRONTO         │
 │                                         │
 │           ╭─────────────────╮           │
 │          ╱                   ╲          │
@@ -1020,7 +1020,7 @@ function FirstMeasurementScreen({ onComplete, onSkip, onBack }: FirstMeasurement
 │         CLASSIFICAÇÃO: AVANÇADO         │
 │                                         │
 │   ┌─────────────────────────────────┐   │
-│   │  SHAPE-V RATIO                  │   │
+│   │  VITRU IA RATIO                  │   │
 │   │                                 │   │
 │   │  1.56 / 1.618                   │   │
 │   │  ████████████████░░░░           │   │
@@ -1077,7 +1077,7 @@ function ScoreRevealScreen({ score, ratio, classification, strengths, focus, onC
         transition={{ type: 'spring', duration: 0.8 }}
       >
         <h1>🎉 PARABÉNS, {userName}!</h1>
-        <p>SEU SHAPE-V ESTÁ PRONTO</p>
+        <p>SEU VITRU IA ESTÁ PRONTO</p>
         
         <ScoreGauge
           value={score}
@@ -1463,7 +1463,7 @@ function getOnboardingVariant(flagKey: string, userId: string): string {
 | Estruturais | SUAS MEDIDAS ESTRUTURAIS | Essas medidas são a base para seus ideais |
 | Tutorial | COMO MEDIR CORRETAMENTE | Para resultados precisos |
 | 1ª Medição | SUA PRIMEIRA MEDIÇÃO | Vamos registrar suas medidas atuais |
-| Reveal | 🎉 PARABÉNS, {NOME}! | SEU SHAPE-V ESTÁ PRONTO |
+| Reveal | 🎉 PARABÉNS, {NOME}! | SEU VITRU IA ESTÁ PRONTO |
 
 ### 8.2 Mensagens de Erro
 
@@ -1563,5 +1563,5 @@ function ScoreReveal({ score }) {
 
 ---
 
-**SHAPE-V Onboarding**  
+**VITRU IA Onboarding**  
 *Primeira Impressão • Coleta de Dados • Valor Imediato • Engajamento*

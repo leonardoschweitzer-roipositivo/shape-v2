@@ -6,18 +6,22 @@ import { AssessmentModal } from './components/AssessmentModal';
 import { AssessmentResults } from './components/AssessmentResults';
 import { DesignSystem } from './components/DesignSystem';
 import { Evolution } from './components/Evolution';
+import { HallDosDeuses } from './components/HallDosDeuses';
 import { Login } from './components/Login';
 import { AssessmentPage } from './components/AssessmentPage';
 import { DashboardView } from './src/components/templates/DashboardView/DashboardView';
+import { ProfileType } from './components/ProfileSelector';
 
-type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'coach' | 'profile' | 'settings' | 'assessment';
+type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userProfile, setUserProfile] = useState<ProfileType>('atleta');
   const [isAssessmentOpen, setIsAssessmentOpen] = useState(false);
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
 
-  const handleLogin = () => {
+  const handleLogin = (profile: ProfileType) => {
+    setUserProfile(profile);
     setIsAuthenticated(true);
   };
 
@@ -39,6 +43,10 @@ const App: React.FC = () => {
         return <DesignSystem />;
       case 'evolution':
         return <Evolution />;
+      case 'hall':
+        return <HallDosDeuses />;
+      case 'trainers':
+      case 'students':
       case 'coach':
       case 'profile':
       case 'settings':
@@ -49,7 +57,7 @@ const App: React.FC = () => {
         );
       case 'dashboard':
       default:
-        return <DashboardView />;
+        return <DashboardView userProfile={userProfile} />;
     }
   };
 
@@ -59,8 +67,11 @@ const App: React.FC = () => {
       case 'dashboard': return 'INÍCIO';
       case 'results': return 'RESULTADOS';
       case 'evolution': return 'EVOLUÇÃO';
-      case 'assessment': return 'AVALIAÇÃO IA';
+      case 'hall': return 'HALL DOS DEUSES';
+      case 'assessment': return 'AVALIAÇÃO';
       case 'design-system': return 'DESIGN SYSTEM';
+      case 'trainers': return 'PERSONAIS';
+      case 'students': return 'ALUNOS';
       default: return currentView.toUpperCase();
     }
   }
@@ -72,7 +83,11 @@ const App: React.FC = () => {
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background-dark text-white font-sans selection:bg-primary selection:text-background-dark">
       {/* Sidebar Navigation */}
-      <Sidebar currentView={currentView} onNavigate={(view) => setCurrentView(view as ViewState)} />
+      <Sidebar
+        currentView={currentView}
+        onNavigate={(view) => setCurrentView(view as ViewState)}
+        userProfile={userProfile}
+      />
 
       {/* Main Content Wrapper */}
       <main className="flex-1 flex flex-col h-full relative overflow-hidden bg-background-dark">
@@ -81,6 +96,7 @@ const App: React.FC = () => {
         <Header
           onOpenAssessment={() => setIsAssessmentOpen(true)}
           title={getPageTitle()}
+          userProfile={userProfile}
         />
 
         {/* Content Area - Flex container to manage scrolling independently */}

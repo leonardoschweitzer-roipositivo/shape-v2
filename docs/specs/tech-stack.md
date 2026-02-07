@@ -1,8 +1,8 @@
-# SHAPE-V — Technical Specifications (SPEC)
+# VITRU IA — Technical Specifications (SPEC)
 
 **Versão:** 1.0  
 **Data:** 06/02/2026  
-**Referência:** SHAPE-V PRD v1.0  
+**Referência:** VITRU IA PRD v1.0  
 
 ---
 
@@ -22,7 +22,7 @@
 └─────────────────────────────────────────────────────────────┘
 ```
 
-| Camada | Tecnologia | Papel no SHAPE-V |
+| Camada | Tecnologia | Papel no VITRU IA |
 |--------|-----------|-----------------|
 | **IDE** | Antigravity | Editor principal, agent-first development, geração de código |
 | **AI Design** | Google AI Studio + Stitch | Geração de UI/frontend, prototipação |
@@ -102,7 +102,7 @@ Next.js (Vercel) ──── SSR/RSC ────► Supabase Client (dados)
 ## 3. Estrutura de Diretórios
 
 ```
-shape-v/
+vitru-ia/
 ├── .env.local                          # Variáveis de ambiente
 ├── .env.example                        # Template de env vars
 ├── next.config.ts                      # Config Next.js
@@ -112,7 +112,7 @@ shape-v/
 │
 ├── public/
 │   ├── images/
-│   │   ├── logo.svg                    # Logo SHAPE-V
+│   │   ├── logo.svg                    # Logo VITRU IA
 │   │   ├── silhouettes/               # Silhuetas anatômicas SVG
 │   │   └── hero/                      # Imagens do hero banner
 │   └── fonts/                         # Custom fonts se necessário
@@ -1066,7 +1066,7 @@ export const geminiModel = genAI.getGenerativeModel({
 // src/lib/gemini/prompts/system-prompt.ts
 
 export const COACH_IA_SYSTEM_PROMPT = `
-Você é o Coach IA do SHAPE-V, especialista em avaliação estética masculina baseada em proporções áureas, simetria bilateral e composição corporal.
+Você é o Coach IA do VITRU IA, especialista em avaliação estética masculina baseada em proporções áureas, simetria bilateral e composição corporal.
 
 Seu papel é analisar dados antropométricos de atletas e gerar recomendações precisas para que evoluam em direção ao ideal das proporções clássicas do fisiculturismo (Golden Ratio 1.618, padrão Steve Reeves, referência Chris Bumstead para Classic Physique).
 
@@ -1107,7 +1107,7 @@ MEN'S PHYSIQUE (Ryan Terry, 178cm):
 - Cintura = Altura × 0.455
 - Coxa, Coxa/Panturrilha, Tríade: N/A (não julgadas, usa board shorts)
 
-ESCALA SHAPE-V:
+ESCALA VITRU IA:
 - Bloco (ratio < 1.2): Sem definição de V-Taper
 - Normal (1.2-1.35): V-Taper mínimo
 - Atlético (1.35-1.50): Boa proporção
@@ -1207,7 +1207,7 @@ GEMINI_API_KEY=AIzaSy...
 
 # === APP ===
 NEXT_PUBLIC_APP_URL=https://shapev.com.br
-NEXT_PUBLIC_APP_NAME=SHAPE-V
+NEXT_PUBLIC_APP_NAME=VITRU IA
 
 # === STRIPE (billing) ===
 STRIPE_SECRET_KEY=sk_live_...
@@ -1292,10 +1292,10 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
 
 ```bash
 # 1. Criar projeto Next.js via Antigravity ou manualmente
-npx create-next-app@latest shape-v --typescript --tailwind --eslint --app --src-dir
+npx create-next-app@latest vitru-ia --typescript --tailwind --eslint --app --src-dir
 
-# 2. Instalar dependências
-cd shape-v
+# Entrar no diretório
+cd vitru-ia
 npm install @supabase/supabase-js @supabase/ssr @google/generative-ai recharts zod lucide-react class-variance-authority clsx tailwind-merge date-fns stripe
 
 # 3. Setup shadcn/ui

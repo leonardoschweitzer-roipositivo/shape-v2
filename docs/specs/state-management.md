@@ -1,16 +1,16 @@
-# SPEC: State Management - SHAPE-V
+# SPEC: State Management - VITRU IA
 
 ## Documento de Gerenciamento de Estado
 
 **Versão:** 1.0  
 **Data:** Fevereiro 2026  
-**Projeto:** SHAPE-V (Sistema de Análise de Proporções Corporais)
+**Projeto:** VITRU IA (Sistema de Análise de Proporções Corporais)
 
 ---
 
 ## 1. VISÃO GERAL
 
-Este documento define a arquitetura de gerenciamento de estado do SHAPE-V.
+Este documento define a arquitetura de gerenciamento de estado do VITRU IA.
 
 ### 1.1 Stack de Estado
 
@@ -587,5 +587,5 @@ export function useMeasurementsUrlFilters() {
 
 ---
 
-**SHAPE-V State Management**  
+**VITRU IA State Management**  
 *Zustand • React Query • TypeScript*

@@ -1,11 +1,12 @@
 import React from 'react';
-import { 
-  LayoutDashboard, 
-  TrendingUp, 
-  Bot, 
-  User, 
-  Settings, 
-  LogOut 
+import {
+  LayoutDashboard,
+  TrendingUp,
+  Activity,
+  Bot,
+  User,
+  Settings,
+  LogOut
 } from 'lucide-react';
 
 interface NavItemProps {
@@ -20,7 +21,7 @@ interface NavItemProps {
 const NavItem: React.FC<NavItemProps> = ({ icon: Icon, label, isActive, isPro, isLogout, onClick }) => {
   const baseClasses = "flex items-center gap-3 px-4 py-3 rounded-lg transition-all group cursor-pointer";
   const activeClasses = "bg-primary/10 border border-primary/20 text-primary shadow-[0_0_10px_rgba(0,201,167,0.1)]";
-  const inactiveClasses = isLogout 
+  const inactiveClasses = isLogout
     ? "text-red-400/80 hover:text-red-400 hover:bg-red-500/10 mt-2"
     : "text-gray-400 hover:text-white hover:bg-white/5";
 
@@ -44,7 +45,8 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ currentView = 'dashboard', onNavigate }) => {
   const mainNavItems = [
-    { icon: LayoutDashboard, label: 'Momento', id: 'dashboard' },
+    { icon: LayoutDashboard, label: 'Início', id: 'dashboard' },
+    { icon: Activity, label: 'Avaliação', id: 'assessment' },
     { icon: TrendingUp, label: 'Evolução', id: 'evolution' },
     { icon: Bot, label: 'Coach IA', id: 'coach', isPro: true },
   ];
@@ -62,16 +64,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView = 'dashboard', onN
           <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-[#0A0F1C] font-bold text-xl shadow-lg shadow-primary/20">
             V
           </div>
-          <h1 className="text-xl font-bold tracking-wider text-white">SHAPE-V</h1>
+          <h1 className="text-xl font-bold tracking-wider text-white">VITRU IA</h1>
         </div>
 
         {/* Main Nav */}
         <nav className="flex flex-col gap-2">
           <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 px-2">Menu Principal</p>
           {mainNavItems.map((item, index) => (
-            <NavItem 
-              key={index} 
-              {...item} 
+            <NavItem
+              key={index}
+              {...item}
               isActive={currentView === item.id}
               onClick={() => onNavigate && onNavigate(item.id)}
             />

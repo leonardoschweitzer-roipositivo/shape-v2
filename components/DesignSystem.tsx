@@ -28,7 +28,7 @@ export const DesignSystem: React.FC = () => {
         <div className="flex flex-col gap-2">
           <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight">DESIGN SYSTEM</h1>
           <p className="text-gray-400 font-light text-lg">
-            Guia oficial de identidade visual, componentes e biblioteca de widgets da aplicação SHAPE-V.
+            Guia oficial de identidade visual, componentes e biblioteca de widgets da aplicação VITRU IA.
           </p>
         </div>
 

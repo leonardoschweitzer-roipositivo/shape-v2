@@ -1,16 +1,16 @@
-# SPEC: Code Style Guide - SHAPE-V
+# SPEC: Code Style Guide - VITRU IA
 
 ## Documento de Convenções de Código
 
 **Versão:** 1.0  
 **Data:** Fevereiro 2026  
-**Projeto:** SHAPE-V (Sistema de Análise de Proporções Corporais)
+**Projeto:** VITRU IA (Sistema de Análise de Proporções Corporais)
 
 ---
 
 ## 1. VISÃO GERAL
 
-Este documento define as convenções de código para o SHAPE-V. Focamos em criar um sistema modular através de **Tokenização Visual**, **Separação de Responsabilidades (SoC)** e o princípio **DRY**, garantindo que o software seja escalável e fácil de manter.
+Este documento define as convenções de código para o VITRU IA. Focamos em criar um sistema modular através de **Tokenização Visual**, **Separação de Responsabilidades (SoC)** e o princípio **DRY**, garantindo que o software seja escalável e fácil de manter.
 
 ### 1.1 Princípios Fundamentais
 
@@ -58,7 +58,7 @@ export const colors = {
     info: '#3B82F6',         // Azul - informação
   },
 
-  // === PROPORTIONS (específico SHAPE-V) ===
+  // === PROPORTIONS (específico VITRU IA) ===
   proportions: {
     golden: '#FFD700',       // Dourado - Golden Ratio
     classic: '#8B5CF6',      // Roxo - Classic Physique
@@ -1086,5 +1086,5 @@ describe('Golden Ratio Calculations', () => {
 
 ---
 
-**SHAPE-V Code Style Guide**  
+**VITRU IA Code Style Guide**  
 *Tokenização Visual • Separação de Responsabilidades • DRY*

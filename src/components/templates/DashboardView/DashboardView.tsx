@@ -15,6 +15,7 @@ import { BodyCompositionCard } from '../../molecules/BodyCompositionCard/BodyCom
 import { DashboardLoading } from '../../organisms/DashboardLoading/DashboardLoading';
 import { DashboardError } from '../../organisms/DashboardError/DashboardError';
 import { Target, BarChart2, Ruler, Zap, Trophy, Scale, Layout, Activity } from 'lucide-react';
+import { ProfileType } from '../../../../components/ProfileSelector';
 
 const SectionHeader: React.FC<{
     icon: React.ReactNode;
@@ -36,7 +37,7 @@ const SectionHeader: React.FC<{
     </div>
 );
 
-export const DashboardView: React.FC = () => {
+export const DashboardView: React.FC<{ userProfile?: ProfileType }> = ({ userProfile = 'atleta' }) => {
     const { data, isLoading, error } = useDashboard();
 
     if (isLoading) {
@@ -72,7 +73,11 @@ export const DashboardView: React.FC = () => {
                 {/* Header Section */}
                 <div className="flex flex-col animate-fade-in-up">
                     <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight uppercase">INÍCIO</h2>
-                    <p className="text-gray-400 mt-2 font-light">Visão geral da sua simetria e progresso atual.</p>
+                    <p className="text-gray-400 mt-2 font-light">
+                        {userProfile === 'academia' && "Gestão completa da sua academia e rede de profissionais."}
+                        {userProfile === 'personal' && "Gestão de seus alunos e planilhamento de evoluções."}
+                        {userProfile === 'atleta' && "Visão geral da sua simetria e progresso atual."}
+                    </p>
                 </div>
 
                 <div className="h-px w-full bg-white/10" />
