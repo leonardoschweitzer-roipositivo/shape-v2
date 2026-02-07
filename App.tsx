@@ -9,12 +9,18 @@ import { AssessmentModal } from './components/AssessmentModal';
 import { AssessmentResults } from './components/AssessmentResults';
 import { DesignSystem } from './components/DesignSystem';
 import { Evolution } from './components/Evolution';
+import { Login } from './components/Login';
 
 type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'coach' | 'profile' | 'settings';
 
 const App: React.FC = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAssessmentOpen, setIsAssessmentOpen] = useState(false);
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
+
+  const handleLogin = () => {
+    setIsAuthenticated(true);
+  };
 
   const handleAssessmentSubmit = () => {
     setIsAssessmentOpen(false);
@@ -35,11 +41,11 @@ const App: React.FC = () => {
       case 'coach':
       case 'profile':
       case 'settings':
-         return (
-             <div className="flex-1 flex items-center justify-center text-gray-500">
-                 <p>Funcionalidade em desenvolvimento ({currentView})</p>
-             </div>
-         );
+        return (
+          <div className="flex-1 flex items-center justify-center text-gray-500">
+            <p>Funcionalidade em desenvolvimento ({currentView})</p>
+          </div>
+        );
       case 'dashboard':
       default:
         return (
@@ -70,13 +76,17 @@ const App: React.FC = () => {
   };
 
   const getPageTitle = () => {
-      switch(currentView) {
-          case 'dashboard': return 'MOMENTO';
-          case 'results': return 'RESULTADOS';
-          case 'evolution': return 'EVOLUÇÃO';
-          case 'design-system': return 'DESIGN SYSTEM';
-          default: return currentView.toUpperCase();
-      }
+    switch (currentView) {
+      case 'dashboard': return 'MOMENTO';
+      case 'results': return 'RESULTADOS';
+      case 'evolution': return 'EVOLUÇÃO';
+      case 'design-system': return 'DESIGN SYSTEM';
+      default: return currentView.toUpperCase();
+    }
+  }
+
+  if (!isAuthenticated) {
+    return <Login onLogin={handleLogin} />;
   }
 
   return (
@@ -86,17 +96,17 @@ const App: React.FC = () => {
 
       {/* Main Content Wrapper */}
       <main className="flex-1 flex flex-col h-full relative overflow-hidden bg-background-dark">
-        
+
         {/* Global Header - Persistent across all views */}
-        <Header 
-          onOpenAssessment={() => setIsAssessmentOpen(true)} 
+        <Header
+          onOpenAssessment={() => setIsAssessmentOpen(true)}
           title={getPageTitle()}
         />
 
         {/* Content Area - Flex container to manage scrolling independently */}
         <div className="flex-1 overflow-hidden relative flex flex-col">
           {renderContent()}
-          
+
           {/* Footer - Only shown in dashboard or design system view to avoid double scrollbars in results which has its own layout */}
           {currentView !== 'results' && (
             <Footer onOpenDesignSystem={() => setCurrentView('design-system')} />
@@ -105,10 +115,10 @@ const App: React.FC = () => {
       </main>
 
       {/* Modals */}
-      <AssessmentModal 
-        isOpen={isAssessmentOpen} 
+      <AssessmentModal
+        isOpen={isAssessmentOpen}
         onClose={() => setIsAssessmentOpen(false)}
-        onConfirm={handleAssessmentSubmit} 
+        onConfirm={handleAssessmentSubmit}
       />
     </div>
   );
