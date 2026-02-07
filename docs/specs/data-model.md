@@ -25,21 +25,47 @@ Este documento define a estrutura de dados completa do VITRU IA, incluindo schem
 ### 1.2 Diagrama de Entidades (ERD)
 
 ```
-┌─────────────┐     ┌─────────────────┐     ┌──────────────────┐
-│    User     │────<│   Measurement   │────<│  ProportionScore │
-└─────────────┘     └─────────────────┘     └──────────────────┘
-       │                    │
-       │                    │
-       ▼                    ▼
-┌─────────────┐     ┌─────────────────┐
-│   Profile   │     │   BodyPhoto     │
-└─────────────┘     └─────────────────┘
-       │
-       │
-       ▼
-┌─────────────┐     ┌─────────────────┐
-│    Goal     │     │   Achievement   │
-└─────────────┘     └─────────────────┘
+┌─────────────┐       ┌─────────────┐       ┌─────────────┐
+│   Academy   │──────<│   Personal  │──────<│    User     │
+│  (tenant)   │  1:N  │ (trainer)   │  1:N  │  (athlete)  │
+└─────────────┘       └─────────────┘       └──────┬──────┘
+                                                   │
+       ┌───────────────────────────────────────────┤
+       │                    │                      │
+       ▼                    ▼                      ▼
+┌─────────────┐     ┌─────────────────┐     ┌─────────────┐
+│   Profile   │     │   Measurement   │────<│   Invite    │
+└─────────────┘     └────────┬────────┘     └─────────────┘
+                             │
+       ┌─────────────────────┼─────────────────────┐
+       │                     │                     │
+       ▼                     ▼                     ▼
+┌──────────────────┐  ┌─────────────┐     ┌─────────────────┐
+│  ProportionScore │  │  BodyPhoto  │     │      Goal       │
+└──────────────────┘  └─────────────┘     └─────────────────┘
+                                                   │
+                                                   ▼
+                                          ┌─────────────────┐
+                                          │   Achievement   │
+                                          └─────────────────┘
+```
+
+### 1.3 Modelo de Usuários
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    HIERARQUIA DE USUÁRIOS                       │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  💪 ATLETA (B2C)          Contrata → Usa sozinho               │
+│                                                                 │
+│  🏋️ PERSONAL (B2B)        Contrata → Cadastra atletas          │
+│                                                                 │
+│  🏢 ACADEMIA (B2B)        Contrata → Cadastra personais        │
+│                                       → Personais cadastram     │
+│                                         atletas                 │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -61,6 +87,33 @@ datasource db {
 }
 
 // ============================================
+// ENUMS GLOBAIS
+// ============================================
+
+enum UserRole {
+  ATHLETE       // Atleta individual
+  PERSONAL      // Personal trainer
+  ACADEMY       // Academia/Empresa
+  ADMIN         // Administrador do sistema
+}
+
+enum PlanType {
+  // Atleta
+  FREE
+  ATHLETE_PRO
+  
+  // Personal
+  PERSONAL_BASIC     // Até 10 alunos
+  PERSONAL_PRO       // Até 50 alunos
+  PERSONAL_UNLIMITED // Ilimitado
+  
+  // Academia
+  ACADEMY_BASIC      // Até 5 personais
+  ACADEMY_PRO        // Até 20 personais
+  ACADEMY_UNLIMITED  // Ilimitado
+}
+
+// ============================================
 // USER & AUTHENTICATION
 // ============================================
 
@@ -71,6 +124,9 @@ model User {
   name          String?
   avatarUrl     String?
   
+  // Tipo de usuário (NOVO)
+  role          UserRole  @default(ATHLETE)
+  
   // OAuth
   googleId      String?   @unique
   appleId       String?   @unique
@@ -78,15 +134,17 @@ model User {
   // Status
   emailVerified DateTime?
   isActive      Boolean   @default(true)
-  isPro         Boolean   @default(false)
-  proExpiresAt  DateTime?
+  
+  // Plano (ATUALIZADO)
+  plan          PlanType  @default(FREE)
+  planExpiresAt DateTime?
   
   // Timestamps
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   lastLoginAt   DateTime?
   
-  // Relations
+  // Relations - Próprias (Atleta)
   profile       Profile?
   measurements  Measurement[]
   goals         Goal[]
@@ -94,6 +152,19 @@ model User {
   photos        BodyPhoto[]
   sessions      Session[]
   
+  // Relations - Multi-user (NOVO)
+  personal      Personal?   @relation("PersonalUser")     // Se for PERSONAL
+  academy       Academy?    @relation("AcademyUser")      // Se for ACADEMY
+  
+  // Vinculação com Personal (para ATHLETE)
+  assignedTo    Personal?   @relation("AthletePersonal", fields: [personalId], references: [id])
+  personalId    String?
+  
+  // Convites enviados
+  invitesSent   Invite[]    @relation("InviteSender")
+  
+  @@index([role])
+  @@index([personalId])
   @@map("users")
 }
 
@@ -167,7 +238,145 @@ enum ProportionMethod {
 }
 ```
 
-### 2.3 Measurement
+### 2.3 Personal (NOVO)
+
+```prisma
+// ============================================
+// PERSONAL (Personal Trainer)
+// ============================================
+
+model Personal {
+  id            String    @id @default(cuid())
+  userId        String    @unique
+  
+  // Dados Profissionais
+  cref          String?   // Registro profissional (CREF)
+  specialties   String[]  // Especialidades: ["Hipertrofia", "Emagrecimento"]
+  bio           String?   // Biografia/descrição
+  phone         String?   // Telefone de contato
+  
+  // Vinculação com Academia (opcional)
+  academyId     String?
+  academy       Academy?  @relation(fields: [academyId], references: [id], onDelete: SetNull)
+  
+  // Limites do Plano
+  maxAthletes   Int       @default(10)
+  
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  user          User      @relation("PersonalUser", fields: [userId], references: [id], onDelete: Cascade)
+  athletes      User[]    @relation("AthletePersonal")
+  
+  @@index([academyId])
+  @@map("personals")
+}
+```
+
+### 2.4 Academy (NOVO)
+
+```prisma
+// ============================================
+// ACADEMY (Academia/Empresa)
+// ============================================
+
+model Academy {
+  id            String    @id @default(cuid())
+  userId        String    @unique  // User admin da academia
+  
+  // Dados da Empresa
+  businessName  String              // Nome fantasia
+  legalName     String?             // Razão social
+  cnpj          String?   @unique   // CNPJ
+  
+  // Contato
+  phone         String?
+  email         String?
+  website       String?
+  
+  // Endereço
+  address       String?
+  city          String?
+  state         String?
+  zipCode       String?
+  
+  // Visual/Branding
+  logoUrl       String?
+  primaryColor  String?   @default("#00C9A7")
+  
+  // Limites do Plano
+  maxPersonals  Int       @default(5)
+  
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  user          User       @relation("AcademyUser", fields: [userId], references: [id], onDelete: Cascade)
+  personals     Personal[]
+  
+  @@map("academies")
+}
+```
+
+### 2.5 Invite (NOVO)
+
+```prisma
+// ============================================
+// INVITE (Convites pendentes)
+// ============================================
+
+model Invite {
+  id            String       @id @default(cuid())
+  
+  // Quem convidou
+  invitedById   String
+  invitedBy     User         @relation("InviteSender", fields: [invitedById], references: [id], onDelete: Cascade)
+  invitedByRole UserRole     // PERSONAL ou ACADEMY
+  
+  // Convidado
+  email         String
+  name          String?      // Nome sugerido
+  role          UserRole     // ATHLETE (para personal) ou PERSONAL (para academia)
+  
+  // Contexto (um ou outro)
+  academyId     String?      // Se convite de academia para personal
+  personalId    String?      // Se convite de personal para atleta
+  
+  // Configurações específicas
+  maxAthletes   Int?         // Se for convite para personal (limite de alunos)
+  
+  // Token único
+  token         String       @unique @default(cuid())
+  
+  // Status
+  status        InviteStatus @default(PENDING)
+  expiresAt     DateTime
+  acceptedAt    DateTime?
+  
+  // Mensagem personalizada
+  message       String?
+  
+  // Timestamps
+  createdAt     DateTime     @default(now())
+  
+  @@index([email])
+  @@index([token])
+  @@index([status])
+  @@map("invites")
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  CANCELLED
+}
+```
+
+### 2.7 Measurement
 
 ```prisma
 // ============================================
@@ -177,6 +386,11 @@ enum ProportionMethod {
 model Measurement {
   id              String   @id @default(cuid())
   userId          String
+  
+  // Quem registrou a medição (NOVO)
+  // Se o próprio atleta, será null ou igual ao userId
+  // Se o personal registrou para o atleta, será o ID do personal
+  registeredById  String?
   
   // Data da medição
   measuredAt      DateTime @default(now())
@@ -218,6 +432,7 @@ model Measurement {
   
   @@index([userId])
   @@index([measuredAt])
+  @@index([registeredById])
   @@map("measurements")
 }
 
@@ -226,10 +441,11 @@ enum MeasurementSource {
   PHOTO_AI
   SMART_SCALE
   IMPORTED
+  PERSONAL_ENTRY   // Registrado pelo personal (NOVO)
 }
 ```
 
-### 2.4 ProportionScore
+### 2.8 ProportionScore
 
 ```prisma
 // ============================================
@@ -280,7 +496,7 @@ enum ScoreClassification {
 }
 ```
 
-### 2.5 BodyPhoto
+### 2.9 BodyPhoto
 
 ```prisma
 // ============================================
@@ -331,7 +547,7 @@ enum PhotoAngle {
 }
 ```
 
-### 2.6 Goals & Achievements
+### 2.10 Goals & Achievements
 
 ```prisma
 // ============================================
@@ -440,26 +656,48 @@ enum AchievementCategory {
 
 ## 3. TYPES TYPESCRIPT
 
-### 3.1 User Types
+### 3.1 User & Role Types
 
 ```typescript
 // types/user.ts
+
+// Tipos de usuário
+export type UserRole = 'ATHLETE' | 'PERSONAL' | 'ACADEMY' | 'ADMIN'
+
+// Tipos de plano
+export type PlanType = 
+  | 'FREE'
+  | 'ATHLETE_PRO'
+  | 'PERSONAL_BASIC'
+  | 'PERSONAL_PRO'
+  | 'PERSONAL_UNLIMITED'
+  | 'ACADEMY_BASIC'
+  | 'ACADEMY_PRO'
+  | 'ACADEMY_UNLIMITED'
 
 export interface User {
   id: string
   email: string
   name: string | null
   avatarUrl: string | null
+  role: UserRole              // NOVO
   isActive: boolean
-  isPro: boolean
-  proExpiresAt: Date | null
+  plan: PlanType              // ATUALIZADO
+  planExpiresAt: Date | null
   createdAt: Date
   updatedAt: Date
   lastLoginAt: Date | null
+  personalId: string | null   // NOVO: Se atleta vinculado a personal
 }
 
 export interface UserWithProfile extends User {
   profile: Profile | null
+}
+
+export interface UserWithRelations extends UserWithProfile {
+  personal?: Personal | null      // Se role === 'PERSONAL'
+  academy?: Academy | null        // Se role === 'ACADEMY'
+  assignedTo?: Personal | null    // Se role === 'ATHLETE' e vinculado
 }
 
 export interface Profile {
@@ -483,7 +721,145 @@ export type UnitSystem = 'METRIC' | 'IMPERIAL'
 export type ProportionMethod = 'GOLDEN_RATIO' | 'CLASSIC_PHYSIQUE' | 'MENS_PHYSIQUE'
 ```
 
-### 3.2 Measurement Types
+### 3.2 Personal Types (NOVO)
+
+```typescript
+// types/personal.ts
+
+export interface Personal {
+  id: string
+  userId: string
+  cref: string | null
+  specialties: string[]
+  bio: string | null
+  phone: string | null
+  academyId: string | null
+  maxAthletes: number
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface PersonalWithUser extends Personal {
+  user: User
+}
+
+export interface PersonalWithAthletes extends PersonalWithUser {
+  athletes: User[]
+  athleteCount: number        // Computed field
+}
+
+export interface PersonalWithAcademy extends PersonalWithUser {
+  academy: Academy | null
+}
+
+// Input para criação/atualização
+export interface PersonalInput {
+  cref?: string
+  specialties?: string[]
+  bio?: string
+  phone?: string
+}
+```
+
+### 3.3 Academy Types (NOVO)
+
+```typescript
+// types/academy.ts
+
+export interface Academy {
+  id: string
+  userId: string
+  businessName: string
+  legalName: string | null
+  cnpj: string | null
+  phone: string | null
+  email: string | null
+  website: string | null
+  address: string | null
+  city: string | null
+  state: string | null
+  zipCode: string | null
+  logoUrl: string | null
+  primaryColor: string
+  maxPersonals: number
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface AcademyWithUser extends Academy {
+  user: User
+}
+
+export interface AcademyWithPersonals extends AcademyWithUser {
+  personals: PersonalWithAthletes[]
+  personalCount: number       // Computed field
+  totalAthletes: number       // Computed field
+}
+
+// Input para criação/atualização
+export interface AcademyInput {
+  businessName: string
+  legalName?: string
+  cnpj?: string
+  phone?: string
+  email?: string
+  website?: string
+  address?: string
+  city?: string
+  state?: string
+  zipCode?: string
+  logoUrl?: string
+  primaryColor?: string
+}
+```
+
+### 3.4 Invite Types (NOVO)
+
+```typescript
+// types/invite.ts
+
+export type InviteStatus = 'PENDING' | 'ACCEPTED' | 'EXPIRED' | 'CANCELLED'
+
+export interface Invite {
+  id: string
+  invitedById: string
+  invitedByRole: UserRole
+  email: string
+  name: string | null
+  role: UserRole              // Role que o convidado terá
+  academyId: string | null
+  personalId: string | null
+  maxAthletes: number | null  // Se convite para personal
+  token: string
+  status: InviteStatus
+  expiresAt: Date
+  acceptedAt: Date | null
+  message: string | null
+  createdAt: Date
+}
+
+export interface InviteWithSender extends Invite {
+  invitedBy: User
+}
+
+// Input para criar convite
+export interface CreateInviteInput {
+  email: string
+  name?: string
+  role: 'ATHLETE' | 'PERSONAL'  // Só esses podem ser convidados
+  message?: string
+  maxAthletes?: number          // Só para convite de personal
+}
+
+// Response ao aceitar convite
+export interface AcceptInviteResponse {
+  invite: Invite
+  user: User
+  requiresPassword: boolean     // true se usuário novo precisa definir senha
+}
+```
+
+### 3.5 Measurement Types
 
 ```typescript
 // types/measurement.ts
@@ -521,11 +897,12 @@ export interface Measurement {
   updatedAt: Date
 }
 
-export type MeasurementSource = 'MANUAL' | 'PHOTO_AI' | 'SMART_SCALE' | 'IMPORTED'
+export type MeasurementSource = 'MANUAL' | 'PHOTO_AI' | 'SMART_SCALE' | 'IMPORTED' | 'PERSONAL_ENTRY'
 
 // Input para criação de medida
 export interface MeasurementInput {
   measuredAt?: Date
+  registeredById?: string     // NOVO: ID de quem registrou (personal)
   peso?: number
   gorduraCorporal?: number
   cintura: number
@@ -1180,8 +1557,14 @@ main()
 | Versão | Data | Alterações |
 |--------|------|------------|
 | 1.0 | Fev/2026 | Versão inicial do Data Model |
+| 1.1 | Fev/2026 | Adicionado Multi-User: Personal, Academy, Invite, Roles |
 
 ---
 
+<<<<<<< HEAD
 **VITRU IA Data Model**  
 *PostgreSQL • Prisma • Zod • TypeScript*
+=======
+**SHAPE-V Data Model**  
+*PostgreSQL • Prisma • Zod • TypeScript • Multi-User*
+>>>>>>> ef32451231e4a686ebf7866076b2111b5eebda4d
