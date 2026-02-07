@@ -9,25 +9,25 @@ export const HeroCard: React.FC = () => {
   const fallbackImage = "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop";
 
   return (
-    <div className="w-full h-80 md:h-72 rounded-2xl relative overflow-hidden group shadow-2xl shadow-black/50 border border-card-border">
+    <div className="w-full h-[400px] md:h-[500px] rounded-2xl relative overflow-hidden group shadow-2xl shadow-black/50 border border-card-border">
       {/* Background Image */}
-      <div 
+      <div
         className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-105"
-        style={{ 
-          backgroundImage: `url('${imgError ? fallbackImage : mainImage}')` 
+        style={{
+          backgroundImage: `url('${imgError ? fallbackImage : mainImage}')`
         }}
       >
-        <img 
-            src={mainImage} 
-            alt="hidden check" 
-            className="hidden" 
-            onError={() => setImgError(true)} 
+        <img
+          src={mainImage}
+          alt="hidden check"
+          className="hidden"
+          onError={() => setImgError(true)}
         />
       </div>
 
       {/* Gradient Overlays */}
       <div className="absolute inset-0 bg-gradient-to-r from-[#0A0F1C] via-[#0A0F1C]/80 to-transparent"></div>
-      
+
       {/* Decorative Grid */}
       <div className="absolute right-0 top-0 h-full w-1/2 opacity-10" style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
 
@@ -42,19 +42,19 @@ export const HeroCard: React.FC = () => {
         <div className="inline-flex items-center gap-3 mb-4">
           <span className="bg-primary/20 text-primary text-[10px] md:text-xs font-bold px-2.5 py-1 rounded border border-primary/20 tracking-wider">RELATÓRIO SEMANAL</span>
           <span className="text-gray-400 text-xs flex items-center gap-1.5 font-medium">
-            <Calendar size={14} className="text-gray-500"/> 12 OUT, 2023
+            <Calendar size={14} className="text-gray-500" /> 12 OUT, 2023
           </span>
         </div>
-        
-        <h3 className="text-3xl md:text-5xl font-bold text-white leading-tight mb-3">SIMETRIA DO <br className="hidden md:block" /> FÍSICO PERFEITO</h3>
-        
+
+        <h3 className="text-4xl md:text-6xl font-bold text-white leading-tight mb-3">SIMETRIA DO <br className="hidden md:block" /> FÍSICO PERFEITO</h3>
+
         <p className="text-gray-300 text-sm md:text-base max-w-lg mb-8 leading-relaxed font-light">
           Sua análise de <strong className="text-white font-medium">Proporção Áurea</strong> indica uma evolução de 2.4% no deltoide lateral, aproximando-se do Golden Ratio ideal.
         </p>
-        
+
         <div className="flex items-center gap-4">
           <button className="text-white text-sm font-bold hover:text-primary transition-colors flex items-center gap-2 group/btn">
-            Ver análise detalhada 
+            Ver análise detalhada
             <ArrowRight size={16} className="transition-transform group-hover/btn:translate-x-1" />
           </button>
         </div>

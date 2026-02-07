@@ -38,7 +38,7 @@ export const HeroCard: React.FC<HeroCardProps> = ({ content }) => {
   };
 
   return (
-    <div className="w-full h-80 md:h-72 rounded-2xl relative overflow-hidden group shadow-2xl shadow-black/50 border border-card-border">
+    <div className="w-full h-[400px] md:h-[500px] rounded-2xl relative overflow-hidden group shadow-2xl shadow-black/50 border border-card-border">
       {/* Background Image Logic */}
       <div
         className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-105"
@@ -90,7 +90,7 @@ export const HeroCard: React.FC<HeroCardProps> = ({ content }) => {
         </div>
 
         {/* Restored Original Title with BR */}
-        <h3 className="text-3xl md:text-5xl font-bold text-white leading-tight mb-3">
+        <h3 className="text-4xl md:text-6xl font-bold text-white leading-tight mb-3">
           SIMETRIA DO <br className="hidden md:block" /> FÍSICO PERFEITO
         </h3>
 
