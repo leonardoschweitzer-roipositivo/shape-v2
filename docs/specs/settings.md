@@ -20,10 +20,6 @@ A tela de **Configurações** permite que cada tipo de usuário gerencie seus da
 | Empresa | ✅ | ❌ | ❌ |
 | Profissional | ❌ | ✅ | ❌ |
 | Metodologia | ❌ | ✅ | ❌ |
-| Perfil | ❌ | ❌ | ✅ |
-| Medidas | ❌ | ❌ | ✅ |
-| Saúde | ❌ | ❌ | ✅ |
-| VITRÚVIO | ❌ | ❌ | ✅ |
 | Branding | ✅ | ❌ | ❌ |
 | Personais | ✅ | ❌ | ❌ |
 | Atletas | ❌ | ✅ | ❌ |
@@ -34,6 +30,8 @@ A tela de **Configurações** permite que cada tipo de usuário gerencie seus da
 | Integrações | ✅ | ✅ | ❌ |
 | Meus Dados | ❌ | ❌ | ✅ |
 
+> **Nota:** Para o Atleta, as seções **Perfil**, **Medidas**, **Saúde** e **VITRÚVIO** são gerenciadas na **Tela de Perfil**, não em Configurações.
+
 ---
 
 ## 2. CONFIGURAÇÕES: ATLETA
@@ -43,10 +41,6 @@ A tela de **Configurações** permite que cada tipo de usuário gerencie seus da
 ```typescript
 const ATHLETE_SETTINGS_SECTIONS = [
   { id: 'account', icon: 'User', label: 'Conta', description: 'Email, senha e dados de acesso' },
-  { id: 'profile', icon: 'UserCircle', label: 'Perfil', description: 'Dados pessoais e preferências' },
-  { id: 'measurements', icon: 'Ruler', label: 'Medidas', description: 'Medidas estruturais e unidades' },
-  { id: 'health', icon: 'Heart', label: 'Saúde', description: 'Condições, lesões e medicamentos', badge: 'VITRÚVIO' },
-  { id: 'vitruvio', icon: 'Bot', label: 'VITRÚVIO', description: 'Configurações do Coach IA', badge: 'PRO' },
   { id: 'notifications', icon: 'Bell', label: 'Notificações', description: 'Alertas e lembretes' },
   { id: 'privacy', icon: 'Shield', label: 'Privacidade', description: 'Visibilidade e compartilhamento' },
   { id: 'security', icon: 'Lock', label: 'Segurança', description: 'Senha, 2FA e sessões' },
@@ -54,6 +48,8 @@ const ATHLETE_SETTINGS_SECTIONS = [
   { id: 'data', icon: 'Database', label: 'Meus Dados', description: 'Exportar ou excluir dados' },
 ]
 ```
+
+> **Nota:** As seções Perfil, Medidas, Saúde e VITRÚVIO foram movidas para a **Tela de Perfil** para melhor separação de responsabilidades.
 
 ### 2.2 Seção: Conta
 

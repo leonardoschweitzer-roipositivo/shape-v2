@@ -14,6 +14,7 @@ import { CoachIA } from './components/CoachIA';
 import { DashboardView } from './src/components/templates/DashboardView/DashboardView';
 import { ProfileType } from './components/ProfileSelector';
 import { AthleteProfilePage } from './components/AthleteProfilePage';
+import { AthleteSettingsPage } from './components/AthleteSettingsPage';
 
 type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking';
 
@@ -53,9 +54,10 @@ const App: React.FC = () => {
         return <CoachIA onOpenChat={() => setIsCoachModalOpen(true)} />;
       case 'profile':
         return <AthleteProfilePage />;
+      case 'settings':
+        return <AthleteSettingsPage />;
       case 'trainers':
       case 'students':
-      case 'settings':
         return (
           <div className="flex-1 flex items-center justify-center text-gray-500">
             <p>Funcionalidade em desenvolvimento ({currentView})</p>
@@ -80,6 +82,7 @@ const App: React.FC = () => {
       case 'students': return 'ALUNOS';
       case 'trainers-ranking': return 'RANKING PERSONAIS';
       case 'profile': return 'MEU PERFIL';
+      case 'settings': return 'CONFIGURAÇÕES';
       default: return currentView.toUpperCase();
     }
   }

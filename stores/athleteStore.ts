@@ -11,6 +11,13 @@ import {
     Gender,
     UserGoal
 } from '../types/athlete';
+import {
+    AthleteSettings,
+    DEFAULT_ATHLETE_SETTINGS,
+    NotificationSettings,
+    PrivacySettings,
+    ProfilePreferences
+} from '../types/settings';
 
 // ============================================
 // HELPER: Calculate profile completion
@@ -48,6 +55,7 @@ function calculateCompletion(profile: Partial<AthleteProfile>): ProfileCompletio
 
 interface AthleteState {
     profile: AthleteProfile | null;
+    settings: AthleteSettings;
     isLoading: boolean;
 
     // Actions
@@ -82,6 +90,11 @@ interface AthleteState {
 
     updateLatestScore: (score: { overall: number; ratio: number; classification: string }) => void;
 
+    // Settings actions
+    updateNotifications: (data: Partial<NotificationSettings>) => void;
+    updatePrivacy: (data: Partial<PrivacySettings>) => void;
+    updatePreferences: (data: Partial<ProfilePreferences>) => void;
+
     clearProfile: () => void;
 }
 
@@ -93,6 +106,7 @@ export const useAthleteStore = create<AthleteState>()(
     persist(
         (set, get) => ({
             profile: null,
+            settings: DEFAULT_ATHLETE_SETTINGS,
             isLoading: false,
 
             initializeProfile: (data) => {
@@ -197,8 +211,44 @@ export const useAthleteStore = create<AthleteState>()(
                 set({ profile: { ...current, latestScore: score } });
             },
 
+            // Settings actions
+            updateNotifications: (data) => {
+                const current = get().settings;
+                set({
+                    settings: {
+                        ...current,
+                        notifications: { ...current.notifications, ...data },
+                    },
+                });
+            },
+
+            updatePrivacy: (data) => {
+                const current = get().settings;
+                set({
+                    settings: {
+                        ...current,
+                        privacy: {
+                            ...current.privacy,
+                            public: { ...current.privacy.public, ...data.public },
+                            personal: { ...current.privacy.personal, ...data.personal },
+                            data: { ...current.privacy.data, ...data.data },
+                        },
+                    },
+                });
+            },
+
+            updatePreferences: (data) => {
+                const current = get().settings;
+                set({
+                    settings: {
+                        ...current,
+                        preferences: { ...current.preferences, ...data },
+                    },
+                });
+            },
+
             clearProfile: () => {
-                set({ profile: null });
+                set({ profile: null, settings: DEFAULT_ATHLETE_SETTINGS });
             },
         }),
         {
