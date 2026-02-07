@@ -12,10 +12,8 @@ import { RadarChart, BodyFatGauge, AsymmetryRadar } from './AssessmentCharts';
 import { MassCard, ProportionCard, AsymmetryCard, ScoreWidget, AiAnalysisWidget, ProportionAiAnalysisCard, AiInsightCard } from './AssessmentCards';
 import {
   GoldenEvolutionChart,
-  MeasuresChart,
   WeightChart,
-  BodyFatChart,
-  AsymmetryScannerChart
+  BodyFatChart
 } from './EvolutionCharts';
 import { AssessmentList } from './AssessmentList';
 import { ProfileSelector } from './ProfileSelector';
@@ -352,12 +350,8 @@ export const DesignSystem: React.FC = () => {
             {/* Secondary Charts Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <GlassPanel className="p-6 rounded-2xl h-[300px]">
-                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Measures Chart</h3>
-                <MeasuresChart />
-              </GlassPanel>
-              <GlassPanel className="p-6 rounded-2xl h-[300px]">
                 <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Weight Chart</h3>
-                <WeightChart />
+                <WeightChart data={[{ date: 'Jan', total: 80, lean: 70, fat: 10 }, { date: 'Fev', total: 79, lean: 70, fat: 9 }]} />
               </GlassPanel>
             </div>
 
@@ -366,10 +360,6 @@ export const DesignSystem: React.FC = () => {
               <GlassPanel className="p-6 rounded-2xl h-[200px] flex flex-col">
                 <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Body Fat Sparkline</h3>
                 <BodyFatChart />
-              </GlassPanel>
-              <GlassPanel className="p-6 rounded-2xl h-[200px] lg:col-span-2 flex flex-col">
-                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Asymmetry Scanner</h3>
-                <AsymmetryScannerChart />
               </GlassPanel>
             </div>
           </div>
