@@ -30,24 +30,23 @@ Para calcular TODAS as proporções nos 3 métodos, o usuário deve fornecer:
 | 2 | **Punho** | `punho` | cm | Circunferência no osso proeminente (mão dominante) |
 | 3 | **Tornozelo** | `tornozelo` | cm | Parte mais fina, acima do osso |
 | 4 | **Joelho** | `joelho` | cm | Centro da patela, perna estendida e relaxada |
-| 5 | **Pelvis/Quadril** | `pelvis` | cm | Parte mais larga da pelve/quadril |
-| 6 | **Cabeça** | `cabeca` | cm | Circunferência acima das sobrancelhas |
-| 7 | **Cintura** | `cintura` | cm | Parte mais estreita do abdômen (umbigo) |
-| 8 | **Ombros** | `ombros` | cm | Ponto mais largo, braços relaxados ao lado |
-| 9 | **Peito** | `peito` | cm | Na altura dos mamilos, respiração normal |
-| 10 | **Braço** | `braco` | cm | Bíceps flexionado, ponto mais grosso |
-| 11 | **Antebraço** | `antebraco` | cm | Ponto mais grosso, punho cerrado |
+| 5 | **Pelve/Quadril** | `pelve` | cm | Parte mais larga da pelve/quadril |
+| 6 | **Cintura** | `cintura` | cm | Parte mais estreita do abdômen (umbigo) |
+| 7 | **Ombros** | `ombros` | cm | Ponto mais largo, braços relaxados ao lado |
+| 8 | **Peitoral** | `peitoral` | cm | Na altura dos mamilos, respiração normal |
+| 9 | **Braço** | `braco` | cm | Bíceps flexionado, ponto mais grosso |
+| 10 | **Antebraço** | `antebraco` | cm | Ponto mais grosso, punho cerrado |
+| 11 | **Pescoço** | `pescoco` | cm | Parte mais estreita, abaixo do pomo de Adão |
 | 12 | **Coxa** | `coxa` | cm | Ponto mais grosso, perna relaxada |
 | 13 | **Panturrilha** | `panturrilha` | cm | Ponto mais grosso, perna relaxada |
-| 14 | **Pescoço** | `pescoco` | cm | Parte mais estreita, abaixo do pomo de Adão |
 
 ### 2.2 Classificação das Medidas
 
 **Medidas Estruturais (não mudam com treino):**
-- Altura, Punho, Tornozelo, Joelho, Pelvis, Cabeça
+- Altura, Punho, Tornozelo, Joelho, Pelve
 
 **Medidas Variáveis (mudam com treino/dieta):**
-- Cintura, Ombros, Peito, Braço, Antebraço, Coxa, Panturrilha, Pescoço
+- Cintura, Ombros, Peitoral, Braço, Antebraço, Pescoço, Coxa, Panturrilha
 
 ---
 
@@ -55,17 +54,17 @@ Para calcular TODAS as proporções nos 3 métodos, o usuário deve fornecer:
 
 ### 3.1 Tabela Completa de Referência
 
-| Medida Alvo | Partes Envolvidas | Golden Ratio (Clássico) | Classic Physique (CBum) | Men's Physique (Ryan Terry) |
-|-------------|-------------------|-------------------------|-------------------------|----------------------------|
-| **Ombros** | Ombros e Cintura | `1.618 × Cintura` | `1.70 × Cintura` | `1.55 × Cintura` |
-| **Peito** | Peito e Punho | `6.5 × Punho` | `7.0 × Punho` | `6.2 × Punho` |
-| **Braço** | Braço, Punho e Altura | `2.52 × Punho` | `(Altura/185) × 50cm` | `(Altura/178) × 43cm` |
-| **Antebraço** | Antebraço e Peito | `0.29 × Peito Ideal` | Proporcional ao Braço | Estética do Punho |
-| **Cintura** | Cintura, Pelvis e Altura | `0.86 × Pelvis` | `0.42 × Altura` | `0.455 × Altura` |
-| **Coxa** | Coxa, Joelho e Cintura | `1.75 × Joelho` | `0.97 × Cintura` | N/A (Não julgada) |
-| **Panturrilha** | Panturrilha, Tornozelo e Braço | `1.92 × Tornozelo` | `0.96 × Braço` | Estética Geral |
-| **Pescoço** | Pescoço, Cabeça e Braço | `0.79 × Cabeça` | Igual ao Braço (Simetria) | Estética do Tronco |
-| **Tríade** | Pescoço, Braço e Panturrilha | `1:1:1 (Igualdade)` | `~1:1:1 (Harmonia)` | N/A |
+| # | Proporção | Partes Envolvidas | Golden Ratio (Clássico) | Classic Physique (CBum) | Men's Physique (Ryan Terry) |
+|---|-----------|-------------------|-------------------------|-------------------------|----------------------------|
+| 1 | **Ombros** | Ombro + Cintura | `1.618 × Cintura` | `1.70 × Cintura` | `1.55 × Cintura` |
+| 2 | **Peitoral** | Peitoral + Punho | `6.5 × Punho` | `7.0 × Punho` | `6.2 × Punho` |
+| 3 | **Braço** | Braço + Punho | `2.52 × Punho` | `(Altura/185) × 50cm` | `(Altura/178) × 43cm` |
+| 4 | **Antebraço** | Antebraço + Braço | `0.80 × Braço` | `0.80 × Braço` | `0.80 × Braço` |
+| 5 | **Tríade** | Pescoço + Braço + Panturrilha | `1:1:1 (Igualdade)` | `~1:1:1 (Harmonia)` | N/A |
+| 6 | **Cintura** | Cintura + Pelve | `0.86 × Pelve` | `0.42 × Altura` | `0.455 × Altura` |
+| 7 | **Coxa** | Coxa + Joelho + Cintura | `1.75 × Joelho` | `0.97 × Cintura` | N/A (Não julgada) |
+| 8 | **Coxa/Panturrilha** | Coxa + Panturrilha | `Coxa = 1.5 × Panturrilha` | `Coxa = 1.5 × Panturrilha` | N/A (Não julgada) |
+| 9 | **Panturrilha** | Panturrilha + Tornozelo | `1.92 × Tornozelo` | `0.96 × Braço` | Estética Geral |
 
 ---
 
@@ -76,13 +75,13 @@ Para calcular TODAS as proporções nos 3 métodos, o usuário deve fornecer:
 ```javascript
 const GOLDEN_RATIO = {
     PHI: 1.618,                    // Proporção Áurea
-    PEITO_PUNHO: 6.5,              // Multiplicador peito
+    PEITO_PUNHO: 6.5,              // Multiplicador peitoral
     BRACO_PUNHO: 2.52,             // Multiplicador braço
-    ANTEBRACO_PEITO: 0.29,         // Proporção antebraço
-    CINTURA_PELVIS: 0.86,          // Proporção cintura
+    ANTEBRACO_BRACO: 0.80,         // Proporção antebraço/braço (80%)
+    CINTURA_PELVE: 0.86,           // Proporção cintura
     COXA_JOELHO: 1.75,             // Multiplicador coxa
-    PANTURRILHA_TORNOZELO: 1.92,   // Multiplicador panturrilha
-    PESCOCO_CABECA: 0.79           // Proporção pescoço
+    COXA_PANTURRILHA: 1.5,         // Proporção coxa/panturrilha
+    PANTURRILHA_TORNOZELO: 1.92    // Multiplicador panturrilha
 }
 ```
 
@@ -90,38 +89,50 @@ const GOLDEN_RATIO = {
 
 ```javascript
 function calcularIdeaisGoldenRatio(medidas) {
-    const { cintura, punho, pelvis, joelho, tornozelo, cabeca } = medidas
+    const { cintura, punho, pelve, joelho, tornozelo } = medidas
+    
+    // Calcular braço ideal primeiro (usado em outras proporções)
+    const braco_ideal = punho * GOLDEN_RATIO.BRACO_PUNHO
+    
+    // Calcular panturrilha ideal (usado na proporção coxa/panturrilha)
+    const panturrilha_ideal = tornozelo * GOLDEN_RATIO.PANTURRILHA_TORNOZELO
     
     return {
         // 1. OMBROS: 1.618 × Cintura
         ombros: cintura * GOLDEN_RATIO.PHI,
         
-        // 2. PEITO: 6.5 × Punho
-        peito: punho * GOLDEN_RATIO.PEITO_PUNHO,
+        // 2. PEITORAL: 6.5 × Punho
+        peitoral: punho * GOLDEN_RATIO.PEITO_PUNHO,
         
         // 3. BRAÇO: 2.52 × Punho
-        braco: punho * GOLDEN_RATIO.BRACO_PUNHO,
+        braco: braco_ideal,
         
-        // 4. ANTEBRAÇO: 0.29 × Peito Ideal
-        antebraco: (punho * GOLDEN_RATIO.PEITO_PUNHO) * GOLDEN_RATIO.ANTEBRACO_PEITO,
+        // 4. ANTEBRAÇO: 0.80 × Braço (80% do braço)
+        antebraco: braco_ideal * GOLDEN_RATIO.ANTEBRACO_BRACO,
         
-        // 5. CINTURA: 0.86 × Pelvis
-        cintura: pelvis * GOLDEN_RATIO.CINTURA_PELVIS,
+        // 5. TRÍADE: Braço = Panturrilha = Pescoço (1:1:1)
+        triade: {
+            valor_ideal: braco_ideal,
+            pescoço: braco_ideal,
+            panturrilha: braco_ideal,
+            regra: "Pescoço, Braço e Panturrilha devem ser iguais"
+        },
         
-        // 6. COXA: 1.75 × Joelho
+        // 6. CINTURA: 0.86 × Pelve
+        cintura: pelve * GOLDEN_RATIO.CINTURA_PELVE,
+        
+        // 7. COXA: 1.75 × Joelho
         coxa: joelho * GOLDEN_RATIO.COXA_JOELHO,
         
-        // 7. PANTURRILHA: 1.92 × Tornozelo
-        panturrilha: tornozelo * GOLDEN_RATIO.PANTURRILHA_TORNOZELO,
+        // 8. COXA/PANTURRILHA: Coxa = 1.5 × Panturrilha
+        coxa_panturrilha: {
+            coxa_ideal: panturrilha_ideal * GOLDEN_RATIO.COXA_PANTURRILHA,
+            panturrilha_ref: panturrilha_ideal,
+            regra: "Coxa deve ser 1.5× a Panturrilha"
+        },
         
-        // 8. PESCOÇO: 0.79 × Cabeça
-        pescoco: cabeca * GOLDEN_RATIO.PESCOCO_CABECA,
-        
-        // 9. TRÍADE: Braço = Panturrilha = Pescoço (1:1:1)
-        triade: {
-            valor_ideal: punho * GOLDEN_RATIO.BRACO_PUNHO, // Usa braço como referência
-            regra: "Braço, Panturrilha e Pescoço devem ser iguais"
-        }
+        // 9. PANTURRILHA: 1.92 × Tornozelo
+        panturrilha: panturrilha_ideal
     }
 }
 ```
@@ -135,45 +146,45 @@ function calcularScoreGoldenRatio(medidas) {
     
     // Pesos de cada proporção (total = 100)
     const pesos = {
-        ombros: 20,      // V-taper é prioridade
-        peito: 15,
-        braco: 15,
-        antebraco: 5,
-        cintura: 15,     // Menor é melhor
-        coxa: 10,
-        panturrilha: 8,
-        pescoco: 5,
-        triade: 7        // Simetria
+        ombros: 18,           // 1. Ombro + Cintura (V-taper prioridade)
+        peitoral: 14,         // 2. Peitoral + Punho
+        braco: 14,            // 3. Braço + Punho
+        antebraco: 5,         // 4. Antebraço + Braço
+        triade: 10,           // 5. Pescoço + Braço + Panturrilha (simetria)
+        cintura: 12,          // 6. Cintura + Pelve (menor é melhor)
+        coxa: 10,             // 7. Coxa + Joelho + Cintura
+        coxa_panturrilha: 8,  // 8. Coxa + Panturrilha
+        panturrilha: 9        // 9. Panturrilha + Tornozelo
     }
     
     let scores = {}
     
-    // Ombros (quanto maior, melhor até o ideal)
+    // 1. Ombros (quanto maior até o ideal, melhor)
     scores.ombros = calcularScoreProporcional(atuais.ombros, ideais.ombros, pesos.ombros)
     
-    // Peito
-    scores.peito = calcularScoreProporcional(atuais.peito, ideais.peito, pesos.peito)
+    // 2. Peitoral
+    scores.peitoral = calcularScoreProporcional(atuais.peitoral, ideais.peitoral, pesos.peitoral)
     
-    // Braço
+    // 3. Braço
     scores.braco = calcularScoreProporcional(atuais.braco, ideais.braco, pesos.braco)
     
-    // Antebraço
+    // 4. Antebraço
     scores.antebraco = calcularScoreProporcional(atuais.antebraco, ideais.antebraco, pesos.antebraco)
     
-    // Cintura (INVERTIDO - menor é melhor)
+    // 5. Tríade (simetria entre pescoço, braço e panturrilha)
+    scores.triade = calcularScoreTriade(atuais.pescoco, atuais.braco, atuais.panturrilha, pesos.triade)
+    
+    // 6. Cintura (INVERTIDO - menor é melhor)
     scores.cintura = calcularScoreInverso(atuais.cintura, ideais.cintura, pesos.cintura)
     
-    // Coxa
+    // 7. Coxa
     scores.coxa = calcularScoreProporcional(atuais.coxa, ideais.coxa, pesos.coxa)
     
-    // Panturrilha
+    // 8. Coxa/Panturrilha (proporção entre as duas)
+    scores.coxa_panturrilha = calcularScoreCoxaPanturrilha(atuais.coxa, atuais.panturrilha, GOLDEN_RATIO.COXA_PANTURRILHA, pesos.coxa_panturrilha)
+    
+    // 9. Panturrilha
     scores.panturrilha = calcularScoreProporcional(atuais.panturrilha, ideais.panturrilha, pesos.panturrilha)
-    
-    // Pescoço
-    scores.pescoco = calcularScoreProporcional(atuais.pescoco, ideais.pescoco, pesos.pescoco)
-    
-    // Tríade (simetria entre braço, panturrilha e pescoço)
-    scores.triade = calcularScoreTriade(atuais.braco, atuais.panturrilha, atuais.pescoco, pesos.triade)
     
     const scoreTotal = Object.values(scores).reduce((a, b) => a + b, 0)
     
@@ -197,15 +208,15 @@ function calcularScoreInverso(atual, ideal, peso) {
     return percentual * (peso / 100)
 }
 
-function calcularScoreTriade(braco, panturrilha, pescoco, peso) {
+function calcularScoreTriade(pescoco, braco, panturrilha, peso) {
     // Média das medidas
-    const media = (braco + panturrilha + pescoco) / 3
+    const media = (pescoco + braco + panturrilha) / 3
     
     // Desvio de cada medida em relação à média
     const desvios = [
+        Math.abs(pescoco - media) / media,
         Math.abs(braco - media) / media,
-        Math.abs(panturrilha - media) / media,
-        Math.abs(pescoco - media) / media
+        Math.abs(panturrilha - media) / media
     ]
     
     // Média dos desvios (0 = perfeito, 1 = muito desigual)
@@ -213,6 +224,15 @@ function calcularScoreTriade(braco, panturrilha, pescoco, peso) {
     
     // Converter para score (100% se desvio = 0)
     const percentual = Math.max(0, (1 - desvioMedio) * 100)
+    return percentual * (peso / 100)
+}
+
+function calcularScoreCoxaPanturrilha(coxa, panturrilha, ratioIdeal, peso) {
+    // Proporção atual
+    const ratioAtual = coxa / panturrilha
+    
+    // Score baseado em quão perto está do ideal (1.5)
+    const percentual = Math.min(100, Math.max(0, (1 - Math.abs(ratioAtual - ratioIdeal) / ratioIdeal) * 100))
     return percentual * (peso / 100)
 }
 
@@ -240,17 +260,19 @@ function calcularDiferencas(atuais, ideais) {
 const CLASSIC_PHYSIQUE = {
     // Proporções baseadas em Chris Bumstead
     OMBROS_CINTURA: 1.70,          // V-taper mais agressivo
-    PEITO_PUNHO: 7.0,              // Peito maior
+    PEITO_PUNHO: 7.0,              // Peitoral maior
     CINTURA_ALTURA: 0.42,          // Cintura super apertada
-    COXA_CINTURA: 0.97,            // Coxas proporcionais
+    COXA_CINTURA: 0.97,            // Coxas proporcionais à cintura
+    COXA_PANTURRILHA: 1.5,         // Proporção coxa/panturrilha
     PANTURRILHA_BRACO: 0.96,       // Quase iguais
+    ANTEBRACO_BRACO: 0.80,         // 80% do braço
     
     // Referência CBum (185cm altura)
     CBUM_ALTURA: 185,
     CBUM_BRACO: 50,                // 50cm de braço reference
     
-    // Regra: Pescoço = Braço (simetria)
-    PESCOCO_BRACO: 1.0
+    // Regra Tríade: Pescoço ≈ Braço ≈ Panturrilha
+    TRIADE_HARMONIA: true
 }
 
 // Tabela de peso máximo IFBB Pro Classic Physique
@@ -281,36 +303,48 @@ function calcularIdeaisClassicPhysique(medidas) {
     // Fator de escala baseado na altura vs CBum
     const fatorAltura = altura / CLASSIC_PHYSIQUE.CBUM_ALTURA
     
+    // Calcular braço ideal primeiro (usado em outras proporções)
+    const braco_ideal = fatorAltura * CLASSIC_PHYSIQUE.CBUM_BRACO
+    
+    // Calcular panturrilha ideal (baseada no braço)
+    const panturrilha_ideal = braco_ideal * CLASSIC_PHYSIQUE.PANTURRILHA_BRACO
+    
     return {
         // 1. OMBROS: 1.70 × Cintura
         ombros: cintura * CLASSIC_PHYSIQUE.OMBROS_CINTURA,
         
-        // 2. PEITO: 7.0 × Punho
-        peito: punho * CLASSIC_PHYSIQUE.PEITO_PUNHO,
+        // 2. PEITORAL: 7.0 × Punho
+        peitoral: punho * CLASSIC_PHYSIQUE.PEITO_PUNHO,
         
         // 3. BRAÇO: Fator Altura × 50cm (escalado do CBum)
-        braco: fatorAltura * CLASSIC_PHYSIQUE.CBUM_BRACO,
+        braco: braco_ideal,
         
-        // 4. ANTEBRAÇO: Proporcional ao Braço (~65% do braço)
-        antebraco: (fatorAltura * CLASSIC_PHYSIQUE.CBUM_BRACO) * 0.65,
+        // 4. ANTEBRAÇO: 0.80 × Braço (80% do braço)
+        antebraco: braco_ideal * CLASSIC_PHYSIQUE.ANTEBRACO_BRACO,
         
-        // 5. CINTURA: 0.42 × Altura (muito apertada!)
+        // 5. TRÍADE: Pescoço ≈ Braço ≈ Panturrilha (harmonia)
+        triade: {
+            valor_ideal: braco_ideal,
+            pescoco: braco_ideal,
+            panturrilha: panturrilha_ideal,
+            regra: "Pescoço ≈ Braço ≈ Panturrilha (harmonia)"
+        },
+        
+        // 6. CINTURA: 0.42 × Altura (muito apertada!)
         cintura: altura * CLASSIC_PHYSIQUE.CINTURA_ALTURA,
         
-        // 6. COXA: 0.97 × Cintura
+        // 7. COXA: 0.97 × Cintura
         coxa: cintura * CLASSIC_PHYSIQUE.COXA_CINTURA,
         
-        // 7. PANTURRILHA: 0.96 × Braço (quase igual)
-        panturrilha: (fatorAltura * CLASSIC_PHYSIQUE.CBUM_BRACO) * CLASSIC_PHYSIQUE.PANTURRILHA_BRACO,
-        
-        // 8. PESCOÇO: Igual ao Braço (simetria clássica)
-        pescoco: fatorAltura * CLASSIC_PHYSIQUE.CBUM_BRACO,
-        
-        // 9. TRÍADE: Harmonia ~1:1:1
-        triade: {
-            valor_ideal: fatorAltura * CLASSIC_PHYSIQUE.CBUM_BRACO,
-            regra: "Braço ≈ Panturrilha ≈ Pescoço"
+        // 8. COXA/PANTURRILHA: Coxa = 1.5 × Panturrilha
+        coxa_panturrilha: {
+            coxa_ideal: panturrilha_ideal * CLASSIC_PHYSIQUE.COXA_PANTURRILHA,
+            panturrilha_ref: panturrilha_ideal,
+            regra: "Coxa deve ser 1.5× a Panturrilha"
         },
+        
+        // 9. PANTURRILHA: 0.96 × Braço (quase igual)
+        panturrilha: panturrilha_ideal,
         
         // Peso máximo da categoria
         peso_maximo: getPesoMaximoClassic(altura)
@@ -345,28 +379,45 @@ function calcularScoreClassicPhysique(medidas) {
     
     // Pesos ajustados para Classic (ênfase em V-taper e cintura apertada)
     const pesos = {
-        ombros: 20,
-        peito: 15,
-        braco: 18,
-        antebraco: 4,
-        cintura: 18,     // Muito importante no Classic
-        coxa: 10,
-        panturrilha: 7,
-        pescoco: 3,
-        triade: 5
+        ombros: 18,           // 1. Ombro + Cintura
+        peitoral: 14,         // 2. Peitoral + Punho
+        braco: 16,            // 3. Braço + Punho
+        antebraco: 4,         // 4. Antebraço + Braço
+        triade: 8,            // 5. Pescoço + Braço + Panturrilha
+        cintura: 16,          // 6. Cintura + Pelve (muito importante no Classic)
+        coxa: 10,             // 7. Coxa + Joelho + Cintura
+        coxa_panturrilha: 6,  // 8. Coxa + Panturrilha
+        panturrilha: 8        // 9. Panturrilha + Tornozelo
     }
     
     let scores = {}
     
+    // 1. Ombros
     scores.ombros = calcularScoreProporcional(atuais.ombros, ideais.ombros, pesos.ombros)
-    scores.peito = calcularScoreProporcional(atuais.peito, ideais.peito, pesos.peito)
+    
+    // 2. Peitoral
+    scores.peitoral = calcularScoreProporcional(atuais.peitoral, ideais.peitoral, pesos.peitoral)
+    
+    // 3. Braço
     scores.braco = calcularScoreProporcional(atuais.braco, ideais.braco, pesos.braco)
+    
+    // 4. Antebraço
     scores.antebraco = calcularScoreProporcional(atuais.antebraco, ideais.antebraco, pesos.antebraco)
+    
+    // 5. Tríade (simetria entre pescoço, braço e panturrilha)
+    scores.triade = calcularScoreTriade(atuais.pescoco, atuais.braco, atuais.panturrilha, pesos.triade)
+    
+    // 6. Cintura (INVERTIDO - menor é melhor)
     scores.cintura = calcularScoreInverso(atuais.cintura, ideais.cintura, pesos.cintura)
+    
+    // 7. Coxa
     scores.coxa = calcularScoreProporcional(atuais.coxa, ideais.coxa, pesos.coxa)
+    
+    // 8. Coxa/Panturrilha
+    scores.coxa_panturrilha = calcularScoreCoxaPanturrilha(atuais.coxa, atuais.panturrilha, CLASSIC_PHYSIQUE.COXA_PANTURRILHA, pesos.coxa_panturrilha)
+    
+    // 9. Panturrilha
     scores.panturrilha = calcularScoreProporcional(atuais.panturrilha, ideais.panturrilha, pesos.panturrilha)
-    scores.pescoco = calcularScoreProporcional(atuais.pescoco, ideais.pescoco, pesos.pescoco)
-    scores.triade = calcularScoreTriade(atuais.braco, atuais.panturrilha, atuais.pescoco, pesos.triade)
     
     const scoreTotal = Object.values(scores).reduce((a, b) => a + b, 0)
     
@@ -390,20 +441,16 @@ function calcularScoreClassicPhysique(medidas) {
 const MENS_PHYSIQUE = {
     // Proporções baseadas em Ryan Terry
     OMBROS_CINTURA: 1.55,          // V-taper mais suave
-    PEITO_PUNHO: 6.2,              // Peito moderado
+    PEITO_PUNHO: 6.2,              // Peitoral moderado
     CINTURA_ALTURA: 0.455,         // Cintura menos extrema
+    ANTEBRACO_BRACO: 0.80,         // 80% do braço
     
     // Referência Ryan Terry (178cm altura)
     RYAN_ALTURA: 178,
     RYAN_BRACO: 43,                // 43cm de braço reference
     
-    // Notas: Coxa NÃO é julgada (usa board shorts)
-    COXA_JULGADA: false,
-    
-    // Antebraço: Estética proporcional ao punho
-    ANTEBRACO_PUNHO: 1.6,
-    
-    // Panturrilha e Pescoço: Estética geral, sem fórmula rígida
+    // Notas: Coxa e Panturrilha NÃO são julgadas (usa board shorts)
+    PERNAS_JULGADAS: false
 }
 ```
 
@@ -411,41 +458,45 @@ const MENS_PHYSIQUE = {
 
 ```javascript
 function calcularIdeaisMensPhysique(medidas) {
-    const { altura, punho, cintura } = medidas
+    const { altura, punho, cintura, tornozelo } = medidas
     
     // Fator de escala baseado na altura vs Ryan Terry
     const fatorAltura = altura / MENS_PHYSIQUE.RYAN_ALTURA
+    
+    // Calcular braço ideal primeiro
+    const braco_ideal = fatorAltura * MENS_PHYSIQUE.RYAN_BRACO
     
     return {
         // 1. OMBROS: 1.55 × Cintura
         ombros: cintura * MENS_PHYSIQUE.OMBROS_CINTURA,
         
-        // 2. PEITO: 6.2 × Punho
-        peito: punho * MENS_PHYSIQUE.PEITO_PUNHO,
+        // 2. PEITORAL: 6.2 × Punho
+        peitoral: punho * MENS_PHYSIQUE.PEITO_PUNHO,
         
         // 3. BRAÇO: Fator Altura × 43cm (escalado do Ryan)
-        braco: fatorAltura * MENS_PHYSIQUE.RYAN_BRACO,
+        braco: braco_ideal,
         
-        // 4. ANTEBRAÇO: Estética do Punho (~1.6x punho)
-        antebraco: punho * MENS_PHYSIQUE.ANTEBRACO_PUNHO,
+        // 4. ANTEBRAÇO: 0.80 × Braço (80% do braço)
+        antebraco: braco_ideal * MENS_PHYSIQUE.ANTEBRACO_BRACO,
         
-        // 5. CINTURA: 0.455 × Altura
+        // 5. TRÍADE: N/A para Men's Physique
+        triade: null,
+        triade_nota: "Não aplicável - foco em upper body",
+        
+        // 6. CINTURA: 0.455 × Altura
         cintura: altura * MENS_PHYSIQUE.CINTURA_ALTURA,
         
-        // 6. COXA: N/A - Não julgada (usa board shorts)
+        // 7. COXA: N/A - Não julgada (usa board shorts)
         coxa: null,
         coxa_nota: "Não julgada na categoria Men's Physique",
         
-        // 7. PANTURRILHA: Estética Geral (proporcional ao tornozelo)
-        panturrilha: medidas.tornozelo * 1.8, // Sugestão estética
-        panturrilha_nota: "Estética geral, menos ênfase",
+        // 8. COXA/PANTURRILHA: N/A - Não julgada
+        coxa_panturrilha: null,
+        coxa_panturrilha_nota: "Não julgada - usa board shorts",
         
-        // 8. PESCOÇO: Estética do Tronco (proporcional)
-        pescoco: (fatorAltura * MENS_PHYSIQUE.RYAN_BRACO) * 0.9,
-        pescoco_nota: "Proporcional ao visual do tronco",
-        
-        // 9. TRÍADE: N/A para Men's Physique
-        triade: null
+        // 9. PANTURRILHA: Estética Geral (referência suave)
+        panturrilha: tornozelo * 1.8,
+        panturrilha_nota: "Estética geral, menos ênfase"
     }
 }
 ```
@@ -458,28 +509,47 @@ function calcularScoreMensPhysique(medidas) {
     const atuais = medidas
     
     // Pesos para Men's Physique (foco em upper body e estética geral)
-    // Nota: Coxa tem peso 0 pois não é julgada
+    // Nota: Coxa, Coxa/Panturrilha e Tríade não são julgadas
     const pesos = {
-        ombros: 25,      // Muito importante - deltoides são destaque
-        peito: 20,
-        braco: 25,       // Braços são destaque
-        antebraco: 5,
-        cintura: 15,
-        coxa: 0,         // NÃO JULGADA
-        panturrilha: 5,  // Estética geral
-        pescoco: 5       // Estética geral
+        ombros: 25,           // 1. Muito importante - deltoides são destaque
+        peitoral: 22,         // 2. Peitoral + Punho
+        braco: 25,            // 3. Braços são destaque
+        antebraco: 6,         // 4. Antebraço + Braço
+        triade: 0,            // 5. NÃO JULGADA
+        cintura: 17,          // 6. Cintura + Pelve
+        coxa: 0,              // 7. NÃO JULGADA
+        coxa_panturrilha: 0,  // 8. NÃO JULGADA
+        panturrilha: 5        // 9. Estética geral
     }
     
     let scores = {}
     
+    // 1. Ombros
     scores.ombros = calcularScoreProporcional(atuais.ombros, ideais.ombros, pesos.ombros)
-    scores.peito = calcularScoreProporcional(atuais.peito, ideais.peito, pesos.peito)
+    
+    // 2. Peitoral
+    scores.peitoral = calcularScoreProporcional(atuais.peitoral, ideais.peitoral, pesos.peitoral)
+    
+    // 3. Braço
     scores.braco = calcularScoreProporcional(atuais.braco, ideais.braco, pesos.braco)
+    
+    // 4. Antebraço
     scores.antebraco = calcularScoreProporcional(atuais.antebraco, ideais.antebraco, pesos.antebraco)
+    
+    // 5. Tríade - Não julgada
+    scores.triade = 0
+    
+    // 6. Cintura (INVERTIDO - menor é melhor)
     scores.cintura = calcularScoreInverso(atuais.cintura, ideais.cintura, pesos.cintura)
-    scores.coxa = 0 // Não julgada
+    
+    // 7. Coxa - Não julgada
+    scores.coxa = 0
+    
+    // 8. Coxa/Panturrilha - Não julgada
+    scores.coxa_panturrilha = 0
+    
+    // 9. Panturrilha (estética geral)
     scores.panturrilha = calcularScoreProporcional(atuais.panturrilha, ideais.panturrilha, pesos.panturrilha)
-    scores.pescoco = calcularScoreProporcional(atuais.pescoco, ideais.pescoco, pesos.pescoco)
     
     const scoreTotal = Object.values(scores).reduce((a, b) => a + b, 0)
     
@@ -490,7 +560,8 @@ function calcularScoreMensPhysique(medidas) {
         diferencas: calcularDiferencas(atuais, ideais),
         notas: {
             coxa: "Não julgada - usa board shorts",
-            panturrilha: "Estética geral, menos ênfase",
+            coxa_panturrilha: "Não julgada - usa board shorts",
+            triade: "Não aplicável nesta categoria",
             foco: "Deltoides, braços e V-taper moderado"
         }
     }
@@ -505,34 +576,35 @@ function calcularScoreMensPhysique(medidas) {
 
 | Medida | Golden Ratio | Classic Physique | Men's Physique |
 |--------|--------------|------------------|----------------|
-| **Ombros** | `Cintura × 1.618` | `Cintura × 1.70` | `Cintura × 1.55` |
-| **Peito** | `Punho × 6.5` | `Punho × 7.0` | `Punho × 6.2` |
-| **Braço** | `Punho × 2.52` | `(Altura/185) × 50` | `(Altura/178) × 43` |
-| **Antebraço** | `Peito_ideal × 0.29` | `Braço × 0.65` | `Punho × 1.6` |
-| **Cintura** | `Pelvis × 0.86` | `Altura × 0.42` | `Altura × 0.455` |
-| **Coxa** | `Joelho × 1.75` | `Cintura × 0.97` | `N/A` |
-| **Panturrilha** | `Tornozelo × 1.92` | `Braço × 0.96` | `Tornozelo × 1.8` |
-| **Pescoço** | `Cabeça × 0.79` | `= Braço` | `Braço × 0.9` |
-| **Tríade** | `Braço = Pant = Pesc` | `≈ 1:1:1` | `N/A` |
+| # | Proporção | Golden Ratio | Classic Physique | Men's Physique |
+|---|-----------|--------------|------------------|----------------|
+| 1 | **Ombros** | `Cintura × 1.618` | `Cintura × 1.70` | `Cintura × 1.55` |
+| 2 | **Peitoral** | `Punho × 6.5` | `Punho × 7.0` | `Punho × 6.2` |
+| 3 | **Braço** | `Punho × 2.52` | `(Altura/185) × 50` | `(Altura/178) × 43` |
+| 4 | **Antebraço** | `Braço × 0.80` | `Braço × 0.80` | `Braço × 0.80` |
+| 5 | **Tríade** | `Pesc = Braço = Pant` | `≈ 1:1:1` | `N/A` |
+| 6 | **Cintura** | `Pelve × 0.86` | `Altura × 0.42` | `Altura × 0.455` |
+| 7 | **Coxa** | `Joelho × 1.75` | `Cintura × 0.97` | `N/A` |
+| 8 | **Coxa/Pant** | `Coxa = Pant × 1.5` | `Coxa = Pant × 1.5` | `N/A` |
+| 9 | **Panturrilha** | `Tornozelo × 1.92` | `Braço × 0.96` | Estética |
 
 ### 7.2 Medidas Necessárias por Método
 
 | Medida Input | Golden Ratio | Classic Physique | Men's Physique |
 |--------------|:------------:|:----------------:|:--------------:|
-| Altura | ❌ | ✅ | ✅ |
+| Altura | ✅ | ✅ | ✅ |
 | Punho | ✅ | ✅ | ✅ |
-| Tornozelo | ✅ | ❌ | ✅ |
+| Tornozelo | ✅ | ✅ | ✅ |
 | Joelho | ✅ | ❌ | ❌ |
-| Pelvis | ✅ | ❌ | ❌ |
-| Cabeça | ✅ | ❌ | ❌ |
+| Pelve | ✅ | ❌ | ❌ |
 | Cintura | ✅ | ✅ | ✅ |
 | Ombros | ✅ | ✅ | ✅ |
-| Peito | ✅ | ✅ | ✅ |
+| Peitoral | ✅ | ✅ | ✅ |
 | Braço | ✅ | ✅ | ✅ |
 | Antebraço | ✅ | ✅ | ✅ |
+| Pescoço | ✅ | ✅ | ❌ |
 | Coxa | ✅ | ✅ | ❌ |
 | Panturrilha | ✅ | ✅ | ✅ |
-| Pescoço | ✅ | ✅ | ✅ |
 
 **Legenda:** ✅ = Obrigatório | ❌ = Não necessário para cálculo
 
@@ -630,18 +702,17 @@ const medidasUsuario = {
     punho: 17.5,        // cm
     tornozelo: 23,      // cm
     joelho: 38,         // cm
-    pelvis: 98,         // cm
-    cabeca: 58,         // cm
+    pelve: 98,          // cm
     
     // Medidas variáveis
     cintura: 82,        // cm
     ombros: 120,        // cm
-    peito: 108,         // cm
+    peitoral: 108,      // cm
     braco: 40,          // cm
     antebraco: 32,      // cm
+    pescoco: 40,        // cm
     coxa: 60,           // cm
-    panturrilha: 38,    // cm
-    pescoco: 40         // cm
+    panturrilha: 38     // cm
 }
 ```
 
@@ -655,14 +726,24 @@ const medidasUsuario = {
         golden_ratio: {
             score_total: 82.5,
             ideais: {
-                ombros: 132.7,    // 82 × 1.618
-                peito: 113.8,     // 17.5 × 6.5
-                braco: 44.1,      // 17.5 × 2.52
-                antebraco: 33.0,  // 113.8 × 0.29
-                cintura: 84.3,    // 98 × 0.86
-                coxa: 66.5,       // 38 × 1.75
-                panturrilha: 44.2,// 23 × 1.92
-                pescoco: 45.8     // 58 × 0.79
+                // 1. Ombros: Cintura × 1.618
+                ombros: 132.7,
+                // 2. Peitoral: Punho × 6.5
+                peitoral: 113.8,
+                // 3. Braço: Punho × 2.52
+                braco: 44.1,
+                // 4. Antebraço: Braço × 0.80
+                antebraco: 35.3,
+                // 5. Tríade: Pescoço = Braço = Panturrilha
+                triade: { valor_ideal: 44.1 },
+                // 6. Cintura: Pelve × 0.86
+                cintura: 84.3,
+                // 7. Coxa: Joelho × 1.75
+                coxa: 66.5,
+                // 8. Coxa/Panturrilha: Coxa = Pant × 1.5
+                coxa_panturrilha: { coxa_ideal: 66.3 },
+                // 9. Panturrilha: Tornozelo × 1.92
+                panturrilha: 44.2
             },
             diferencas: {
                 ombros: { diferenca: 12.7, necessario: 'aumentar' },
@@ -675,12 +756,24 @@ const medidasUsuario = {
         classic_physique: {
             score_total: 78.3,
             ideais: {
-                ombros: 139.4,    // 82 × 1.70
-                peito: 122.5,     // 17.5 × 7.0
-                braco: 48.6,      // (180/185) × 50
-                cintura: 75.6,    // 180 × 0.42
-                coxa: 79.5,       // 82 × 0.97
-                // ...
+                // 1. Ombros: Cintura × 1.70
+                ombros: 139.4,
+                // 2. Peitoral: Punho × 7.0
+                peitoral: 122.5,
+                // 3. Braço: (Altura/185) × 50
+                braco: 48.6,
+                // 4. Antebraço: Braço × 0.80
+                antebraco: 38.9,
+                // 5. Tríade: ~1:1:1
+                triade: { valor_ideal: 48.6 },
+                // 6. Cintura: Altura × 0.42
+                cintura: 75.6,
+                // 7. Coxa: Cintura × 0.97
+                coxa: 79.5,
+                // 8. Coxa/Panturrilha: Coxa = Pant × 1.5
+                coxa_panturrilha: { coxa_ideal: 70.0 },
+                // 9. Panturrilha: Braço × 0.96
+                panturrilha: 46.7
             },
             peso_maximo_categoria: 97.5  // kg para 180cm
         },
@@ -688,15 +781,29 @@ const medidasUsuario = {
         mens_physique: {
             score_total: 85.1,
             ideais: {
-                ombros: 127.1,    // 82 × 1.55
-                peito: 108.5,     // 17.5 × 6.2
-                braco: 43.5,      // (180/178) × 43
-                cintura: 81.9,    // 180 × 0.455
-                coxa: null,       // Não julgada
-                // ...
+                // 1. Ombros: Cintura × 1.55
+                ombros: 127.1,
+                // 2. Peitoral: Punho × 6.2
+                peitoral: 108.5,
+                // 3. Braço: (Altura/178) × 43
+                braco: 43.5,
+                // 4. Antebraço: Braço × 0.80
+                antebraco: 34.8,
+                // 5. Tríade: N/A
+                triade: null,
+                // 6. Cintura: Altura × 0.455
+                cintura: 81.9,
+                // 7. Coxa: N/A
+                coxa: null,
+                // 8. Coxa/Panturrilha: N/A
+                coxa_panturrilha: null,
+                // 9. Panturrilha: Estética
+                panturrilha: 41.4
             },
             notas: {
-                coxa: "Não julgada - usa board shorts"
+                coxa: "Não julgada - usa board shorts",
+                coxa_panturrilha: "Não julgada - usa board shorts",
+                triade: "Não aplicável nesta categoria"
             }
         }
     },
@@ -727,8 +834,9 @@ const medidasUsuario = {
 
 1. **Golden Ratio** é o padrão clássico de estética universal
 2. **Classic Physique** exige cintura MUITO apertada e mais massa muscular
-3. **Men's Physique** foca em upper body e não julga pernas
-4. A **Tríade** (braço = panturrilha = pescoço) só se aplica ao Golden Ratio e Classic
+3. **Men's Physique** foca em upper body e não julga pernas (coxa, coxa/panturrilha)
+4. A **Tríade** (pescoço = braço = panturrilha) só se aplica ao Golden Ratio e Classic
+5. A proporção **Coxa/Panturrilha** (1.5:1) é nova e importante para simetria de pernas
 
 ### 10.2 Referências
 
