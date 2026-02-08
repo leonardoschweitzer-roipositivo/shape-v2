@@ -164,7 +164,7 @@ export const mockDashboardData: DashboardResponse = {
             type: 'warning',
             title: 'Atenção à Cintura',
             message: 'Sua cintura aumentou 1cm nas últimas 2 semanas. Revise sua dieta.',
-            priority: 'high',
+            priority: 'medium',
             icon: 'warning',
             isPro: false,
             createdAt: new Date(Date.now() - 86400000)

@@ -53,7 +53,7 @@ export function getHeroContent(data: DashboardResponse): HeroContent {
     return {
         badge: { label: 'RELATÓRIO SEMANAL', variant: 'primary' },
         date: new Date(),
-        title: 'SIMETRIA DO FÍSICO PERFEITO',
+        title: 'SIMETRIA DO\nFÍSICO PERFEITO',
         description: 'Sua análise de Proporção Áurea indica uma evolução de 2.4% no deltoide lateral, aproximando-se do Golden Ratio ideal.',
         cta: { label: 'Ver análise detalhada', href: '/results' },
         image: {

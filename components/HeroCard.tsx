@@ -90,13 +90,13 @@ export const HeroCard: React.FC<HeroCardProps> = ({ content }) => {
         </div>
 
         {/* Restored Original Title with BR */}
-        <h3 className="text-4xl md:text-6xl font-bold text-white leading-tight mb-3">
-          SIMETRIA DO <br className="hidden md:block" /> FÍSICO PERFEITO
+        <h3 className="text-4xl md:text-6xl font-bold text-white leading-tight mb-3 whitespace-pre-line">
+          {title}
         </h3>
 
-        {/* Restored Original Description with Strong */}
+        {/* Dynamic Description */}
         <p className="text-gray-300 text-sm md:text-base max-w-lg mb-8 leading-relaxed font-light">
-          Sua análise de <strong className="text-white font-medium">Proporção Áurea</strong> indica uma evolução de 2.4% no deltoide lateral, aproximando-se do Golden Ratio ideal.
+          {description}
         </p>
 
         <div className="flex items-center gap-4">

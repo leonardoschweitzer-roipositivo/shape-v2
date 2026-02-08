@@ -12,6 +12,8 @@ import {
     ChevronRight
 } from 'lucide-react';
 import { CoachPillarCard } from './molecules/CoachPillarCard';
+import { HeroCard } from './HeroCard';
+import { HeroContent } from '../src/features/dashboard/types';
 
 interface CoachIAProps {
     onOpenChat?: () => void;
@@ -36,6 +38,19 @@ export const CoachIA: React.FC<CoachIAProps> = ({ onOpenChat }) => {
         setTimeout(() => setIsGenerating(null), 2000);
     };
 
+    const heroContent: HeroContent = {
+        badge: { label: 'VITRÚVIO COACH IA', variant: 'primary' },
+        date: new Date(),
+        title: 'TRANSFORME SEUS \n DADOS EM ESTÉTICA',
+        description: 'Sua análise completa de proporções e simetria está pronta. O Vitrúvio utiliza a matemática clássica para gerar planos de ação personalizados para o seu físico ideal.',
+        cta: { label: 'Consultar o Coach', href: '#' },
+        image: {
+            src: '/images/vitruvio-hero.png',
+            alt: 'Coach IA Banner',
+            position: 'background'
+        }
+    };
+
     return (
         <div className="flex-1 p-4 md:p-8 flex flex-col">
             <div className="max-w-7xl mx-auto flex flex-col gap-8 pb-10 flex-1 w-full">
@@ -52,76 +67,68 @@ export const CoachIA: React.FC<CoachIAProps> = ({ onOpenChat }) => {
 
                 <div className="h-px w-full bg-white/10" />
 
-                {/* Vitrúvio Introduction Card */}
-                <div className="bg-[#131B2C] border border-white/10 rounded-2xl p-6 md:p-8 animate-fade-in-up">
-                    <div className="flex flex-col md:flex-row items-start gap-6">
-                        {/* Avatar */}
-                        <div className="relative shrink-0">
-                            <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl"></div>
-                            <div className="relative w-20 h-20 md:w-24 md:h-24 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center">
-                                <Bot size={40} className="text-primary" />
-                            </div>
-                            <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-[#131B2C] rounded-full border-2 border-primary flex items-center justify-center">
-                                <Sparkles size={14} className="text-primary animate-pulse" />
-                            </div>
-                        </div>
-
-                        {/* Intro Text */}
-                        <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-3">
-                                <h3 className="text-2xl font-bold text-white tracking-wide">VITRÚVIO</h3>
-                                <span className="px-2 py-1 rounded-md text-[10px] font-bold bg-primary/20 text-primary border border-primary/20">
-                                    COACH IA
-                                </span>
-                            </div>
-                            <p className="text-gray-300 leading-relaxed text-sm md:text-base">
-                                Olá! Sou o <span className="text-primary font-semibold">Vitrúvio</span>,
-                                seu coach virtual inteligente. Meu nome é uma homenagem a Marcus Vitruvius Pollio,
-                                o arquiteto romano que definiu as proporções ideais do corpo humano — os mesmos
-                                princípios que inspiraram o Homem Vitruviano de Da Vinci.
-                            </p>
-                            <p className="text-gray-400 leading-relaxed text-sm mt-3">
-                                Minha missão é <span className="text-white font-medium">cruzar seus dados</span> —
-                                histórico de avaliações, proporções atuais, assimetrias e objetivos — para gerar
-                                planos de ação personalizados que te ajudem a atingir o físico ideal.
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Quick Stats */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-6 border-t border-white/5">
-                        <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
-                            <Target size={18} className="text-primary shrink-0" />
-                            <div>
-                                <p className="text-[10px] text-gray-500 uppercase tracking-wider">Análises</p>
-                                <p className="text-sm font-bold text-white">Proporções</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
-                            <TrendingUp size={18} className="text-emerald-400 shrink-0" />
-                            <div>
-                                <p className="text-[10px] text-gray-500 uppercase tracking-wider">Evolução</p>
-                                <p className="text-sm font-bold text-white">Histórico</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
-                            <AlertTriangle size={18} className="text-amber-400 shrink-0" />
-                            <div>
-                                <p className="text-[10px] text-gray-500 uppercase tracking-wider">Correção</p>
-                                <p className="text-sm font-bold text-white">Assimetrias</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
-                            <Sparkles size={18} className="text-violet-400 shrink-0" />
-                            <div>
-                                <p className="text-[10px] text-gray-500 uppercase tracking-wider">Planos</p>
-                                <p className="text-sm font-bold text-white">Personalizados</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                {/* Hero Card Banner */}
+                <HeroCard content={heroContent} />
 
                 <div className="h-px w-full bg-white/5" />
+
+                {/* Quick Stats & Context */}
+                <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    <div className="lg:col-span-8 flex flex-col gap-6">
+                        <div className="flex items-center gap-4">
+                            <div className="p-2.5 bg-[#131B2C] rounded-xl border border-white/5 text-primary shadow-lg">
+                                <Bot size={22} />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-white tracking-tight uppercase">
+                                    Quem é o Vitrúvio?
+                                </h3>
+                                <p className="text-sm text-gray-500 font-light">
+                                    Seu guia na busca pela harmonia clássica das proporções
+                                </p>
+                            </div>
+                        </div>
+                        <p className="text-gray-300 leading-relaxed text-sm md:text-base bg-white/5 p-6 rounded-2xl border border-white/10">
+                            Olá! Sou o <span className="text-primary font-semibold">Vitrúvio</span>, seu coach virtual inteligente.
+                            Minha missão é <span className="text-white font-medium">cruzar seus dados</span> — histórico de avaliações,
+                            proporções atuais, assimetrias e objetivos — para gerar planos de ação personalizados que te ajudem a atingir o físico ideal.
+                            Tudo baseado nos princípios que inspiraram o Homem Vitruviano de Da Vinci.
+                        </p>
+                    </div>
+
+                    <div className="lg:col-span-4 grid grid-cols-1 gap-4 h-full">
+                        <div className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/5">
+                            <Target size={20} className="text-primary shrink-0" />
+                            <div>
+                                <p className="text-[10px] text-gray-500 uppercase tracking-wider">Análises</p>
+                                <p className="text-sm font-bold text-white">Proporções Atuais</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/5">
+                            <TrendingUp size={20} className="text-emerald-400 shrink-0" />
+                            <div>
+                                <p className="text-[10px] text-gray-500 uppercase tracking-wider">Evolução</p>
+                                <p className="text-sm font-bold text-white">Histórico de Dados</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/5">
+                            <AlertTriangle size={20} className="text-amber-400 shrink-0" />
+                            <div>
+                                <p className="text-[10px] text-gray-500 uppercase tracking-wider">Correção</p>
+                                <p className="text-sm font-bold text-white">Foco em Assimetrias</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/5">
+                            <Sparkles size={20} className="text-violet-400 shrink-0" />
+                            <div>
+                                <p className="text-[10px] text-gray-500 uppercase tracking-wider">Planos</p>
+                                <p className="text-sm font-bold text-white">Nutrição & Treino</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div className="h-px w-full bg-white/10" />
 
                 {/* Section Header */}
                 <div className="flex items-center gap-4">

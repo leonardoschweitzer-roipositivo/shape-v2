@@ -15,6 +15,7 @@ import { DashboardView } from './src/components/templates/DashboardView/Dashboar
 import { ProfileType } from './components/ProfileSelector';
 import { AthleteProfilePage } from './components/AthleteProfilePage';
 import { AthleteSettingsPage } from './components/AthleteSettingsPage';
+import { RankingPersonaisPage } from './components/RankingPersonais/RankingPersonaisPage';
 
 type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking';
 
@@ -56,6 +57,8 @@ const App: React.FC = () => {
         return <AthleteProfilePage />;
       case 'settings':
         return <AthleteSettingsPage />;
+      case 'trainers-ranking':
+        return <RankingPersonaisPage />;
       case 'trainers':
       case 'students':
         return (
