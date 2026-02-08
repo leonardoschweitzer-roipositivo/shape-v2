@@ -8,7 +8,7 @@
  */
 
 import { MENS_PHYSIQUE } from './constants'
-import type { UserMeasurements, ProportionIdeals } from '../../types/proportions'
+import type { UserMeasurements, ProportionIdeals } from '@/types/proportions'
 
 /**
  * Calcula as medidas ideais baseado no Men's Physique (Ryan Terry)

@@ -1,1 +1,1 @@
-export { MetricsGrid } from './MetricsGrid'
+export * from './MetricsGrid';

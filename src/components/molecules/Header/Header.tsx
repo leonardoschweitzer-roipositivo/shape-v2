@@ -1,12 +1,57 @@
 import React from 'react';
-import { Bell, Camera } from 'lucide-react';
+import { Bell, Camera, MessageCircle, UserPlus } from 'lucide-react';
+import { type ProfileType } from '../../../components';
 
 interface HeaderProps {
   onOpenAssessment?: () => void;
+  onOpenCoach?: () => void;
   title?: string;
+  userProfile?: ProfileType;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onOpenAssessment, title = "INÍCIO" }) => {
+export const Header: React.FC<HeaderProps> = ({
+  onOpenAssessment,
+  onOpenCoach,
+  title = "INÍCIO",
+  userProfile = 'atleta'
+}) => {
+
+  const renderAction = () => {
+    switch (userProfile) {
+      case 'academia':
+        return (
+          <button
+            className="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-[#0A0F1C] rounded-lg font-bold text-sm transition-all shadow-[0_0_15px_rgba(0,201,167,0.3)] hover:shadow-[0_0_20px_rgba(0,201,167,0.5)] transform hover:scale-105 active:scale-95"
+            onClick={() => alert('Funcionalidade: Convidar Personal')}
+          >
+            <UserPlus size={18} />
+            <span>CONVIDAR PERSONAL</span>
+          </button>
+        );
+      case 'personal':
+        return (
+          <button
+            className="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-[#0A0F1C] rounded-lg font-bold text-sm transition-all shadow-[0_0_15px_rgba(0,201,167,0.3)] hover:shadow-[0_0_20px_rgba(0,201,167,0.5)] transform hover:scale-105 active:scale-95"
+            onClick={() => alert('Funcionalidade: Novo Aluno')}
+          >
+            <UserPlus size={18} />
+            <span>NOVO ALUNO</span>
+          </button>
+        );
+      case 'atleta':
+      default:
+        return (
+          <button
+            onClick={onOpenCoach}
+            className="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-[#0A0F1C] rounded-lg font-bold text-sm transition-all shadow-[0_0_15px_rgba(0,201,167,0.3)] hover:shadow-[0_0_20px_rgba(0,201,167,0.5)] transform hover:scale-105 active:scale-95"
+          >
+            <MessageCircle size={18} />
+            <span>COACH IA</span>
+          </button>
+        );
+    }
+  };
+
   return (
     <header className="h-20 w-full flex-shrink-0 flex items-center justify-between px-8 border-b border-card-border bg-[#0A0F1C]/90 backdrop-blur-md z-30">
       <div className="flex items-center gap-2 text-sm font-medium">
@@ -19,13 +64,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAssessment, title = "INÍC
           <Bell size={20} />
         </button>
 
-        <button
-          onClick={onOpenAssessment}
-          className="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-[#0A0F1C] rounded-lg font-bold text-sm transition-all shadow-[0_0_15px_rgba(0,201,167,0.3)] hover:shadow-[0_0_20px_rgba(0,201,167,0.5)] transform hover:scale-105 active:scale-95"
-        >
-          <Camera size={18} />
-          <span>REALIZAR AVALIAÇÃO IA</span>
-        </button>
+        {renderAction()}
       </div>
     </header>
   );

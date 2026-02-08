@@ -18,5 +18,5 @@ export * from './molecules'
 // Organisms
 export * from './organisms'
 
-// Templates (quando migrados)
-// export * from './templates'
+// Templates
+export * from './templates'

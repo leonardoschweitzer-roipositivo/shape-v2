@@ -1,0 +1,6 @@
+export * from './PersonalDashboard';
+export * from './PersonalAthletesList';
+export * from './PersonalAssessmentView';
+export * from './PersonalEvolutionView';
+export * from './PersonalCoachView';
+export * from './PersonalProfilePage';

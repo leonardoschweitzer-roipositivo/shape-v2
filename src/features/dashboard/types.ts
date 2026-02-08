@@ -35,6 +35,7 @@ export interface HeroContent {
         label: string;
         href: string;
         icon?: React.ReactNode;
+        onClick?: () => void;
     };
     image?: {
         src: string;

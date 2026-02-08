@@ -8,7 +8,7 @@
  */
 
 import { GOLDEN_RATIO } from './constants'
-import type { UserMeasurements, ProportionIdeals } from '../../types/proportions'
+import type { UserMeasurements, ProportionIdeals } from '@/types/proportions'
 
 /**
  * Calcula as medidas ideais baseado no Golden Ratio (1.618)

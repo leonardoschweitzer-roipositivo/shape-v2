@@ -1,14 +1,14 @@
 import React from 'react';
-import { 
-  Dumbbell, 
-  Ruler, 
-  ArrowUpFromLine, 
+import {
+  Dumbbell,
+  Ruler,
+  ArrowUpFromLine,
   Footprints,
   Activity,
   User
 } from 'lucide-react';
-import { BodyMetric } from '../types';
-import { GlassPanel } from './GlassPanel';
+import { BodyMetric } from '@/types';
+import { GlassPanel } from '@/components/atoms';
 
 const MetricCard: React.FC<{ metric: BodyMetric }> = ({ metric }) => {
   const getBorderColor = () => {
@@ -16,12 +16,12 @@ const MetricCard: React.FC<{ metric: BodyMetric }> = ({ metric }) => {
     if (metric.label === "Cintura") return "hover:border-l-secondary";
     return "hover:border-l-primary";
   };
-  
+
   const getTextColor = () => {
-      if (metric.label === "Cintura") return "text-secondary";
-      if (metric.label === "Coxas") return "text-green-500";
-      if (metric.label === "Panturrilha") return "text-red-400";
-      return "text-primary";
+    if (metric.label === "Cintura") return "text-secondary";
+    if (metric.label === "Coxas") return "text-green-500";
+    if (metric.label === "Panturrilha") return "text-red-400";
+    return "text-primary";
   }
 
   return (
@@ -29,7 +29,7 @@ const MetricCard: React.FC<{ metric: BodyMetric }> = ({ metric }) => {
       <div className="flex items-center justify-between">
         <span className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">{metric.label}</span>
         <div className="text-gray-600 group-hover:text-white transition-colors">
-            {metric.icon}
+          {metric.icon}
         </div>
       </div>
       <div>
@@ -37,19 +37,19 @@ const MetricCard: React.FC<{ metric: BodyMetric }> = ({ metric }) => {
           {metric.value}
           <span className="text-sm text-gray-500 font-normal ml-1">{metric.unit}</span>
         </p>
-        
+
         {metric.status === 'on-track' ? (
-           <p className={`text-[10px] ${getTextColor()} mt-1 flex items-center gap-1 font-medium`}>
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span> Na Meta
-           </p>
+          <p className={`text-[10px] ${getTextColor()} mt-1 flex items-center gap-1 font-medium`}>
+            <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span> Na Meta
+          </p>
         ) : metric.diff ? (
-            <p className={`text-[10px] ${getTextColor()} mt-1 font-medium`}>
-                Faltam: {metric.diff}{metric.unit}
-            </p>
+          <p className={`text-[10px] ${getTextColor()} mt-1 font-medium`}>
+            Faltam: {metric.diff}{metric.unit}
+          </p>
         ) : (
-            <p className={`text-[10px] ${getTextColor()} mt-1 font-medium`}>
-                {metric.ideal ? `Ideal: ${metric.ideal}${metric.unit}` : `Meta: ${metric.target}${metric.unit}`}
-            </p>
+          <p className={`text-[10px] ${getTextColor()} mt-1 font-medium`}>
+            {metric.ideal ? `Ideal: ${metric.ideal}${metric.unit}` : `Meta: ${metric.target}${metric.unit}`}
+          </p>
         )}
       </div>
     </GlassPanel>

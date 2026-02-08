@@ -1,21 +1,25 @@
 import React from 'react';
-import { useDashboard } from '../../../features/dashboard/hooks/useDashboard';
-import { getHeroContent } from '../../../features/dashboard/utils/heroContent';
-import { HeroCard } from '../../../../components/HeroCard';
-import { ShapeVRatioCard } from '../../molecules/ShapeVRatioCard/ShapeVRatioCard';
-import { AvaliacaoGeralCard } from '../../molecules/AvaliacaoGeralCard/AvaliacaoGeralCard';
-import { EvolutionCard } from '../../molecules/EvolutionCard/EvolutionCard';
-import { BodyHeatmap } from '../../organisms/BodyHeatmap/BodyHeatmap';
-import { ScoreBreakdown } from '../../organisms/ScoreBreakdown/ScoreBreakdown';
-import { MetricsGrid } from '../../../../components/MetricsGrid';
-import { InsightCard } from '../../molecules/InsightCard/InsightCard';
-import { AchievementsCard } from '../../molecules/AchievementsCard/AchievementsCard';
-import { SymmetryWidget } from '../../molecules/SymmetryWidget/SymmetryWidget';
-import { BodyCompositionCard } from '../../molecules/BodyCompositionCard/BodyCompositionCard';
-import { DashboardLoading } from '../../organisms/DashboardLoading/DashboardLoading';
-import { DashboardError } from '../../organisms/DashboardError/DashboardError';
+import {
+    ShapeVRatioCard,
+    AvaliacaoGeralCard,
+    EvolutionCard,
+    InsightCard,
+    AchievementsCard,
+    SymmetryWidget,
+    BodyCompositionCard,
+} from '@/components/molecules';
+import {
+    HeroCard,
+    BodyHeatmap,
+    ScoreBreakdown,
+    MetricsGrid,
+    DashboardLoading,
+    DashboardError,
+    type ProfileType
+} from '@/components/organisms';
+import { useDashboard } from '@/features/dashboard/hooks/useDashboard';
 import { Target, BarChart2, Ruler, Zap, Trophy, Scale, Layout, Activity } from 'lucide-react';
-import { ProfileType } from '../../../../components/ProfileSelector';
+import { getHeroContent } from '@/features/dashboard/utils/heroContent';
 
 const SectionHeader: React.FC<{
     icon: React.ReactNode;
