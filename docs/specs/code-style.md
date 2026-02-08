@@ -24,7 +24,11 @@ Este documento define as convenções de código para o VITRU IA. Focamos em cri
 
 ## 2. TOKENIZAÇÃO VISUAL (DESIGN TOKENS)
 
-### 2.1 Estrutura de Tokens
+### 2.1 Orientação Geral
+
+**SEMPRE** utilize Design Tokens para armazenar valores de design — como cores, fontes, espaçamentos e sombras — no sistema de design. Eles atuam como a menor "fonte de verdade" compartilhada entre design e código, garantindo consistência visual (tokens de referência, sistemas e componentes) e permitindo atualizações automáticas em tempo real em todas as plataformas.
+
+### 2.2 Estrutura de Tokens
 
 ```
 /tokens
@@ -37,7 +41,7 @@ Este documento define as convenções de código para o VITRU IA. Focamos em cri
   └── index.ts           # Exportação centralizada
 ```
 
-### 2.2 Tokens de Cores
+### 2.3 Tokens de Cores
 
 ```typescript
 // tokens/colors.ts
@@ -113,7 +117,7 @@ export type Colors = typeof colors
 export type ColorKey = keyof typeof colors
 ```
 
-### 2.3 Tokens de Tipografia
+### 2.4 Tokens de Tipografia
 
 ```typescript
 // tokens/typography.ts
@@ -233,7 +237,7 @@ export const textStyles = {
 } as const
 ```
 
-### 2.4 Tokens de Espaçamento
+### 2.5 Tokens de Espaçamento
 
 ```typescript
 // tokens/spacing.ts
@@ -279,7 +283,7 @@ export const spacing = {
 } as const
 ```
 
-### 2.5 Tokens de Bordas e Sombras
+### 2.6 Tokens de Bordas e Sombras
 
 ```typescript
 // tokens/borders.ts
@@ -328,7 +332,7 @@ export const shadows = {
 } as const
 ```
 
-### 2.6 Tokens de Animação
+### 2.7 Tokens de Animação
 
 ```typescript
 // tokens/animations.ts
@@ -381,7 +385,7 @@ export const animations = {
 } as const
 ```
 
-### 2.7 Exportação Centralizada
+### 2.8 Exportação Centralizada
 
 ```typescript
 // tokens/index.ts

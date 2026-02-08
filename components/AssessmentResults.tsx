@@ -17,55 +17,271 @@ import {
 import { GlassPanel } from './GlassPanel';
 import { RadarChart, BodyFatGauge, AsymmetryRadar } from './AssessmentCharts';
 import { MassCard, ProportionCard, AsymmetryCard, ScoreWidget, AiAnalysisWidget, ProportionAiAnalysisCard, AiInsightCard } from './AssessmentCards';
+
+// Nova estrutura: usar services centralizados
 import {
-    calcularProportions,
-    MOCK_USER_MEASUREMENTS,
-    getMethodLabel,
-    getStatusLabel
-} from '../proportionCalculator';
+    calcularIdeaisGoldenRatio,
+    calcularIdeaisClassicPhysique,
+    calcularIdeaisMensPhysique,
+} from '../src/services/calculations';
+import {
+    calcularDiferenca,
+    getStatusLabel,
+} from '../src/services/calculations/utils';
 import { ComparisonMode } from '../types/proportions';
+import { useTokens } from '../src/hooks/useTokens';
+
+// Mock measurements (temporário - será substituído por dados reais)
+const MOCK_USER_MEASUREMENTS = {
+    // Medidas estruturais
+    altura: 180,
+    punho: 17.5,
+    tornozelo: 23,
+    joelho: 38,
+    pelvis: 98,
+    cabeca: 58,
+    // Medidas variáveis
+    cintura: 82,
+    ombros: 120,
+    peito: 108,
+    braco: 40,
+    antebraco: 32,
+    coxa: 60,
+    panturrilha: 38,
+    pescoco: 40
+};
 
 interface AssessmentResultsProps {
     onBack: () => void;
 }
 
+// Helper: Get method label for display
+const getMethodLabel = (mode: ComparisonMode): string => {
+    switch (mode) {
+        case 'golden': return 'Meta Golden';
+        case 'classic': return 'Meta CBum';
+        case 'mens': return 'Meta MP';
+    }
+};
+
+// --- TOKENIZED STYLES ---
+/**
+ * Estilos centralizados usando design tokens
+ * Substitui classes Tailwind hardcoded por valores dos tokens
+ */
+import { colors as designColors, typography as designTypography, spacing as designSpacing, borders as designBorders } from '../src/tokens';
+
+const tokenStyles = {
+    iconBadge: {
+        width: '32px',
+        height: '32px',
+        borderRadius: designBorders.radius.lg,
+        background: `${designColors.brand.primary}1A`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        border: `1px solid ${designColors.brand.primary}33`,
+        boxShadow: '0 0 15px rgba(0, 201, 167, 0.1)'
+    },
+    sectionTitle: {
+        fontSize: designTypography.fontSize.xl,
+        fontWeight: designTypography.fontWeight.bold,
+        color: designColors.text.primary,
+        letterSpacing: designTypography.letterSpacing.tight,
+        textTransform: 'uppercase' as const
+    },
+    description: {
+        fontSize: designTypography.fontSize.sm,
+        color: designColors.text.secondary,
+        lineHeight: designTypography.lineHeight.relaxed,
+        fontWeight: designTypography.fontWeight.normal
+    },
+    filterContainer: {
+        display: 'flex',
+        background: designColors.background.dark,
+        border: `1px solid rgba(255, 255, 255, 0.1)`,
+        borderRadius: designBorders.radius.lg,
+        padding: designSpacing[1]
+    },
+    filterButton: (isActive: boolean) => ({
+        padding: `${designSpacing[2]} ${designSpacing[4]}`,
+        borderRadius: designBorders.radius.md,
+        fontSize: designTypography.fontSize.xs,
+        fontWeight: designTypography.fontWeight.bold,
+        transition: 'all 0.2s ease',
+        display: 'flex',
+        alignItems: 'center',
+        gap: designSpacing[2],
+        background: isActive ? designColors.background.card : 'transparent',
+        color: isActive ? designColors.text.primary : designColors.text.muted,
+        border: isActive ? `1px solid rgba(255, 255, 255, 0.05)` : 'none',
+        cursor: 'pointer'
+    }),
+    // Main Component Styles
+    pageContainer: {
+        flex: 1,
+        padding: `${designSpacing[4]} ${designSpacing[4]}`, // mobile default
+        display: 'flex',
+        flexDirection: 'column' as const,
+        background: designColors.background.dark
+    },
+    contentWrapper: {
+        maxWidth: '80rem', // 7xl
+        margin: '0 auto',
+        display: 'flex',
+        flexDirection: 'column' as const,
+        gap: designSpacing[8],
+        paddingBottom: designSpacing[10],
+        flex: 1,
+        width: '100%'
+    },
+    headerTitle: {
+        fontSize: designTypography.fontSize['3xl'],
+        fontWeight: designTypography.fontWeight.bold,
+        color: designColors.text.primary,
+        letterSpacing: designTypography.letterSpacing.tight
+    },
+    primaryButton: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: designSpacing[2],
+        padding: `${designSpacing[2]} ${designSpacing[6]}`,
+        borderRadius: designBorders.radius.lg,
+        background: designColors.brand.primary,
+        color: '#0A0F1C',
+        fontSize: designTypography.fontSize.xs,
+        fontWeight: designTypography.fontWeight.bold,
+        transition: 'all 0.2s ease',
+        boxShadow: '0 0 15px rgba(0, 201, 167, 0.3)',
+        cursor: 'pointer',
+        border: 'none'
+    },
+    secondaryButton: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: designSpacing[2],
+        padding: `${designSpacing[2]} ${designSpacing[4]}`,
+        borderRadius: designBorders.radius.lg,
+        border: `1px solid rgba(255, 255, 255, 0.1)`,
+        background: 'transparent',
+        color: designColors.text.secondary,
+        fontSize: designTypography.fontSize.xs,
+        fontWeight: designTypography.fontWeight.bold,
+        transition: 'all 0.2s ease',
+        cursor: 'pointer'
+    },
+    // Tabs Navigation Styles
+    tabsContainer: {
+        borderBottom: `1px solid rgba(255, 255, 255, 0.1)`
+    },
+    tabsScroll: {
+        display: 'flex',
+        gap: designSpacing[8],
+        overflowX: 'auto' as const,
+        paddingBottom: designSpacing[1]
+    },
+    tabButton: (isActive: boolean) => ({
+        padding: `${designSpacing[4]} 0`,
+        fontSize: designTypography.fontSize.sm,
+        fontWeight: designTypography.fontWeight.bold,
+        transition: 'all 0.2s ease',
+        whiteSpace: 'nowrap' as const,
+        background: 'transparent',
+        border: 'none',
+        borderBottom: isActive ? `2px solid ${designColors.brand.primary}` : '2px solid transparent',
+        color: isActive ? designColors.brand.primary : designColors.text.muted,
+        cursor: 'pointer'
+    })
+};
+
 // --- TABS CONTENT ---
 
-const DiagnosticTab = () => (
-    <div className="flex flex-col gap-6 animate-fade-in-up">
-        {/* Top Row: 3 Main Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-auto lg:h-[340px]">
-            {/* 1. General Score */}
-            <ScoreWidget score={80} label="Pontos" change="+5%" />
+const DiagnosticTab = () => {
+    const [filter, setFilter] = useState<'geral' | 'comp' | 'metrics'>('geral');
 
-            {/* 2. Radar Chart */}
-            <GlassPanel className="rounded-2xl relative">
-                <RadarChart />
-            </GlassPanel>
+    return (
+        <div className="flex flex-col gap-8 animate-fade-in-up">
+            {/* Header Description & Control Bar */}
+            {/* Header Description & Control Bar */}
+            <div className="flex flex-col lg:flex-row justify-between items-end gap-6 mb-2">
+                <div className="flex-1 animate-fade-in-up">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div style={tokenStyles.iconBadge}>
+                            <Activity size={16} color={designColors.brand.primary} />
+                        </div>
+                        <h3 style={tokenStyles.sectionTitle}>DIAGNÓSTICO ESTÉTICO</h3>
+                    </div>
+                    <p style={tokenStyles.description} className="max-w-2xl">
+                        {filter === 'geral' && "Uma visão holística do seu estado atual. Analisamos a pontuação de pontos, o equilíbrio via radar e a composição de massas."}
+                        {filter === 'comp' && "Análise detalhada da composição corporal. Foco no percentual de gordura e distribuição de massa magra vs gorda."}
+                        {filter === 'metrics' && "Mapeamento biométrico completo. Visualização do equilíbrio muscular e volumetria através do gráfico de radar."}
+                    </p>
+                </div>
 
-            {/* 3. Body Fat */}
-            <GlassPanel className="rounded-2xl relative">
-                <BodyFatGauge />
-            </GlassPanel>
+                <div style={tokenStyles.filterContainer}>
+                    <button
+                        onClick={() => setFilter('geral')}
+                        style={tokenStyles.filterButton(filter === 'geral')}
+                    >
+                        {filter === 'geral' && <Activity size={12} color={designColors.brand.primary} />}
+                        Geral
+                    </button>
+                    <button
+                        onClick={() => setFilter('comp')}
+                        style={tokenStyles.filterButton(filter === 'comp')}
+                    >
+                        Composição
+                    </button>
+                    <button
+                        onClick={() => setFilter('metrics')}
+                        style={tokenStyles.filterButton(filter === 'metrics')}
+                    >
+                        Métricas
+                    </button>
+                </div>
+            </div>
+
+            <div className="flex flex-col gap-6">
+                {/* Top Row: Main Cards (Filtered) */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-auto lg:h-[340px]">
+                    {(filter === 'geral' || filter === 'metrics') && (
+                        <ScoreWidget score={80} label="Pontos" change="+5%" />
+                    )}
+
+                    {(filter === 'geral' || filter === 'metrics') && (
+                        <GlassPanel className="rounded-2xl relative">
+                            <RadarChart />
+                        </GlassPanel>
+                    )}
+
+                    {(filter === 'geral' || filter === 'comp') && (
+                        <GlassPanel className="rounded-2xl relative">
+                            <BodyFatGauge />
+                        </GlassPanel>
+                    )}
+                </div>
+
+                {/* Middle Row: Metrics (Filtered) */}
+                {(filter === 'comp' || filter === 'metrics') && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in">
+                        <MassCard label="Peso Atual" value={88.5} unit="kg" trend={1.2} color="green" />
+                        <MassCard label="Peso Magro" value={77.1} unit="kg" trend={0.8} color="purple" />
+                        <MassCard label="Peso Gordo" value={11.4} unit="kg" trend={-0.5} color="red" />
+                    </div>
+                )}
+
+                {/* Bottom Row: AI Analysis */}
+                <AiAnalysisWidget
+                    analysis={
+                        <>
+                            Com base na análise de simetria bilateral, o cliente apresenta um <span className="text-white font-medium">desequilíbrio leve no deltoide direito</span> em relação ao esquerdo (aproximadamente 4% de diferença em volume). Recomenda-se adicionar 2 séries de elevação lateral unilateral para correção. O percentual de gordura (12.9%) está em um ponto ideal para iniciar a fase de <span className="text-primary font-bold">bulking limpo</span>, focando em progressão de carga nos compostos principais.
+                        </>
+                    }
+                />
+            </div>
         </div>
-
-        {/* Middle Row: Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <MassCard label="Peso Atual" value={88.5} unit="kg" trend={1.2} color="green" />
-            <MassCard label="Peso Magro" value={77.1} unit="kg" trend={0.8} color="purple" />
-            <MassCard label="Peso Gordo" value={11.4} unit="kg" trend={-0.5} color="red" />
-        </div>
-
-        {/* Bottom Row: AI Analysis */}
-        <AiAnalysisWidget
-            analysis={
-                <>
-                    Com base na análise de simetria bilateral, o cliente apresenta um <span className="text-white font-medium">desequilíbrio leve no deltoide direito</span> em relação ao esquerdo (aproximadamente 4% de diferença em volume). Recomenda-se adicionar 2 séries de elevação lateral unilateral para correção. O percentual de gordura (12.9%) está em um ponto ideal para iniciar a fase de <span className="text-primary font-bold">bulking limpo</span>, focando em progressão de carga nos compostos principais.
-                </>
-            }
-        />
-    </div>
-);
+    );
+};
 
 const GoldenRatioTab = () => {
     const [comparisonMode, setComparisonMode] = useState<ComparisonMode>('golden');
@@ -74,10 +290,33 @@ const GoldenRatioTab = () => {
     const userMeasurements = MOCK_USER_MEASUREMENTS;
 
     // Calculate proportions dynamically based on selected mode
-    const proportionData = useMemo(() =>
-        calcularProportions(userMeasurements, comparisonMode),
-        [comparisonMode]
-    );
+    const ideais = useMemo(() => {
+        switch (comparisonMode) {
+            case 'golden':
+                return calcularIdeaisGoldenRatio(userMeasurements);
+            case 'classic':
+                return calcularIdeaisClassicPhysique(userMeasurements);
+            case 'mens':
+                return calcularIdeaisMensPhysique(userMeasurements);
+        }
+    }, [comparisonMode]);
+
+    // Calculate differences for each proportion
+    const diferencas = useMemo(() => {
+        const diffs: Record<string, any> = {};
+        const campos = ['ombros', 'peito', 'braco', 'antebraco', 'cintura', 'coxa', 'panturrilha', 'pescoco'];
+
+        for (const campo of campos) {
+            const ideal = ideais[campo as keyof typeof ideais];
+            const atual = userMeasurements[campo as keyof typeof userMeasurements] as number;
+
+            if (typeof ideal === 'number' && typeof atual === 'number') {
+                diffs[campo] = calcularDiferenca(atual, ideal);
+            }
+        }
+
+        return diffs;
+    }, [ideais, userMeasurements]);
 
     // Helper to get method label
     const methodLabel = getMethodLabel(comparisonMode);
@@ -90,9 +329,6 @@ const GoldenRatioTab = () => {
         if (percentual >= 60) return `DESENVOLVENDO (${Math.round(percentual)}%)`;
         return `INICIANDO (${Math.round(percentual)}%)`;
     };
-
-    // Get calculated values
-    const { ideais, diferencas } = proportionData;
 
     // Calculate derived values
     const shapeVAtual = userMeasurements.ombros / userMeasurements.cintura;
@@ -342,33 +578,33 @@ const GoldenRatioTab = () => {
             <div className="flex flex-col lg:flex-row justify-between items-end gap-6 mb-2">
                 <div className="flex-1 animate-fade-in-up">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20 shadow-[0_0_15px_rgba(0,201,167,0.1)]">
-                            <Sparkles size={16} className="text-primary" />
+                        <div style={tokenStyles.iconBadge}>
+                            <Sparkles size={16} color={designColors.brand.primary} />
                         </div>
-                        <h3 className="text-xl font-bold text-white tracking-tight uppercase">DIMENSÕES ÁUREAS</h3>
+                        <h3 style={tokenStyles.sectionTitle}>DIMENSÕES ÁUREAS</h3>
                     </div>
-                    <p className="text-sm text-gray-400 max-w-2xl leading-relaxed font-light">
-                        Mapeamento matemático do seu físico em relação aos ideais clássicos. O <span className="text-primary font-medium">Shape-V</span> é o pilar central da sua jornada, definindo a harmonia estética através da convergência entre largura de ombros e linha de cintura.
+                    <p style={tokenStyles.description} className="max-w-2xl">
+                        Mapeamento matemático do seu físico em relação aos ideais clássicos. O <span style={{ color: designColors.brand.primary, fontWeight: designTypography.fontWeight.medium }}>Shape-V</span> é o pilar central da sua jornada, definindo a harmonia estética através da convergência entre largura de ombros e linha de cintura.
                     </p>
                 </div>
 
-                <div className="flex bg-[#0A0F1C] border border-white/10 rounded-lg p-1 shadow-2xl">
+                <div style={tokenStyles.filterContainer}>
                     <button
                         onClick={() => setComparisonMode('golden')}
-                        className={`px-4 py-2 rounded-md text-xs font-bold transition-all flex items-center gap-2 ${comparisonMode === 'golden' ? 'bg-[#1E293B] text-white shadow-sm border border-white/5' : 'text-gray-500 hover:text-white'}`}
+                        style={tokenStyles.filterButton(comparisonMode === 'golden')}
                     >
-                        {comparisonMode === 'golden' && <Sparkles size={12} className="text-primary" />}
+                        {comparisonMode === 'golden' && <Sparkles size={12} color={designColors.brand.primary} />}
                         Golden Ratio
                     </button>
                     <button
                         onClick={() => setComparisonMode('classic')}
-                        className={`px-4 py-2 rounded-md text-xs font-bold transition-all ${comparisonMode === 'classic' ? 'bg-[#1E293B] text-white shadow-sm border border-white/5' : 'text-gray-500 hover:text-white'}`}
+                        style={tokenStyles.filterButton(comparisonMode === 'classic')}
                     >
                         Classic Physique
                     </button>
                     <button
                         onClick={() => setComparisonMode('mens')}
-                        className={`px-4 py-2 rounded-md text-xs font-bold transition-all ${comparisonMode === 'mens' ? 'bg-[#1E293B] text-white shadow-sm border border-white/5' : 'text-gray-500 hover:text-white'}`}
+                        style={tokenStyles.filterButton(comparisonMode === 'mens')}
                     >
                         Men's Physique
                     </button>
@@ -406,45 +642,111 @@ const GoldenRatioTab = () => {
     );
 };
 
-const AsymmetryTab = () => (
-    <div className="flex flex-col lg:flex-row gap-6 animate-fade-in-up h-full">
-        <div className="w-full lg:w-2/3 flex flex-col gap-4">
-            <AsymmetryCard icon={<Accessibility size={20} />} title="BRAÇO" subtitle="BÍCEPS RELAXADO" leftVal="41,0" rightVal="44,5" diff="+3,5" status="high" />
-            <AsymmetryCard icon={<Hand size={20} />} title="ANTEBRAÇO" subtitle="PORÇÃO MEDIAL" leftVal="32,0" rightVal="32,2" diff="+0,2" status="symmetrical" />
-            <AsymmetryCard icon={<Activity size={20} />} title="COXA" subtitle="MEDIDA PROXIMAL" leftVal="62,0" rightVal="60,5" diff="+1,5" status="moderate" />
-            <AsymmetryCard icon={<Footprints size={20} />} title="PANTURRILHA" subtitle="GASTROCNÊMIO" leftVal="38,0" rightVal="38,0" diff="0,0" status="symmetrical" />
-        </div>
+const AsymmetryTab = () => {
+    const [view, setView] = useState<'total' | 'membros' | 'tronco'>('total');
 
-        <div className="w-full lg:w-1/3 flex flex-col gap-6">
-            <GlassPanel className="p-6 rounded-2xl border border-white/5 flex flex-col items-center flex-1 min-h-[400px]">
-                <h4 className="text-white font-bold text-sm tracking-wide self-start mb-6">RADAR DE DESEQUILÍBRIO</h4>
-                <div className="flex-1 w-full flex items-center justify-center">
-                    <AsymmetryRadar />
-                </div>
-                <div className="flex gap-6 mt-6">
-                    <div className="flex items-center gap-2">
-                        <span className="w-3 h-3 rounded-full bg-secondary"></span>
-                        <span className="text-xs text-gray-400 font-medium">Lado Esquerdo</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <span className="w-3 h-3 rounded-full bg-primary"></span>
-                        <span className="text-xs text-gray-400 font-medium">Lado Direito</span>
-                    </div>
-                </div>
-            </GlassPanel>
+    const asymmetryItems = [
+        { id: 'braco', category: 'membros', icon: <Accessibility size={20} />, title: "BRAÇO", subtitle: "BÍCEPS RELAXADO", leftVal: "41,0", rightVal: "44,5", diff: "+3,5", status: "high" },
+        { id: 'antebraco', category: 'membros', icon: <Hand size={20} />, title: "ANTEBRAÇO", subtitle: "PORÇÃO MEDIAL", leftVal: "32,0", rightVal: "32,2", diff: "+0,2", status: "symmetrical" },
+        { id: 'ombros', category: 'tronco', icon: <Dumbbell size={20} />, title: "OMBROS", subtitle: "DELTOIDE LATERAL", leftVal: "133,0", rightVal: "132,5", diff: "-0,5", status: "symmetrical" },
+        { id: 'peito', category: 'tronco', icon: <Activity size={20} />, title: "PEITORAL", subtitle: "PORÇÃO SUPERIOR", leftVal: "60,0", rightVal: "59,2", diff: "-0,8", status: "moderate" },
+        { id: 'coxa', category: 'membros', icon: <Activity size={20} />, title: "COXA", subtitle: "MEDIDA PROXIMAL", leftVal: "62,0", rightVal: "60,5", diff: "+1,5", status: "moderate" },
+        { id: 'panturrilha', category: 'membros', icon: <Footprints size={20} />, title: "PANTURRILHA", subtitle: "GASTROCNÊMIO", leftVal: "38,0", rightVal: "38,0", diff: "0,0", status: "symmetrical" },
+    ];
 
-            <AiInsightCard
-                type="AI Insight"
-                title="Dominância do Hemicorpo Direito"
-                description={
-                    <>
-                        Identificamos uma assimetria significativa no <strong className="text-orange-400">Braço Direito (+3,5cm)</strong> que pode estar relacionada à compensação em exercícios de empurrar.
-                    </>
-                }
-            />
+    const filteredItems = asymmetryItems.filter(item =>
+        view === 'total' || item.category === view
+    );
+
+    return (
+        <div className="flex flex-col gap-8 animate-fade-in-up">
+            {/* Header Description & Control Bar */}
+            <div className="flex flex-col lg:flex-row justify-between items-end gap-6 mb-2">
+                <div className="flex-1 animate-fade-in-up">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div style={tokenStyles.iconBadge}>
+                            <Accessibility size={16} color={designColors.brand.primary} />
+                        </div>
+                        <h3 style={tokenStyles.sectionTitle}>ANÁLISE DE ASSIMETRIAS</h3>
+                    </div>
+                    <p style={tokenStyles.description} className="max-w-2xl">
+                        {view === 'total' && "Mapeamento completo de desequilíbrios musculares laterais em todo o corpo."}
+                        {view === 'membros' && "Foco na simetria de braços, antebraços e pernas, essenciais para o equilíbrio estético."}
+                        {view === 'tronco' && "Análise da linha de ombros e peitoral, fundamentais para a estrutura em V."}
+                    </p>
+                </div>
+
+                <div style={tokenStyles.filterContainer}>
+                    <button
+                        onClick={() => setView('total')}
+                        style={tokenStyles.filterButton(view === 'total')}
+                    >
+                        {view === 'total' && <Accessibility size={12} color={designColors.brand.primary} />}
+                        Total
+                    </button>
+                    <button
+                        onClick={() => setView('membros')}
+                        style={tokenStyles.filterButton(view === 'membros')}
+                    >
+                        Membros
+                    </button>
+                    <button
+                        onClick={() => setView('tronco')}
+                        style={tokenStyles.filterButton(view === 'tronco')}
+                    >
+                        Tronco
+                    </button>
+                </div>
+            </div>
+
+            <div className="flex flex-col lg:flex-row gap-6 h-full">
+                <div className="w-full lg:w-2/3 flex flex-col gap-4">
+                    {filteredItems.map(item => (
+                        <AsymmetryCard
+                            key={item.id}
+                            icon={item.icon}
+                            title={item.title}
+                            subtitle={item.subtitle}
+                            leftVal={item.leftVal}
+                            rightVal={item.rightVal}
+                            diff={item.diff}
+                            status={item.status as any}
+                        />
+                    ))}
+                </div>
+
+                <div className="w-full lg:w-1/3 flex flex-col gap-6">
+                    <GlassPanel className="p-6 rounded-2xl border border-white/5 flex flex-col items-center flex-1 min-h-[400px]">
+                        <h4 className="text-white font-bold text-sm tracking-wide self-start mb-6">RADAR DE DESEQUILÍBRIO</h4>
+                        <div className="flex-1 w-full flex items-center justify-center">
+                            <AsymmetryRadar />
+                        </div>
+                        <div className="flex gap-6 mt-6">
+                            <div className="flex items-center gap-2">
+                                <span className="w-3 h-3 rounded-full bg-secondary"></span>
+                                <span className="text-xs text-gray-400 font-medium">Lado Esquerdo</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="w-3 h-3 rounded-full bg-primary"></span>
+                                <span className="text-xs text-gray-400 font-medium">Lado Direito</span>
+                            </div>
+                        </div>
+                    </GlassPanel>
+
+                    <AiInsightCard
+                        type="AI Insight"
+                        title="Dominância do Hemicorpo Direito"
+                        description={
+                            <>
+                                Identificamos uma assimetria significativa no <strong className="text-orange-400">Braço Direito (+3,5cm)</strong> que pode estar relacionada à compensação em exercícios de empurrar.
+                            </>
+                        }
+                    />
+                </div>
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 // --- MAIN COMPONENT ---
 
@@ -498,15 +800,15 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({ onBack }) 
     };
 
     return (
-        <div className="flex-1 p-4 md:p-8 flex flex-col bg-background-dark">
-            <div className="max-w-7xl mx-auto flex flex-col gap-8 pb-10 flex-1 w-full">
+        <div style={tokenStyles.pageContainer}>
+            <div style={tokenStyles.contentWrapper}>
                 {/* Header Section */}
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                     <div className="flex flex-col animate-fade-in-up">
                         <button onClick={onBack} className="flex items-center gap-2 text-gray-400 hover:text-white mb-2 transition-colors text-xs font-bold uppercase tracking-wider w-fit">
                             <ChevronLeft size={14} /> Voltar para Dashboard
                         </button>
-                        <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight">RESULTADOS DA AVALIAÇÃO</h2>
+                        <h2 style={tokenStyles.headerTitle}>RESULTADOS DA AVALIAÇÃO</h2>
                         <p className="text-sm text-gray-400 flex items-center gap-2 mt-2 font-light">
                             Análise completa do físico de <strong className="text-gray-200 font-medium">João Silva</strong> • 24/10/2023
                         </p>
@@ -514,14 +816,14 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({ onBack }) 
                     <div className="flex gap-3 flex-wrap">
                         <button
                             onClick={handleSaveAssessment}
-                            className="flex items-center gap-2 px-6 py-2 rounded-lg bg-primary hover:bg-primary/90 text-[#0A0F1C] text-xs font-bold transition-all shadow-[0_0_15px_rgba(0,201,167,0.3)] hover:shadow-[0_0_25px_rgba(0,201,167,0.5)] transform hover:scale-105"
+                            style={tokenStyles.primaryButton}
                         >
                             <Save size={16} /> SALVAR AVALIAÇÃO IA
                         </button>
-                        <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-gray-300 text-xs font-bold transition-all">
+                        <button style={tokenStyles.secondaryButton}>
                             <Download size={16} /> Exportar PDF
                         </button>
-                        <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-gray-300 text-xs font-bold transition-all">
+                        <button style={tokenStyles.secondaryButton}>
                             <Share2 size={16} /> Compartilhar
                         </button>
                     </div>
@@ -530,13 +832,13 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({ onBack }) 
                 <div className="h-px w-full bg-white/10" />
 
                 {/* Navigation Tabs */}
-                <div className="border-b border-white/10">
-                    <div className="flex gap-8 overflow-x-auto custom-scrollbar pb-1">
+                <div style={tokenStyles.tabsContainer}>
+                    <div className="custom-scrollbar" style={tokenStyles.tabsScroll}>
                         {tabs.map(tab => (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id as any)}
-                                className={`py-4 text-sm font-bold transition-colors whitespace-nowrap ${activeTab === tab.id ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-300'}`}
+                                style={tokenStyles.tabButton(activeTab === tab.id)}
                             >
                                 {tab.label}
                             </button>
