@@ -16,6 +16,8 @@ export const getMethodLabel = (mode: ComparisonMode): string => {
             return 'Classic Physique';
         case 'mens':
             return "Men's Physique";
+        case 'open':
+            return "Open Bodybuilding";
     }
 };
 

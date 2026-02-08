@@ -38,7 +38,7 @@ export const CoachPillarCard: React.FC<CoachPillarCardProps> = ({
             <div className="flex items-start gap-4 mb-6">
                 {/* Number Circle */}
                 <div className="relative shrink-0">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 border border-white/10 flex items-center justify-center">
                         <span className="text-primary font-bold text-lg">{number}</span>
                     </div>
                     <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#131B2C] border border-primary/30 flex items-center justify-center">
@@ -71,7 +71,7 @@ export const CoachPillarCard: React.FC<CoachPillarCardProps> = ({
                     flex items-center justify-center gap-2 transition-all
                     ${isDisabled
                         ? 'bg-white/5 text-gray-500 cursor-not-allowed'
-                        : 'bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 hover:border-primary/40 hover:shadow-[0_0_15px_rgba(0,201,167,0.2)]'
+                        : 'bg-primary/10 border border-white/10 text-primary hover:bg-primary/20 hover:border-primary/40 hover:shadow-[0_0_15px_rgba(0,201,167,0.2)]'
                     }
                 `}
             >

@@ -74,7 +74,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile }) => {
         <div className="flex items-center gap-6 p-6 bg-card-bg rounded-2xl border border-card-border">
             {/* Avatar */}
             <div className="relative">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 border-2 border-primary/30 flex items-center justify-center">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 border-2 border-white/10 flex items-center justify-center">
                     {profile.avatarUrl ? (
                         <img
                             src={profile.avatarUrl}
@@ -101,7 +101,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile }) => {
 
             {/* Score Badge */}
             {profile.latestScore && (
-                <div className="flex flex-col items-center p-4 bg-primary/5 border border-primary/20 rounded-xl">
+                <div className="flex flex-col items-center p-4 bg-primary/5 border border-white/10 rounded-xl">
                     <span className="text-3xl font-bold text-primary">{profile.latestScore.overall}</span>
                     <span className="text-xs text-gray-400">Score Geral</span>
                     <span className="text-xs font-medium text-primary mt-1">{profile.latestScore.classification}</span>
@@ -166,7 +166,7 @@ const ProfileCompletionBar: React.FC<ProfileCompletionBarProps> = ({ completion,
             {!completion.canUseVitruvio && (
                 <button
                     onClick={onComplete}
-                    className="mt-4 w-full py-3 px-4 bg-gradient-to-r from-secondary/20 to-primary/20 border border-secondary/30 rounded-xl text-secondary font-medium hover:from-secondary/30 hover:to-primary/30 transition-all flex items-center justify-center gap-2 group"
+                    className="mt-4 w-full py-3 px-4 bg-gradient-to-r from-secondary/20 to-primary/20 border border-white/10 rounded-xl text-secondary font-medium hover:from-secondary/30 hover:to-primary/30 transition-all flex items-center justify-center gap-2 group"
                 >
                     <Sparkles size={16} />
                     Completar Perfil
@@ -485,6 +485,7 @@ export const AthleteProfilePage: React.FC = () => {
     // Edit state for basic info
     const [editName, setEditName] = useState('');
     const [editEmail, setEditEmail] = useState('');
+    const [editGender, setEditGender] = useState<Gender>('MALE');
     const [editGoal, setEditGoal] = useState<UserGoal>('aesthetics');
 
     // Edit state for structural measures
@@ -496,6 +497,7 @@ export const AthleteProfilePage: React.FC = () => {
         if (profile) {
             setEditName(profile.name || '');
             setEditEmail(profile.email || '');
+            setEditGender(profile.gender || 'MALE');
             setEditGoal(profile.goal || 'aesthetics');
             if (profile) {
                 setEditAltura(profile.altura?.toString() || '');
@@ -510,6 +512,7 @@ export const AthleteProfilePage: React.FC = () => {
         updateBasicInfo({
             name: editName,
             email: editEmail,
+            gender: editGender,
             goal: editGoal
         });
         setIsEditingBasic(false);
@@ -580,6 +583,20 @@ export const AthleteProfilePage: React.FC = () => {
                             <>
                                 <EditableInput label="Nome" value={editName} onChange={setEditName} />
                                 <EditableInput label="Email" value={editEmail} onChange={setEditEmail} type="email" />
+                                <div className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+                                    <div className="flex items-center gap-2 text-gray-400">
+                                        <span className="text-sm">Gênero</span>
+                                    </div>
+                                    <select
+                                        value={editGender}
+                                        onChange={(e) => setEditGender(e.target.value as Gender)}
+                                        className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white w-48 focus:outline-none focus:border-primary/50"
+                                    >
+                                        <option value="MALE">Masculino</option>
+                                        <option value="FEMALE">Feminino</option>
+                                        <option value="OTHER">Outro</option>
+                                    </select>
+                                </div>
                                 <div className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
                                     <div className="flex items-center gap-2 text-gray-400">
                                         <span className="text-sm">Objetivo</span>

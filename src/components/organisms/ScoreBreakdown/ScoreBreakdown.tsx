@@ -22,6 +22,7 @@ export const ScoreBreakdown: React.FC<ScoreBreakdownProps> = ({ data }) => {
     const getMethodLabel = (m: string) => {
         if (m === 'golden_ratio') return 'Golden Ratio';
         if (m === 'classic_physique') return 'Classic Physique';
+        if (m === 'open') return 'Open Bodybuilding';
         return "Men's Physique";
     };
 

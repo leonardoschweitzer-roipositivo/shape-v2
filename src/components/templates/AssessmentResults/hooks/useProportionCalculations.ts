@@ -23,6 +23,9 @@ export const useProportionCalculations = (
                 return calcularIdeaisClassicPhysique(userMeasurements);
             case 'mens':
                 return calcularIdeaisMensPhysique(userMeasurements);
+            case 'open':
+                // Placeholder until Open calculations are implemented
+                return calcularIdeaisClassicPhysique(userMeasurements);
         }
     }, [comparisonMode, userMeasurements]);
 

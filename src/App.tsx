@@ -24,8 +24,11 @@ import {
   PersonalProfilePage,
   AcademyDashboard,
   AcademyPersonalsList,
+  AcademyProfilePage,
+  AthleteInvitationModal,
   type ProfileType
 } from '@/components';
+import { useAthleteStore } from '@/stores/athleteStore';
 
 type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking';
 
@@ -34,8 +37,21 @@ const App: React.FC = () => {
   const [userProfile, setUserProfile] = useState<ProfileType>('atleta');
   const [isAssessmentOpen, setIsAssessmentOpen] = useState(false);
   const [isCoachModalOpen, setIsCoachModalOpen] = useState(false);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
   const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(null);
+  const { settings } = useAthleteStore();
+
+  const handleInviteAthlete = () => {
+    setIsInviteModalOpen(true);
+  };
+
+  // Apply primary color globally from settings
+  React.useEffect(() => {
+    if (settings.preferences.primaryColor) {
+      document.documentElement.style.setProperty('--color-primary', settings.preferences.primaryColor);
+    }
+  }, [settings.preferences.primaryColor]);
 
   const handleLogin = (profile: ProfileType) => {
     setUserProfile(profile);
@@ -84,11 +100,7 @@ const App: React.FC = () => {
             </div>
           );
         case 'profile':
-          return (
-            <div className="flex-1 flex items-center justify-center text-gray-500">
-              <p>Perfil da Academia (Dados empresariais)</p>
-            </div>
-          );
+          return <AcademyProfilePage />;
         case 'settings':
           return <AthleteSettingsPage />;
         case 'hall':
@@ -289,6 +301,14 @@ const App: React.FC = () => {
       <CoachModal
         isOpen={isCoachModalOpen}
         onClose={() => setIsCoachModalOpen(false)}
+      />
+      <AthleteInvitationModal
+        isOpen={isInviteModalOpen}
+        onClose={() => setIsInviteModalOpen(false)}
+        onInvite={(data) => {
+          console.log('Inviting athlete:', data);
+          alert(`Convite enviado para ${data.name} (${data.gender})`);
+        }}
       />
     </div>
   );

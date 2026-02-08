@@ -32,7 +32,7 @@ export const AssessmentModal: React.FC<AssessmentModalProps> = ({ isOpen, onClos
             <p className="text-sm text-gray-400">Insira os dados métricos para análise de simetria bilateral e proporção áurea.</p>
           </div>
           <div className="flex items-center gap-4">
-            <span className="px-3 py-1 rounded border border-primary/20 bg-primary/5 text-primary text-[10px] font-bold tracking-widest">
+            <span className="px-3 py-1 rounded border border-white/10 bg-primary/5 text-primary text-[10px] font-bold tracking-widest">
               PROTOCOLO V.2.0
             </span>
             <button

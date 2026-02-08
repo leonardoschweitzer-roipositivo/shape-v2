@@ -15,6 +15,7 @@ export interface SettingsSection {
 
 export const ATHLETE_SETTINGS_SECTIONS: SettingsSection[] = [
     { id: 'account', icon: 'User', label: 'Conta', description: 'Email, senha e dados de acesso' },
+    { id: 'appearance', icon: 'Layout', label: 'Aparência', description: 'Personalize as cores da interface' },
     { id: 'notifications', icon: 'Bell', label: 'Notificações', description: 'Alertas e lembretes' },
     { id: 'privacy', icon: 'Shield', label: 'Privacidade', description: 'Visibilidade e compartilhamento' },
     { id: 'security', icon: 'Lock', label: 'Segurança', description: 'Senha, 2FA e sessões' },
@@ -24,6 +25,7 @@ export const ATHLETE_SETTINGS_SECTIONS: SettingsSection[] = [
 
 export type SettingsSectionId =
     | 'account'
+    | 'appearance'
     | 'notifications'
     | 'privacy'
     | 'security'
@@ -104,6 +106,7 @@ export interface ProfilePreferences {
     proportionMethod: ProportionMethod;
     theme: ThemeMode;
     language: 'pt-BR' | 'en-US';
+    primaryColor: string;
 }
 
 export const DEFAULT_PROFILE_PREFERENCES: ProfilePreferences = {
@@ -111,6 +114,7 @@ export const DEFAULT_PROFILE_PREFERENCES: ProfilePreferences = {
     proportionMethod: 'golden_ratio',
     theme: 'dark',
     language: 'pt-BR',
+    primaryColor: '#00C9A7', // Default Teal
 };
 
 // ============================================

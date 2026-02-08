@@ -25,10 +25,10 @@ export const PersonalStatsCard: React.FC<PersonalStatsCardProps> = ({
     target,
 }) => {
     const colorClasses = {
-        primary: 'from-primary/20 to-primary/5 border-primary/30',
-        success: 'from-green-500/20 to-green-500/5 border-green-500/30',
-        warning: 'from-amber-500/20 to-amber-500/5 border-amber-500/30',
-        error: 'from-red-500/20 to-red-500/5 border-red-500/30',
+        primary: 'from-primary/20 to-primary/5 border-white/10',
+        success: 'from-green-500/20 to-green-500/5 border-white/10',
+        warning: 'from-amber-500/20 to-amber-500/5 border-white/10',
+        error: 'from-red-500/20 to-red-500/5 border-white/10',
     };
 
     const iconColorClasses = {

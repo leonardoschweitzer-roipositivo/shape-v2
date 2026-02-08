@@ -152,6 +152,7 @@ export const PersonalProfilePage: React.FC = () => {
                     <InfoCard title="Dados de Acesso" icon={User}>
                         <InfoRow label="Nome Completo" value={profile.name} icon={User} />
                         <InfoRow label="Email Profissional" value={profile.email} icon={Mail} />
+                        <InfoRow label="Sexo" value={profile.gender === 'MALE' ? 'Masculino' : profile.gender === 'FEMALE' ? 'Feminino' : 'Outro'} icon={User} />
                         <InfoRow label="Status da Conta" value={
                             <span className="flex items-center gap-1.5 text-primary">
                                 <Check size={14} /> Ativa

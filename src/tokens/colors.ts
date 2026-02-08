@@ -8,8 +8,8 @@
 export const colors = {
     // === BRAND ===
     brand: {
-        /** #00C9A7 - Ações principais, CTAs, progresso positivo */
-        primary: '#00C9A7',
+        /** Dynamic - Ações principais, CTAs, progresso positivo */
+        primary: 'var(--color-primary)',
         /** #7C3AED - Gradientes, acentos secundários, badges PRO */
         secondary: '#7C3AED',
     },

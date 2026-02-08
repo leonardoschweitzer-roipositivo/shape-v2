@@ -128,10 +128,10 @@ export const AcademyDashboard: React.FC<AcademyDashboardProps> = ({
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {personals.slice(0, 4).map((p) => (
-                                <div key={p.id} className="bg-card-bg border border-card-border rounded-xl p-5 hover:border-primary/30 transition-all group">
+                                <div key={p.id} className="bg-card-bg border border-white/10 rounded-xl p-5 hover:border-primary/30 transition-all group">
                                     <div className="flex items-center justify-between mb-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-white/10">
                                                 {p.name.charAt(0)}
                                             </div>
                                             <div>
@@ -175,7 +175,7 @@ export const AcademyDashboard: React.FC<AcademyDashboardProps> = ({
                             ))}
                         </div>
 
-                        <div className="bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 rounded-xl p-6">
+                        <div className="bg-gradient-to-br from-primary/10 to-secondary/10 border border-white/10 rounded-xl p-6">
                             <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
                                 <Calendar className="text-primary" size={20} />
                                 Gestão do Plano
@@ -190,7 +190,7 @@ export const AcademyDashboard: React.FC<AcademyDashboardProps> = ({
                                     <span className="text-white font-medium">12/03/2026</span>
                                 </li>
                                 <li className="mt-4 pt-4 border-t border-white/10">
-                                    <button className="w-full py-2 bg-primary/20 text-primary border border-primary/30 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-primary/30 transition-all">
+                                    <button className="w-full py-2 bg-primary/20 text-primary border border-white/10 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-primary/30 transition-all">
                                         Upgrade de Plano
                                     </button>
                                 </li>

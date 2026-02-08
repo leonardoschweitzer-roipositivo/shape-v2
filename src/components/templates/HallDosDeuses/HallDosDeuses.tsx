@@ -69,7 +69,7 @@ const RankingCard: React.FC<{ data: RankingData; userPosition?: number }> = ({ d
                             <div
                                 key={usuario.id}
                                 className={`flex items-center gap-3 p-3 rounded-lg transition-all ${isUser
-                                    ? 'bg-primary/10 border border-primary/20'
+                                    ? 'bg-primary/10 border border-white/10'
                                     : 'bg-white/5 border border-white/10 hover:bg-white/10'
                                     }`}
                             >
@@ -94,7 +94,7 @@ const RankingCard: React.FC<{ data: RankingData; userPosition?: number }> = ({ d
                                             {usuario.nome} {isUser && <span className="text-xs text-gray-400">(Você)</span>}
                                         </span>
                                         {usuario.badge && (
-                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-secondary/20 text-secondary border border-secondary/20">
+                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-secondary/20 text-secondary border border-white/10">
                                                 {usuario.badge}
                                             </span>
                                         )}
@@ -376,7 +376,7 @@ export const HallDosDeuses: React.FC = () => {
                         <button
                             onClick={() => setSelectedTab('principais')}
                             className={`px-6 py-3 rounded-lg font-medium text-sm transition-all ${selectedTab === 'principais'
-                                ? 'bg-primary/10 text-primary border border-primary/20'
+                                ? 'bg-primary/10 text-primary border border-white/10'
                                 : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10 hover:text-white'
                                 }`}
                         >
@@ -385,7 +385,7 @@ export const HallDosDeuses: React.FC = () => {
                         <button
                             onClick={() => setSelectedTab('especiais')}
                             className={`px-6 py-3 rounded-lg font-medium text-sm transition-all ${selectedTab === 'especiais'
-                                ? 'bg-secondary/10 text-secondary border border-secondary/20'
+                                ? 'bg-secondary/10 text-secondary border border-white/10'
                                 : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10 hover:text-white'
                                 }`}
                         >

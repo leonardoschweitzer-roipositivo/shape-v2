@@ -143,7 +143,10 @@ A navegação lateral (Sidebar) é dinâmica conforme o perfil do usuário:
 | Início | Home | Dashboard da academia |
 | Personais | Users | Gestão de personal trainers |
 | Alunos | Users | Lista de todos os alunos |
-| Ranking | Trophy | Ranking de personais |
+| Evolução | TrendingUp | Histórico e gráficos |
+| Ranking Personais | Trophy | Ranking de personais |
+| Hall dos Deuses | Building2 | Ranking de atletas |
+| Perfil | User | Perfil da academia |
 | Configurações | Settings | Configurações da academia |
 
 **🏋️ Personal:**
@@ -152,8 +155,11 @@ A navegação lateral (Sidebar) é dinâmica conforme o perfil do usuário:
 | Início | Home | Dashboard do personal |
 | Meus Alunos | Users | Lista de alunos vinculados |
 | Avaliação IA | Activity | Realizar nova avaliação |
+| Evolução | TrendingUp | Histórico e gráficos |
 | Coach IA | Bot | Assistente inteligente |
-| Ranking | Trophy | Ranking de personais |
+| Hall dos Deuses | Dumbbell | Ranking de atletas |
+| Ranking Personais | Trophy | Ranking de personais |
+| Perfil | User | Perfil do personal |
 | Configurações | Settings | Configurações do personal |
 
 **💪 Atleta:**
@@ -163,7 +169,7 @@ A navegação lateral (Sidebar) é dinâmica conforme o perfil do usuário:
 | Avaliação | Activity | Resultados da avaliação |
 | Evolução | TrendingUp | Histórico e gráficos |
 | Coach IA | Bot | Assistente inteligente (PRO) |
-| Hall dos Deuses | Crown | Ranking de atletas |
+| Hall dos Deuses | Dumbbell | Ranking de atletas |
 | Ranking Personais | Trophy | Ranking de personais |
 | Perfil | User | Dados do perfil |
 | Configurações | Settings | Configurações do atleta |

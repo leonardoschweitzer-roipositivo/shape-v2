@@ -20,7 +20,7 @@
             sans: ['Space Grotesk', 'sans-serif'],
           },
           colors: {
-            primary: "#00C9A7", // Teal
+            primary: "var(--color-primary, #00C9A7)", // Dynamic Primary
             secondary: "#7C3AED", // Purple
             "background-dark": "#0A0F1C",
             "card-dark": "rgba(19, 27, 44, 0.7)",
@@ -34,6 +34,10 @@
     };
   </script>
   <style>
+    :root {
+      --color-primary: #00C9A7;
+    }
+
     body {
       background-color: #0A0F1C;
       color: white;

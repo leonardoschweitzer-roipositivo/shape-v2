@@ -11,7 +11,9 @@ import {
     ChevronRight,
     Download,
     Trash2,
-    Sparkles
+    Sparkles,
+    Layout,
+    Palette
 } from 'lucide-react';
 import { useAthleteStore } from '@/stores/athleteStore';
 import {
@@ -30,6 +32,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
     Lock,
     CreditCard,
     Database,
+    Layout,
 };
 
 // ============================================
@@ -59,7 +62,7 @@ const SettingsNavItem: React.FC<SettingsNavItemProps> = ({
         <button
             onClick={onClick}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left group ${isActive
-                ? 'bg-primary/10 border border-primary/20 text-primary'
+                ? 'bg-primary/10 border border-white/10 text-primary'
                 : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
         >
@@ -286,6 +289,64 @@ const NotificationsSection: React.FC = () => {
     );
 };
 
+const AppearanceSection: React.FC = () => {
+    const { settings, updatePreferences } = useAthleteStore();
+    const { primaryColor } = settings.preferences;
+
+    const colorOptions = [
+        { name: 'Teal (Original)', value: '#00C9A7', class: 'bg-[#00C9A7]' },
+        { name: 'Azul', value: '#3b82f6', class: 'bg-[#3b82f6]' },
+        { name: 'Roxo', value: '#7C3AED', class: 'bg-[#7C3AED]' },
+        { name: 'Amarelo', value: '#eab308', class: 'bg-[#eab308]' },
+        { name: 'Verde', value: '#22c55e', class: 'bg-[#22c55e]' },
+        { name: 'Vermelho', value: '#ef4444', class: 'bg-[#ef4444]' },
+    ];
+
+    const handleColorChange = (color: string) => {
+        updatePreferences({ primaryColor: color });
+        document.documentElement.style.setProperty('--color-primary', color);
+    };
+
+    return (
+        <div className="space-y-6">
+            <SettingsCard icon={Palette} title="Cor de Destaque" description="Altere a cor principal (Teal) de toda a interface">
+                <div className="py-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {colorOptions.map((color) => (
+                            <button
+                                key={color.value}
+                                onClick={() => handleColorChange(color.value)}
+                                className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${primaryColor === color.value
+                                    ? 'bg-primary/10 border-primary text-white'
+                                    : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/20'
+                                    }`}
+                            >
+                                <div className={`w-4 h-4 rounded-full ${color.class} shadow-lg shadow-black/20`} />
+                                <span className="text-sm font-medium">{color.name}</span>
+                                {primaryColor === color.value && (
+                                    <Check size={14} className="ml-auto text-primary" />
+                                )}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </SettingsCard>
+
+            <SettingsCard icon={Layout} title="Tema da Interface">
+                <SettingsRow
+                    label="Modo escuro"
+                    value="Ativado"
+                    action={
+                        <div className="px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-lg border border-primary/20">
+                            PADRÃO VITRU
+                        </div>
+                    }
+                />
+            </SettingsCard>
+        </div>
+    );
+};
+
 const PrivacySection: React.FC = () => {
     const { settings, updatePrivacy } = useAthleteStore();
     const priv = settings.privacy;
@@ -466,10 +527,19 @@ const DataSection: React.FC = () => (
 
 export const AthleteSettingsPage: React.FC = () => {
     const [activeSection, setActiveSection] = useState<SettingsSectionId>('account');
+    const { settings } = useAthleteStore();
+
+    // Effect to apply primary color on mount or change
+    React.useEffect(() => {
+        if (settings.preferences.primaryColor) {
+            document.documentElement.style.setProperty('--color-primary', settings.preferences.primaryColor);
+        }
+    }, [settings.preferences.primaryColor]);
 
     const renderSection = () => {
         switch (activeSection) {
             case 'account': return <AccountSection />;
+            case 'appearance': return <AppearanceSection />;
             case 'notifications': return <NotificationsSection />;
             case 'privacy': return <PrivacySection />;
             case 'security': return <SecuritySection />;

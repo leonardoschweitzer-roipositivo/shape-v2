@@ -254,7 +254,7 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
                 </div>
 
                 {/* Próximas Ações */}
-                <div className="bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 rounded-xl p-6">
+                <div className="bg-gradient-to-br from-primary/10 to-secondary/10 border border-white/10 rounded-xl p-6">
                     <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-4">
                         <Calendar className="text-primary" size={24} />
                         Próximas Ações

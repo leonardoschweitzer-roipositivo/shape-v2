@@ -49,7 +49,7 @@ export const CoachIA: React.FC<CoachIAProps> = ({ onOpenChat, hideHeader = false
             : 'Sua análise completa de proporções e simetria está pronta. O Vitrúvio utiliza a matemática clássica para gerar planos de ação personalizados para o seu físico ideal.',
         cta: { label: 'Consultar o Coach', href: '#' },
         image: {
-            src: '/images/vitruvio-hero.png',
+            src: '/images/robot-coach.png',
             alt: 'Coach IA Banner',
             position: 'background'
         }

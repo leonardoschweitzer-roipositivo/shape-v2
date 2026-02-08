@@ -1,5 +1,5 @@
 // Types for Assessment Results
-export type ComparisonMode = 'golden' | 'classic' | 'mens';
+export type ComparisonMode = 'golden' | 'classic' | 'mens' | 'open';
 export type TabType = 'diagnostic' | 'golden' | 'asymmetry';
 export type FilterType = 'geral' | 'comp' | 'metrics';
 

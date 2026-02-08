@@ -119,6 +119,12 @@ export const ProportionsTab: React.FC<ProportionsTabProps> = ({
                     >
                         Men's Physique
                     </button>
+                    <button
+                        onClick={() => setComparisonMode('open')}
+                        style={tokenStyles.filterButton(comparisonMode === 'open')}
+                    >
+                        Open
+                    </button>
                 </div>
             </div>
 

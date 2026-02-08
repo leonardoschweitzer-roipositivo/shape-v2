@@ -40,6 +40,7 @@ export interface PersonalAthlete {
     id: string;
     name: string;
     email: string;
+    gender: 'MALE' | 'FEMALE' | 'OTHER';
     avatarUrl: string | null;
     score: number;
     scoreVariation: number;
@@ -53,6 +54,7 @@ export interface PersonalProfile {
     id: string;
     name: string;
     email: string;
+    gender: 'MALE' | 'FEMALE' | 'OTHER';
     avatarUrl: string | null;
     cref: string;
     specialties: string[];
@@ -76,6 +78,7 @@ export const mockPersonalProfile: PersonalProfile = {
     id: 'personal-1',
     name: 'Professor Carlos Lima',
     email: 'carlos.lima@vitruia.com',
+    gender: 'MALE',
     avatarUrl: null,
     cref: '012345-G/SP',
     specialties: ['Bodybuilding', 'Alta Performance', 'Bioestimulação'],
@@ -200,6 +203,7 @@ export const mockPersonalAthletes: PersonalAthlete[] = [
         id: 'athlete-1',
         name: 'Ana Lima',
         email: 'ana@email.com',
+        gender: 'FEMALE',
         avatarUrl: null,
         score: 92,
         scoreVariation: 3,
@@ -212,6 +216,7 @@ export const mockPersonalAthletes: PersonalAthlete[] = [
         id: 'athlete-2',
         name: 'Carlos Souza',
         email: 'carlos@email.com',
+        gender: 'MALE',
         avatarUrl: null,
         score: 88,
         scoreVariation: 1,
@@ -224,6 +229,7 @@ export const mockPersonalAthletes: PersonalAthlete[] = [
         id: 'athlete-3',
         name: 'João Silva',
         email: 'joao@email.com',
+        gender: 'MALE',
         avatarUrl: null,
         score: 72,
         scoreVariation: -3,
@@ -236,6 +242,7 @@ export const mockPersonalAthletes: PersonalAthlete[] = [
         id: 'athlete-4',
         name: 'Fernanda Dias',
         email: 'fernanda@email.com',
+        gender: 'FEMALE',
         avatarUrl: null,
         score: 85,
         scoreVariation: 2,
@@ -248,6 +255,7 @@ export const mockPersonalAthletes: PersonalAthlete[] = [
         id: 'athlete-5',
         name: 'Lucas Alves',
         email: 'lucas@email.com',
+        gender: 'MALE',
         avatarUrl: null,
         score: 83,
         scoreVariation: 0,
@@ -260,6 +268,7 @@ export const mockPersonalAthletes: PersonalAthlete[] = [
         id: 'athlete-6',
         name: 'Maria Santos',
         email: 'maria@email.com',
+        gender: 'FEMALE',
         avatarUrl: null,
         score: 68,
         scoreVariation: 0,
@@ -272,6 +281,7 @@ export const mockPersonalAthletes: PersonalAthlete[] = [
         id: 'athlete-7',
         name: 'Julia Rocha',
         email: 'julia@email.com',
+        gender: 'FEMALE',
         avatarUrl: null,
         score: 81,
         scoreVariation: 4,
@@ -284,6 +294,7 @@ export const mockPersonalAthletes: PersonalAthlete[] = [
         id: 'athlete-8',
         name: 'Pedro Costa',
         email: 'pedro@email.com',
+        gender: 'MALE',
         avatarUrl: null,
         score: 65,
         scoreVariation: -5,
@@ -296,6 +307,7 @@ export const mockPersonalAthletes: PersonalAthlete[] = [
         id: 'athlete-9',
         name: 'Beatriz Oliveira',
         email: 'beatriz@email.com',
+        gender: 'FEMALE',
         avatarUrl: null,
         score: 79,
         scoreVariation: 1,
@@ -308,6 +320,7 @@ export const mockPersonalAthletes: PersonalAthlete[] = [
         id: 'athlete-10',
         name: 'Rafael Mendes',
         email: 'rafael@email.com',
+        gender: 'MALE',
         avatarUrl: null,
         score: 76,
         scoreVariation: 2,
@@ -320,6 +333,7 @@ export const mockPersonalAthletes: PersonalAthlete[] = [
         id: 'athlete-11',
         name: 'Camila Ferreira',
         email: 'camila@email.com',
+        gender: 'FEMALE',
         avatarUrl: null,
         score: 74,
         scoreVariation: -1,
@@ -332,6 +346,7 @@ export const mockPersonalAthletes: PersonalAthlete[] = [
         id: 'athlete-12',
         name: 'Thiago Martins',
         email: 'thiago@email.com',
+        gender: 'MALE',
         avatarUrl: null,
         score: 70,
         scoreVariation: 0,
