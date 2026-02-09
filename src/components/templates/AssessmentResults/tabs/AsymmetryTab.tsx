@@ -3,6 +3,7 @@ import { Accessibility, Hand, Dumbbell, Activity, Footprints } from 'lucide-reac
 import { GlassPanel } from '@/components/atoms';
 import { AsymmetryCard, AiInsightCard, AsymmetryRadar } from '@/components/organisms';
 import { colors as designColors, typography as designTypography, spacing as designSpacing } from '@/tokens';
+import { MeasurementHistory } from '@/mocks/personal';
 
 // Token styles (shared with parent)
 const tokenStyles = {
@@ -51,10 +52,23 @@ const tokenStyles = {
     })
 };
 
-export const AsymmetryTab: React.FC = () => {
+interface AsymmetryTabProps {
+    assessment?: MeasurementHistory;
+}
+
+export const AsymmetryTab: React.FC<AsymmetryTabProps> = ({ assessment }) => {
     const [view, setView] = useState<'total' | 'membros' | 'tronco'>('total');
 
-    const asymmetryItems = [
+    const formatVal = (val: number) => val.toFixed(1).replace('.', ',');
+    const formatDiff = (diff: number) => (diff > 0 ? '+' : '') + diff.toFixed(1).replace('.', ',');
+    const getStatus = (diff: number) => {
+        const absDiff = Math.abs(diff);
+        if (absDiff > 2.0) return 'high';
+        if (absDiff > 1.0) return 'moderate';
+        return 'symmetrical';
+    };
+
+    const defaultAsymmetryItems = [
         { id: 'braco', category: 'membros', icon: <Accessibility size={20} />, title: "BRAÇO", subtitle: "BÍCEPS RELAXADO", leftVal: "41,0", rightVal: "44,5", diff: "+3,5", status: "high" },
         { id: 'antebraco', category: 'membros', icon: <Hand size={20} />, title: "ANTEBRAÇO", subtitle: "PORÇÃO MEDIAL", leftVal: "32,0", rightVal: "32,2", diff: "+0,2", status: "symmetrical" },
         { id: 'ombros', category: 'tronco', icon: <Dumbbell size={20} />, title: "OMBROS", subtitle: "DELTOIDE LATERAL", leftVal: "133,0", rightVal: "132,5", diff: "-0,5", status: "symmetrical" },
@@ -62,6 +76,59 @@ export const AsymmetryTab: React.FC = () => {
         { id: 'coxa', category: 'membros', icon: <Activity size={20} />, title: "COXA", subtitle: "MEDIDA PROXIMAL", leftVal: "62,0", rightVal: "60,5", diff: "+1,5", status: "moderate" },
         { id: 'panturrilha', category: 'membros', icon: <Footprints size={20} />, title: "PANTURRILHA", subtitle: "GASTROCNÊMIO", leftVal: "38,0", rightVal: "38,0", diff: "0,0", status: "symmetrical" },
     ];
+
+    let asymmetryItems = defaultAsymmetryItems;
+
+    if (assessment) {
+        const m = assessment.measurements;
+        // Only include items we have L/R data for
+        asymmetryItems = [
+            {
+                id: 'braco',
+                category: 'membros',
+                icon: <Accessibility size={20} />,
+                title: "BRAÇO",
+                subtitle: "BÍCEPS RELAXADO",
+                leftVal: formatVal(m.armLeft),
+                rightVal: formatVal(m.armRight),
+                diff: formatDiff(m.armRight - m.armLeft),
+                status: getStatus(m.armRight - m.armLeft)
+            },
+            {
+                id: 'antebraco',
+                category: 'membros',
+                icon: <Hand size={20} />,
+                title: "ANTEBRAÇO",
+                subtitle: "PORÇÃO MEDIAL",
+                leftVal: formatVal(m.forearmLeft),
+                rightVal: formatVal(m.forearmRight),
+                diff: formatDiff(m.forearmRight - m.forearmLeft),
+                status: getStatus(m.forearmRight - m.forearmLeft)
+            },
+            {
+                id: 'coxa',
+                category: 'membros',
+                icon: <Activity size={20} />,
+                title: "COXA",
+                subtitle: "MEDIDA PROXIMAL",
+                leftVal: formatVal(m.thighLeft),
+                rightVal: formatVal(m.thighRight),
+                diff: formatDiff(m.thighRight - m.thighLeft),
+                status: getStatus(m.thighRight - m.thighLeft)
+            },
+            {
+                id: 'panturrilha',
+                category: 'membros',
+                icon: <Footprints size={20} />,
+                title: "PANTURRILHA",
+                subtitle: "GASTROCNÊMIO",
+                leftVal: formatVal(m.calfLeft),
+                rightVal: formatVal(m.calfRight),
+                diff: formatDiff(m.calfRight - m.calfLeft),
+                status: getStatus(m.calfRight - m.calfLeft)
+            }
+        ];
+    }
 
     const filteredItems = asymmetryItems.filter(item =>
         view === 'total' || item.category === view
@@ -144,11 +211,17 @@ export const AsymmetryTab: React.FC = () => {
 
                     <AiInsightCard
                         type="AI Insight"
-                        title="Dominância do Hemicorpo Direito"
+                        title={assessment ? (Math.abs(assessment.measurements.armRight - assessment.measurements.armLeft) > 2 ? "Dominância Unilateral" : "Boa Simetria") : "Dominância do Hemicorpo Direito"}
                         description={
-                            <>
-                                Identificamos uma assimetria significativa no <strong className="text-orange-400">Braço Direito (+3,5cm)</strong> que pode estar relacionada à compensação em exercícios de empurrar.
-                            </>
+                            assessment ? (
+                                Math.abs(assessment.measurements.armRight - assessment.measurements.armLeft) > 2 ?
+                                    `Identificamos uma assimetria no Braço (${formatDiff(assessment.measurements.armRight - assessment.measurements.armLeft)}cm).` :
+                                    "Seus membros apresentam bom equilíbrio bilateral."
+                            ) : (
+                                <>
+                                    Identificamos uma assimetria significativa no <strong className="text-orange-400">Braço Direito (+3,5cm)</strong> que pode estar relacionada à compensação em exercícios de empurrar.
+                                </>
+                            )
                         }
                     />
                 </div>

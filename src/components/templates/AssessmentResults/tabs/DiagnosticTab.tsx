@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Activity } from 'lucide-react';
 import { GlassPanel } from '@/components/atoms';
 import {
@@ -9,6 +9,7 @@ import {
     BodyFatGauge
 } from '@/components/organisms';
 import { colors as designColors, typography as designTypography, spacing as designSpacing } from '@/tokens';
+import { MeasurementHistory } from '@/mocks/personal';
 
 // Token styles (shared with parent)
 const tokenStyles = {
@@ -57,8 +58,68 @@ const tokenStyles = {
     })
 };
 
-export const DiagnosticTab: React.FC = () => {
+interface DiagnosticTabProps {
+    assessment?: MeasurementHistory;
+    gender?: 'male' | 'female';
+}
+
+export const DiagnosticTab: React.FC<DiagnosticTabProps> = ({ assessment, gender = 'male' }) => {
     const [filter, setFilter] = useState<'todos' | 'comp' | 'metrics'>('todos');
+    const [bfMethod, setBfMethod] = useState<'navy' | 'pollock'>('navy');
+
+    // Calculate metrics
+    const metrics = useMemo(() => {
+        if (!assessment) return {
+            weight: 88.5,
+            leanMass: 77.1,
+            fatMass: 11.4,
+            bf: 12.9,
+            score: 80
+        };
+
+        const { weight, height, waist, neck, hips } = assessment.measurements;
+        let bf = 0;
+
+        if (bfMethod === 'pollock') {
+            const s = assessment.skinfolds;
+            const sumSkinfolds = s.tricep + s.subscapular + s.chest + s.axillary + s.suprailiac + s.abdominal + s.thigh;
+            const age = 30; // Default age as we don't have it in props yet
+
+            // Pollock 7-site formula
+            let bodyDensity;
+            if (gender === 'male') {
+                bodyDensity = 1.112 - 0.00043499 * sumSkinfolds + 0.00000055 * sumSkinfolds * sumSkinfolds - 0.00028826 * age;
+            } else {
+                bodyDensity = 1.097 - 0.00046971 * sumSkinfolds + 0.00000056 * sumSkinfolds * sumSkinfolds - 0.00012828 * age;
+            }
+            bf = Math.max(0, (495 / bodyDensity) - 450);
+        } else {
+            // Navy Method
+            // Formula from PRD: BF% = 86.010 × log10(cintura - pescoço) - 70.041 × log10(altura) + 36.76
+            // Note: This is the metric version coefficients
+            if (gender === 'male') {
+                bf = 86.010 * Math.log10(waist - neck) - 70.041 * Math.log10(height) + 36.76;
+            } else {
+                // Female Navy (Metric): 163.205 × log10(waist + hip - neck) - 97.684 × log10(height) - 104.912
+                bf = 163.205 * Math.log10(waist + (hips || waist) - neck) - 97.684 * Math.log10(height) - 104.912;
+            }
+        }
+
+        bf = Math.max(2, bf); // Minimum 2%
+        const fatMass = weight * (bf / 100);
+        const leanMass = weight - fatMass;
+
+        // Simple score calculation based on symmetry and bf (mock logic)
+        const score = Math.min(100, Math.max(50, 85 - (bf - 10) * 0.5));
+
+        return {
+            weight,
+            leanMass: parseFloat(leanMass.toFixed(1)),
+            fatMass: parseFloat(fatMass.toFixed(1)),
+            bf: parseFloat(bf.toFixed(1)),
+            score: Math.round(score)
+        };
+    }, [assessment, gender, bfMethod]);
 
     return (
         <div className="flex flex-col gap-8 animate-fade-in-up">
@@ -105,7 +166,7 @@ export const DiagnosticTab: React.FC = () => {
                 {/* Top Row: Main Cards (Filtered) */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-auto lg:h-[340px]">
                     {(filter === 'todos' || filter === 'metrics') && (
-                        <ScoreWidget score={80} label="Pontos" change="+5%" />
+                        <ScoreWidget score={metrics.score} label="Pontos" change="+5%" />
                     )}
 
                     {(filter === 'todos' || filter === 'metrics') && (
@@ -116,7 +177,11 @@ export const DiagnosticTab: React.FC = () => {
 
                     {(filter === 'todos' || filter === 'comp') && (
                         <GlassPanel className="rounded-2xl relative">
-                            <BodyFatGauge />
+                            <BodyFatGauge
+                                value={metrics.bf}
+                                method={bfMethod}
+                                onMethodChange={setBfMethod}
+                            />
                         </GlassPanel>
                     )}
                 </div>
@@ -124,9 +189,9 @@ export const DiagnosticTab: React.FC = () => {
                 {/* Middle Row: Metrics (Filtered) */}
                 {(filter === 'todos' || filter === 'comp' || filter === 'metrics') && (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in">
-                        <MassCard label="Peso Atual" value={88.5} unit="kg" trend={1.2} color="green" />
-                        <MassCard label="Peso Magro" value={77.1} unit="kg" trend={0.8} color="purple" />
-                        <MassCard label="Peso Gordo" value={11.4} unit="kg" trend={-0.5} color="red" />
+                        <MassCard label="Peso Atual" value={metrics.weight} unit="kg" trend={1.2} color="green" />
+                        <MassCard label="Peso Magro" value={metrics.leanMass} unit="kg" trend={0.8} color="purple" />
+                        <MassCard label="Peso Gordo" value={metrics.fatMass} unit="kg" trend={-0.5} color="red" />
                     </div>
                 )}
 
@@ -134,7 +199,7 @@ export const DiagnosticTab: React.FC = () => {
                 <AiAnalysisWidget
                     analysis={
                         <>
-                            Com base na análise de simetria bilateral, o cliente apresenta um <span className="text-white font-medium">desequilíbrio leve no deltoide direito</span> em relação ao esquerdo (aproximadamente 4% de diferença em volume). Recomenda-se adicionar 2 séries de elevação lateral unilateral para correção. O percentual de gordura (12.9%) está em um ponto ideal para iniciar a fase de <span className="text-primary font-bold">bulking limpo</span>, focando em progressão de carga nos compostos principais.
+                            Com base na análise de simetria bilateral, o cliente apresenta um <span className="text-white font-medium">desequilíbrio leve</span>. O percentual de gordura ({metrics.bf.toFixed(1)}%) está em um ponto {metrics.bf < 15 ? 'excelente' : 'bom'} para focar em <span className="text-primary font-bold">{metrics.bf < 12 ? 'ganho de massa limpa' : 'recomposição corporal'}</span>, focando em progressão de carga nos compostos principais.
                         </>
                     }
                 />

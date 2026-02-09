@@ -5,14 +5,20 @@ import { PersonalAthleteSelector } from './PersonalAthleteSelector';
 import { PersonalAthlete } from '@/mocks/personal';
 
 interface PersonalAssessmentViewProps {
-    onConfirm: (data: { studentId: string; gender: 'male' | 'female'; studentName: string }) => void;
+    onConfirm: (data: {
+        studentId: string;
+        gender: 'male' | 'female';
+        studentName: string;
+        measurements: any;
+        skinfolds: any;
+    }) => void;
     initialAthlete?: PersonalAthlete | null;
 }
 
 export const PersonalAssessmentView: React.FC<PersonalAssessmentViewProps> = ({ onConfirm, initialAthlete }) => {
     const [selectedAthlete, setSelectedAthlete] = useState<PersonalAthlete | null>(initialAthlete || null);
 
-    const handleConfirm = () => {
+    const handleConfirm = (formData: { measurements: any; skinfolds: any }) => {
         if (!selectedAthlete) return;
 
         const gender: 'male' | 'female' = selectedAthlete.gender === 'FEMALE' ? 'female' : 'male';
@@ -20,7 +26,9 @@ export const PersonalAssessmentView: React.FC<PersonalAssessmentViewProps> = ({ 
         onConfirm({
             studentId: selectedAthlete.id,
             studentName: selectedAthlete.name,
-            gender: gender
+            gender: gender,
+            measurements: formData.measurements,
+            skinfolds: formData.skinfolds
         });
     };
 

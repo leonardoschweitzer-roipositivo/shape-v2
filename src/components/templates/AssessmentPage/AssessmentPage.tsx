@@ -3,7 +3,7 @@ import { AssessmentForm } from '@/components/organisms';
 import { Activity } from 'lucide-react';
 
 interface AssessmentPageProps {
-    onConfirm: () => void;
+    onConfirm: (data: { measurements: any; skinfolds: any }) => void;
 }
 
 export const AssessmentPage: React.FC<AssessmentPageProps> = ({ onConfirm }) => {

@@ -27,6 +27,7 @@ interface AthleteDetailsViewProps {
     athlete: PersonalAthlete;
     onBack: () => void;
     onNewAssessment: () => void;
+    onConsultAssessment: (assessmentId: string) => void;
 }
 
 const SectionHeader = ({ icon: Icon, title, subtitle, rightElement }: { icon: any, title: string, subtitle: string, rightElement?: React.ReactNode }) => (
@@ -107,7 +108,7 @@ const StatusSelector = ({ status, onChange }: { status: string, onChange: (s: st
     </div>
 );
 
-export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete, onBack, onNewAssessment }) => {
+export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete, onBack, onNewAssessment, onConsultAssessment }) => {
     const [openAccordion, setOpenAccordion] = useState<string | null>('basics');
     const [isEditing, setIsEditing] = useState(false);
     const [athleteStatus, setAthleteStatus] = useState(athlete.status);
@@ -410,9 +411,12 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                                     {ass.measurements.weight}kg
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
-                                                    <button className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-all flex items-center gap-2 text-xs font-bold uppercase ml-auto">
+                                                    <button
+                                                        onClick={() => onConsultAssessment(ass.id)}
+                                                        className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-all flex items-center gap-2 text-xs font-bold uppercase ml-auto"
+                                                    >
                                                         <Eye size={16} />
-                                                        <span className="hidden md:inline">Relatório</span>
+                                                        <span className="hidden md:inline">Consultar</span>
                                                         <ExternalLink size={12} className="opacity-50" />
                                                     </button>
                                                 </td>

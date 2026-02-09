@@ -32,7 +32,7 @@ import {
   type ProfileType
 } from '@/components';
 import { useAthleteStore } from '@/stores/athleteStore';
-import { mockPersonalAthletes, PersonalAthlete } from '@/mocks/personal';
+import { mockPersonalAthletes, PersonalAthlete, MeasurementHistory } from '@/mocks/personal';
 
 type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details';
 
@@ -48,12 +48,66 @@ const App: React.FC = () => {
   const { settings, profile } = useAthleteStore();
 
   // State for assessment flow
-  const [assessmentData, setAssessmentData] = useState<{ studentName?: string; gender?: 'male' | 'female' }>({});
+  const [assessmentData, setAssessmentData] = useState<{ studentName?: string; gender?: 'male' | 'female', assessment?: MeasurementHistory }>({});
   const [athleteForEvaluation, setAthleteForEvaluation] = useState<PersonalAthlete | null>(null);
 
-  const handleAssessmentSubmit = (data?: { studentName: string; gender: 'male' | 'female' }) => {
+  // State for Personal Athletes (to allow updates during session)
+  const [personalAthletes, setPersonalAthletes] = useState<PersonalAthlete[]>(mockPersonalAthletes);
+
+  const handleAssessmentSubmit = (data?: {
+    studentId?: string;
+    studentName?: string;
+    gender?: 'male' | 'female';
+    measurements?: any;
+    skinfolds?: any;
+  }) => {
     setIsAssessmentOpen(false);
-    if (data) {
+
+    if (!data) return;
+
+    if (data.studentId && data.measurements && data.skinfolds) {
+      // Create new assessment
+      const newAssessment: MeasurementHistory = {
+        id: `assessment-${Date.now()}`,
+        date: new Date().toISOString(),
+        measurements: data.measurements,
+        skinfolds: data.skinfolds
+      };
+
+      // Update state
+      setPersonalAthletes(prev => prev.map(athlete => {
+        if (athlete.id === data.studentId) {
+          return {
+            ...athlete,
+            assessments: [newAssessment, ...athlete.assessments],
+            lastMeasurement: new Date().toISOString(),
+          };
+        }
+        return athlete;
+      }));
+
+      // Update assessment data for results view
+      setAssessmentData({
+        studentName: data.studentName,
+        gender: data.gender,
+        assessment: newAssessment
+      });
+    } else if (data.measurements && data.skinfolds) {
+      // Self/Atleta assessment
+      const newAssessment: MeasurementHistory = {
+        id: `assessment-${Date.now()}`,
+        date: new Date().toISOString(),
+        measurements: data.measurements,
+        skinfolds: data.skinfolds
+      };
+
+      setAssessmentData({
+        studentName: profile?.name || 'Atleta',
+        gender: profile?.gender === 'FEMALE' ? 'female' : 'male',
+        assessment: newAssessment
+      });
+    } else if (data.studentName && data.gender) {
+      // Legacy/Fallback or just simple pass-through
       setAssessmentData({ studentName: data.studentName, gender: data.gender });
     }
 
@@ -61,6 +115,21 @@ const App: React.FC = () => {
     setTimeout(() => {
       setCurrentView('results');
     }, 300);
+  };
+
+  const handleConsultAssessment = (assessmentId: string) => {
+    const selectedAthlete = personalAthletes.find(a => a.id === selectedAthleteId);
+    if (selectedAthlete) {
+      const assessment = selectedAthlete.assessments.find(a => a.id === assessmentId);
+      if (assessment) {
+        setAssessmentData({
+          studentName: selectedAthlete.name,
+          gender: selectedAthlete.gender === 'FEMALE' ? 'female' : 'male',
+          assessment: assessment
+        });
+        setCurrentView('results');
+      }
+    }
   };
 
   const handleInviteAthlete = () => {
@@ -151,22 +220,27 @@ const App: React.FC = () => {
         case 'students':
           return (
             <PersonalAthletesList
+              athletes={personalAthletes}
               onSelectAthlete={(id) => {
                 setSelectedAthleteId(id);
                 setCurrentView('athlete-details');
+              }}
+              onViewEvolution={(id) => {
+                setSelectedAthleteId(id);
+                setCurrentView('evolution');
               }}
               onInviteAthlete={handleInviteAthlete}
               onRegisterStudent={() => setCurrentView('student-registration')}
               onRegisterMeasurement={(id) => {
                 setSelectedAthleteId(id);
-                const athlete = mockPersonalAthletes.find(a => a.id === id);
+                const athlete = personalAthletes.find(a => a.id === id);
                 if (athlete) setAthleteForEvaluation(athlete);
                 setCurrentView('assessment');
               }}
             />
           );
         case 'athlete-details':
-          const selectedAthlete = mockPersonalAthletes.find(a => a.id === selectedAthleteId);
+          const selectedAthlete = personalAthletes.find(a => a.id === selectedAthleteId);
           if (!selectedAthlete) {
             setCurrentView('students');
             return null;
@@ -175,6 +249,7 @@ const App: React.FC = () => {
             <AthleteDetailsView
               athlete={selectedAthlete}
               onBack={() => setCurrentView('students')}
+              onConsultAssessment={handleConsultAssessment}
               onNewAssessment={() => {
                 setAthleteForEvaluation(selectedAthlete);
                 setCurrentView('assessment');
@@ -185,14 +260,11 @@ const App: React.FC = () => {
           return (
             <PersonalAssessmentView
               initialAthlete={athleteForEvaluation}
-              onConfirm={(data) => handleAssessmentSubmit({
-                studentName: data.studentName,
-                gender: data.gender
-              })}
+              onConfirm={handleAssessmentSubmit}
             />
           );
         case 'evolution':
-          return <PersonalEvolutionView />;
+          return <PersonalEvolutionView initialAthleteId={selectedAthleteId} />;
         case 'coach':
           return <PersonalCoachView />;
         case 'hall':
@@ -203,6 +275,7 @@ const App: React.FC = () => {
               onBack={() => setCurrentView('dashboard')}
               studentName={assessmentData.studentName}
               gender={assessmentData.gender}
+              assessment={assessmentData.assessment}
             />
           );
         case 'design-system':
@@ -237,7 +310,7 @@ const App: React.FC = () => {
       case 'results':
         return <AssessmentResults onBack={() => setCurrentView('dashboard')} />;
       case 'assessment':
-        return <AssessmentPage onConfirm={() => handleAssessmentSubmit()} />;
+        return <AssessmentPage onConfirm={(data: any) => handleAssessmentSubmit(data)} />;
       case 'design-system':
         return <DesignSystem />;
       case 'evolution':
@@ -360,7 +433,7 @@ const App: React.FC = () => {
       <AssessmentModal
         isOpen={isAssessmentOpen}
         onClose={() => setIsAssessmentOpen(false)}
-        onConfirm={handleAssessmentSubmit}
+        onConfirm={(data: any) => handleAssessmentSubmit(data)}
       />
 
       <CoachModal

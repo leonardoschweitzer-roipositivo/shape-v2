@@ -55,6 +55,13 @@ export interface MeasurementHistory {
         thighLeft: number;
         calfRight: number;
         calfLeft: number;
+        // New measurements for full analysis
+        wristRight: number;
+        wristLeft: number;
+        kneeRight: number;
+        kneeLeft: number;
+        ankleRight: number;
+        ankleLeft: number;
     };
     skinfolds: {
         tricep: number;
@@ -98,12 +105,12 @@ export interface PersonalProfile {
 }
 
 export const mockPersonalStats: PersonalStats = {
-    totalAthletes: 12,
+    totalAthletes: 8,
     maxAthletes: 20,
     measuredThisWeek: 8,
-    averageScore: 76.5,
-    scoreVariation: 2.3,
-    needsAttention: 3,
+    averageScore: 78.5,
+    scoreVariation: 2.1,
+    needsAttention: 2,
 };
 
 export const mockPersonalProfile: PersonalProfile = {
@@ -123,346 +130,127 @@ export const mockPersonalProfile: PersonalProfile = {
 
 export const mockAthletesNeedingAttention: AthleteNeedingAttention[] = [
     {
-        id: 'athlete-3',
-        name: 'João Silva',
-        email: 'joao@email.com',
+        id: 'athlete-7',
+        name: 'João Ogro Silva',
+        email: 'joao.ogro@email.com',
         avatarUrl: null,
-        score: 72,
-        scoreVariation: -3,
-        lastMeasurement: '2026-01-20',
-        reason: 'Última medição: 18 dias atrás',
-    },
-    {
-        id: 'athlete-6',
-        name: 'Maria Santos',
-        email: 'maria@email.com',
-        avatarUrl: null,
-        score: 68,
-        scoreVariation: 0,
-        lastMeasurement: '2026-02-05',
-        reason: 'Assimetria alta: Braço 9.2%',
+        score: 45,
+        scoreVariation: -5,
+        lastMeasurement: '2026-02-09',
+        reason: 'Proporções abaixo do esperado e BF elevado.',
     },
     {
         id: 'athlete-8',
-        name: 'Pedro Costa',
-        email: 'pedro@email.com',
+        name: 'Maria Curva Oliveira',
+        email: 'maria.curva@email.com',
         avatarUrl: null,
-        score: 65,
-        scoreVariation: -5,
-        lastMeasurement: '2026-02-04',
-        reason: 'Score caiu 5pts no último mês',
-    },
+        score: 48,
+        scoreVariation: -3,
+        lastMeasurement: '2026-02-09',
+        reason: 'WHR desalinhado e baixo tônus muscular.',
+    }
 ];
 
 export const mockTopPerformers: TopPerformer[] = [
-    {
-        id: 'athlete-1',
-        name: 'Ana Lima',
-        score: 92,
-        ratio: 1.58,
-        position: 1,
-    },
-    {
-        id: 'athlete-2',
-        name: 'Carlos Souza',
-        score: 88,
-        ratio: 1.52,
-        position: 2,
-    },
-    {
-        id: 'athlete-4',
-        name: 'Fernanda Dias',
-        score: 85,
-        ratio: 1.49,
-        position: 3,
-    },
-    {
-        id: 'athlete-5',
-        name: 'Lucas Alves',
-        score: 83,
-        ratio: 1.47,
-        position: 4,
-    },
-    {
-        id: 'athlete-7',
-        name: 'Julia Rocha',
-        score: 81,
-        ratio: 1.45,
-        position: 5,
-    },
+    { id: 'athlete-1', name: 'Ricardo Souza', score: 92, ratio: 1.62, position: 1 },
+    { id: 'athlete-2', name: 'Fernanda Lima', score: 89, ratio: 1.58, position: 2 },
+    { id: 'athlete-3', name: 'Bruno Silva', score: 85, ratio: 1.55, position: 3 },
 ];
 
 export const mockRecentActivity: RecentActivity[] = [
-    {
-        id: '1',
-        athleteName: 'João Silva',
-        action: 'Registrou medidas',
-        timestamp: '2026-02-07T10:30:00',
-        type: 'measurement',
-    },
-    {
-        id: '2',
-        athleteName: 'Maria Santos',
-        action: 'Atingiu meta de cintura',
-        timestamp: '2026-02-07T09:15:00',
-        type: 'goal',
-    },
-    {
-        id: '3',
-        athleteName: 'Pedro Costa',
-        action: 'Registrou medidas',
-        timestamp: '2026-02-06T18:45:00',
-        type: 'measurement',
-    },
-    {
-        id: '4',
-        athleteName: 'Ana Lima',
-        action: 'Bateu recorde de score',
-        timestamp: '2026-02-06T16:20:00',
-        type: 'record',
-    },
-    {
-        id: '5',
-        athleteName: 'Carlos Souza',
-        action: 'Registrou medidas',
-        timestamp: '2026-02-05T11:00:00',
-        type: 'measurement',
-    },
+    { id: '1', athleteName: 'João Ogro Silva', action: 'Registrou medidas', timestamp: '2026-02-09T10:30:00', type: 'measurement' },
+    { id: '2', athleteName: 'Maria Curva Oliveira', action: 'Registrou medidas', timestamp: '2026-02-09T09:15:00', type: 'measurement' },
 ];
 
-const generateAssessments = (gender: 'MALE' | 'FEMALE'): MeasurementHistory[] => {
-    const isMale = gender === 'MALE';
-    return [
-        {
-            id: 'ass-1',
-            date: '2026-02-07',
-            measurements: {
-                weight: isMale ? 88.5 : 62.0,
-                height: isMale ? 178 : 165,
-                neck: isMale ? 42 : 32,
-                shoulders: isMale ? 133 : 108,
-                chest: isMale ? 120 : 92,
-                waist: isMale ? 85 : 64,
-                hips: isMale ? 100 : 102,
-                armRight: isMale ? 44.5 : 30,
-                armLeft: isMale ? 44.0 : 30,
-                forearmRight: isMale ? 32.2 : 24,
-                forearmLeft: isMale ? 32.0 : 24,
-                thighRight: isMale ? 60.5 : 58,
-                thighLeft: isMale ? 60.0 : 58,
-                calfRight: isMale ? 38.0 : 36,
-                calfLeft: isMale ? 38.0 : 36,
-            },
-            skinfolds: {
-                tricep: 12,
-                subscapular: 15,
-                chest: 8,
-                axillary: 10,
-                suprailiac: 14,
-                abdominal: 18,
-                thigh: 12,
-            },
-        },
-        {
-            id: 'ass-2',
-            date: '2026-01-07',
-            measurements: {
-                weight: isMale ? 86 : 60.0,
-                height: isMale ? 178 : 165,
-                neck: isMale ? 41 : 31,
-                shoulders: isMale ? 130 : 105,
-                chest: isMale ? 118 : 90,
-                waist: isMale ? 88 : 66,
-                hips: isMale ? 98 : 100,
-                armRight: isMale ? 43 : 29,
-                armLeft: isMale ? 43 : 29,
-                forearmRight: isMale ? 31 : 23,
-                forearmLeft: isMale ? 31 : 23,
-                thighRight: isMale ? 59 : 57,
-                thighLeft: isMale ? 59 : 57,
-                calfRight: isMale ? 37 : 35,
-                calfLeft: isMale ? 37 : 35,
-            },
-            skinfolds: {
-                tricep: 14,
-                subscapular: 16,
-                chest: 9,
-                axillary: 11,
-                suprailiac: 16,
-                abdominal: 20,
-                thigh: 14,
-            },
-        },
-    ];
+// --- MALE ATHLETES ---
+
+const m1_current: MeasurementHistory = {
+    id: 'm1-curr', date: '2026-02-08',
+    measurements: { weight: 95.5, height: 182, neck: 44, shoulders: 142, chest: 125, waist: 82, hips: 102, armRight: 46.5, armLeft: 46.5, forearmRight: 36, forearmLeft: 36, thighRight: 68, thighLeft: 68, calfRight: 42, calfLeft: 42, wristRight: 18, wristLeft: 18, kneeRight: 42, kneeLeft: 42, ankleRight: 24, ankleLeft: 24 },
+    skinfolds: { tricep: 8, subscapular: 10, chest: 6, axillary: 8, suprailiac: 8, abdominal: 10, thigh: 8 }
+};
+const m1_old: MeasurementHistory = {
+    id: 'm1-old', date: '2025-08-08',
+    measurements: { weight: 92.0, height: 182, neck: 43, shoulders: 138, chest: 120, waist: 86, hips: 103, armRight: 45.0, armLeft: 44.0, forearmRight: 35, forearmLeft: 34.5, thighRight: 66, thighLeft: 66, calfRight: 41, calfLeft: 41, wristRight: 18, wristLeft: 18, kneeRight: 41, kneeLeft: 41, ankleRight: 24, ankleLeft: 24 },
+    skinfolds: { tricep: 12, subscapular: 14, chest: 9, axillary: 11, suprailiac: 14, abdominal: 16, thigh: 12 }
+};
+
+const m2_current: MeasurementHistory = {
+    id: 'm2-curr', date: '2026-02-05',
+    measurements: { weight: 82.0, height: 175, neck: 40, shoulders: 132, chest: 112, waist: 76, hips: 94, armRight: 41, armLeft: 41, forearmRight: 32, forearmLeft: 32, thighRight: 58, thighLeft: 58, calfRight: 38, calfLeft: 38, wristRight: 17, wristLeft: 17, kneeRight: 38, kneeLeft: 38, ankleRight: 22, ankleLeft: 22 },
+    skinfolds: { tricep: 7, subscapular: 9, chest: 5, axillary: 7, suprailiac: 6, abdominal: 8, thigh: 8 }
+};
+const m2_old: MeasurementHistory = {
+    id: 'm2-old', date: '2025-08-05',
+    measurements: { weight: 78.0, height: 175, neck: 39, shoulders: 125, chest: 108, waist: 80, hips: 95, armRight: 39, armLeft: 38.5, forearmRight: 31, forearmLeft: 31, thighRight: 56, thighLeft: 56, calfRight: 37, calfLeft: 37, wristRight: 17, wristLeft: 17, kneeRight: 37, kneeLeft: 37, ankleRight: 22, ankleLeft: 22 },
+    skinfolds: { tricep: 10, subscapular: 12, chest: 8, axillary: 10, suprailiac: 12, abdominal: 14, thigh: 10 }
+};
+
+const m3_current: MeasurementHistory = {
+    id: 'm3-curr', date: '2026-02-01',
+    measurements: { weight: 105.0, height: 178, neck: 46, shoulders: 140, chest: 130, waist: 95, hips: 110, armRight: 48, armLeft: 48, forearmRight: 38, forearmLeft: 38, thighRight: 72, thighLeft: 72, calfRight: 45, calfLeft: 45, wristRight: 19, wristLeft: 19, kneeRight: 44, kneeLeft: 44, ankleRight: 26, ankleLeft: 26 },
+    skinfolds: { tricep: 14, subscapular: 16, chest: 10, axillary: 12, suprailiac: 15, abdominal: 18, thigh: 14 }
+};
+const m3_old: MeasurementHistory = {
+    id: 'm3-old', date: '2025-08-01',
+    measurements: { weight: 115.0, height: 178, neck: 46, shoulders: 138, chest: 132, waist: 108, hips: 115, armRight: 47, armLeft: 47, forearmRight: 37, forearmLeft: 37, thighRight: 74, thighLeft: 74, calfRight: 45, calfLeft: 45, wristRight: 19, wristLeft: 19, kneeRight: 44, kneeLeft: 44, ankleRight: 26, ankleLeft: 26 },
+    skinfolds: { tricep: 20, subscapular: 24, chest: 18, axillary: 20, suprailiac: 25, abdominal: 28, thigh: 20 }
+};
+
+const m4_current: MeasurementHistory = {
+    id: 'm4-curr', date: '2026-02-09',
+    measurements: { weight: 110.0, height: 175, neck: 42, shoulders: 115, chest: 105, waist: 112, hips: 115, armRight: 36, armLeft: 35.5, forearmRight: 28, forearmLeft: 28, thighRight: 60, thighLeft: 59, calfRight: 38, calfLeft: 38, wristRight: 18.5, wristLeft: 18.5, kneeRight: 42, kneeLeft: 42, ankleRight: 25, ankleLeft: 25 },
+    skinfolds: { tricep: 25, subscapular: 30, chest: 22, axillary: 28, suprailiac: 35, abdominal: 40, thigh: 25 }
+};
+
+// --- FEMALE ATHLETES ---
+
+const f1_current: MeasurementHistory = {
+    id: 'f1-curr', date: '2026-02-08',
+    measurements: { weight: 68.0, height: 165, neck: 32, shoulders: 108, chest: 92, waist: 64, hips: 105, armRight: 31, armLeft: 31, forearmRight: 25, forearmLeft: 25, thighRight: 64, thighLeft: 64, calfRight: 38, calfLeft: 38, wristRight: 15, wristLeft: 15, kneeRight: 36, kneeLeft: 36, ankleRight: 21, ankleLeft: 21 },
+    skinfolds: { tricep: 12, subscapular: 14, chest: 8, axillary: 10, suprailiac: 10, abdominal: 12, thigh: 14 }
+};
+const f1_old: MeasurementHistory = {
+    id: 'f1-old', date: '2025-08-08',
+    measurements: { weight: 64.0, height: 165, neck: 31, shoulders: 105, chest: 90, waist: 68, hips: 98, armRight: 29, armLeft: 29, forearmRight: 24, forearmLeft: 24, thighRight: 59, thighLeft: 59, calfRight: 36, calfLeft: 36, wristRight: 15, wristLeft: 15, kneeRight: 35, kneeLeft: 35, ankleRight: 21, ankleLeft: 21 },
+    skinfolds: { tricep: 15, subscapular: 16, chest: 10, axillary: 12, suprailiac: 14, abdominal: 16, thigh: 18 }
+};
+
+const f2_current: MeasurementHistory = {
+    id: 'f2-curr', date: '2026-02-06',
+    measurements: { weight: 56.0, height: 162, neck: 30, shoulders: 102, chest: 88, waist: 60, hips: 92, armRight: 28, armLeft: 28, forearmRight: 23, forearmLeft: 23, thighRight: 54, thighLeft: 54, calfRight: 34, calfLeft: 34, wristRight: 14, wristLeft: 14, kneeRight: 34, kneeLeft: 34, ankleRight: 20, ankleLeft: 20 },
+    skinfolds: { tricep: 10, subscapular: 10, chest: 6, axillary: 8, suprailiac: 8, abdominal: 9, thigh: 11 }
+};
+const f2_old: MeasurementHistory = {
+    id: 'f2-old', date: '2025-08-06',
+    measurements: { weight: 60.0, height: 162, neck: 30, shoulders: 98, chest: 90, waist: 66, hips: 94, armRight: 26, armLeft: 26, forearmRight: 22, forearmLeft: 22, thighRight: 56, thighLeft: 56, calfRight: 35, calfLeft: 35, wristRight: 14, wristLeft: 14, kneeRight: 34, kneeLeft: 34, ankleRight: 20, ankleLeft: 20 },
+    skinfolds: { tricep: 14, subscapular: 15, chest: 10, axillary: 12, suprailiac: 14, abdominal: 16, thigh: 16 }
+};
+
+const f3_current: MeasurementHistory = {
+    id: 'f3-curr', date: '2026-02-03',
+    measurements: { weight: 72.0, height: 170, neck: 34, shoulders: 118, chest: 100, waist: 70, hips: 102, armRight: 35, armLeft: 35, forearmRight: 28, forearmLeft: 28, thighRight: 62, thighLeft: 62, calfRight: 40, calfLeft: 40, wristRight: 16, wristLeft: 16, kneeRight: 38, kneeLeft: 38, ankleRight: 22, ankleLeft: 22 },
+    skinfolds: { tricep: 9, subscapular: 10, chest: 6, axillary: 8, suprailiac: 9, abdominal: 10, thigh: 10 }
+};
+const f3_old: MeasurementHistory = {
+    id: 'f3-old', date: '2025-08-03',
+    measurements: { weight: 70.0, height: 170, neck: 33, shoulders: 112, chest: 98, waist: 74, hips: 104, armRight: 33, armLeft: 32.5, forearmRight: 27, forearmLeft: 27, thighRight: 60, thighLeft: 60, calfRight: 39, calfLeft: 39, wristRight: 16, wristLeft: 16, kneeRight: 37, kneeLeft: 37, ankleRight: 22, ankleLeft: 22 },
+    skinfolds: { tricep: 12, subscapular: 14, chest: 10, axillary: 12, suprailiac: 14, abdominal: 16, thigh: 14 }
+};
+
+const f4_current: MeasurementHistory = {
+    id: 'f4-curr', date: '2026-02-09',
+    measurements: { weight: 85.0, height: 160, neck: 36, shoulders: 95, chest: 100, waist: 98, hips: 110, armRight: 34, armLeft: 33.5, forearmRight: 26, forearmLeft: 26, thighRight: 62, thighLeft: 61, calfRight: 37, calfLeft: 37, wristRight: 15.5, wristLeft: 15.5, kneeRight: 38, kneeLeft: 38, ankleRight: 22, ankleLeft: 22 },
+    skinfolds: { tricep: 28, subscapular: 32, chest: 24, axillary: 30, suprailiac: 38, abdominal: 45, thigh: 35 }
 };
 
 export const mockPersonalAthletes: PersonalAthlete[] = [
-    {
-        id: 'athlete-1',
-        name: 'Ana Lima',
-        email: 'ana@email.com',
-        gender: 'FEMALE',
-        avatarUrl: null,
-        score: 92,
-        scoreVariation: 3,
-        ratio: 1.58,
-        lastMeasurement: '2026-02-07',
-        status: 'active',
-        linkedSince: '2023-03-10',
-        assessments: generateAssessments('FEMALE'),
-    },
-    {
-        id: 'athlete-2',
-        name: 'Carlos Souza',
-        email: 'carlos@email.com',
-        gender: 'MALE',
-        avatarUrl: null,
-        score: 88,
-        scoreVariation: 1,
-        ratio: 1.52,
-        lastMeasurement: '2026-02-05',
-        status: 'active',
-        linkedSince: '2023-05-22',
-        assessments: generateAssessments('MALE'),
-    },
-    {
-        id: 'athlete-3',
-        name: 'João Silva',
-        email: 'joao@email.com',
-        gender: 'MALE',
-        avatarUrl: null,
-        score: 72,
-        scoreVariation: -3,
-        ratio: 1.42,
-        lastMeasurement: '2026-01-20',
-        status: 'inactive',
-        linkedSince: '2023-08-15',
-        assessments: generateAssessments('MALE'),
-    },
-    {
-        id: 'athlete-4',
-        name: 'Fernanda Dias',
-        email: 'fernanda@email.com',
-        gender: 'FEMALE',
-        avatarUrl: null,
-        score: 85,
-        scoreVariation: 2,
-        ratio: 1.49,
-        lastMeasurement: '2026-02-02',
-        status: 'active',
-        linkedSince: '2023-06-18',
-        assessments: generateAssessments('FEMALE'),
-    },
-    {
-        id: 'athlete-5',
-        name: 'Lucas Alves',
-        email: 'lucas@email.com',
-        gender: 'MALE',
-        avatarUrl: null,
-        score: 83,
-        scoreVariation: 0,
-        ratio: 1.47,
-        lastMeasurement: '2026-02-06',
-        status: 'active',
-        linkedSince: '2023-09-05',
-        assessments: generateAssessments('MALE'),
-    },
-    {
-        id: 'athlete-6',
-        name: 'Maria Santos',
-        email: 'maria@email.com',
-        gender: 'FEMALE',
-        avatarUrl: null,
-        score: 68,
-        scoreVariation: 0,
-        ratio: 1.38,
-        lastMeasurement: '2026-02-05',
-        status: 'attention',
-        linkedSince: '2024-01-12',
-        assessments: generateAssessments('FEMALE'),
-    },
-    {
-        id: 'athlete-7',
-        name: 'Julia Rocha',
-        email: 'julia@email.com',
-        gender: 'FEMALE',
-        avatarUrl: null,
-        score: 81,
-        scoreVariation: 4,
-        ratio: 1.45,
-        lastMeasurement: '2026-02-07',
-        status: 'active',
-        linkedSince: '2023-11-20',
-        assessments: generateAssessments('FEMALE'),
-    },
-    {
-        id: 'athlete-8',
-        name: 'Pedro Costa',
-        email: 'pedro@email.com',
-        gender: 'MALE',
-        avatarUrl: null,
-        score: 65,
-        scoreVariation: -5,
-        ratio: 1.35,
-        lastMeasurement: '2026-02-04',
-        status: 'attention',
-        linkedSince: '2024-02-08',
-        assessments: generateAssessments('MALE'),
-    },
-    {
-        id: 'athlete-9',
-        name: 'Beatriz Oliveira',
-        email: 'beatriz@email.com',
-        gender: 'FEMALE',
-        avatarUrl: null,
-        score: 79,
-        scoreVariation: 1,
-        ratio: 1.43,
-        lastMeasurement: '2026-02-06',
-        status: 'active',
-        linkedSince: '2023-10-30',
-        assessments: generateAssessments('FEMALE'),
-    },
-    {
-        id: 'athlete-10',
-        name: 'Rafael Mendes',
-        email: 'rafael@email.com',
-        gender: 'MALE',
-        avatarUrl: null,
-        score: 76,
-        scoreVariation: 2,
-        ratio: 1.41,
-        lastMeasurement: '2026-02-03',
-        status: 'active',
-        linkedSince: '2024-03-15',
-        assessments: generateAssessments('MALE'),
-    },
-    {
-        id: 'athlete-11',
-        name: 'Camila Ferreira',
-        email: 'camila@email.com',
-        gender: 'FEMALE',
-        avatarUrl: null,
-        score: 74,
-        scoreVariation: -1,
-        ratio: 1.40,
-        lastMeasurement: '2026-01-28',
-        status: 'inactive',
-        linkedSince: '2024-04-22',
-        assessments: generateAssessments('FEMALE'),
-    },
-    {
-        id: 'athlete-12',
-        name: 'Thiago Martins',
-        email: 'thiago@email.com',
-        gender: 'MALE',
-        avatarUrl: null,
-        score: 70,
-        scoreVariation: 0,
-        ratio: 1.39,
-        lastMeasurement: '2026-02-01',
-        status: 'active',
-        linkedSince: '2024-05-10',
-        assessments: generateAssessments('MALE'),
-    },
+    { id: 'athlete-1', name: 'Ricardo Souza', email: 'ricardo@email.com', gender: 'MALE', avatarUrl: null, score: 92, scoreVariation: 5, ratio: 1.62, lastMeasurement: '2026-02-08', status: 'active', linkedSince: '2024-01-15', assessments: [m1_current, m1_old] },
+    { id: 'athlete-2', name: 'Fernanda Lima', email: 'fernanda@email.com', gender: 'FEMALE', avatarUrl: null, score: 89, scoreVariation: 4, ratio: 1.58, lastMeasurement: '2026-02-08', status: 'active', linkedSince: '2024-02-20', assessments: [f1_current, f1_old] },
+    { id: 'athlete-3', name: 'Bruno Silva', email: 'bruno@email.com', gender: 'MALE', avatarUrl: null, score: 85, scoreVariation: 8, ratio: 1.55, lastMeasurement: '2026-02-05', status: 'active', linkedSince: '2023-11-10', assessments: [m2_current, m2_old] },
+    { id: 'athlete-4', name: 'Camila Rocha', email: 'camila@email.com', gender: 'FEMALE', avatarUrl: null, score: 88, scoreVariation: 7, ratio: 1.52, lastMeasurement: '2026-02-06', status: 'active', linkedSince: '2023-10-05', assessments: [f2_current, f2_old] },
+    { id: 'athlete-5', name: 'Gabriel Torres', email: 'gabriel@email.com', gender: 'MALE', avatarUrl: null, score: 78, scoreVariation: 12, ratio: 1.45, lastMeasurement: '2026-02-01', status: 'active', linkedSince: '2024-03-01', assessments: [m3_current, m3_old] },
+    { id: 'athlete-6', name: 'Larissa Mendes', email: 'larissa@email.com', gender: 'FEMALE', avatarUrl: null, score: 84, scoreVariation: 6, ratio: 1.50, lastMeasurement: '2026-02-03', status: 'active', linkedSince: '2023-12-12', assessments: [f3_current, f3_old] },
+    { id: 'athlete-7', name: 'João Ogro Silva', email: 'joao.ogro@email.com', gender: 'MALE', avatarUrl: null, score: 45, scoreVariation: -5, ratio: 1.02, lastMeasurement: '2026-02-09', status: 'attention', linkedSince: '2024-05-01', assessments: [m4_current] },
+    { id: 'athlete-8', name: 'Maria Curva Oliveira', email: 'maria.curva@email.com', gender: 'FEMALE', avatarUrl: null, score: 48, scoreVariation: -3, ratio: 0.97, lastMeasurement: '2026-02-09', status: 'attention', linkedSince: '2024-05-10', assessments: [f4_current] },
 ];

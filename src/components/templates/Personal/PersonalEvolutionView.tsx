@@ -2,10 +2,32 @@ import React, { useState } from 'react';
 import { TrendingUp, User, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { Evolution } from '../Evolution';
 import { PersonalAthleteSelector } from './PersonalAthleteSelector';
-import { PersonalAthlete } from '@/mocks/personal';
+import { mockPersonalAthletes, PersonalAthlete } from '@/mocks/personal';
 
-export const PersonalEvolutionView: React.FC = () => {
-    const [selectedAthlete, setSelectedAthlete] = useState<PersonalAthlete | null>(null);
+interface PersonalEvolutionViewProps {
+    initialAthleteId?: string | null;
+}
+
+export const PersonalEvolutionView: React.FC<PersonalEvolutionViewProps> = ({ initialAthleteId }) => {
+    const [selectedAthlete, setSelectedAthlete] = useState<PersonalAthlete | null>(() => {
+        if (initialAthleteId) {
+            return mockPersonalAthletes.find(a => a.id === initialAthleteId) || null;
+        }
+        return null;
+    });
+
+    React.useEffect(() => {
+        if (initialAthleteId) {
+            const athlete = mockPersonalAthletes.find(a => a.id === initialAthleteId);
+            if (athlete) setSelectedAthlete(athlete);
+        } else {
+            // Optional: If initialAthleteId becomes null, do we want to reset? 
+            // Ideally yes if we want to force selection, but usually this component mounts with a specific ID.
+            // Let's keep current state if id is null/undefined to avoid resetting when just navigating back/forth if app state persists it differently.
+            // But for the use case "Click Sidebar -> Show Selector", we might want to pass null.
+            setSelectedAthlete(null);
+        }
+    }, [initialAthleteId]);
 
     return (
         <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth custom-scrollbar flex flex-col">

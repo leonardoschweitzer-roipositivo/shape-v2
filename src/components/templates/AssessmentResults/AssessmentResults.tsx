@@ -5,6 +5,8 @@ import {
     Save,
     ChevronLeft
 } from 'lucide-react';
+import { MeasurementHistory } from '@/mocks/personal';
+import { Measurements } from './types';
 
 // Import extracted tab components
 import { DiagnosticTab, ProportionsTab, AsymmetryTab } from './tabs';
@@ -14,6 +16,9 @@ import { colors as designColors, typography as designTypography, spacing as desi
 
 interface AssessmentResultsProps {
     onBack: () => void;
+    studentName?: string;
+    gender?: 'male' | 'female';
+    assessment?: MeasurementHistory;
 }
 
 // Token styles for main component
@@ -88,7 +93,8 @@ const tokenStyles = {
 export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
     onBack,
     studentName,
-    gender
+    gender,
+    assessment
 }) => {
     const [activeTab, setActiveTab] = useState<'diagnostic' | 'golden' | 'asymmetry'>('diagnostic');
 
@@ -97,6 +103,27 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
         { id: 'golden', label: 'Proporções Áureas' },
         { id: 'asymmetry', label: 'Análise de Assimetrias' }
     ];
+
+    // Map assessment data to local Measurements format
+    const userMeasurements: Measurements | undefined = assessment ? {
+        altura: assessment.measurements.height,
+        peso: assessment.measurements.weight,
+        ombros: assessment.measurements.shoulders,
+        peito: assessment.measurements.chest,
+        costas: assessment.measurements.chest * 1.05, // Approximation
+        cintura: assessment.measurements.waist,
+        quadril: assessment.measurements.hips,
+        braco: Math.max(assessment.measurements.armRight, assessment.measurements.armLeft),
+        antebraco: Math.max(assessment.measurements.forearmRight, assessment.measurements.forearmLeft),
+        punho: (assessment.measurements.wristRight + assessment.measurements.wristLeft) / 2 || 17,
+        pescoco: assessment.measurements.neck,
+        coxa: Math.max(assessment.measurements.thighRight, assessment.measurements.thighLeft),
+        joelho: (assessment.measurements.kneeRight + assessment.measurements.kneeLeft) / 2 || 40,
+        panturrilha: Math.max(assessment.measurements.calfRight, assessment.measurements.calfLeft),
+        tornozelo: (assessment.measurements.ankleRight + assessment.measurements.ankleLeft) / 2 || 22,
+        pelvis: assessment.measurements.hips,
+        cabeca: 56 // Default
+    } : undefined;
 
     const handleSaveAssessment = () => {
         // Data to be saved (filtered as per requirements)
@@ -150,7 +177,7 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
                         </button>
                         <h2 style={tokenStyles.headerTitle}>RESULTADOS DA AVALIAÇÃO</h2>
                         <p className="text-sm text-gray-400 flex items-center gap-2 mt-2 font-light">
-                            Análise completa do físico de <strong className="text-gray-200 font-medium">{studentName || 'João Silva'}</strong> • {new Date().toLocaleDateString()}
+                            Análise completa do físico de <strong className="text-gray-200 font-medium">{studentName || 'João Silva'}</strong> • {assessment ? new Date(assessment.date).toLocaleDateString() : new Date().toLocaleDateString()}
                         </p>
                     </div>
                     <div className="flex gap-3 flex-wrap">
@@ -188,9 +215,9 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
 
                 {/* Main Content - Render active tab */}
                 <div className="flex flex-col gap-6">
-                    {activeTab === 'diagnostic' && <DiagnosticTab />}
-                    {activeTab === 'golden' && <ProportionsTab gender={gender} />}
-                    {activeTab === 'asymmetry' && <AsymmetryTab />}
+                    {activeTab === 'diagnostic' && <DiagnosticTab assessment={assessment} gender={gender} />}
+                    {activeTab === 'golden' && <ProportionsTab gender={gender} userMeasurements={userMeasurements} />}
+                    {activeTab === 'asymmetry' && <AsymmetryTab assessment={assessment} />}
                 </div>
             </div>
         </div>

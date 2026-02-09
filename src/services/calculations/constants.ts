@@ -51,11 +51,14 @@ export const CLASSIC_PHYSIQUE = {
     /** Peitoral = Punho × 7.0 */
     PEITO_PUNHO: 7.0,
 
+    /** Braço = Punho × 2.70 */
+    BRACO_PUNHO: 2.70,
+
     /** Cintura = Altura × 0.42 (super apertada) */
     CINTURA_ALTURA: 0.42,
 
-    /** Coxa = Cintura × 0.97 */
-    COXA_CINTURA: 0.97,
+    /** Coxa = Joelho × 1.85 */
+    COXA_JOELHO: 1.85,
 
     /** Panturrilha = Braço × 0.96 */
     PANTURRILHA_BRACO: 0.96,
@@ -92,6 +95,9 @@ export const MENS_PHYSIQUE = {
     /** Peitoral = Punho × 6.2 */
     PEITO_PUNHO: 6.2,
 
+    /** Braço = Punho × 2.40 */
+    BRACO_PUNHO: 2.40,
+
     /** Cintura = Altura × 0.455 (menos extrema) */
     CINTURA_ALTURA: 0.455,
 
@@ -126,6 +132,9 @@ export const OPEN_BODYBUILDING = {
 
     /** Peitoral = Punho × 7.5 */
     PEITO_PUNHO: 7.5,
+
+    /** Braço = Punho × 3.11 */
+    BRACO_PUNHO: 3.11,
 
     /** Cintura = Altura × 0.44 */
     CINTURA_ALTURA: 0.44,

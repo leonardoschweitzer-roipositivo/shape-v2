@@ -5,7 +5,7 @@ import { AssessmentForm } from '../AssessmentForm';
 interface AssessmentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (data: { measurements: any; skinfolds: any }) => void;
 }
 
 export const AssessmentModal: React.FC<AssessmentModalProps> = ({ isOpen, onClose, onConfirm }) => {
@@ -20,7 +20,7 @@ export const AssessmentModal: React.FC<AssessmentModalProps> = ({ isOpen, onClos
       ></div>
 
       {/* Modal Content */}
-      <div className="relative bg-[#131B2C] border border-white/10 w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-fade-in-up">
+      <div className="bg-[#131B2C] border border-white/10 w-full max-w-4xl h-[90vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-fade-in-up">
 
         {/* Header */}
         <div className="p-6 border-b border-white/5 flex items-start justify-between bg-[#131B2C] z-10 shrink-0">
@@ -45,21 +45,7 @@ export const AssessmentModal: React.FC<AssessmentModalProps> = ({ isOpen, onClos
         </div>
 
         {/* Form Content */}
-        <div className="flex-1 overflow-hidden">
-          {/* Pass isModal=true so the form knows it's inside a modal (e.g. padding adjustments if needed, though we handled most structure here or in form). 
-                 Wait, I put the scrolling Logic INSIDE AssessmentForm. 
-                 If AssessmentModal has a header and footer, AssessmentForm shouldn't duplicate the footer actions if I want them fixed.
-                 But AssessmentForm HAS the footer action. 
-                 So in AssessmentModal, I should probably render AssessmentForm without the header/footer from AssessmentModal if I want to reuse exactly?
-                 Actually, AssessmentModal has a custom Header with X close button. AssessmentForm has no X button.
-                 So AssessmentModal keeps its Header.
-                 AssessmentForm has the content + footer button.
-                 So I should render AssessmentForm inside the modal body.
-                 But AssessmentModal was flex flex-col with overflow hidden on the container, and scroll on the body.
-                 I need to make sure AssessmentForm handles scrolling or fits in.
-                 In `AssessmentForm`, I set `overflow-y-auto` on the middle div.
-                 So if I put `AssessmentForm` in a flex-1 container, it should work.
-             */}
+        <div className="flex-1 overflow-hidden relative flex flex-col">
           <AssessmentForm onConfirm={onConfirm} isModal={true} />
         </div>
       </div>

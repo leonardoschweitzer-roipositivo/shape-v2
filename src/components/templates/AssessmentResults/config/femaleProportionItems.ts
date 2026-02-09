@@ -124,10 +124,11 @@ export const getFemaleProportionItems = (
                 title: "Índice Ampulheta",
                 badge: "HARMONIA",
                 metrics: [
-                    { label: 'Índice Atual', value: hourglassAtual.toFixed(2) },
+                    { label: 'Ratio Atual', value: hourglassAtual.toFixed(2) },
                     { label: 'Meta', value: hourglassTarget.toFixed(2) }
                 ],
                 currentValue: hourglassAtual.toFixed(2),
+                valueLabel: "RATIO ATUAL",
                 valueUnit: "",
                 description: "Equilíbrio entre Busto e Quadril em relação à Cintura.",
                 statusLabel: getStatus(hgScore),

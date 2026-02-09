@@ -1,31 +1,32 @@
 import React, { useState, useMemo } from 'react';
-import { Search, UserPlus, Eye, Activity, MoreVertical } from 'lucide-react';
+import { Search, UserPlus, Eye, Activity, MoreVertical, TrendingUp, ClipboardList } from 'lucide-react';
 import { mockPersonalAthletes, PersonalAthlete } from '@/mocks/personal';
 
 interface PersonalAthletesListProps {
     onSelectAthlete: (athleteId: string) => void;
+    onViewEvolution: (athleteId: string) => void;
     onInviteAthlete: () => void;
     onRegisterStudent: () => void;
     onRegisterMeasurement: (athleteId: string) => void;
+    athletes?: PersonalAthlete[];
 }
 
 type AthleteStatus = 'all' | 'active' | 'inactive' | 'attention';
 
 export const PersonalAthletesList: React.FC<PersonalAthletesListProps> = ({
     onSelectAthlete,
+    onViewEvolution,
     onInviteAthlete,
     onRegisterStudent,
     onRegisterMeasurement,
+    athletes = mockPersonalAthletes,
 }) => {
     // State for student details modal
-
 
     const [searchQuery, setSearchQuery] = useState('');
     const [filter, setFilter] = useState<AthleteStatus>('all');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
-
-    const athletes = mockPersonalAthletes;
 
     const filteredAthletes = useMemo(() => {
         let result = athletes;
@@ -56,12 +57,6 @@ export const PersonalAthletesList: React.FC<PersonalAthletesListProps> = ({
     const totalPages = Math.ceil(filteredAthletes.length / itemsPerPage);
 
     const getStatusBadge = (status: string) => {
-        const ATHLETE_DATA = [
-            { id: '1', name: 'João Silva', status: 'active', lastCheckin: 'Hoje, 09:30', plan: 'Pro', gender: 'male' },
-            { id: '2', name: 'Maria Oliveira', status: 'active', lastCheckin: 'Ontem', plan: 'Basic', gender: 'female' },
-            { id: '3', name: 'Pedro Santos', status: 'inactive', lastCheckin: 'Há 5 dias', plan: 'Pro', gender: 'male' },
-            { id: '4', name: 'Ana Costa', status: 'active', lastCheckin: 'Hoje, 14:00', plan: 'Premium', gender: 'female' },
-        ];
         const config = {
             active: {
                 label: 'Ativo',
@@ -101,9 +96,6 @@ export const PersonalAthletesList: React.FC<PersonalAthletesListProps> = ({
         if (diffDays < 7) return `${diffDays} dias`;
         return `${Math.floor(diffDays / 7)} semanas`;
     };
-
-    // Modal Component (Inline for simplicity, can be extracted later)
-
 
     return (
         <div className="flex-1 p-4 md:p-8 flex flex-col w-full">
@@ -221,10 +213,20 @@ export const PersonalAthletesList: React.FC<PersonalAthletesListProps> = ({
                                                         e.stopPropagation();
                                                         onSelectAthlete(athlete.id);
                                                     }}
-                                                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                                                    title="Ver Perfil"
+                                                    className="p-2 hover:bg-white/10 rounded-lg transition-colors group relative"
+                                                    title="Visualizar Ficha"
                                                 >
                                                     <Eye size={18} className="text-gray-400 hover:text-primary" />
+                                                </button>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        onViewEvolution(athlete.id);
+                                                    }}
+                                                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                                                    title="Visualizar Evolução"
+                                                >
+                                                    <TrendingUp size={18} className="text-gray-400 hover:text-primary" />
                                                 </button>
                                                 <button
                                                     onClick={(e) => {
@@ -232,18 +234,9 @@ export const PersonalAthletesList: React.FC<PersonalAthletesListProps> = ({
                                                         onRegisterMeasurement(athlete.id);
                                                     }}
                                                     className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                                                    title="Registrar Medição"
+                                                    title="Fazer Avaliação"
                                                 >
-                                                    <Activity size={18} className="text-gray-400 hover:text-primary" />
-                                                </button>
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                    }}
-                                                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                                                    title="Mais Opções"
-                                                >
-                                                    <MoreVertical size={18} className="text-gray-400 hover:text-primary" />
+                                                    <ClipboardList size={18} className="text-gray-400 hover:text-primary" />
                                                 </button>
                                             </div>
                                         </td>
@@ -307,8 +300,6 @@ export const PersonalAthletesList: React.FC<PersonalAthletesListProps> = ({
                     </div>
                 )}
             </div>
-
-
         </div>
     );
 };

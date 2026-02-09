@@ -1,1011 +1,360 @@
 # SPEC: Calculadora de Proporções Corporais Masculinas
 
-## Documento de Especificação Técnica v3.0
+## Documento de Especificação Técnica v3.1 (CORRIGIDO)
 
-**Versão:** 3.0  
+**Versão:** 3.1  
 **Data:** Fevereiro 2026  
-**Aplicação:** VITRU IA - Análise de Físico e Proporções Corporais Masculinas
+**Projeto:** VITRU IA - Análise de Proporções Corporais  
+**Correção:** Diferenciação entre ÍNDICES e VALORES IDEAIS
 
 ---
 
-## 1. VISÃO GERAL
+## 1. CONCEITO FUNDAMENTAL: ÍNDICES vs VALORES
 
-Este documento especifica os cálculos e fórmulas para a calculadora de proporções corporais **masculinas** com quatro métodos de comparação:
-
-1. **🏛️ Golden Ratio (Clássico)** - Proporções áureas baseadas em Eugen Sandow e Steve Reeves
-2. **🏆 Classic Physique** - Baseado em Chris Bumstead (6x Mr. Olympia Classic Physique)
-3. **🏖️ Men's Physique** - Baseado em Ryan Terry (3x Mr. Olympia Men's Physique)
-4. **👑 Open Bodybuilding** - Baseado em Derek Lunsford (Mr. Olympia 2024) **NOVO**
-
----
-
-## 2. ESPECTRO DE CATEGORIAS MASCULINAS
-
-### 2.1 Comparativo Visual
-
-```
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                    ESPECTRO DE CATEGORIAS MASCULINAS                         │
-├──────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  ← MENOS MUSCULAR                                    MAIS MUSCULAR →         │
-│                                                                              │
-│  🏖️ Men's      🏛️ Golden      🏆 Classic       👑 Open                       │
-│   Physique      Ratio          Physique        Bodybuilding                  │
-│                                                                              │
-│  V-Taper: 1.55  V-Taper: 1.618 V-Taper: 1.70   V-Taper: 1.75+               │
-│  BF: 5-8%       BF: 8-12%      BF: 3-6%        BF: 2-5%                      │
-│                                                                              │
-│  Foco:          Foco:          Foco:           Foco:                         │
-│  Upper body     Proporção      Proporção +     TAMANHO                       │
-│  Estética       Perfeita       Tamanho         MÁXIMO +                      │
-│  Beach look     Clássica       Clássico        Simetria                      │
-│                                                                              │
-│  Ref:           Ref:           Ref:            Ref:                          │
-│  Ryan Terry     Steve Reeves   Chris Bumstead  Derek Lunsford                │
-│  178cm/93kg     185cm/95kg     185cm/104kg     166cm/104kg                   │
-│                                                                              │
-│  Pernas:        Pernas:        Pernas:         Pernas:                       │
-│  NÃO JULGADAS   Proporcionais  Muito import.   ESSENCIAIS                    │
-│                                                                              │
-└──────────────────────────────────────────────────────────────────────────────┘
-```
-
-### 2.2 Quando Usar Cada Categoria
-
-| Categoria | Perfil do Usuário | Objetivo |
-|-----------|-------------------|----------|
-| **🏖️ Men's Physique** | Busca estética de praia, não quer pernas grandes | "Beach body" com V-Taper |
-| **🏛️ Golden Ratio** | Busca proporções naturais e harmoniosas | Físico clássico atemporal |
-| **🏆 Classic Physique** | Quer competir ou ter físico de era de ouro moderno | Volume + Proporções clássicas |
-| **👑 Open Bodybuilding** | Busca máximo desenvolvimento muscular | Tamanho extremo + Simetria |
-
----
-
-## 3. MEDIDAS NECESSÁRIAS (INPUT DO USUÁRIO)
-
-### 3.1 Lista Completa de Medidas
-
-| # | Medida | Código | Unidade | Como Medir | Tipo |
-|---|--------|--------|---------|------------|------|
-| 1 | **Altura** | `altura` | cm | Descalço, coluna ereta contra parede | Estrutural |
-| 2 | **Peso** | `peso` | kg | Pela manhã, em jejum | Variável |
-| 3 | **Punho** | `punho` | cm | Circunferência no osso proeminente | Estrutural |
-| 4 | **Tornozelo** | `tornozelo` | cm | Parte mais fina, acima do osso | Estrutural |
-| 5 | **Joelho** | `joelho` | cm | Centro da patela, perna estendida | Estrutural |
-| 6 | **Pelve/Quadril** | `pelve` | cm | Parte mais larga da pelve | Estrutural |
-| 7 | **Cintura** | `cintura` | cm | Parte mais estreita (umbigo) | Variável |
-| 8 | **Ombros** | `ombros` | cm | Ponto mais largo, braços relaxados | Variável |
-| 9 | **Peitoral** | `peitoral` | cm | Na altura dos mamilos | Variável |
-| 10 | **Costas** | `costas` | cm | Largura de lat a lat (wingspan) | Variável |
-| 11 | **Braço** | `braco` | cm | Bíceps flexionado, ponto mais grosso | Variável |
-| 12 | **Antebraço** | `antebraco` | cm | Ponto mais grosso, punho cerrado | Variável |
-| 13 | **Pescoço** | `pescoco` | cm | Parte mais estreita | Variável |
-| 14 | **Coxa** | `coxa` | cm | Ponto mais grosso, perna relaxada | Variável |
-| 15 | **Panturrilha** | `panturrilha` | cm | Ponto mais grosso | Variável |
-
-### 3.2 Classificação das Medidas
-
-**Medidas Estruturais (genética - não mudam com treino):**
-- Altura, Punho, Tornozelo, Joelho, Pelve
-
-**Medidas Variáveis (mudam com treino/dieta):**
-- Peso, Cintura, Ombros, Peitoral, Costas, Braço, Antebraço, Pescoço, Coxa, Panturrilha
-
-### 3.3 Medidas por Categoria
-
-| Medida | Golden Ratio | Classic | Men's Physique | Open BB |
-|--------|:------------:|:-------:|:--------------:|:-------:|
-| Altura | ✅ | ✅ | ✅ | ✅ |
-| Peso | ✅ | ✅ | ✅ | ✅ |
-| Punho | ✅ | ✅ | ✅ | ✅ |
-| Tornozelo | ✅ | ✅ | ✅ | ✅ |
-| Joelho | ✅ | ⚪ | ❌ | ✅ |
-| Pelve | ✅ | ⚪ | ❌ | ⚪ |
-| Cintura | ✅ | ✅ | ✅ | ✅ |
-| Ombros | ✅ | ✅ | ✅ | ✅ |
-| Peitoral | ✅ | ✅ | ✅ | ✅ |
-| Costas | ⚪ | ✅ | ✅ | ✅ |
-| Braço | ✅ | ✅ | ✅ | ✅ |
-| Antebraço | ✅ | ✅ | ✅ | ✅ |
-| Pescoço | ✅ | ✅ | ❌ | ✅ |
-| Coxa | ✅ | ✅ | ❌ | ✅ |
-| Panturrilha | ✅ | ✅ | ⚪ | ✅ |
-
-**Legenda:** ✅ Obrigatório | ⚪ Opcional | ❌ Não usado
-
----
-
-## 4. QUADRO DE PROPORÇÕES: FÓRMULAS POR MÉTODO
-
-### 4.1 Tabela Completa de Referência
-
-| # | Proporção | Golden Ratio 🏛️ | Classic 🏆 | Men's Physique 🏖️ | Open BB 👑 |
-|---|-----------|-----------------|------------|-------------------|-----------|
-| 1 | **V-Taper (SWR)** | `1.618 × Cintura` | `1.70 × Cintura` | `1.55 × Cintura` | `1.75 × Cintura` |
-| 2 | **Peitoral** | `6.5 × Punho` | `7.0 × Punho` | `6.2 × Punho` | `7.5 × Punho` |
-| 3 | **Braço** | `2.52 × Punho` | `(Alt/185)×50` | `(Alt/178)×43` | `(Alt/166)×56` |
-| 4 | **Antebraço** | `0.80 × Braço` | `0.80 × Braço` | `0.80 × Braço` | `0.78 × Braço` |
-| 5 | **Tríade** | `1:1:1` | `~1:1:1` | N/A | `~1:1:1` |
-| 6 | **Cintura** | `0.86 × Pelve` | `0.42 × Altura` | `0.455 × Altura` | `0.44 × Altura` |
-| 7 | **Coxa** | `1.75 × Joelho` | `0.97 × Cintura` | N/A | `1.85 × Joelho` |
-| 8 | **Coxa/Pant** | `1.5:1` | `1.5:1` | N/A | `1.55:1` |
-| 9 | **Panturrilha** | `1.92 × Tornozelo` | `0.96 × Braço` | Estética | `0.98 × Braço` |
-| 10 | **Costas** | N/A | `1.6 × Cintura` | `1.5 × Cintura` | `1.7 × Cintura` |
-
-### 4.2 Pesos do Score por Categoria
-
-| Proporção | Golden Ratio | Classic | Men's Physique | Open BB |
-|-----------|:------------:|:-------:|:--------------:|:-------:|
-| Ombros/V-Taper | 18% | 18% | 25% | 16% |
-| Peitoral | 14% | 14% | 22% | 14% |
-| Braço | 14% | 16% | 25% | 14% |
-| Antebraço | 5% | 4% | 6% | 4% |
-| Tríade | 10% | 8% | 0% | 6% |
-| Cintura | 12% | 16% | 17% | 12% |
-| Coxa | 10% | 10% | 0% | 14% |
-| Coxa/Panturrilha | 8% | 6% | 0% | 8% |
-| Panturrilha | 9% | 8% | 5% | 8% |
-| Costas | 0% | 0% | 0% | 4% |
-| **Total** | 100% | 100% | 100% | 100% |
-
----
-
-## 5. FÓRMULAS DETALHADAS - GOLDEN RATIO (CLÁSSICO) 🏛️
-
-### 5.1 Referência Histórica
+### 1.1 A Diferença Crítica
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    GOLDEN RATIO - REFERÊNCIAS                   │
+│                   ÍNDICE vs VALOR IDEAL                         │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  EUGEN SANDOW (1867-1925)                                       │
-│  "Pai do Bodybuilding Moderno"                                  │
-│  • Altura: 175 cm                                               │
-│  • Peso: 88 kg                                                  │
-│  • Braço: 45 cm                                                 │
-│  • Peitoral: 122 cm                                             │
-│  • Cintura: 74 cm                                               │
-│  • Coxa: 66 cm                                                  │
+│  📊 ÍNDICE (RATIO)                                              │
+│  ─────────────────                                              │
+│  • É uma PROPORÇÃO entre duas medidas                           │
+│  • Resultado é um NÚMERO DECIMAL (ex: 1.59, 2.52, 0.80)         │
+│  • NÃO tem unidade de medida (não é cm, kg, etc)                │
+│  • É o que deve ser EXIBIDO na UI principal                     │
+│  • Permite comparar pessoas de tamanhos diferentes              │
 │                                                                 │
-│  STEVE REEVES (1926-2000)                                       │
-│  "O Físico Perfeito da Era de Ouro"                             │
-│  • Altura: 185 cm                                               │
-│  • Peso: 95 kg (competição)                                     │
-│  • Braço: 47 cm                                                 │
-│  • Peitoral: 132 cm                                             │
-│  • Cintura: 74 cm                                               │
-│  • Coxa: 66 cm                                                  │
-│  • Panturrilha: 47 cm (igual ao braço!)                         │
+│  Exemplo: V-Taper = Ombros ÷ Cintura = 125 ÷ 80 = 1.56          │
 │                                                                 │
-│  PROPORÇÃO ÁUREA (PHI = 1.618)                                  │
-│  • Ombros = Cintura × 1.618                                     │
-│  • Pescoço = Braço = Panturrilha (Tríade Clássica)              │
-│  • Harmonia matemática perfeita                                 │
+│  ─────────────────────────────────────────────────────────────  │
+│                                                                 │
+│  📏 VALOR IDEAL (em cm)                                         │
+│  ──────────────────────                                         │
+│  • É o valor ABSOLUTO que a medida deveria ter                  │
+│  • Resultado em CENTÍMETROS                                     │
+│  • Calculado multiplicando índice × medida base                 │
+│  • Usado para dizer "você precisa ganhar X cm"                  │
+│  • É um dado SECUNDÁRIO, não o principal                        │
+│                                                                 │
+│  Exemplo: Ombros ideal = Cintura × 1.618 = 80 × 1.618 = 129.4cm │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 5.2 Constantes
-
-```javascript
-const GOLDEN_RATIO = {
-  // Identificação
-  name: 'Golden Ratio',
-  icon: '🏛️',
-  
-  // Constante matemática
-  PHI: 1.618,
-  
-  // Proporções
-  OMBROS_CINTURA: 1.618,       // V-Taper áureo
-  PEITO_PUNHO: 6.5,            // Multiplicador peitoral
-  BRACO_PUNHO: 2.52,           // Multiplicador braço
-  ANTEBRACO_BRACO: 0.80,       // 80% do braço
-  CINTURA_PELVE: 0.86,         // Proporção cintura
-  COXA_JOELHO: 1.75,           // Multiplicador coxa
-  COXA_PANTURRILHA: 1.5,       // Proporção coxa/panturrilha
-  PANTURRILHA_TORNOZELO: 1.92, // Multiplicador panturrilha
-  
-  // Tríade Clássica
-  TRIADE: {
-    enabled: true,
-    descricao: 'Pescoço = Braço = Panturrilha',
-  },
-  
-  // Gordura corporal ideal
-  BF_MIN: 8,
-  BF_MAX: 12,
-  BF_IDEAL: 10,
-  
-  // Referências históricas
-  referencias: [
-    { nome: 'Eugen Sandow', altura: 175, peso: 88 },
-    { nome: 'Steve Reeves', altura: 185, peso: 95 },
-    { nome: 'John Grimek', altura: 175, peso: 88 },
-  ],
-}
-```
-
-### 5.3 Funções de Cálculo
-
-```javascript
-function calcularIdeaisGoldenRatio(medidas) {
-  const { cintura, punho, pelve, joelho, tornozelo } = medidas
-  
-  // Calcular braço ideal primeiro (usado em outras proporções)
-  const braco_ideal = punho * GOLDEN_RATIO.BRACO_PUNHO
-  
-  // Calcular panturrilha ideal
-  const panturrilha_ideal = tornozelo * GOLDEN_RATIO.PANTURRILHA_TORNOZELO
-  
-  return {
-    // 1. OMBROS: PHI × Cintura (V-Taper áureo)
-    ombros: cintura * GOLDEN_RATIO.PHI,
-    
-    // 2. PEITORAL: 6.5 × Punho
-    peitoral: punho * GOLDEN_RATIO.PEITO_PUNHO,
-    
-    // 3. BRAÇO: 2.52 × Punho
-    braco: braco_ideal,
-    
-    // 4. ANTEBRAÇO: 80% do Braço
-    antebraco: braco_ideal * GOLDEN_RATIO.ANTEBRACO_BRACO,
-    
-    // 5. TRÍADE: Pescoço = Braço = Panturrilha
-    triade: {
-      valor_ideal: braco_ideal,
-      pescoco: braco_ideal,
-      braco: braco_ideal,
-      panturrilha: braco_ideal,
-      regra: 'Pescoço = Braço = Panturrilha',
-    },
-    
-    // 6. CINTURA: 0.86 × Pelve
-    cintura: pelve * GOLDEN_RATIO.CINTURA_PELVE,
-    
-    // 7. COXA: 1.75 × Joelho
-    coxa: joelho * GOLDEN_RATIO.COXA_JOELHO,
-    
-    // 8. COXA/PANTURRILHA: Coxa = 1.5 × Panturrilha
-    coxa_panturrilha: {
-      coxa_ideal: panturrilha_ideal * GOLDEN_RATIO.COXA_PANTURRILHA,
-      panturrilha_ref: panturrilha_ideal,
-      ratio: GOLDEN_RATIO.COXA_PANTURRILHA,
-      regra: 'Coxa deve ser 1.5× a Panturrilha',
-    },
-    
-    // 9. PANTURRILHA: 1.92 × Tornozelo
-    panturrilha: panturrilha_ideal,
-  }
-}
-```
-
-### 5.4 Cálculo de Score
-
-```javascript
-function calcularScoreGoldenRatio(medidas) {
-  const ideais = calcularIdeaisGoldenRatio(medidas)
-  
-  // Pesos (total = 100)
-  const pesos = {
-    ombros: 18,           // V-Taper é prioridade
-    peitoral: 14,
-    braco: 14,
-    antebraco: 5,
-    triade: 10,           // Simetria clássica
-    cintura: 12,          // INVERTIDO - menor é melhor
-    coxa: 10,
-    coxa_panturrilha: 8,
-    panturrilha: 9,
-  }
-  
-  const scores = {}
-  
-  // Calcular cada score
-  scores.ombros = calcularScoreProporcional(medidas.ombros, ideais.ombros, pesos.ombros)
-  scores.peitoral = calcularScoreProporcional(medidas.peitoral, ideais.peitoral, pesos.peitoral)
-  scores.braco = calcularScoreProporcional(medidas.braco, ideais.braco, pesos.braco)
-  scores.antebraco = calcularScoreProporcional(medidas.antebraco, ideais.antebraco, pesos.antebraco)
-  scores.triade = calcularScoreTriade(medidas.pescoco, medidas.braco, medidas.panturrilha, pesos.triade)
-  scores.cintura = calcularScoreInverso(medidas.cintura, ideais.cintura, pesos.cintura)
-  scores.coxa = calcularScoreProporcional(medidas.coxa, ideais.coxa, pesos.coxa)
-  scores.coxa_panturrilha = calcularScoreRatio(medidas.coxa, medidas.panturrilha, 1.5, pesos.coxa_panturrilha)
-  scores.panturrilha = calcularScoreProporcional(medidas.panturrilha, ideais.panturrilha, pesos.panturrilha)
-  
-  const scoreTotal = Object.values(scores).reduce((a, b) => a + b, 0)
-  
-  return {
-    categoria: 'Golden Ratio',
-    icon: '🏛️',
-    scores_detalhados: scores,
-    score_total: Math.round(scoreTotal * 100) / 100,
-    ideais,
-    diferencas: calcularDiferencas(medidas, ideais),
-  }
-}
-```
-
----
-
-## 6. FÓRMULAS DETALHADAS - CLASSIC PHYSIQUE 🏆
-
-### 6.1 Referência
+### 1.2 Regra de Ouro para Exibição
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                CLASSIC PHYSIQUE - REFERÊNCIA                    │
+│                    REGRA DE EXIBIÇÃO                            │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  CHRIS BUMSTEAD                                                 │
-│  "CBum" - 6x Mr. Olympia Classic Physique (2019-2024)           │
-│  Aposentado após o 6º título consecutivo                        │
+│  NA UI PRINCIPAL (card de proporção):                           │
 │                                                                 │
-│  MEDIDAS (competição):                                          │
-│  • Altura: 185 cm (6'1")                                        │
-│  • Peso: 104 kg (230 lbs) - stage                               │
-│  • Peso off-season: ~120 kg (265 lbs)                           │
-│  • Peitoral: ~132 cm (52")                                      │
-│  • Cintura: ~76 cm (30") - MUITO apertada                       │
-│  • Braço: ~51 cm (20")                                          │
-│  • Coxa: ~76 cm (30")                                           │
-│  • Panturrilha: ~48 cm (19")                                    │
-│  • BF% stage: 3-4%                                              │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │  ESCALA SHAPE-V                              1.59       │    │
+│  │  Shape-V                                  RATIO ATUAL   │    │
+│  │  ──────────────────────────────────────────────────     │    │
+│  │  Ratio Atual: 1.59    Meta: 1.62                        │    │
+│  │  BASE: Ombros ÷ Cintura                                 │    │
+│  │                                                         │    │
+│  │  [====BLOCO====|==NORMAL==|==ATLÉTICO==|ESTÉTICO|FREAK] │    │
+│  │                                              ●          │    │
+│  │                                           VOCÊ  GOLDEN  │    │
+│  └─────────────────────────────────────────────────────────┘    │
 │                                                                 │
-│  CARACTERÍSTICAS:                                               │
-│  • V-Taper extremamente pronunciado                             │
-│  • Cintura "vacuum" possível                                    │
-│  • Linhas clássicas da Era de Ouro                              │
-│  • Desenvolvimento muscular completo                            │
-│  • Limite de peso por altura (tabela IFBB)                      │
+│  ✅ CORRETO: Mostrar ÍNDICE (1.59) como valor principal         │
+│  ❌ ERRADO: Mostrar "Golden Ratio: 129.4cm"                     │
 │                                                                 │
-│  V-TAPER: Ombros/Cintura = 1.70                                 │
+│  O valor em cm pode aparecer em um tooltip ou detalhe:          │
+│  "Para atingir o índice 1.618, seus ombros precisam ter 129cm"  │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 6.2 Constantes
+---
+
+## 2. TABELA MESTRE DE PROPORÇÕES
+
+### 2.1 Todas as Proporções com Fórmulas de ÍNDICE
+
+| # | Proporção | Fórmula do ÍNDICE | Meta Golden | Como Calcular ÍNDICE ATUAL | Como Calcular VALOR IDEAL (cm) |
+|---|-----------|-------------------|-------------|---------------------------|-------------------------------|
+| 1 | **V-Taper (Shape-V)** | Ombros ÷ Cintura | **1.618** | `ombros / cintura` | `cintura × 1.618` |
+| 2 | **Peitoral** | Peitoral ÷ Punho | **6.5** | `peitoral / punho` | `punho × 6.5` |
+| 3 | **Braço** | Braço ÷ Punho | **2.52** | `braco / punho` | `punho × 2.52` |
+| 4 | **Antebraço** | Antebraço ÷ Braço | **0.80** | `antebraco / braco` | `braco × 0.80` |
+| 5 | **Tríade** | Harmonia entre Pesc/Braço/Pant | **100%** | Cálculo especial | N/A |
+| 6 | **Cintura** | Cintura ÷ Pelve | **0.86** | `cintura / pelve` | `pelve × 0.86` |
+| 7 | **Coxa** | Coxa ÷ Joelho | **1.75** | `coxa / joelho` | `joelho × 1.75` |
+| 8 | **Coxa/Panturrilha** | Coxa ÷ Panturrilha | **1.50** | `coxa / panturrilha` | `panturrilha × 1.50` |
+| 9 | **Panturrilha** | Panturrilha ÷ Tornozelo | **1.92** | `panturrilha / tornozelo` | `tornozelo × 1.92` |
+
+### 2.2 Exemplo Completo de Cálculo
 
 ```javascript
-const CLASSIC_PHYSIQUE = {
-  // Identificação
-  name: 'Classic Physique',
-  icon: '🏆',
-  
-  // Referência
-  reference: {
-    nome: 'Chris Bumstead',
-    titulos: '6x Mr. Olympia Classic Physique',
-    altura: 185,
-    peso_stage: 104,
-    peso_off: 120,
-    braco: 51,
-    cintura: 76,
-    coxa: 76,
-  },
-  
-  // Proporções
-  OMBROS_CINTURA: 1.70,        // V-Taper mais agressivo que Golden
-  PEITO_PUNHO: 7.0,            // Peitoral maior
-  CINTURA_ALTURA: 0.42,        // Cintura SUPER apertada
-  COXA_CINTURA: 0.97,          // Coxas proporcionais
-  COXA_PANTURRILHA: 1.5,       // Proporção pernas
-  PANTURRILHA_BRACO: 0.96,     // Panturrilha quase igual ao braço
-  ANTEBRACO_BRACO: 0.80,
-  
-  // Referência para escalar braço
-  CBUM_ALTURA: 185,
-  CBUM_BRACO: 50,              // 50cm reference
-  
-  // Tríade
-  TRIADE: {
-    enabled: true,
-    descricao: 'Pescoço ≈ Braço ≈ Panturrilha (harmonia)',
-  },
-  
-  // Gordura corporal
-  BF_MIN: 3,
-  BF_MAX: 6,
-  BF_IDEAL: 4,
+// Medidas do usuário
+const medidas = {
+  altura: 180,
+  punho: 18,
+  tornozelo: 24,
+  joelho: 40,
+  pelve: 100,
+  cintura: 82,
+  ombros: 128,
+  peitoral: 112,
+  braco: 45,
+  antebraco: 35,
+  pescoco: 42,
+  coxa: 65,
+  panturrilha: 42,
 }
 
-// Tabela de peso máximo IFBB Pro Classic Physique 2024
-const CLASSIC_WEIGHT_LIMITS = {
-  162.6: 80.3,   // 5'4"
-  165.1: 82.6,   // 5'5"
-  167.6: 84.8,   // 5'6"
-  170.2: 87.1,   // 5'7"
-  172.7: 89.4,   // 5'8"
-  175.3: 91.6,   // 5'9"
-  177.8: 93.9,   // 5'10"
-  180.3: 97.5,   // 5'11"
-  182.9: 100.7,  // 6'0"
-  185.4: 104.3,  // 6'1" (CBum)
-  188.0: 108.9,  // 6'2"
-  190.5: 112.0,  // 6'3"
-  193.0: 115.2,  // 6'4"
-}
-```
-
-### 6.3 Funções de Cálculo
-
-```javascript
-function calcularIdeaisClassicPhysique(medidas) {
-  const { altura, punho, cintura, tornozelo } = medidas
-  
-  // Fator de escala baseado na altura vs CBum
-  const fatorAltura = altura / CLASSIC_PHYSIQUE.CBUM_ALTURA
-  
-  // Braço ideal escalado
-  const braco_ideal = fatorAltura * CLASSIC_PHYSIQUE.CBUM_BRACO
-  
-  // Panturrilha baseada no braço
-  const panturrilha_ideal = braco_ideal * CLASSIC_PHYSIQUE.PANTURRILHA_BRACO
-  
-  return {
-    // 1. OMBROS: 1.70 × Cintura
-    ombros: cintura * CLASSIC_PHYSIQUE.OMBROS_CINTURA,
-    
-    // 2. PEITORAL: 7.0 × Punho
-    peitoral: punho * CLASSIC_PHYSIQUE.PEITO_PUNHO,
-    
-    // 3. BRAÇO: Escalado do CBum
-    braco: braco_ideal,
-    
-    // 4. ANTEBRAÇO: 80% do Braço
-    antebraco: braco_ideal * CLASSIC_PHYSIQUE.ANTEBRACO_BRACO,
-    
-    // 5. TRÍADE: Harmonia (não exata)
-    triade: {
-      valor_ideal: braco_ideal,
-      pescoco: braco_ideal,
-      panturrilha: panturrilha_ideal,
-      regra: 'Pescoço ≈ Braço ≈ Panturrilha',
-    },
-    
-    // 6. CINTURA: 0.42 × Altura (MUITO apertada)
-    cintura: altura * CLASSIC_PHYSIQUE.CINTURA_ALTURA,
-    
-    // 7. COXA: 0.97 × Cintura ideal
-    coxa: (altura * CLASSIC_PHYSIQUE.CINTURA_ALTURA) * CLASSIC_PHYSIQUE.COXA_CINTURA,
-    
-    // 8. COXA/PANTURRILHA: 1.5:1
-    coxa_panturrilha: {
-      coxa_ideal: panturrilha_ideal * CLASSIC_PHYSIQUE.COXA_PANTURRILHA,
-      panturrilha_ref: panturrilha_ideal,
-      ratio: CLASSIC_PHYSIQUE.COXA_PANTURRILHA,
-    },
-    
-    // 9. PANTURRILHA: 0.96 × Braço
-    panturrilha: panturrilha_ideal,
-    
-    // 10. COSTAS: 1.6 × Cintura
-    costas: cintura * 1.6,
-    
-    // Peso máximo da categoria
-    peso_maximo: getPesoMaximoClassic(altura),
-  }
+// CÁLCULO DOS ÍNDICES ATUAIS (o que mostramos na UI)
+const indicesAtuais = {
+  vTaper: medidas.ombros / medidas.cintura,           // 128/82 = 1.56
+  peitoral: medidas.peitoral / medidas.punho,         // 112/18 = 6.22
+  braco: medidas.braco / medidas.punho,               // 45/18 = 2.50
+  antebraco: medidas.antebraco / medidas.braco,       // 35/45 = 0.78
+  cintura: medidas.cintura / medidas.pelve,           // 82/100 = 0.82
+  coxa: medidas.coxa / medidas.joelho,                // 65/40 = 1.63
+  coxaPanturrilha: medidas.coxa / medidas.panturrilha, // 65/42 = 1.55
+  panturrilha: medidas.panturrilha / medidas.tornozelo, // 42/24 = 1.75
 }
 
-function getPesoMaximoClassic(altura_cm) {
-  const alturas = Object.keys(CLASSIC_WEIGHT_LIMITS).map(Number).sort((a, b) => a - b)
-  
-  if (altura_cm <= alturas[0]) return CLASSIC_WEIGHT_LIMITS[alturas[0]]
-  if (altura_cm >= alturas[alturas.length - 1]) return CLASSIC_WEIGHT_LIMITS[alturas[alturas.length - 1]]
-  
-  // Interpolação linear
-  for (let i = 0; i < alturas.length - 1; i++) {
-    if (altura_cm >= alturas[i] && altura_cm < alturas[i + 1]) {
-      const h1 = alturas[i], h2 = alturas[i + 1]
-      const w1 = CLASSIC_WEIGHT_LIMITS[h1], w2 = CLASSIC_WEIGHT_LIMITS[h2]
-      const fator = (altura_cm - h1) / (h2 - h1)
-      return Math.round((w1 + (w2 - w1) * fator) * 10) / 10
-    }
-  }
+// ÍNDICES IDEAIS (Golden Ratio)
+const indicesIdeais = {
+  vTaper: 1.618,
+  peitoral: 6.5,
+  braco: 2.52,
+  antebraco: 0.80,
+  cintura: 0.86,
+  coxa: 1.75,
+  coxaPanturrilha: 1.50,
+  panturrilha: 1.92,
 }
-```
 
-### 6.4 Cálculo de Score
-
-```javascript
-function calcularScoreClassicPhysique(medidas) {
-  const ideais = calcularIdeaisClassicPhysique(medidas)
-  
-  // Pesos ajustados (cintura MUITO importante)
-  const pesos = {
-    ombros: 18,
-    peitoral: 14,
-    braco: 16,
-    antebraco: 4,
-    triade: 8,
-    cintura: 16,          // Cintura é crucial no Classic
-    coxa: 10,
-    coxa_panturrilha: 6,
-    panturrilha: 8,
-  }
-  
-  const scores = {}
-  
-  scores.ombros = calcularScoreProporcional(medidas.ombros, ideais.ombros, pesos.ombros)
-  scores.peitoral = calcularScoreProporcional(medidas.peitoral, ideais.peitoral, pesos.peitoral)
-  scores.braco = calcularScoreProporcional(medidas.braco, ideais.braco, pesos.braco)
-  scores.antebraco = calcularScoreProporcional(medidas.antebraco, ideais.antebraco, pesos.antebraco)
-  scores.triade = calcularScoreTriade(medidas.pescoco, medidas.braco, medidas.panturrilha, pesos.triade)
-  scores.cintura = calcularScoreInverso(medidas.cintura, ideais.cintura, pesos.cintura)
-  scores.coxa = calcularScoreProporcional(medidas.coxa, ideais.coxa, pesos.coxa)
-  scores.coxa_panturrilha = calcularScoreRatio(medidas.coxa, medidas.panturrilha, 1.5, pesos.coxa_panturrilha)
-  scores.panturrilha = calcularScoreProporcional(medidas.panturrilha, ideais.panturrilha, pesos.panturrilha)
-  
-  const scoreTotal = Object.values(scores).reduce((a, b) => a + b, 0)
-  
-  return {
-    categoria: 'Classic Physique',
-    icon: '🏆',
-    referencia: CLASSIC_PHYSIQUE.reference.nome,
-    scores_detalhados: scores,
-    score_total: Math.round(scoreTotal * 100) / 100,
-    ideais,
-    diferencas: calcularDiferencas(medidas, ideais),
-    peso_maximo_categoria: ideais.peso_maximo,
-    peso_atual: medidas.peso,
-    dentro_do_limite: medidas.peso <= ideais.peso_maximo,
-  }
+// VALORES IDEAIS EM CM (secundário, para referência)
+const valoresIdeaisCm = {
+  ombros: medidas.cintura * indicesIdeais.vTaper,     // 82 × 1.618 = 132.7cm
+  peitoral: medidas.punho * indicesIdeais.peitoral,   // 18 × 6.5 = 117.0cm
+  braco: medidas.punho * indicesIdeais.braco,         // 18 × 2.52 = 45.4cm
+  antebraco: medidas.braco * indicesIdeais.antebraco, // 45 × 0.80 = 36.0cm
+  cintura: medidas.pelve * indicesIdeais.cintura,     // 100 × 0.86 = 86.0cm
+  coxa: medidas.joelho * indicesIdeais.coxa,          // 40 × 1.75 = 70.0cm
+  panturrilha: medidas.tornozelo * indicesIdeais.panturrilha, // 24 × 1.92 = 46.1cm
 }
 ```
 
 ---
 
-## 7. FÓRMULAS DETALHADAS - MEN'S PHYSIQUE 🏖️
+## 3. ESTRUTURA DE DADOS CORRIGIDA
 
-### 7.1 Referência
+### 3.1 Interface TypeScript
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                  MEN'S PHYSIQUE - REFERÊNCIA                    │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  RYAN TERRY                                                     │
-│  3x Mr. Olympia Men's Physique (2023, 2024, 2025)               │
-│                                                                 │
-│  MEDIDAS (aproximadas):                                         │
-│  • Altura: 178 cm (5'10")                                       │
-│  • Peso: 88-93 kg (195-205 lbs) - stage                         │
-│  • Cintura: ~81 cm (32")                                        │
-│  • Braço: ~43 cm (17")                                          │
-│  • BF% stage: 5-7%                                              │
-│                                                                 │
-│  CARACTERÍSTICAS:                                               │
-│  • V-Taper SUAVE (não extremo)                                  │
-│  • Deltóides 3D (caps arredondados)                             │
-│  • Cintura fina mas não "vacuum"                                │
-│  • Pernas NÃO JULGADAS (usa board shorts)                       │
-│  • Foco em estética "beach body"                                │
-│  • Sem poses obrigatórias de pernas                             │
-│                                                                 │
-│  V-TAPER: Ombros/Cintura = 1.55                                 │
-│                                                                 │
-│  NOTA: Categoria mais popular do IFBB                           │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### 7.2 Constantes
-
-```javascript
-const MENS_PHYSIQUE = {
+```typescript
+/**
+ * Resultado de uma proporção individual
+ */
+interface ProportionResult {
   // Identificação
-  name: "Men's Physique",
-  icon: '🏖️',
+  id: string                    // 'vTaper', 'peitoral', 'braco', etc.
+  nome: string                  // 'Shape-V', 'Peitoral', 'Braço', etc.
+  categoria: string             // 'ESCALA SHAPE-V', 'VOLUME MUSCULAR', etc.
   
-  // Referência
-  reference: {
-    nome: 'Ryan Terry',
-    titulos: "3x Mr. Olympia Men's Physique",
-    altura: 178,
-    peso_stage: 93,
-    braco: 43,
-  },
+  // === ÍNDICES (PRINCIPAL - mostrar na UI) ===
+  indiceAtual: number           // Ex: 1.56 (ombros/cintura)
+  indiceMeta: number            // Ex: 1.618 (Golden Ratio)
   
-  // Proporções
-  OMBROS_CINTURA: 1.55,        // V-Taper mais suave
-  PEITO_PUNHO: 6.2,            // Peitoral moderado
-  CINTURA_ALTURA: 0.455,       // Cintura menos extrema
-  ANTEBRACO_BRACO: 0.80,
+  // Base do cálculo (para exibir "BASE: Ombros ÷ Cintura")
+  formulaBase: string           // 'Ombros ÷ Cintura'
+  medidaNumerador: string       // 'ombros'
+  medidaDenominador: string     // 'cintura'
   
-  // Referência para escalar braço
-  RYAN_ALTURA: 178,
-  RYAN_BRACO: 43,
+  // === VALORES EM CM (SECUNDÁRIO - para detalhes) ===
+  valorAtualCm: number          // Ex: 128 (ombros atual)
+  valorIdealCm: number          // Ex: 132.7 (ombros ideal)
+  diferencaCm: number           // Ex: 4.7 (quanto falta)
   
-  // Pernas NÃO são julgadas
-  PERNAS_JULGADAS: false,
+  // === PERCENTUAIS (para score e barra de progresso) ===
+  percentualDoIdeal: number     // Ex: 96.4% (1.56/1.618)
+  score: number                 // Contribuição para score total
   
-  // Tríade não aplicável
-  TRIADE: {
-    enabled: false,
-    descricao: 'N/A - Foco em upper body',
-  },
+  // === CLASSIFICAÇÃO ===
+  classificacao: 'BLOCO' | 'NORMAL' | 'ATLÉTICO' | 'ESTÉTICO' | 'FREAK'
+  dentroDaMeta: boolean
   
-  // Gordura corporal
-  BF_MIN: 5,
-  BF_MAX: 8,
-  BF_IDEAL: 6,
+  // === DIREÇÃO (para cintura, menor é melhor) ===
+  inversao: boolean             // true para cintura (menor = melhor)
+}
+
+/**
+ * Resultado completo de todas as proporções
+ */
+interface ProportionsResult {
+  // Dados do usuário
+  medidas: UserMeasurements
+  metodo: 'GOLDEN_RATIO' | 'CLASSIC_PHYSIQUE' | 'MENS_PHYSIQUE' | 'OPEN_BB'
+  
+  // Resultados por proporção
+  proporcoes: {
+    vTaper: ProportionResult
+    peitoral: ProportionResult
+    braco: ProportionResult
+    antebraco: ProportionResult
+    triade: TriadeResult        // Especial
+    cintura: ProportionResult
+    coxa: ProportionResult
+    coxaPanturrilha: ProportionResult
+    panturrilha: ProportionResult
+  }
+  
+  // Score total
+  scoreTotal: number            // 0-100
+  classificacaoGeral: string
 }
 ```
 
-### 7.3 Funções de Cálculo
+### 3.2 Interface da Tríade (Caso Especial)
 
-```javascript
-function calcularIdeaisMensPhysique(medidas) {
-  const { altura, punho, cintura, tornozelo } = medidas
+```typescript
+/**
+ * A Tríade é especial porque mede HARMONIA entre 3 medidas,
+ * não uma proporção simples entre 2 medidas.
+ */
+interface TriadeResult {
+  id: 'triade'
+  nome: 'Tríade'
+  categoria: 'A TRINDADE'
   
-  // Fator de escala
-  const fatorAltura = altura / MENS_PHYSIQUE.RYAN_ALTURA
+  // Valores das 3 medidas
+  pescoco: number               // cm
+  braco: number                 // cm
+  panturrilha: number           // cm
   
-  // Braço ideal escalado
-  const braco_ideal = fatorAltura * MENS_PHYSIQUE.RYAN_BRACO
+  // Média das 3 medidas
+  media: number                 // cm
   
-  return {
-    // 1. OMBROS: 1.55 × Cintura
-    ombros: cintura * MENS_PHYSIQUE.OMBROS_CINTURA,
-    
-    // 2. PEITORAL: 6.2 × Punho
-    peitoral: punho * MENS_PHYSIQUE.PEITO_PUNHO,
-    
-    // 3. BRAÇO: Escalado do Ryan
-    braco: braco_ideal,
-    
-    // 4. ANTEBRAÇO: 80% do Braço
-    antebraco: braco_ideal * MENS_PHYSIQUE.ANTEBRACO_BRACO,
-    
-    // 5. TRÍADE: N/A
-    triade: null,
-    triade_nota: 'Não aplicável - foco em upper body',
-    
-    // 6. CINTURA: 0.455 × Altura
-    cintura: altura * MENS_PHYSIQUE.CINTURA_ALTURA,
-    
-    // 7. COXA: N/A - Não julgada
-    coxa: null,
-    coxa_nota: 'Não julgada - usa board shorts',
-    
-    // 8. COXA/PANTURRILHA: N/A
-    coxa_panturrilha: null,
-    
-    // 9. PANTURRILHA: Estética geral (opcional)
-    panturrilha: tornozelo * 1.8,
-    panturrilha_nota: 'Estética geral, pouco peso no score',
-    
-    // 10. COSTAS: 1.5 × Cintura
-    costas: cintura * 1.5,
-  }
-}
-```
-
-### 7.4 Cálculo de Score
-
-```javascript
-function calcularScoreMensPhysique(medidas) {
-  const ideais = calcularIdeaisMensPhysique(medidas)
+  // Desvio de cada uma em relação à média
+  desvioPescoco: number         // Ex: -2cm (2cm abaixo da média)
+  desvioBraco: number           // Ex: +1cm
+  desvioPanturrilha: number     // Ex: +1cm
   
-  // Pesos (foco em upper body - coxa e tríade = 0)
-  const pesos = {
-    ombros: 25,           // Deltóides são destaque
-    peitoral: 22,
-    braco: 25,            // Braços são destaque
-    antebraco: 6,
-    triade: 0,            // NÃO JULGADA
-    cintura: 17,
-    coxa: 0,              // NÃO JULGADA
-    coxa_panturrilha: 0,  // NÃO JULGADA
-    panturrilha: 5,       // Estética geral
-  }
+  // Percentual de harmonia (100% = todas iguais)
+  harmoniaPercentual: number    // Ex: 98.1%
   
-  const scores = {}
+  // Meta
+  meta: '100% Harmonia'
   
-  scores.ombros = calcularScoreProporcional(medidas.ombros, ideais.ombros, pesos.ombros)
-  scores.peitoral = calcularScoreProporcional(medidas.peitoral, ideais.peitoral, pesos.peitoral)
-  scores.braco = calcularScoreProporcional(medidas.braco, ideais.braco, pesos.braco)
-  scores.antebraco = calcularScoreProporcional(medidas.antebraco, ideais.antebraco, pesos.antebraco)
-  scores.triade = 0
-  scores.cintura = calcularScoreInverso(medidas.cintura, ideais.cintura, pesos.cintura)
-  scores.coxa = 0
-  scores.coxa_panturrilha = 0
-  scores.panturrilha = calcularScoreProporcional(medidas.panturrilha, ideais.panturrilha, pesos.panturrilha)
-  
-  const scoreTotal = Object.values(scores).reduce((a, b) => a + b, 0)
-  
-  return {
-    categoria: "Men's Physique",
-    icon: '🏖️',
-    referencia: MENS_PHYSIQUE.reference.nome,
-    scores_detalhados: scores,
-    score_total: Math.round(scoreTotal * 100) / 100,
-    ideais,
-    diferencas: calcularDiferencas(medidas, ideais),
-    notas: {
-      coxa: 'Não julgada - usa board shorts',
-      coxa_panturrilha: 'Não julgada',
-      triade: 'Não aplicável nesta categoria',
-      foco: 'Deltóides 3D, braços, V-taper moderado, aparência de praia',
-    },
-  }
+  // Classificação
+  classificacao: string
+  dentroDaMeta: boolean
 }
 ```
 
 ---
 
-## 8. FÓRMULAS DETALHADAS - OPEN BODYBUILDING 👑 (NOVO)
+## 4. FÓRMULAS DE CÁLCULO CORRIGIDAS
 
-### 8.1 Referência
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                 OPEN BODYBUILDING - REFERÊNCIA                  │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  DEREK LUNSFORD                                                 │
-│  Mr. Olympia 2024 (Open Bodybuilding)                           │
-│  Também foi campeão 212 Olympia 2021                            │
-│                                                                 │
-│  MEDIDAS (competição):                                          │
-│  • Altura: 166 cm (5'5") - relativamente baixo                  │
-│  • Peso: 104+ kg (230+ lbs) - stage                             │
-│  • Peso off-season: ~125 kg (275 lbs)                           │
-│  • Peitoral: ~140+ cm (55"+)                                    │
-│  • Cintura: ~73 cm (29") - muito apertada para o tamanho        │
-│  • Braço: ~56 cm (22")                                          │
-│  • Coxa: ~79 cm (31")                                           │
-│  • Panturrilha: ~51 cm (20")                                    │
-│  • BF% stage: 2-4%                                              │
-│                                                                 │
-│  CARACTERÍSTICAS:                                               │
-│  • Massa muscular MÁXIMA                                        │
-│  • Simetria e proporções mesmo com tamanho extremo              │
-│  • Condicionamento extremo (veins, striations)                  │
-│  • Cintura relativamente pequena para o tamanho                 │
-│  • Pernas MUITO desenvolvidas                                   │
-│  • Poses obrigatórias completas (front/back lat spread, etc)    │
-│                                                                 │
-│  V-TAPER: Ombros/Cintura = 1.75+                                │
-│                                                                 │
-│  NOTA: Categoria de maior prestígio do bodybuilding             │
-│                                                                 │
-│  OUTROS CAMPEÕES RECENTES:                                      │
-│  • Hadi Choopan (2023) - 170cm, 102kg                           │
-│  • Big Ramy (2020, 2021) - 180cm, 136kg                         │
-│  • Brandon Curry (2019) - 175cm, 114kg                          │
-│  • Shawn Rhoden (2018) - 178cm, 113kg                           │
-│  • Phil Heath (7x) - 175cm, 111kg                               │
-│  • Ronnie Coleman (8x) - 180cm, 136kg                           │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### 8.2 Constantes
-
-```javascript
-const OPEN_BODYBUILDING = {
-  // Identificação
-  name: 'Open Bodybuilding',
-  icon: '👑',
-  
-  // Referência principal (atual campeão)
-  reference: {
-    nome: 'Derek Lunsford',
-    titulos: 'Mr. Olympia 2024',
-    altura: 166,
-    peso_stage: 104,
-    peso_off: 125,
-    braco: 56,
-    cintura: 73,
-    coxa: 79,
-    panturrilha: 51,
-    peitoral: 140,
-  },
-  
-  // Referências históricas (para escalar)
-  referencias_historicas: [
-    { nome: 'Ronnie Coleman', altura: 180, peso: 136, braco: 61 },
-    { nome: 'Phil Heath', altura: 175, peso: 111, braco: 58 },
-    { nome: 'Big Ramy', altura: 180, peso: 136, braco: 60 },
-    { nome: 'Dorian Yates', altura: 178, peso: 121, braco: 54 },
-    { nome: 'Arnold Schwarzenegger', altura: 188, peso: 107, braco: 56 },
-  ],
-  
-  // Proporções (MAIS AGRESSIVAS que Classic)
-  OMBROS_CINTURA: 1.75,        // V-Taper mais extremo
-  PEITO_PUNHO: 7.5,            // Peitoral MUITO desenvolvido
-  CINTURA_ALTURA: 0.44,        // Cintura apertada (mas aceita maior que Classic)
-  COXA_JOELHO: 1.85,           // Coxas MUITO desenvolvidas
-  COXA_PANTURRILHA: 1.55,      // Proporção pernas
-  PANTURRILHA_BRACO: 0.98,     // Panturrilha quase igual ao braço
-  ANTEBRACO_BRACO: 0.78,       // Antebraço ligeiramente menor (braços enormes)
-  COSTAS_CINTURA: 1.70,        // Costas muito largas
-  
-  // Referência para escalar braço
-  DEREK_ALTURA: 166,
-  DEREK_BRACO: 56,             // 56cm de braço!
-  
-  // Tríade
-  TRIADE: {
-    enabled: true,
-    descricao: 'Pescoço ≈ Braço ≈ Panturrilha (menos rígido)',
-  },
-  
-  // Gordura corporal (EXTREMAMENTE baixa)
-  BF_MIN: 2,
-  BF_MAX: 5,
-  BF_IDEAL: 3,
-  
-  // Sem limite de peso (diferente do Classic)
-  PESO_LIMITE: null,
-}
-```
-
-### 8.3 Funções de Cálculo
-
-```javascript
-function calcularIdeaisOpenBodybuilding(medidas) {
-  const { altura, punho, cintura, tornozelo, joelho } = medidas
-  
-  // Fator de escala baseado na altura vs Derek Lunsford
-  const fatorAltura = altura / OPEN_BODYBUILDING.DEREK_ALTURA
-  
-  // Braço ideal escalado (MUITO grande)
-  const braco_ideal = fatorAltura * OPEN_BODYBUILDING.DEREK_BRACO
-  
-  // Panturrilha baseada no braço
-  const panturrilha_ideal = braco_ideal * OPEN_BODYBUILDING.PANTURRILHA_BRACO
-  
-  // Cintura ideal
-  const cintura_ideal = altura * OPEN_BODYBUILDING.CINTURA_ALTURA
-  
-  return {
-    // 1. OMBROS: 1.75 × Cintura (V-Taper extremo)
-    ombros: cintura * OPEN_BODYBUILDING.OMBROS_CINTURA,
-    
-    // 2. PEITORAL: 7.5 × Punho (muito desenvolvido)
-    peitoral: punho * OPEN_BODYBUILDING.PEITO_PUNHO,
-    
-    // 3. BRAÇO: Escalado do Derek (MUITO grande)
-    braco: braco_ideal,
-    
-    // 4. ANTEBRAÇO: 78% do Braço
-    antebraco: braco_ideal * OPEN_BODYBUILDING.ANTEBRACO_BRACO,
-    
-    // 5. TRÍADE: Harmonia (menos rígido que Golden)
-    triade: {
-      valor_ideal: braco_ideal,
-      pescoco: braco_ideal * 0.95, // Pescoço pode ser ligeiramente menor
-      panturrilha: panturrilha_ideal,
-      regra: 'Pescoço ≈ Braço ≈ Panturrilha',
-    },
-    
-    // 6. CINTURA: 0.44 × Altura
-    cintura: cintura_ideal,
-    
-    // 7. COXA: 1.85 × Joelho (MUITO desenvolvida)
-    coxa: joelho * OPEN_BODYBUILDING.COXA_JOELHO,
-    
-    // 8. COXA/PANTURRILHA: 1.55:1
-    coxa_panturrilha: {
-      coxa_ideal: panturrilha_ideal * OPEN_BODYBUILDING.COXA_PANTURRILHA,
-      panturrilha_ref: panturrilha_ideal,
-      ratio: OPEN_BODYBUILDING.COXA_PANTURRILHA,
-    },
-    
-    // 9. PANTURRILHA: 0.98 × Braço
-    panturrilha: panturrilha_ideal,
-    
-    // 10. COSTAS: 1.7 × Cintura (muito largas)
-    costas: cintura * OPEN_BODYBUILDING.COSTAS_CINTURA,
-    
-    // Sem limite de peso
-    peso_maximo: null,
-    peso_nota: 'Sem limite - categoria Open',
-  }
-}
-```
-
-### 8.4 Cálculo de Score
-
-```javascript
-function calcularScoreOpenBodybuilding(medidas) {
-  const ideais = calcularIdeaisOpenBodybuilding(medidas)
-  
-  // Pesos (FOCO EM TAMANHO + PROPORÇÃO)
-  // Pernas são MUITO importantes no Open
-  const pesos = {
-    ombros: 16,
-    peitoral: 14,
-    braco: 14,
-    antebraco: 4,
-    triade: 6,
-    cintura: 12,
-    coxa: 14,             // Pernas MUITO importantes
-    coxa_panturrilha: 8,
-    panturrilha: 8,
-    costas: 4,
-  }
-  
-  const scores = {}
-  
-  scores.ombros = calcularScoreProporcional(medidas.ombros, ideais.ombros, pesos.ombros)
-  scores.peitoral = calcularScoreProporcional(medidas.peitoral, ideais.peitoral, pesos.peitoral)
-  scores.braco = calcularScoreProporcional(medidas.braco, ideais.braco, pesos.braco)
-  scores.antebraco = calcularScoreProporcional(medidas.antebraco, ideais.antebraco, pesos.antebraco)
-  scores.triade = calcularScoreTriade(medidas.pescoco, medidas.braco, medidas.panturrilha, pesos.triade)
-  scores.cintura = calcularScoreInverso(medidas.cintura, ideais.cintura, pesos.cintura)
-  scores.coxa = calcularScoreProporcional(medidas.coxa, ideais.coxa, pesos.coxa)
-  scores.coxa_panturrilha = calcularScoreRatio(medidas.coxa, medidas.panturrilha, 1.55, pesos.coxa_panturrilha)
-  scores.panturrilha = calcularScoreProporcional(medidas.panturrilha, ideais.panturrilha, pesos.panturrilha)
-  scores.costas = calcularScoreProporcional(medidas.costas || medidas.ombros * 0.95, ideais.costas, pesos.costas)
-  
-  const scoreTotal = Object.values(scores).reduce((a, b) => a + b, 0)
-  
-  return {
-    categoria: 'Open Bodybuilding',
-    icon: '👑',
-    referencia: OPEN_BODYBUILDING.reference.nome,
-    scores_detalhados: scores,
-    score_total: Math.round(scoreTotal * 100) / 100,
-    ideais,
-    diferencas: calcularDiferencas(medidas, ideais),
-    notas: {
-      peso: 'Sem limite de peso - categoria Open',
-      foco: 'Massa muscular máxima + simetria + condicionamento extremo',
-      pernas: 'Pernas são ESSENCIAIS - maior peso no score que outras categorias',
-      condicionamento: 'BF% esperado: 2-5% em competição',
-    },
-  }
-}
-```
-
----
-
-## 9. FUNÇÕES AUXILIARES
-
-### 9.1 Cálculo de Score Proporcional
+### 4.1 Função Principal: Calcular Índice
 
 ```javascript
 /**
- * Score proporcional: quanto mais próximo do ideal, melhor
- * 100% = igual ou maior que o ideal
+ * Calcula o ÍNDICE de uma proporção
+ * ÍNDICE = medida1 / medida2
+ * 
+ * @param medidaNumerador - Medida no numerador (ex: ombros)
+ * @param medidaDenominador - Medida no denominador (ex: cintura)
+ * @returns Índice decimal (ex: 1.56)
  */
-function calcularScoreProporcional(atual, ideal, peso) {
-  if (!atual || !ideal || ideal === 0) return 0
-  const percentual = Math.min(100, (atual / ideal) * 100)
-  return percentual * (peso / 100)
+function calcularIndice(medidaNumerador, medidaDenominador) {
+  if (!medidaDenominador || medidaDenominador === 0) return 0
+  return medidaNumerador / medidaDenominador
 }
+
+// Exemplos de uso:
+const indiceVTaper = calcularIndice(ombros, cintura)           // 128/82 = 1.56
+const indicePeitoral = calcularIndice(peitoral, punho)         // 112/18 = 6.22
+const indiceBraco = calcularIndice(braco, punho)               // 45/18 = 2.50
+const indiceAntebraco = calcularIndice(antebraco, braco)       // 35/45 = 0.78
+const indiceCintura = calcularIndice(cintura, pelve)           // 82/100 = 0.82
+const indiceCoxa = calcularIndice(coxa, joelho)                // 65/40 = 1.63
+const indiceCoxaPant = calcularIndice(coxa, panturrilha)       // 65/42 = 1.55
+const indicePanturrilha = calcularIndice(panturrilha, tornozelo) // 42/24 = 1.75
 ```
 
-### 9.2 Cálculo de Score Inverso (Cintura)
+### 4.2 Função: Calcular Valor Ideal em CM
 
 ```javascript
 /**
- * Score inverso: menor é melhor (usado para cintura)
- * 100% se igual ou menor que o ideal
+ * Calcula o VALOR IDEAL em centímetros
+ * VALOR_IDEAL = medidaBase × índiceIdeal
+ * 
+ * @param medidaBase - Medida base (denominador da fórmula)
+ * @param indiceIdeal - Índice alvo (ex: 1.618 para Golden Ratio)
+ * @returns Valor ideal em cm
  */
-function calcularScoreInverso(atual, ideal, peso) {
-  if (!atual || !ideal) return 0
-  if (atual <= ideal) return peso // 100% se igual ou menor
-  const percentual = (ideal / atual) * 100
-  return percentual * (peso / 100)
+function calcularValorIdealCm(medidaBase, indiceIdeal) {
+  return medidaBase * indiceIdeal
 }
+
+// Exemplos de uso:
+const ombrosIdealCm = calcularValorIdealCm(cintura, 1.618)     // 82 × 1.618 = 132.7cm
+const peitoralIdealCm = calcularValorIdealCm(punho, 6.5)       // 18 × 6.5 = 117.0cm
+const bracoIdealCm = calcularValorIdealCm(punho, 2.52)         // 18 × 2.52 = 45.4cm
+const antebracoIdealCm = calcularValorIdealCm(braco, 0.80)     // 45 × 0.80 = 36.0cm
 ```
 
-### 9.3 Cálculo de Score da Tríade
+### 4.3 Função: Calcular Diferença
 
 ```javascript
 /**
- * Tríade Clássica: Pescoço = Braço = Panturrilha
- * Score baseado na simetria entre as três medidas
+ * Calcula a diferença entre valor atual e ideal
+ * Positivo = precisa aumentar, Negativo = precisa diminuir
  */
-function calcularScoreTriade(pescoco, braco, panturrilha, peso) {
-  if (!pescoco || !braco || !panturrilha) return 0
+function calcularDiferenca(valorAtual, valorIdeal, inverso = false) {
+  const diff = valorIdeal - valorAtual
   
-  // Média das medidas
+  return {
+    diferenca: Math.abs(diff),
+    direcao: inverso 
+      ? (diff < 0 ? 'diminuir' : 'manter')  // Para cintura
+      : (diff > 0 ? 'aumentar' : 'manter'), // Para outras
+  }
+}
+```
+
+### 4.4 Função: Calcular Percentual do Ideal
+
+```javascript
+/**
+ * Calcula qual percentual do índice ideal foi atingido
+ * 
+ * Para proporções normais: indiceAtual / indiceIdeal
+ * Para cintura (inverso): indiceIdeal / indiceAtual (menor é melhor)
+ */
+function calcularPercentualDoIdeal(indiceAtual, indiceIdeal, inverso = false) {
+  if (inverso) {
+    // Cintura: menor é melhor
+    if (indiceAtual <= indiceIdeal) return 100
+    return (indiceIdeal / indiceAtual) * 100
+  }
+  
+  // Outras proporções: maior é melhor (até o ideal)
+  return Math.min(100, (indiceAtual / indiceIdeal) * 100)
+}
+```
+
+### 4.5 Função: Calcular Tríade (Caso Especial)
+
+```javascript
+/**
+ * Calcula a harmonia da Tríade (Pescoço = Braço = Panturrilha)
+ * Retorna percentual de 0-100% onde 100% = perfeita harmonia
+ */
+function calcularTriade(pescoco, braco, panturrilha) {
+  // Média das 3 medidas
   const media = (pescoco + braco + panturrilha) / 3
   
   // Desvio de cada medida em relação à média
@@ -1018,464 +367,733 @@ function calcularScoreTriade(pescoco, braco, panturrilha, peso) {
   // Média dos desvios (0 = perfeito)
   const desvioMedio = desvios.reduce((a, b) => a + b, 0) / 3
   
-  // Converter para score (100% se desvio = 0)
-  const percentual = Math.max(0, (1 - desvioMedio) * 100)
-  return percentual * (peso / 100)
-}
-```
-
-### 9.4 Cálculo de Score de Razão
-
-```javascript
-/**
- * Score de razão: quão próximo está da razão ideal
- * Usado para Coxa/Panturrilha
- */
-function calcularScoreRatio(medida1, medida2, ratioIdeal, peso) {
-  if (!medida1 || !medida2 || medida2 === 0) return 0
-  
-  const ratioAtual = medida1 / medida2
-  const diff = Math.abs(ratioAtual - ratioIdeal) / ratioIdeal
-  const percentual = Math.max(0, (1 - diff) * 100)
-  
-  return percentual * (peso / 100)
-}
-```
-
-### 9.5 Cálculo de Diferenças
-
-```javascript
-/**
- * Calcula diferença entre medidas atuais e ideais
- */
-function calcularDiferencas(atuais, ideais) {
-  const diffs = {}
-  
-  for (const [key, ideal] of Object.entries(ideais)) {
-    if (typeof ideal === 'number' && atuais[key]) {
-      const diferenca = Math.round((ideal - atuais[key]) * 10) / 10
-      diffs[key] = {
-        atual: atuais[key],
-        ideal: ideal,
-        diferenca: Math.abs(diferenca),
-        necessario: diferenca > 0 ? 'aumentar' : diferenca < 0 ? 'diminuir' : 'manter',
-        percentual: Math.round((atuais[key] / ideal) * 100),
-      }
-    }
-  }
-  
-  return diffs
-}
-```
-
----
-
-## 10. CÁLCULO DE GORDURA CORPORAL
-
-### 10.1 Método Navy (US Navy)
-
-```javascript
-/**
- * Fórmula Navy para HOMENS
- */
-function calcularBFNavyMasculino(altura, cintura, pescoco) {
-  // BF% = 86.010 × log10(cintura - pescoço) - 70.041 × log10(altura) + 36.76
-  const bf = 86.010 * Math.log10(cintura - pescoco) 
-             - 70.041 * Math.log10(altura) 
-             + 36.76
-  
-  return Math.max(0, Math.min(50, Math.round(bf * 10) / 10))
-}
-```
-
-### 10.2 Método Pollock 7 Dobras
-
-```javascript
-/**
- * Fórmula Jackson-Pollock para HOMENS (7 dobras)
- */
-function calcularBFPollock7Masculino(dobras, idade) {
-  const { triceps, subescapular, peitoral, axilar, suprailíaca, abdominal, coxa } = dobras
-  
-  // Soma das 7 dobras
-  const soma = triceps + subescapular + peitoral + axilar + suprailíaca + abdominal + coxa
-  
-  // Densidade corporal (fórmula para homens)
-  const densidade = 1.112 
-                    - (0.00043499 * soma) 
-                    + (0.00000055 * soma * soma) 
-                    - (0.00028826 * idade)
-  
-  // Percentual de gordura (Siri equation)
-  const bf = (495 / densidade) - 450
-  
-  return Math.max(0, Math.min(50, Math.round(bf * 10) / 10))
-}
-```
-
-### 10.3 Classificação de BF% Masculino
-
-```javascript
-const CLASSIFICACAO_BF_MASCULINO = {
-  competicao: { min: 2, max: 6, descricao: 'Nível de competição' },
-  atletico: { min: 6, max: 13, descricao: 'Físico atlético' },
-  fitness: { min: 13, max: 17, descricao: 'Fitness/Saudável' },
-  normal: { min: 17, max: 24, descricao: 'Normal' },
-  acima: { min: 24, max: 35, descricao: 'Acima do recomendado' },
-  obesidade: { min: 35, max: 100, descricao: 'Obesidade' },
-}
-
-function classificarBFMasculino(bf) {
-  for (const [nivel, range] of Object.entries(CLASSIFICACAO_BF_MASCULINO)) {
-    if (bf >= range.min && bf < range.max) {
-      return { nivel, descricao: range.descricao, faixa: `${range.min}-${range.max}%` }
-    }
-  }
-  return { nivel: 'indefinido', descricao: 'Valor fora do range' }
-}
-```
-
----
-
-## 11. CALCULADORA COMPLETA
-
-### 11.1 Função Principal
-
-```javascript
-function calcularTodasProporcoesMasculino(medidas) {
-  // Validar medidas
-  const validacao = validarMedidas(medidas)
-  if (!validacao.valido) {
-    return { erro: true, mensagem: validacao.erros }
-  }
-  
-  // Calcular para as 4 categorias
-  const goldenRatio = calcularScoreGoldenRatio(medidas)
-  const classicPhysique = calcularScoreClassicPhysique(medidas)
-  const mensPhysique = calcularScoreMensPhysique(medidas)
-  const openBodybuilding = calcularScoreOpenBodybuilding(medidas)
-  
-  // Ranking de categorias
-  const categorias = [
-    { nome: 'Golden Ratio', icon: '🏛️', score: goldenRatio.score_total },
-    { nome: 'Classic Physique', icon: '🏆', score: classicPhysique.score_total },
-    { nome: "Men's Physique", icon: '🏖️', score: mensPhysique.score_total },
-    { nome: 'Open Bodybuilding', icon: '👑', score: openBodybuilding.score_total },
-  ].sort((a, b) => b.score - a.score)
-  
-  // Calcular gordura corporal
-  const bf_navy = medidas.pescoco 
-    ? calcularBFNavyMasculino(medidas.altura, medidas.cintura, medidas.pescoco)
-    : null
-  
-  // Calcular V-Taper atual
-  const vTaper = medidas.ombros / medidas.cintura
+  // Converter para percentual de harmonia (100% = perfeito)
+  const harmonia = Math.max(0, (1 - desvioMedio) * 100)
   
   return {
-    medidas_input: medidas,
-    genero: 'masculino',
-    
-    metricas_principais: {
-      vTaper: {
-        atual: Math.round(vTaper * 1000) / 1000,
-        classificacao: classificarVTaper(vTaper),
-      },
-      peso: medidas.peso,
-      altura: medidas.altura,
-    },
-    
-    gordura_corporal: bf_navy ? {
-      navy: bf_navy,
-      classificacao: classificarBFMasculino(bf_navy),
-    } : null,
-    
-    resultados: {
-      golden_ratio: goldenRatio,
-      classic_physique: classicPhysique,
-      mens_physique: mensPhysique,
-      open_bodybuilding: openBodybuilding,
-    },
-    
-    recomendacao: {
-      melhor_categoria: categorias[0].nome,
-      icon: categorias[0].icon,
-      score: categorias[0].score,
-      ranking: categorias,
-    },
-    
-    classificacao: getClassificacao(categorias[0].score),
+    pescoco,
+    braco,
+    panturrilha,
+    media: Math.round(media * 10) / 10,
+    desvioPescoco: Math.round((pescoco - media) * 10) / 10,
+    desvioBraco: Math.round((braco - media) * 10) / 10,
+    desvioPanturrilha: Math.round((panturrilha - media) * 10) / 10,
+    harmoniaPercentual: Math.round(harmonia * 10) / 10,
   }
+}
+
+// Exemplo:
+// pescoco: 42cm, braco: 45cm, panturrilha: 42cm
+// média: 43cm
+// desvios: |42-43|/43 = 2.3%, |45-43|/43 = 4.6%, |42-43|/43 = 2.3%
+// desvio médio: 3.1%
+// harmonia: 96.9%
+```
+
+---
+
+## 5. CONSTANTES DE ÍNDICES POR MÉTODO
+
+### 5.1 Golden Ratio (Clássico)
+
+```javascript
+const GOLDEN_RATIO_INDICES = {
+  // Identificação
+  id: 'GOLDEN_RATIO',
+  nome: 'Golden Ratio',
+  icon: '🏛️',
+  descricao: 'Proporções áureas baseadas em Eugen Sandow e Steve Reeves',
+  
+  // ÍNDICES IDEAIS (não valores em cm!)
+  indices: {
+    vTaper: {
+      ideal: 1.618,             // Ombros ÷ Cintura
+      formula: 'ombros / cintura',
+      nome: 'Shape-V',
+      categoria: 'ESCALA SHAPE-V',
+      descricao: 'V-Taper Index: A proporção estética entre ombros e cintura',
+    },
+    peitoral: {
+      ideal: 6.5,               // Peitoral ÷ Punho
+      formula: 'peitoral / punho',
+      nome: 'Peitoral',
+      categoria: 'PODER DE TRONCO',
+      descricao: 'Volume e densidade torácica em relação à estrutura óssea',
+    },
+    braco: {
+      ideal: 2.52,              // Braço ÷ Punho
+      formula: 'braco / punho',
+      nome: 'Braço',
+      categoria: 'VOLUME MUSCULAR',
+      descricao: 'Braço ideal baseado na estrutura do punho',
+    },
+    antebraco: {
+      ideal: 0.80,              // Antebraço ÷ Braço
+      formula: 'antebraco / braco',
+      nome: 'Antebraço',
+      categoria: 'PROPORÇÃO #4',
+      descricao: 'Proporção ideal: 80% do braço',
+    },
+    triade: {
+      ideal: 100,               // Percentual de harmonia
+      formula: 'harmonia(pescoco, braco, panturrilha)',
+      nome: 'Tríade',
+      categoria: 'A TRINDADE',
+      descricao: 'Equilíbrio absoluto entre Pescoço, Braço e Panturrilha',
+    },
+    cintura: {
+      ideal: 0.86,              // Cintura ÷ Pelve
+      formula: 'cintura / pelve',
+      nome: 'Cintura',
+      categoria: 'LINHA DE CINTURA',
+      descricao: 'A base do V-Taper. Quanto mais estreita, mais larga parece a dorsal',
+      inverso: true,            // Menor é melhor
+    },
+    coxa: {
+      ideal: 1.75,              // Coxa ÷ Joelho
+      formula: 'coxa / joelho',
+      nome: 'Coxa',
+      categoria: 'POTÊNCIA DE PERNAS',
+      descricao: 'Desenvolvimento do quadríceps e isquiotibiais',
+    },
+    coxaPanturrilha: {
+      ideal: 1.50,              // Coxa ÷ Panturrilha
+      formula: 'coxa / panturrilha',
+      nome: 'Coxa vs Panturrilha',
+      categoria: 'SIMETRIA INFERIOR',
+      descricao: 'Proporção clássica de pernas',
+    },
+    panturrilha: {
+      ideal: 1.92,              // Panturrilha ÷ Tornozelo
+      formula: 'panturrilha / tornozelo',
+      nome: 'Panturrilha',
+      categoria: 'DETALHAMENTO',
+      descricao: 'Desenvolvimento da panturrilha em relação à estrutura óssea',
+    },
+  },
+  
+  // Pesos para cálculo do score total
+  pesos: {
+    vTaper: 18,
+    peitoral: 14,
+    braco: 14,
+    antebraco: 5,
+    triade: 10,
+    cintura: 12,
+    coxa: 10,
+    coxaPanturrilha: 8,
+    panturrilha: 9,
+  },
 }
 ```
 
-### 11.2 Classificação de V-Taper
+### 5.2 Classic Physique (CBum)
 
 ```javascript
-function classificarVTaper(ratio) {
-  if (ratio >= 1.70) return { nivel: 'ELITE', emoji: '👑', descricao: 'V-Taper excepcional' }
-  if (ratio >= 1.618) return { nivel: 'GOLDEN', emoji: '🏛️', descricao: 'Proporção áurea' }
-  if (ratio >= 1.55) return { nivel: 'ATLÉTICO', emoji: '💪', descricao: 'V-Taper atlético' }
-  if (ratio >= 1.45) return { nivel: 'BOM', emoji: '👍', descricao: 'Boa proporção' }
-  if (ratio >= 1.35) return { nivel: 'NORMAL', emoji: '📊', descricao: 'Proporção normal' }
-  return { nivel: 'BLOCO', emoji: '🧱', descricao: 'Pouco V-Taper' }
+const CLASSIC_PHYSIQUE_INDICES = {
+  id: 'CLASSIC_PHYSIQUE',
+  nome: 'Classic Physique',
+  icon: '🏆',
+  descricao: 'Baseado em Chris Bumstead, 6x Mr. Olympia Classic Physique',
+  
+  indices: {
+    vTaper: {
+      ideal: 1.70,              // V-Taper mais agressivo
+      formula: 'ombros / cintura',
+    },
+    peitoral: {
+      ideal: 7.0,               // Peitoral maior
+      formula: 'peitoral / punho',
+    },
+    braco: {
+      ideal: 2.70,              // Braços maiores (~50cm para 18.5cm punho)
+      formula: 'braco / punho',
+    },
+    antebraco: {
+      ideal: 0.80,
+      formula: 'antebraco / braco',
+    },
+    triade: {
+      ideal: 100,
+      formula: 'harmonia(pescoco, braco, panturrilha)',
+    },
+    cintura: {
+      ideal: 0.42,              // % da altura (muito apertada)
+      formula: 'cintura / altura',
+      usaAltura: true,          // Flag especial
+      inverso: true,
+    },
+    coxa: {
+      ideal: 1.85,              // Coxas mais desenvolvidas
+      formula: 'coxa / joelho',
+    },
+    coxaPanturrilha: {
+      ideal: 1.50,
+      formula: 'coxa / panturrilha',
+    },
+    panturrilha: {
+      ideal: 0.96,              // Relativo ao braço
+      formula: 'panturrilha / braco',
+      usaBraco: true,           // Flag especial
+    },
+  },
+  
+  pesos: {
+    vTaper: 18,
+    peitoral: 14,
+    braco: 16,
+    antebraco: 4,
+    triade: 8,
+    cintura: 16,                // Mais importante no Classic
+    coxa: 10,
+    coxaPanturrilha: 6,
+    panturrilha: 8,
+  },
 }
 ```
 
-### 11.3 Classificação Geral
+### 5.3 Men's Physique (Ryan Terry)
 
 ```javascript
-function getClassificacao(score) {
-  if (score >= 95) return { nivel: 'ELITE', emoji: '👑', descricao: 'Proporções excepcionais' }
-  if (score >= 85) return { nivel: 'AVANÇADO', emoji: '🥇', descricao: 'Muito acima da média' }
-  if (score >= 75) return { nivel: 'INTERMEDIÁRIO', emoji: '🥈', descricao: 'Boas proporções' }
-  if (score >= 60) return { nivel: 'INICIANTE', emoji: '💪', descricao: 'Em desenvolvimento' }
-  return { nivel: 'INICIANTE', emoji: '🚀', descricao: 'Início da jornada' }
+const MENS_PHYSIQUE_INDICES = {
+  id: 'MENS_PHYSIQUE',
+  nome: "Men's Physique",
+  icon: '🏖️',
+  descricao: 'Baseado em Ryan Terry, 3x Mr. Olympia Men\'s Physique',
+  
+  indices: {
+    vTaper: {
+      ideal: 1.55,              // V-Taper mais suave
+      formula: 'ombros / cintura',
+    },
+    peitoral: {
+      ideal: 6.2,               // Peitoral moderado
+      formula: 'peitoral / punho',
+    },
+    braco: {
+      ideal: 2.40,              // Braços moderados
+      formula: 'braco / punho',
+    },
+    antebraco: {
+      ideal: 0.80,
+      formula: 'antebraco / braco',
+    },
+    triade: null,               // Não aplicável
+    cintura: {
+      ideal: 0.455,             // % da altura
+      formula: 'cintura / altura',
+      usaAltura: true,
+      inverso: true,
+    },
+    coxa: null,                 // Não julgada
+    coxaPanturrilha: null,      // Não julgada
+    panturrilha: {
+      ideal: 1.80,              // Estética geral
+      formula: 'panturrilha / tornozelo',
+    },
+  },
+  
+  pesos: {
+    vTaper: 25,                 // Ombros são destaque
+    peitoral: 22,
+    braco: 25,                  // Braços são destaque
+    antebraco: 6,
+    triade: 0,                  // Não julgada
+    cintura: 17,
+    coxa: 0,                    // Não julgada
+    coxaPanturrilha: 0,         // Não julgada
+    panturrilha: 5,
+  },
 }
 ```
 
-### 11.4 Validação de Medidas
+### 5.4 Open Bodybuilding (Derek Lunsford)
 
 ```javascript
-function validarMedidas(medidas) {
-  const obrigatorias = ['altura', 'punho', 'cintura', 'ombros', 'peitoral', 'braco']
-  const erros = []
+const OPEN_BODYBUILDING_INDICES = {
+  id: 'OPEN_BODYBUILDING',
+  nome: 'Open Bodybuilding',
+  icon: '👑',
+  descricao: 'Baseado em Derek Lunsford, Mr. Olympia 2024',
   
-  for (const campo of obrigatorias) {
-    if (!medidas[campo] || medidas[campo] <= 0) {
-      erros.push(`${campo} é obrigatório`)
-    }
-  }
+  indices: {
+    vTaper: {
+      ideal: 1.75,              // V-Taper extremo
+      formula: 'ombros / cintura',
+    },
+    peitoral: {
+      ideal: 7.5,               // Peitoral muito desenvolvido
+      formula: 'peitoral / punho',
+    },
+    braco: {
+      ideal: 3.11,              // Braços enormes (~56cm para 18cm punho)
+      formula: 'braco / punho',
+    },
+    antebraco: {
+      ideal: 0.78,
+      formula: 'antebraco / braco',
+    },
+    triade: {
+      ideal: 100,
+      formula: 'harmonia(pescoco, braco, panturrilha)',
+    },
+    cintura: {
+      ideal: 0.44,              // % da altura
+      formula: 'cintura / altura',
+      usaAltura: true,
+      inverso: true,
+    },
+    coxa: {
+      ideal: 1.85,              // Coxas muito desenvolvidas
+      formula: 'coxa / joelho',
+    },
+    coxaPanturrilha: {
+      ideal: 1.55,
+      formula: 'coxa / panturrilha',
+    },
+    panturrilha: {
+      ideal: 0.98,              // Quase igual ao braço
+      formula: 'panturrilha / braco',
+      usaBraco: true,
+    },
+  },
   
-  // Validar ranges masculinos
-  const limites = {
-    altura: [150, 220],
-    punho: [14, 22],
-    tornozelo: [18, 30],
-    cintura: [60, 130],
-    ombros: [90, 170],
-    peitoral: [80, 160],
-    braco: [25, 65],
-    antebraco: [20, 50],
-    pescoco: [30, 55],
-    coxa: [40, 90],
-    panturrilha: [30, 60],
-  }
-  
-  for (const [campo, [min, max]] of Object.entries(limites)) {
-    if (medidas[campo] && (medidas[campo] < min || medidas[campo] > max)) {
-      erros.push(`${campo} deve estar entre ${min} e ${max} cm`)
-    }
-  }
-  
-  return { valido: erros.length === 0, erros }
+  pesos: {
+    vTaper: 16,
+    peitoral: 14,
+    braco: 14,
+    antebraco: 4,
+    triade: 6,
+    cintura: 12,
+    coxa: 14,                   // Pernas muito importantes
+    coxaPanturrilha: 8,
+    panturrilha: 8,
+    costas: 4,
+  },
 }
 ```
 
 ---
 
-## 12. EXEMPLO DE USO COMPLETO
+## 6. FUNÇÃO DE CÁLCULO COMPLETA
 
-### 12.1 Input do Usuário
+### 6.1 Calcular Todas as Proporções
 
 ```javascript
-const medidasUsuario = {
-  // Dados básicos
-  altura: 180,        // cm
-  peso: 95,           // kg
-  idade: 30,          // anos
+/**
+ * Calcula todas as proporções para um método específico
+ */
+function calcularProporcoes(medidas, metodo = 'GOLDEN_RATIO') {
+  const config = getConfigByMethod(metodo)
+  const resultados = {}
   
-  // Medidas estruturais
-  punho: 17.5,        // cm
-  tornozelo: 23,      // cm
-  joelho: 38,         // cm
-  pelve: 98,          // cm
+  for (const [propKey, propConfig] of Object.entries(config.indices)) {
+    if (!propConfig) {
+      resultados[propKey] = null
+      continue
+    }
+    
+    // Caso especial: Tríade
+    if (propKey === 'triade') {
+      resultados.triade = calcularTriade(
+        medidas.pescoco,
+        medidas.braco,
+        medidas.panturrilha
+      )
+      continue
+    }
+    
+    // Determinar medidas para o cálculo
+    const { numerador, denominador } = parseFormula(propConfig.formula, medidas)
+    
+    // Calcular índice atual
+    const indiceAtual = calcularIndice(numerador, denominador)
+    
+    // Calcular valor ideal em cm
+    const valorIdealCm = calcularValorIdealCm(denominador, propConfig.ideal)
+    
+    // Calcular percentual do ideal
+    const percentual = calcularPercentualDoIdeal(
+      indiceAtual,
+      propConfig.ideal,
+      propConfig.inverso
+    )
+    
+    // Classificar
+    const classificacao = classificarProporcao(percentual)
+    
+    resultados[propKey] = {
+      id: propKey,
+      nome: propConfig.nome,
+      categoria: propConfig.categoria,
+      
+      // ÍNDICES (mostrar na UI)
+      indiceAtual: Math.round(indiceAtual * 100) / 100,
+      indiceMeta: propConfig.ideal,
+      
+      // Base do cálculo
+      formulaBase: formatarFormula(propConfig.formula),
+      
+      // Valores em CM (secundário)
+      valorAtualCm: Math.round(numerador * 10) / 10,
+      valorIdealCm: Math.round(valorIdealCm * 10) / 10,
+      diferencaCm: Math.round((valorIdealCm - numerador) * 10) / 10,
+      
+      // Percentuais
+      percentualDoIdeal: Math.round(percentual * 10) / 10,
+      
+      // Classificação
+      classificacao,
+      dentroDaMeta: percentual >= 95,
+      inverso: propConfig.inverso || false,
+    }
+  }
   
-  // Medidas variáveis
-  cintura: 80,        // cm
-  ombros: 125,        // cm
-  peitoral: 115,      // cm
-  costas: 125,        // cm
-  braco: 42,          // cm
-  antebraco: 34,      // cm
-  pescoco: 41,        // cm
-  coxa: 62,           // cm
-  panturrilha: 40,    // cm
+  // Calcular score total
+  const scoreTotal = calcularScoreTotal(resultados, config.pesos)
+  
+  return {
+    metodo,
+    proporcoes: resultados,
+    scoreTotal,
+    classificacaoGeral: classificarScore(scoreTotal),
+  }
 }
 ```
 
-### 12.2 Output Esperado
+### 6.2 Funções Auxiliares
+
+```javascript
+/**
+ * Formata a fórmula para exibição
+ */
+function formatarFormula(formula) {
+  return formula
+    .replace('ombros / cintura', 'Ombros ÷ Cintura')
+    .replace('peitoral / punho', 'Peitoral ÷ Punho')
+    .replace('braco / punho', 'Braço ÷ Punho')
+    .replace('antebraco / braco', 'Antebraço ÷ Braço')
+    .replace('cintura / pelve', 'Cintura ÷ Pélvis')
+    .replace('cintura / altura', 'Cintura ÷ Altura')
+    .replace('coxa / joelho', 'Coxa ÷ Joelho')
+    .replace('coxa / panturrilha', 'Coxa ÷ Panturrilha')
+    .replace('panturrilha / tornozelo', 'Panturrilha ÷ Tornozelo')
+    .replace('panturrilha / braco', 'Panturrilha ÷ Braço')
+}
+
+/**
+ * Classificação baseada no percentual do ideal
+ */
+function classificarProporcao(percentual) {
+  if (percentual >= 100) return 'FREAK'
+  if (percentual >= 90) return 'ESTÉTICO'
+  if (percentual >= 75) return 'ATLÉTICO'
+  if (percentual >= 60) return 'NORMAL'
+  return 'BLOCO'
+}
+
+/**
+ * Classificação do score total
+ */
+function classificarScore(score) {
+  if (score >= 95) return { nivel: 'ELITE', emoji: '👑' }
+  if (score >= 85) return { nivel: 'AVANÇADO', emoji: '🥇' }
+  if (score >= 75) return { nivel: 'INTERMEDIÁRIO', emoji: '🥈' }
+  if (score >= 60) return { nivel: 'INICIANTE', emoji: '💪' }
+  return { nivel: 'INICIANTE', emoji: '🚀' }
+}
+```
+
+---
+
+## 7. EXEMPLO DE OUTPUT CORRETO
+
+### 7.1 Dados de Entrada
+
+```javascript
+const medidas = {
+  altura: 180,
+  punho: 18,
+  tornozelo: 24,
+  joelho: 40,
+  pelve: 100,
+  cintura: 82,
+  ombros: 128,
+  peitoral: 112,
+  braco: 45,
+  antebraco: 35,
+  pescoco: 42,
+  coxa: 65,
+  panturrilha: 42,
+}
+```
+
+### 7.2 Output Correto (ÍNDICES)
 
 ```javascript
 {
-  medidas_input: { /* medidasUsuario */ },
-  genero: 'masculino',
+  metodo: 'GOLDEN_RATIO',
   
-  metricas_principais: {
+  proporcoes: {
     vTaper: {
-      atual: 1.563,
-      classificacao: {
-        nivel: 'ATLÉTICO',
-        emoji: '💪',
-        descricao: 'V-Taper atlético'
-      }
-    },
-    peso: 95,
-    altura: 180
-  },
-  
-  gordura_corporal: {
-    navy: 14.2,
-    classificacao: {
-      nivel: 'fitness',
-      descricao: 'Fitness/Saudável',
-      faixa: '13-17%'
-    }
-  },
-  
-  resultados: {
-    golden_ratio: {
-      categoria: 'Golden Ratio',
-      icon: '🏛️',
-      score_total: 84.2,
-      ideais: {
-        ombros: 129.4,    // 80 × 1.618
-        peitoral: 113.8,  // 17.5 × 6.5
-        braco: 44.1,      // 17.5 × 2.52
-        // ...
-      }
+      nome: 'Shape-V',
+      categoria: 'ESCALA SHAPE-V',
+      
+      // ✅ CORRETO: Mostra ÍNDICE
+      indiceAtual: 1.56,          // 128/82
+      indiceMeta: 1.618,
+      
+      formulaBase: 'Ombros ÷ Cintura',
+      
+      // Valores em cm (secundário)
+      valorAtualCm: 128,
+      valorIdealCm: 132.7,
+      diferencaCm: 4.7,
+      
+      percentualDoIdeal: 96.4,
+      classificacao: 'ESTÉTICO',
+      dentroDaMeta: true,
     },
     
-    classic_physique: {
-      categoria: 'Classic Physique',
-      icon: '🏆',
-      score_total: 79.5,
-      peso_maximo_categoria: 97.5,
-      dentro_do_limite: true,
-      // ...
+    peitoral: {
+      nome: 'Peitoral',
+      categoria: 'PODER DE TRONCO',
+      
+      // ✅ CORRETO: Mostra ÍNDICE
+      indiceAtual: 6.22,          // 112/18
+      indiceMeta: 6.5,
+      
+      formulaBase: 'Peitoral ÷ Punho',
+      
+      // Valores em cm (secundário)
+      valorAtualCm: 112,
+      valorIdealCm: 117,
+      diferencaCm: 5,
+      
+      percentualDoIdeal: 95.7,
+      classificacao: 'ESTÉTICO',
     },
     
-    mens_physique: {
-      categoria: "Men's Physique",
-      icon: '🏖️',
-      score_total: 88.3,
-      notas: {
-        coxa: 'Não julgada - usa board shorts',
-        foco: 'Deltóides 3D, braços, V-taper moderado'
-      },
-      // ...
+    braco: {
+      nome: 'Braço',
+      categoria: 'VOLUME MUSCULAR',
+      
+      // ✅ CORRETO: Mostra ÍNDICE
+      indiceAtual: 2.50,          // 45/18
+      indiceMeta: 2.52,
+      
+      formulaBase: 'Braço ÷ Punho',
+      
+      valorAtualCm: 45,
+      valorIdealCm: 45.4,
+      diferencaCm: 0.4,
+      
+      percentualDoIdeal: 99.2,
+      classificacao: 'ESTÉTICO',
     },
     
-    open_bodybuilding: {
-      categoria: 'Open Bodybuilding',
-      icon: '👑',
-      score_total: 71.2,
-      notas: {
-        foco: 'Massa muscular máxima + simetria',
-        pernas: 'Pernas precisam de mais desenvolvimento'
-      },
-      // ...
-    }
+    antebraco: {
+      nome: 'Antebraço',
+      categoria: 'PROPORÇÃO #4',
+      
+      // ✅ CORRETO: Mostra ÍNDICE
+      indiceAtual: 0.78,          // 35/45
+      indiceMeta: 0.80,
+      
+      formulaBase: 'Antebraço ÷ Braço',
+      
+      valorAtualCm: 35,
+      valorIdealCm: 36,
+      diferencaCm: 1,
+      
+      percentualDoIdeal: 97.5,
+      classificacao: 'ESTÉTICO',
+    },
+    
+    triade: {
+      nome: 'Tríade',
+      categoria: 'A TRINDADE',
+      
+      // ✅ CORRETO: Mostra PERCENTUAL de harmonia
+      harmoniaPercentual: 96.5,   // Não é índice, é % de harmonia
+      meta: '100% Harmonia',
+      
+      pescoco: 42,
+      braco: 45,
+      panturrilha: 42,
+      media: 43,
+      
+      classificacao: 'ESTÉTICO',
+    },
+    
+    cintura: {
+      nome: 'Cintura',
+      categoria: 'LINHA DE CINTURA',
+      
+      // ✅ CORRETO: Mostra ÍNDICE
+      indiceAtual: 0.82,          // 82/100
+      indiceMeta: 0.86,
+      
+      formulaBase: 'Cintura ÷ Pélvis',
+      
+      valorAtualCm: 82,
+      valorIdealCm: 86,
+      
+      // Para cintura, estar ABAIXO é bom!
+      percentualDoIdeal: 100,     // Já está melhor que o ideal
+      classificacao: 'ESTÉTICO',
+      dentroDaMeta: true,
+      inverso: true,
+    },
+    
+    coxa: {
+      nome: 'Coxa',
+      categoria: 'POTÊNCIA DE PERNAS',
+      
+      // ✅ CORRETO: Mostra ÍNDICE
+      indiceAtual: 1.63,          // 65/40
+      indiceMeta: 1.75,
+      
+      formulaBase: 'Coxa ÷ Joelho',
+      
+      valorAtualCm: 65,
+      valorIdealCm: 70,
+      diferencaCm: 5,
+      
+      percentualDoIdeal: 93.1,
+      classificacao: 'ESTÉTICO',
+    },
+    
+    coxaPanturrilha: {
+      nome: 'Coxa vs Panturrilha',
+      categoria: 'SIMETRIA INFERIOR',
+      
+      // ✅ CORRETO: Mostra ÍNDICE
+      indiceAtual: 1.55,          // 65/42
+      indiceMeta: 1.50,
+      
+      formulaBase: 'Coxa ÷ Panturrilha',
+      
+      percentualDoIdeal: 100,     // Acima do ideal
+      classificacao: 'FREAK',
+    },
+    
+    panturrilha: {
+      nome: 'Panturrilha',
+      categoria: 'DETALHAMENTO',
+      
+      // ✅ CORRETO: Mostra ÍNDICE
+      indiceAtual: 1.75,          // 42/24
+      indiceMeta: 1.92,
+      
+      formulaBase: 'Panturrilha ÷ Tornozelo',
+      
+      valorAtualCm: 42,
+      valorIdealCm: 46.1,
+      diferencaCm: 4.1,
+      
+      percentualDoIdeal: 91.1,
+      classificacao: 'ESTÉTICO',
+    },
   },
   
-  recomendacao: {
-    melhor_categoria: "Men's Physique",
-    icon: '🏖️',
-    score: 88.3,
-    ranking: [
-      { nome: "Men's Physique", icon: '🏖️', score: 88.3 },
-      { nome: "Golden Ratio", icon: '🏛️', score: 84.2 },
-      { nome: "Classic Physique", icon: '🏆', score: 79.5 },
-      { nome: "Open Bodybuilding", icon: '👑', score: 71.2 }
-    ]
-  },
-  
-  classificacao: {
-    nivel: 'AVANÇADO',
-    emoji: '🥇',
-    descricao: 'Muito acima da média'
-  }
+  scoreTotal: 89.5,
+  classificacaoGeral: { nivel: 'AVANÇADO', emoji: '🥇' },
 }
 ```
 
 ---
 
-## 13. RESUMO COMPARATIVO DAS CATEGORIAS
+## 8. COMO EXIBIR NA UI
 
-### 13.1 Tabela de V-Taper Ideais
+### 8.1 Card de Proporção (Correto)
 
-| Categoria | V-Taper (SWR) | Descrição |
-|-----------|:-------------:|-----------|
-| Men's Physique | 1.55 | Suave, estética de praia |
-| Golden Ratio | 1.618 | Proporção áurea clássica |
-| Classic Physique | 1.70 | Pronunciado, era de ouro moderna |
-| Open Bodybuilding | 1.75+ | Extremo, massa máxima |
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│  ESCALA SHAPE-V                                     1.56       │
+│  Shape-V                                         RATIO ATUAL   │
+│                                                                 │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │  Ratio Atual: 1.56    Meta: 1.62                         │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│  BASE: Ombros ÷ Cintura                                        │
+│                                                                 │
+│  [====BLOCO====|===NORMAL===|==ATLÉTICO==|ESTÉTICO|==FREAK==]  │
+│                                                    ●    │      │
+│                                                  VOCÊ GOLDEN   │
+│                                                                 │
+│  V-Taper Index: A proporção estética entre ombros e cintura.   │
+│  No modo Golden Ratio, a meta é 1.618.                         │
+│                                                                 │
+│                                         ┌────────────────────┐ │
+│                                         │ IDEAL CLÁSSICO(96%)│ │
+│                                         └────────────────────┘ │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-### 13.2 Tabela de BF% por Categoria
+### 8.2 Tooltip com Detalhes em CM
 
-| Categoria | BF% Stage | BF% Off-Season |
-|-----------|:---------:|:--------------:|
-| Men's Physique | 5-8% | 10-15% |
-| Golden Ratio | 8-12% | 12-18% |
-| Classic Physique | 3-6% | 10-15% |
-| Open Bodybuilding | 2-5% | 12-18% |
-
-### 13.3 Características Distintivas
-
-| Categoria | Característica Principal | Pernas | Cintura |
-|-----------|-------------------------|:------:|:-------:|
-| Men's Physique | Beach body, deltóides 3D | ❌ Não julgadas | Moderada |
-| Golden Ratio | Harmonia matemática | ✅ Proporcionais | Proporcional |
-| Classic Physique | Era de ouro moderna | ✅ Importantes | MUITO fina |
-| Open Bodybuilding | Massa máxima | ✅ ESSENCIAIS | Fina (relativa) |
-
----
-
-## 14. CONSIDERAÇÕES FINAIS
-
-### 14.1 Observações Importantes
-
-1. **Golden Ratio** é o padrão clássico de estética universal - ideal para quem busca proporções naturais
-2. **Classic Physique** exige cintura MUITO apertada (0.42 × altura) e limite de peso
-3. **Men's Physique** NÃO julga pernas (coxa e coxa/panturrilha têm peso 0 no score)
-4. **Open Bodybuilding** é sobre TAMANHO máximo + simetria - pernas são essenciais
-5. A **Tríade** (pescoço = braço = panturrilha) se aplica a todas exceto Men's Physique
-6. **V-Taper** é a métrica mais visual - quanto maior, mais "estético"
-
-### 14.2 Referências
-
-| Categoria | Referência Principal | Stats |
-|-----------|---------------------|-------|
-| Golden Ratio | Steve Reeves | 185cm, 95kg |
-| Classic Physique | Chris Bumstead | 185cm, 104kg, 6x Olympia |
-| Men's Physique | Ryan Terry | 178cm, 93kg, 3x Olympia |
-| Open Bodybuilding | Derek Lunsford | 166cm, 104kg, Mr. Olympia 2024 |
-
-### 14.3 Histórico de Campeões Mr. Olympia (Open)
-
-| Ano | Campeão | Altura | Peso Stage |
-|-----|---------|:------:|:----------:|
-| 2024 | Derek Lunsford | 166cm | 104kg |
-| 2023 | Hadi Choopan | 170cm | 102kg |
-| 2020-21 | Big Ramy | 180cm | 136kg |
-| 2019 | Brandon Curry | 175cm | 114kg |
-| 2011-18 | Phil Heath (7x) | 175cm | 111kg |
-| 2006-07 | Jay Cutler | 175cm | 121kg |
-| 1998-05 | Ronnie Coleman (8x) | 180cm | 136kg |
-| 1992-97 | Dorian Yates (6x) | 178cm | 121kg |
-| 1984-91 | Lee Haney (8x) | 180cm | 113kg |
-| 1970-80 | Arnold (7x) | 188cm | 107kg |
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  💡 Detalhes                                                    │
+│                                                                 │
+│  Seu índice atual: 1.56                                         │
+│  Índice ideal (Golden): 1.618                                   │
+│                                                                 │
+│  Para atingir o índice ideal:                                   │
+│  • Seus ombros precisam ter 132.7cm (atual: 128cm)              │
+│  • Você precisa ganhar +4.7cm nos ombros                        │
+│  • OU reduzir a cintura de 82cm para 79cm                       │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## 15. CHANGELOG
+## 9. RESUMO DAS CORREÇÕES
+
+### 9.1 O Que Estava Errado
+
+| Proporção | ❌ ERRADO (antes) | ✅ CORRETO (agora) |
+|-----------|-------------------|---------------------|
+| Peitoral | "Golden Ratio: 117.0cm" | **indiceAtual: 6.22** / indiceMeta: 6.5 |
+| Braço | "Golden Ratio: 45.4cm" | **indiceAtual: 2.50** / indiceMeta: 2.52 |
+| Antebraço | "Golden Ratio: 36.3cm" | **indiceAtual: 0.78** / indiceMeta: 0.80 |
+| Cintura | "Golden Ratio: 93.7cm" | **indiceAtual: 0.82** / indiceMeta: 0.86 |
+| Coxa | "Golden Ratio: 42.0cm" | **indiceAtual: 1.63** / indiceMeta: 1.75 |
+| Panturrilha | "Golden Ratio: 34.6cm" | **indiceAtual: 1.75** / indiceMeta: 1.92 |
+
+### 9.2 O Que Já Estava Certo
+
+| Proporção | Exibição Correta |
+|-----------|------------------|
+| Shape-V (V-Taper) | Ratio Atual: **1.59** / Meta: 1.62 ✅ |
+| Tríade | **98.1%** (percentual de harmonia) ✅ |
+| Coxa vs Panturrilha | Ratio Atual: **1.63** / Meta: 1.50 ✅ |
+
+### 9.3 Regra Simples
+
+```
+SEMPRE mostrar na UI principal:
+• ÍNDICE (número decimal) para proporções
+• PERCENTUAL (%) para Tríade
+
+NUNCA mostrar na UI principal:
+• "Golden Ratio: XXcm" (valor em cm é secundário)
+```
+
+---
+
+## 10. CHANGELOG
 
 | Versão | Data | Alterações |
 |--------|------|------------|
-| 1.0 | Jan/2026 | Versão inicial (Golden, Classic, Men's) |
-| 2.0 | Fev/2026 | Revisão de fórmulas e constantes |
-| 3.0 | Fev/2026 | Adição da categoria Open Bodybuilding (Derek Lunsford), revisão completa, funções auxiliares, exemplos detalhados |
+| 3.0 | Fev/2026 | Versão inicial com 4 categorias |
+| 3.1 | Fev/2026 | **CORREÇÃO CRÍTICA**: Diferenciação entre ÍNDICES e VALORES em CM. Todas as proporções agora mostram ÍNDICE na UI principal. |
 
 ---
 
-**VITRU IA - Proporções Corporais Masculinas v3.0**  
-*Golden Ratio • Classic Physique • Men's Physique • Open Bodybuilding*
+**VITRU IA - Proporções Corporais Masculinas v3.1**  
+*Índices • Ratios • Golden Ratio • Classic • Men's Physique • Open BB*
