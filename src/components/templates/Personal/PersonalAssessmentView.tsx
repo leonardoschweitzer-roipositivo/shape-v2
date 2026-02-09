@@ -6,23 +6,16 @@ import { PersonalAthlete } from '@/mocks/personal';
 
 interface PersonalAssessmentViewProps {
     onConfirm: (data: { studentId: string; gender: 'male' | 'female'; studentName: string }) => void;
+    initialAthlete?: PersonalAthlete | null;
 }
 
-export const PersonalAssessmentView: React.FC<PersonalAssessmentViewProps> = ({ onConfirm }) => {
-    // Add gender property to PersonalAthlete type locally if not present in mocks/personal
-    // In a real app, this would come from the backend model
-    const [selectedAthlete, setSelectedAthlete] = useState<(PersonalAthlete & { gender?: 'male' | 'female' }) | null>(null);
-
-    // Mock gender assignment based on name for this demo flow if not present
-    const getGender = (name: string): 'male' | 'female' => {
-        // Simple heuristic for demo purposes
-        return name.split(' ')[0].endsWith('a') ? 'female' : 'male';
-    };
+export const PersonalAssessmentView: React.FC<PersonalAssessmentViewProps> = ({ onConfirm, initialAthlete }) => {
+    const [selectedAthlete, setSelectedAthlete] = useState<PersonalAthlete | null>(initialAthlete || null);
 
     const handleConfirm = () => {
         if (!selectedAthlete) return;
 
-        const gender = selectedAthlete.gender || getGender(selectedAthlete.name);
+        const gender: 'male' | 'female' = selectedAthlete.gender === 'FEMALE' ? 'female' : 'male';
 
         onConfirm({
             studentId: selectedAthlete.id,
@@ -78,7 +71,12 @@ export const PersonalAssessmentView: React.FC<PersonalAssessmentViewProps> = ({ 
                                         <Activity className="text-primary" size={20} />
                                         <h2 className="text-xl font-bold text-white tracking-wide uppercase">DADOS DE {selectedAthlete.name}</h2>
                                     </div>
-                                    <p className="text-sm text-gray-400">Preencha as medidas corporais coletadas para análise de simetria.</p>
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-sm text-gray-400">Preencha as medidas corporais coletadas para análise de simetria.</p>
+                                        <span className="text-[10px] font-bold bg-white/5 border border-white/10 px-2 py-0.5 rounded text-primary uppercase tracking-widest">
+                                            {selectedAthlete.gender === 'FEMALE' ? 'Sexo: Feminino' : 'Sexo: Masculino'}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
 

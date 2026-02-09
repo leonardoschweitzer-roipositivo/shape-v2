@@ -158,16 +158,107 @@ const MOCK_WEIGHT_DATA = [
 ];
 
 
+import { MeasurementHistory } from '@/mocks/personal';
+
 interface EvolutionProps {
     hideHeader?: boolean;
+    gender?: 'MALE' | 'FEMALE';
+    assessments?: MeasurementHistory[];
 }
 
-export const Evolution: React.FC<EvolutionProps> = ({ hideHeader = false }) => {
+export const Evolution: React.FC<EvolutionProps> = ({
+    hideHeader = false,
+    gender = 'MALE',
+    assessments
+}) => {
+    const isMale = gender === 'MALE';
+
+    // --- DYNAMIC METRICS CONFIG ---
+    const MALE_METRICS: MetricConfig[] = [
+        { id: 'ratio', label: 'Proporção Shape-V', color: '#00C9A7', unit: '', idealValue: 1.618, yAxisId: 'left' },
+        { id: 'score', label: 'Score Geral', color: '#7C3AED', unit: 'pts', idealValue: 100, yAxisId: 'right' },
+        { id: 'ombros', label: 'Ombros', color: '#3B82F6', unit: 'cm', yAxisId: 'right' },
+        { id: 'cintura', label: 'Cintura', color: '#F59E0B', unit: 'cm', yAxisId: 'right' },
+        { id: 'braco', label: 'Braço', color: '#EC4899', unit: 'cm', yAxisId: 'right' },
+        { id: 'peitoral', label: 'Peitoral', color: '#8B5CF6', unit: 'cm', yAxisId: 'right' },
+        { id: 'coxa', label: 'Coxa', color: '#06B6D4', unit: 'cm', yAxisId: 'right' },
+        { id: 'panturrilha', label: 'Panturrilha', color: '#84CC16', unit: 'cm', yAxisId: 'right' },
+    ];
+
+    const FEMALE_METRICS: MetricConfig[] = [
+        { id: 'ratio', label: 'Razão Cintura-Quadril', color: '#00C9A7', unit: '', idealValue: 0.70, yAxisId: 'left' },
+        { id: 'score', label: 'Score Geral', color: '#7C3AED', unit: 'pts', idealValue: 100, yAxisId: 'right' },
+        { id: 'quadril', label: 'Quadril', color: '#8B5CF6', unit: 'cm', yAxisId: 'right' },
+        { id: 'cintura', label: 'Cintura', color: '#F59E0B', unit: 'cm', yAxisId: 'right' },
+        { id: 'braco', label: 'Braço', color: '#EC4899', unit: 'cm', yAxisId: 'right' },
+        { id: 'coxa', label: 'Coxa', color: '#06B6D4', unit: 'cm', yAxisId: 'right' },
+        { id: 'ombros', label: 'Ombros', color: '#3B82F6', unit: 'cm', yAxisId: 'right' },
+        { id: 'panturrilha', label: 'Panturrilha', color: '#84CC16', unit: 'cm', yAxisId: 'right' },
+    ];
+
+    const AVAILABLE_METRICS = isMale ? MALE_METRICS : FEMALE_METRICS;
+
+    // --- DATA TRANSFORMATION ---
+    const chartData = React.useMemo(() => {
+        if (!assessments || assessments.length === 0) return MOCK_CHART_DATA;
+
+        return assessments.map(ass => {
+            const m = ass.measurements;
+            const date = new Date(ass.date);
+
+            const point: any = {
+                date: date.toLocaleDateString('pt-BR', { month: 'short' }),
+                fullDate: date,
+                ombros: m.shoulders,
+                cintura: m.waist,
+                quadril: m.hips,
+                braco: (m.armRight + m.armLeft) / 2,
+                coxa: (m.thighRight + m.thighLeft) / 2,
+                panturrilha: (m.calfRight + m.calfLeft) / 2,
+                peitoral: m.chest,
+                score: 70 + Math.random() * 20, // Mock score for now
+            };
+
+            if (isMale) {
+                point.ratio = Number((m.shoulders / m.waist).toFixed(2));
+            } else {
+                point.ratio = Number((m.waist / m.hips).toFixed(2));
+            }
+
+            return point;
+        }).sort((a, b) => a.fullDate.getTime() - b.fullDate.getTime());
+    }, [assessments, isMale]);
+
+    const weightData = React.useMemo(() => {
+        if (!assessments || assessments.length === 0) return MOCK_WEIGHT_DATA;
+
+        return assessments.map(ass => {
+            const m = ass.measurements;
+            const date = new Date(ass.date);
+            // Simple BF estimation if skinfolds are available, or just mock for now
+            const fatPercent = 15; // Placeholder
+            const weight = m.weight;
+            const fatMass = (weight * fatPercent) / 100;
+
+            return {
+                date: date.toLocaleDateString('pt-BR', { month: 'short' }),
+                total: weight,
+                lean: weight - fatMass,
+                fat: fatMass
+            };
+        }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    }, [assessments]);
+
     const [period, setPeriod] = useState('6M');
     const [viewMode, setViewMode] = useState<'charts' | 'list'>('charts');
 
     // Chart State
-    const [selectedMetrics, setSelectedMetrics] = useState<MetricConfig[]>([AVAILABLE_METRICS[0]]); // Helper to start with Ratio
+    const [selectedMetrics, setSelectedMetrics] = useState<MetricConfig[]>([AVAILABLE_METRICS[0]]);
+
+    // Reset selected metrics when gender changes to ensure they are valid for the current gender
+    React.useEffect(() => {
+        setSelectedMetrics([AVAILABLE_METRICS[0]]);
+    }, [gender]);
 
     // Weight State
     const [selectedWeightMetric, setSelectedWeightMetric] = useState('all');
@@ -360,7 +451,7 @@ export const Evolution: React.FC<EvolutionProps> = ({ hideHeader = false }) => {
 
                                 <div className="w-full h-[400px] mt-4">
                                     <GoldenEvolutionChart
-                                        data={MOCK_CHART_DATA}
+                                        data={chartData}
                                         selectedMetrics={selectedMetrics}
                                     />
                                 </div>
@@ -404,7 +495,7 @@ export const Evolution: React.FC<EvolutionProps> = ({ hideHeader = false }) => {
                                     </div>
 
                                     <div className="w-full h-[200px] mt-4">
-                                        <WeightChart data={MOCK_WEIGHT_DATA} selectedMetric={selectedWeightMetric as any} />
+                                        <WeightChart data={weightData} selectedMetric={selectedWeightMetric as any} />
                                     </div>
 
                                     <div className="flex gap-3 justify-center mt-6">

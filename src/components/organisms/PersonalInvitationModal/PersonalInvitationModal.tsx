@@ -1,42 +1,32 @@
 import React, { useState } from 'react';
-import { X, UserPlus, Mail, User, Calendar, Target, Sparkles, ArrowRight, Smartphone, Link as LinkIcon, QrCode } from 'lucide-react';
-import { Gender, UserGoal, GENDER_LABELS, GOAL_LABELS } from '@/types/athlete';
+import { X, UserPlus, Mail, Link as LinkIcon, Sparkles, ArrowRight, ShieldCheck, Dumbbell } from 'lucide-react';
 import { inviteService } from '@/services/invites';
 import { registrationService } from '@/services/registration';
 
-interface AthleteInvitationModalProps {
+interface PersonalInvitationModalProps {
     isOpen: boolean;
     onClose: () => void;
     onInvite: (data: any) => void;
 }
 
-type TabType = 'WHATSAPP' | 'EMAIL' | 'LINK' | 'QR' | 'MANUAL';
+type TabType = 'EMAIL' | 'LINK' | 'MANUAL';
 
-export const AthleteInvitationModal: React.FC<AthleteInvitationModalProps> = ({
+export const PersonalInvitationModal: React.FC<PersonalInvitationModalProps> = ({
     isOpen,
     onClose,
     onInvite
 }) => {
-    const [activeTab, setActiveTab] = useState<TabType>('WHATSAPP');
+    const [activeTab, setActiveTab] = useState<TabType>('EMAIL');
     const [loading, setLoading] = useState(false);
 
     // Manual Registration State
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
-    const [gender, setGender] = useState<Gender>('MALE');
-    const [birthDate, setBirthDate] = useState('');
-    const [goal, setGoal] = useState<UserGoal>('aesthetics');
+    const [cref, setCref] = useState('');
+    const [specialties, setSpecialties] = useState('');
 
     // Invite State
     const [generatedLink, setGeneratedLink] = useState('');
-    const [whatsappMessage, setWhatsappMessage] = useState(`Olá! 👋
-
-Você foi convidado(a) para fazer parte do meu time de atletas no VITRU IA - o app que analisa suas proporções corporais usando a matemática do físico perfeito!
-
-Clique no link abaixo para criar sua conta:
-{link}
-
-Qualquer dúvida, estou à disposição!`);
 
     if (!isOpen) return null;
 
@@ -44,12 +34,11 @@ Qualquer dúvida, estou à disposição!`);
         e.preventDefault();
         setLoading(true);
         try {
-            const result = await registrationService.registerManual('ATLETA', {
+            const result = await registrationService.registerManual('PERSONAL', {
                 name,
                 email,
-                gender,
-                birthDate,
-                goal,
+                cref,
+                specialties: specialties.split(',').map(s => s.trim()),
                 sendInviteEmail: true
             });
             onInvite(result);
@@ -57,9 +46,8 @@ Qualquer dúvida, estou à disposição!`);
             // Reset
             setName('');
             setEmail('');
-            setGender('MALE');
-            setBirthDate('');
-            setGoal('aesthetics');
+            setCref('');
+            setSpecialties('');
         } catch (error) {
             console.error(error);
         } finally {
@@ -67,20 +55,14 @@ Qualquer dúvida, estou à disposição!`);
         }
     };
 
-    const generateInviteLink = async (type: 'LINK_GENERIC' | 'WHATSAPP') => {
+    const generateInviteLink = async (type: 'LINK_GENERIC') => {
         setLoading(true);
         try {
             const invite = await inviteService.createInvite({
                 type,
-                targetRole: 'ATLETA',
-                customMessage: type === 'WHATSAPP' ? whatsappMessage : undefined
+                targetRole: 'PERSONAL'
             });
-
-            if (type === 'WHATSAPP' && invite.whatsappUrl) {
-                window.open(invite.whatsappUrl, '_blank');
-            } else {
-                setGeneratedLink(invite.url);
-            }
+            setGeneratedLink(invite.url);
         } catch (error) {
             console.error(error);
         } finally {
@@ -100,16 +82,16 @@ Qualquer dúvida, estou à disposição!`);
                 onClick={onClose}
             ></div>
 
-            <div className="relative bg-[#131B2C] border border-white/10 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-fade-in-up h-[600px]">
+            <div className="relative bg-[#131B2C] border border-white/10 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-fade-in-up h-[500px]">
 
                 {/* Header */}
                 <div className="p-6 border-b border-white/5 flex items-center justify-between bg-[#131B2C]">
                     <div className="flex flex-col gap-1">
                         <h2 className="text-sm font-bold text-primary uppercase tracking-widest flex items-center gap-2">
-                            CONVIDAR NOVO ALUNO
+                            ADICIONAR PERSONAL TRAINER
                             <Sparkles size={12} className="text-secondary animate-pulse" />
                         </h2>
-                        <p className="text-xs text-gray-400">Escolha como deseja adicionar o aluno ao seu time.</p>
+                        <p className="text-xs text-gray-400">Gerencie o time de personais da academia.</p>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full text-gray-400 hover:text-white transition-colors">
                         <X size={20} />
@@ -119,12 +101,6 @@ Qualquer dúvida, estou à disposição!`);
                 <div className="flex flex-1 overflow-hidden">
                     {/* Sidebar Tabs */}
                     <div className="w-48 bg-[#0A0F1C] border-r border-white/5 flex flex-col p-4 gap-2">
-                        <button
-                            onClick={() => setActiveTab('WHATSAPP')}
-                            className={`flex items-center gap-3 p-3 rounded-xl text-sm font-medium transition-all ${activeTab === 'WHATSAPP' ? 'bg-primary/10 text-primary border border-primary/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-                        >
-                            <Smartphone size={18} /> WhatsApp
-                        </button>
                         <button
                             onClick={() => setActiveTab('EMAIL')}
                             className={`flex items-center gap-3 p-3 rounded-xl text-sm font-medium transition-all ${activeTab === 'EMAIL' ? 'bg-primary/10 text-primary border border-primary/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
@@ -136,12 +112,6 @@ Qualquer dúvida, estou à disposição!`);
                             className={`flex items-center gap-3 p-3 rounded-xl text-sm font-medium transition-all ${activeTab === 'LINK' ? 'bg-primary/10 text-primary border border-primary/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                         >
                             <LinkIcon size={18} /> Link
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('QR')}
-                            className={`flex items-center gap-3 p-3 rounded-xl text-sm font-medium transition-all ${activeTab === 'QR' ? 'bg-primary/10 text-primary border border-primary/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-                        >
-                            <QrCode size={18} /> QR Code
                         </button>
                         <div className="my-2 border-t border-white/5 mx-2"></div>
                         <button
@@ -155,36 +125,16 @@ Qualquer dúvida, estou à disposição!`);
                     {/* Content Area */}
                     <div className="flex-1 overflow-y-auto p-6 bg-[#131B2C]">
 
-                        {activeTab === 'WHATSAPP' && (
-                            <div className="space-y-6">
-                                <div className="bg-[#0A0F1C] p-4 rounded-xl border border-white/5">
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">Prévia da Mensagem</label>
-                                    <textarea
-                                        value={whatsappMessage}
-                                        onChange={(e) => setWhatsappMessage(e.target.value)}
-                                        className="w-full h-40 bg-transparent text-white text-sm resize-none focus:outline-none"
-                                    />
-                                </div>
-                                <button
-                                    onClick={() => generateInviteLink('WHATSAPP')}
-                                    disabled={loading}
-                                    className="w-full h-12 bg-[#25D366] hover:brightness-110 text-black rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(37,211,102,0.2)]"
-                                >
-                                    {loading ? 'Gerando...' : 'Abrir no WhatsApp'}
-                                </button>
-                            </div>
-                        )}
-
                         {activeTab === 'EMAIL' && (
                             <div className="space-y-6 flex flex-col items-center justify-center h-full text-center">
                                 <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
                                     <Mail size={32} className="text-primary" />
                                 </div>
                                 <h3 className="text-xl font-bold text-white">Convite por Email</h3>
-                                <p className="text-gray-400 text-sm max-w-xs">Envie um link único e rastreável diretamente para o email do aluno.</p>
+                                <p className="text-gray-400 text-sm max-w-xs">O personal receberá um link para cadastro vinculado à sua academia.</p>
                                 <input
                                     type="email"
-                                    placeholder="email@aluno.com"
+                                    placeholder="email@personal.com"
                                     className="w-full max-w-sm bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50 text-sm"
                                 />
                                 <button className="w-full max-w-sm h-12 bg-primary hover:bg-primary/90 text-[#0A0F1C] rounded-xl font-bold transition-all">
@@ -196,8 +146,8 @@ Qualquer dúvida, estou à disposição!`);
                         {activeTab === 'LINK' && (
                             <div className="space-y-6">
                                 <div className="text-center space-y-2">
-                                    <h3 className="text-lg font-bold text-white">Link de Convite</h3>
-                                    <p className="text-gray-400 text-sm">Gere um link reutilizável para compartilhar em qualquer lugar.</p>
+                                    <h3 className="text-lg font-bold text-white">Link de Afiliação</h3>
+                                    <p className="text-gray-400 text-sm">Compartilhe este link com personais para que eles se cadastrem na sua academia.</p>
                                 </div>
 
                                 {!generatedLink ? (
@@ -227,23 +177,6 @@ Qualquer dúvida, estou à disposição!`);
                             </div>
                         )}
 
-                        {activeTab === 'QR' && (
-                            <div className="h-full flex flex-col items-center justify-center space-y-6">
-                                <div className="bg-white p-4 rounded-xl">
-                                    {/* Mock QR Code */}
-                                    <img
-                                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://vitru.ia/register`}
-                                        alt="QR Code"
-                                        className="w-48 h-48"
-                                    />
-                                </div>
-                                <div className="text-center">
-                                    <h3 className="text-white font-bold">QR Code para Cadastro</h3>
-                                    <p className="text-gray-400 text-xs mt-1">Peça para o aluno escanear com a câmera</p>
-                                </div>
-                            </div>
-                        )}
-
                         {activeTab === 'MANUAL' && (
                             <form onSubmit={handleManualSubmit} className="space-y-4">
                                 <div>
@@ -268,25 +201,28 @@ Qualquer dúvida, estou à disposição!`);
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Gênero</label>
-                                        <select
-                                            value={gender}
-                                            onChange={(e) => setGender(e.target.value as Gender)}
-                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50 text-sm appearance-none cursor-pointer"
-                                        >
-                                            <option value="MALE">Masculino</option>
-                                            <option value="FEMALE">Feminino</option>
-                                            <option value="OTHER">Outro</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Nascimento</label>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+                                            <ShieldCheck size={12} /> CREF
+                                        </label>
                                         <input
-                                            type="date"
-                                            value={birthDate}
-                                            onChange={(e) => setBirthDate(e.target.value)}
+                                            type="text"
+                                            value={cref}
+                                            onChange={(e) => setCref(e.target.value)}
+                                            placeholder="000000-G/UF"
                                             className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50 text-sm"
                                             required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+                                            <Dumbbell size={12} /> Especialidades
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={specialties}
+                                            onChange={(e) => setSpecialties(e.target.value)}
+                                            placeholder="Musculação, CrossFit..."
+                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50 text-sm"
                                         />
                                     </div>
                                 </div>
@@ -296,7 +232,7 @@ Qualquer dúvida, estou à disposição!`);
                                     disabled={loading}
                                     className="w-full h-12 bg-primary hover:bg-primary/90 text-[#0A0F1C] rounded-xl font-bold flex items-center justify-center gap-2 transition-all mt-4"
                                 >
-                                    {loading ? 'Cadastrando...' : 'CADASTRAR ALUNO'}
+                                    {loading ? 'Cadastrando...' : 'CADASTRAR PERSONAL'}
                                 </button>
                             </form>
                         )}

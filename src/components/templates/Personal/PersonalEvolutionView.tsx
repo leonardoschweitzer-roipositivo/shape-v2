@@ -65,7 +65,11 @@ export const PersonalEvolutionView: React.FC = () => {
                         {/* Rendering the original Evolution component inside */}
                         {/* In a real app, we would pass athleteId to Evolution */}
                         <div className="-mx-4 md:-mx-8">
-                            <Evolution hideHeader={true} />
+                            <Evolution
+                                hideHeader={true}
+                                gender={selectedAthlete.gender === 'FEMALE' ? 'FEMALE' : 'MALE'}
+                                assessments={selectedAthlete.assessments}
+                            />
                         </div>
                     </div>
                 )}

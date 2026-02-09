@@ -22,15 +22,19 @@ import {
   PersonalEvolutionView,
   PersonalCoachView,
   PersonalProfilePage,
+  AthleteDetailsView,
   AcademyDashboard,
   AcademyPersonalsList,
   AcademyProfilePage,
   AthleteInvitationModal,
+  PersonalInvitationModal,
+  StudentRegistration,
   type ProfileType
 } from '@/components';
 import { useAthleteStore } from '@/stores/athleteStore';
+import { mockPersonalAthletes, PersonalAthlete } from '@/mocks/personal';
 
-type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking';
+type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -38,12 +42,14 @@ const App: React.FC = () => {
   const [isAssessmentOpen, setIsAssessmentOpen] = useState(false);
   const [isCoachModalOpen, setIsCoachModalOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [isPersonalInviteModalOpen, setIsPersonalInviteModalOpen] = useState(false);
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
   const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(null);
-  const { settings } = useAthleteStore();
+  const { settings, profile } = useAthleteStore();
 
   // State for assessment flow
   const [assessmentData, setAssessmentData] = useState<{ studentName?: string; gender?: 'male' | 'female' }>({});
+  const [athleteForEvaluation, setAthleteForEvaluation] = useState<PersonalAthlete | null>(null);
 
   const handleAssessmentSubmit = (data?: { studentName: string; gender: 'male' | 'female' }) => {
     setIsAssessmentOpen(false);
@@ -59,6 +65,10 @@ const App: React.FC = () => {
 
   const handleInviteAthlete = () => {
     setIsInviteModalOpen(true);
+  };
+
+  const handleInvitePersonal = () => {
+    setIsPersonalInviteModalOpen(true);
   };
 
   // Apply primary color globally from settings
@@ -97,9 +107,7 @@ const App: React.FC = () => {
               onSelectPersonal={(id) => {
                 alert(`Ver detalhes do personal ${id}`);
               }}
-              onInvitePersonal={() => {
-                alert('Modal de convite em desenvolvimento');
-              }}
+              onInvitePersonal={handleInvitePersonal}
             />
           );
         case 'students':
@@ -135,7 +143,7 @@ const App: React.FC = () => {
             <PersonalDashboard
               onNavigateToAthlete={(id) => {
                 setSelectedAthleteId(id);
-                setCurrentView('students');
+                setCurrentView('athlete-details');
               }}
               onNavigateToAthletes={() => setCurrentView('students')}
             />
@@ -145,25 +153,44 @@ const App: React.FC = () => {
             <PersonalAthletesList
               onSelectAthlete={(id) => {
                 setSelectedAthleteId(id);
-                // Futuramente: navegar para detalhe do atleta
-                alert(`Ver detalhes do atleta ${id}`);
+                setCurrentView('athlete-details');
               }}
-              onInviteAthlete={() => {
-                // Futuramente: abrir modal de convite
-                alert('Modal de convite em desenvolvimento');
-              }}
+              onInviteAthlete={handleInviteAthlete}
+              onRegisterStudent={() => setCurrentView('student-registration')}
               onRegisterMeasurement={(id) => {
                 setSelectedAthleteId(id);
-                // Iniciar avaliação para este atleta
+                const athlete = mockPersonalAthletes.find(a => a.id === id);
+                if (athlete) setAthleteForEvaluation(athlete);
+                setCurrentView('assessment');
+              }}
+            />
+          );
+        case 'athlete-details':
+          const selectedAthlete = mockPersonalAthletes.find(a => a.id === selectedAthleteId);
+          if (!selectedAthlete) {
+            setCurrentView('students');
+            return null;
+          }
+          return (
+            <AthleteDetailsView
+              athlete={selectedAthlete}
+              onBack={() => setCurrentView('students')}
+              onNewAssessment={() => {
+                setAthleteForEvaluation(selectedAthlete);
                 setCurrentView('assessment');
               }}
             />
           );
         case 'assessment':
-          return <PersonalAssessmentView onConfirm={(data) => handleAssessmentSubmit({
-            studentName: data.studentName,
-            gender: data.gender
-          })} />;
+          return (
+            <PersonalAssessmentView
+              initialAthlete={athleteForEvaluation}
+              onConfirm={(data) => handleAssessmentSubmit({
+                studentName: data.studentName,
+                gender: data.gender
+              })}
+            />
+          );
         case 'evolution':
           return <PersonalEvolutionView />;
         case 'coach':
@@ -186,6 +213,16 @@ const App: React.FC = () => {
           return <AthleteSettingsPage />;
         case 'trainers-ranking':
           return <RankingPersonaisPage />;
+        case 'student-registration':
+          return (
+            <StudentRegistration
+              onBack={() => setCurrentView('students')}
+              onComplete={() => {
+                alert('Aluno cadastrado com sucesso!');
+                setCurrentView('students');
+              }}
+            />
+          );
         default:
           return (
             <div className="flex-1 flex items-center justify-center text-gray-500">
@@ -204,7 +241,7 @@ const App: React.FC = () => {
       case 'design-system':
         return <DesignSystem />;
       case 'evolution':
-        return <Evolution />;
+        return <Evolution gender={profile?.gender === 'FEMALE' ? 'FEMALE' : 'MALE'} />;
       case 'hall':
         return <HallDosDeuses />;
       case 'coach':
@@ -256,7 +293,10 @@ const App: React.FC = () => {
         case 'design-system': return 'DESIGN SYSTEM';
         case 'trainers-ranking': return 'RANKING PERSONAIS';
         case 'profile': return 'MEU PERFIL';
+        case 'profile': return 'MEU PERFIL';
         case 'settings': return 'CONFIGURAÇÕES';
+        case 'student-registration': return 'CADASTRO DE ALUNO';
+        case 'athlete-details': return 'DETALHES DO ATLETA';
         default: return currentView.toUpperCase();
       }
     }
@@ -286,7 +326,12 @@ const App: React.FC = () => {
       {/* Sidebar Navigation */}
       <Sidebar
         currentView={currentView}
-        onNavigate={(view) => setCurrentView(view as ViewState)}
+        onNavigate={(view) => {
+          setCurrentView(view as ViewState);
+          if (view !== 'assessment') {
+            setAthleteForEvaluation(null);
+          }
+        }}
         onLogout={handleLogout}
         userProfile={userProfile}
       />
@@ -297,6 +342,8 @@ const App: React.FC = () => {
         {/* Global Header - Persistent across all views */}
         <Header
           onOpenCoach={() => setIsCoachModalOpen(true)}
+          onRegisterStudent={() => setCurrentView('student-registration')}
+          onInvitePersonal={handleInvitePersonal}
           title={getPageTitle()}
           userProfile={userProfile}
         />
@@ -325,7 +372,15 @@ const App: React.FC = () => {
         onClose={() => setIsInviteModalOpen(false)}
         onInvite={(data) => {
           console.log('Inviting athlete:', data);
-          alert(`Convite enviado para ${data.name} (${data.gender})`);
+          alert(`Convite enviado/Gerado! (Verifique o console para detalhes)`);
+        }}
+      />
+      <PersonalInvitationModal
+        isOpen={isPersonalInviteModalOpen}
+        onClose={() => setIsPersonalInviteModalOpen(false)}
+        onInvite={(data) => {
+          console.log('Inviting personal:', data);
+          alert(`Convite de Personal enviado/Gerado!`);
         }}
       />
     </div>
