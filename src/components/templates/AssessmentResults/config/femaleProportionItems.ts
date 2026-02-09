@@ -15,11 +15,11 @@ import {
 
 // Helper function to get status label
 const getStatus = (percentual: number): string => {
-    if (percentual >= 98) return `IDEAL CLÁSSICO (${Math.round(percentual)}%)`;
-    if (percentual >= 90) return `QUASE LÁ (${Math.round(percentual)}%)`;
-    if (percentual >= 80) return `EM PROGRESSO (${Math.round(percentual)}%)`;
-    if (percentual >= 60) return `DESENVOLVENDO (${Math.round(percentual)}%)`;
-    return `INICIANDO (${Math.round(percentual)}%)`;
+    if (percentual >= 103) return 'ELITE';
+    if (percentual >= 97) return 'META';
+    if (percentual >= 90) return 'QUASE LÁ';
+    if (percentual >= 82) return 'CAMINHO';
+    return 'INÍCIO';
 };
 
 // Helper function to get method label
@@ -74,16 +74,28 @@ export const getFemaleProportionItems = (
 
     const methodLabel = getMethodLabel(comparisonMode);
 
-    // 1. WHR (Waist-to-Hip Ratio) - The most important metric
+    // Helper for inverse/normal percent calculation (v1.1)
+    const getRatioPercent = (current: number, target: number, inverse = false) => {
+        if (!target || target <= 0) return 0;
+        if (inverse) {
+            if (current <= target) {
+                const bonus = (target - current) / target;
+                return Math.min(110, 100 + (bonus * 50));
+            }
+            const excessoPercent = ((current - target) / target) * 100;
+            return Math.max(0, 100 - (excessoPercent * 1.5));
+        }
+        return Math.min(115, (current / target) * 100);
+    };
+
+    // 1. WHR (Waist-to-Hip Ratio) - The most important metric (INVERSE)
     const whrAtual = measurements.cintura / measurements.quadril;
     let whrTarget = FEMALE_GOLDEN_RATIO.WHR;
     if (comparisonMode === 'bikini') whrTarget = BIKINI_CONSTANTS.WHR_TARGET;
     if (comparisonMode === 'wellness') whrTarget = WELLNESS_CONSTANTS.WHR_TARGET;
     if (comparisonMode === 'figure') whrTarget = FIGURE_CONSTANTS.WHR_TARGET;
 
-    // Invert calculation for score: closer to target is better
-    const whrDiff = Math.abs(whrAtual - whrTarget);
-    const whrScore = Math.max(0, 100 - (whrDiff * 200)); // Rough scoring
+    const whrPercentual = getRatioPercent(whrAtual, whrTarget, true);
 
     // 2. Hourglass Index
     const hourglassAtual = (measurements.peito + measurements.quadril) / (2 * measurements.cintura);
@@ -91,7 +103,7 @@ export const getFemaleProportionItems = (
     if (comparisonMode === 'bikini') hourglassTarget = BIKINI_CONSTANTS.HOURGLASS_TARGET;
     if (comparisonMode === 'wellness') hourglassTarget = WELLNESS_CONSTANTS.HOURGLASS_TARGET;
 
-    const hgScore = Math.max(0, 100 - (Math.abs(hourglassAtual - hourglassTarget) * 100));
+    const hgPercentual = getRatioPercent(hourglassAtual, hourglassTarget);
 
     return [
         // 1. WHR - Waist to Hip Ratio (Metrics #1)
@@ -106,15 +118,15 @@ export const getFemaleProportionItems = (
                 currentValue: whrAtual.toFixed(2),
                 valueLabel: "RATIO ATUAL",
                 description: `A proporção áurea feminina. Para ${methodLabel}, o ideal é ${whrTarget}.`,
-                statusLabel: getStatus(whrScore),
-                userPosition: Math.round(whrScore),
+                statusLabel: getStatus(whrPercentual),
+                userPosition: Math.round(whrPercentual),
                 goalPosition: 100,
                 image: "/images/widgets/cintura.png", // Reuse appropriate image
                 rawImage: true,
                 measurementsUsed: ['Cintura', 'Quadril']
             },
             ai: {
-                strength: whrScore >= 90 ? `Seu <span class='text-primary font-bold'>WHR</span> está perfeito para a categoria.` : undefined,
+                strength: whrPercentual >= 90 ? `Seu <span class='text-primary font-bold'>WHR</span> está perfeito para a categoria.` : undefined,
                 suggestion: "Mantenha a cintura controlada e foque no desenvolvimento de glúteos para melhorar o ratio."
             }
         },
@@ -131,15 +143,15 @@ export const getFemaleProportionItems = (
                 valueLabel: "RATIO ATUAL",
                 valueUnit: "",
                 description: "Equilíbrio entre Busto e Quadril em relação à Cintura.",
-                statusLabel: getStatus(hgScore),
-                userPosition: Math.round(hgScore),
+                statusLabel: getStatus(hgPercentual),
+                userPosition: Math.round(hgPercentual),
                 goalPosition: 100,
                 image: "/images/widgets/shape-v.png", // Reuse V-shape image as it implies torso shape
                 rawImage: true,
                 measurementsUsed: ['Busto', 'Quadril', 'Cintura']
             },
             ai: {
-                strength: hgScore >= 90 ? "Formato de ampulheta (X-Shape) bem estabelecido." : undefined,
+                strength: hgPercentual >= 90 ? "Formato de ampulheta (X-Shape) bem estabelecido." : undefined,
                 suggestion: "Busque equilibrar o volume de busto/costas com o quadril."
             }
         },
@@ -154,7 +166,7 @@ export const getFemaleProportionItems = (
                 description: comparisonMode === 'wellness'
                     ? "Ponto focal da categoria Wellness."
                     : "Proporção de glúteos em relação à cintura.",
-                statusLabel: "EM DESENVOLVIMENTO",
+                statusLabel: getStatus(70),
                 userPosition: 70, // Mock
                 goalPosition: 100,
                 image: "/images/widgets/coxa.png", // Reuse
@@ -174,8 +186,8 @@ export const getFemaleProportionItems = (
                 currentValue: String(measurements.cintura),
                 valueUnit: "CM",
                 description: "Cintura fina é essencial para acentuar as curvas.",
-                statusLabel: getStatus(diferencas.cintura?.percentual || 0),
-                userPosition: diferencas.cintura?.percentual || 0,
+                statusLabel: getStatus(getRatioPercent(measurements.cintura, ideais.cintura, true)),
+                userPosition: Math.round(getRatioPercent(measurements.cintura, ideais.cintura, true)),
                 goalPosition: 100,
                 image: "/images/widgets/cintura.png",
                 rawImage: true,
@@ -195,8 +207,8 @@ export const getFemaleProportionItems = (
                 currentValue: String(measurements.coxa),
                 valueUnit: "CM",
                 description: "Volume de pernas harmonioso com o quadril.",
-                statusLabel: getStatus(diferencas.coxa?.percentual || 0),
-                userPosition: diferencas.coxa?.percentual || 0,
+                statusLabel: getStatus(getRatioPercent(measurements.coxa, ideais.coxa)),
+                userPosition: Math.round(getRatioPercent(measurements.coxa, ideais.coxa)),
                 goalPosition: 100,
                 image: "/images/widgets/coxa.png",
                 rawImage: true,
@@ -217,8 +229,8 @@ export const getFemaleProportionItems = (
                 description: comparisonMode === 'wellness'
                     ? "Menos dominantes que o quadril."
                     : "Largura para criar a ilusão de cintura mais fina.",
-                statusLabel: getStatus(diferencas.ombros?.percentual || 0),
-                userPosition: diferencas.ombros?.percentual || 0,
+                statusLabel: getStatus(getRatioPercent(measurements.ombros, ideais.ombros)),
+                userPosition: Math.round(getRatioPercent(measurements.ombros, ideais.ombros)),
                 goalPosition: 100,
                 image: "/images/widgets/shape-v.png",
                 rawImage: true,

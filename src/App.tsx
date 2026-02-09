@@ -132,8 +132,10 @@ const App: React.FC = () => {
 
     // Fallback: search all mock athletes if we're in "my record" view as an athlete
     if (!selectedAthlete && userProfile === 'atleta') {
+      const targetEmail = profile?.email?.toLowerCase();
       selectedAthlete = personalAthletes.find(a => a.id === profile?.id) ||
-        personalAthletes.find(a => a.email === profile?.email);
+        personalAthletes.find(a => targetEmail && a.email.toLowerCase() === targetEmail) ||
+        personalAthletes.find(a => a.id === 'athlete-leonardo');
     }
 
     if (selectedAthlete) {
@@ -378,7 +380,20 @@ const App: React.FC = () => {
       case 'design-system':
         return <DesignSystem />;
       case 'evolution':
-        return <Evolution gender={profile?.gender === 'FEMALE' ? 'FEMALE' : 'MALE'} />;
+        // Robust athlete detection
+        const userEmail = profile?.email?.toLowerCase();
+        const userName = profile?.name?.toLowerCase();
+
+        const currentAthleteForEvolution = personalAthletes.find(a =>
+          a.id === profile?.id ||
+          (userEmail && a.email.toLowerCase() === userEmail) ||
+          (userName && a.name.toLowerCase().includes(userName))
+        ) || personalAthletes.find(a => a.id === 'athlete-leonardo'); // Default to Leonardo for demo/dev
+
+        return <Evolution
+          gender={profile?.gender === 'FEMALE' ? 'FEMALE' : 'MALE'}
+          assessments={currentAthleteForEvolution?.assessments || (assessmentData.assessment ? [assessmentData.assessment] : [])}
+        />;
       case 'hall':
         return <HallDosDeuses />;
       case 'coach':
@@ -397,34 +412,37 @@ const App: React.FC = () => {
           </div>
         );
       case 'my-record':
-        if (!profile) return <DashboardView userProfile={userProfile} />;
+        // Robust athlete detection with fallback to Leonardo
+        const myRecordTargetEmail = profile?.email?.toLowerCase();
 
-        // Try to find if this athlete exists in our mock data to show more history
-        const foundMockAthlete = personalAthletes.find(a =>
-          a.id === profile.id ||
-          a.email.toLowerCase() === profile.email.toLowerCase() ||
-          (profile.email === 'atleta.homem@vitru.v' && a.id === 'athlete-leonardo')
-        );
+        const myRecordAthlete = personalAthletes.find(a =>
+          (profile && a.id === profile.id) ||
+          (myRecordTargetEmail && a.email.toLowerCase() === myRecordTargetEmail)
+        ) || personalAthletes.find(a => a.id === 'athlete-leonardo');
 
-        // Convert store profile to PersonalAthlete shape for the view
-        const currentAthlete: PersonalAthlete = foundMockAthlete || {
-          id: profile.id,
-          name: profile.name,
-          email: profile.email,
-          gender: profile.gender,
-          avatarUrl: profile.avatarUrl || null,
-          score: profile.latestScore?.overall || 0,
+        if (!myRecordAthlete && !profile) {
+          return <DashboardView userProfile={userProfile} />;
+        }
+
+        // Use found mock athlete or construct from profile
+        const displayAthlete: PersonalAthlete = myRecordAthlete || {
+          id: profile!.id,
+          name: profile!.name,
+          email: profile!.email,
+          gender: profile!.gender,
+          avatarUrl: profile!.avatarUrl || null,
+          score: profile!.latestScore?.overall || 0,
           scoreVariation: 0,
-          ratio: profile.latestScore?.ratio || 0,
+          ratio: profile!.latestScore?.ratio || 0,
           lastMeasurement: new Date().toISOString(),
           status: 'active',
-          linkedSince: profile.createdAt.toISOString(),
+          linkedSince: profile!.createdAt.toISOString(),
           assessments: assessmentData.assessment ? [assessmentData.assessment] : []
         };
 
         return (
           <AthleteDetailsView
-            athlete={currentAthlete}
+            athlete={displayAthlete}
             onBack={() => setCurrentView('dashboard')}
             onConsultAssessment={handleConsultAssessment}
             onNewAssessment={() => {

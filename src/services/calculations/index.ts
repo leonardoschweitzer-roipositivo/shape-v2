@@ -78,3 +78,9 @@ export {
 export {
     calcularAvaliacaoGeral
 } from './assessment.ts'
+
+// Evolution
+export {
+    mapMeasurementToInput,
+    processEvolutionHistory
+} from './evolutionProcessor'

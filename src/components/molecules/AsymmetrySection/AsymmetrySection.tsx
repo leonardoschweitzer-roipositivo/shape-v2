@@ -136,7 +136,7 @@ export const AsymmetrySection: React.FC<AsymmetrySectionProps> = ({ data, histor
 
                                     <div className="col-span-3 flex items-center justify-end gap-1.5">
                                         <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase bg-opacity-20 flex items-center gap-1`} style={{ color: status.color, backgroundColor: status.bg }}>
-                                            {item.differencePercent <= 3 ? 'OK' : `${item.differencePercent.toFixed(1)}%`}
+                                            {item.differencePercent < 1.0 ? 'OK' : `${item.differencePercent.toFixed(1)}%`}
                                         </span>
                                         {isSelected && <ChevronRight size={14} className="text-gray-500" />}
                                     </div>

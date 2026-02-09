@@ -34,6 +34,7 @@ export const WeightChart: React.FC<WeightChartProps> = ({ data, selectedMetric =
                     contentStyle={{ backgroundColor: '#131B2C', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
                     labelStyle={{ color: '#9CA3AF', fontSize: '10px', textTransform: 'uppercase', fontWeight: 'bold' }}
                     itemStyle={{ fontSize: '12px' }}
+                    formatter={(value: any, name: any) => [`${Number(value).toFixed(2)}kg`, name]}
                 />
 
                 {showTotal && (

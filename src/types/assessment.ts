@@ -77,6 +77,7 @@ export interface ProporcaoDetalhe {
     peso: number;
     percentualDoIdeal: number;
     contribuicao: number;
+    valor?: number;
 }
 
 export interface ProportionScoreDetails {

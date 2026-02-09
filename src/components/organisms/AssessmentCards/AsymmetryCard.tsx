@@ -35,8 +35,12 @@ export const AsymmetryCard: React.FC<AsymmetryCardProps> = ({ icon, title, subti
     };
 
     const config = statusConfig[status];
-    const isRightHeavy = parseFloat(rightVal.replace(',', '.')) > parseFloat(leftVal.replace(',', '.'));
-    const isBalanced = status === 'symmetrical';
+    const rightValNum = parseFloat(rightVal.replace(',', '.'));
+    const leftValNum = parseFloat(leftVal.replace(',', '.'));
+    const diffNum = rightValNum - leftValNum;
+    const absDiff = Math.abs(diffNum);
+    const isRightHeavy = diffNum > 0;
+    const isBalanced = absDiff < 0.1;
 
     return (
         <GlassPanel className="p-5 rounded-2xl border border-white/5 flex flex-col gap-4 relative overflow-hidden">
@@ -103,8 +107,8 @@ export const AsymmetryCard: React.FC<AsymmetryCardProps> = ({ icon, title, subti
                                     borderRadius: borders.radius.full,
                                     position: 'absolute',
                                     background: isRightHeavy ? colors.brand.primary : colors.brand.secondary,
-                                    width: status === 'high' ? '40%' : '15%',
-                                    ...(isRightHeavy ? { right: '50%', transformOrigin: 'left' } : { left: '50%', transform: 'translateX(-100%)', transformOrigin: 'right' })
+                                    width: `${Math.min(absDiff * 20, 48)}%`,
+                                    ...(isRightHeavy ? { left: '50%', transformOrigin: 'left' } : { right: '50%', transform: 'translateX(0%)', transformOrigin: 'right' })
                                 }}
                             ></div>
                         )}
@@ -130,7 +134,7 @@ export const AsymmetryCard: React.FC<AsymmetryCardProps> = ({ icon, title, subti
                         color: config.color,
                         background: config.bgColor
                     }}>
-                        {status === 'symmetrical' ? '0,0 cm' : `${diff} cm`}
+                        {absDiff < 0.1 ? '0,0 cm' : `${diff} cm`}
                     </span>
                 </div>
 

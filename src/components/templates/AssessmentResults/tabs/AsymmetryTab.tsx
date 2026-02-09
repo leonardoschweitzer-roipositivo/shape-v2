@@ -61,10 +61,14 @@ export const AsymmetryTab: React.FC<AsymmetryTabProps> = ({ assessment }) => {
 
     const formatVal = (val: number) => val.toFixed(1).replace('.', ',');
     const formatDiff = (diff: number) => (diff > 0 ? '+' : '') + diff.toFixed(1).replace('.', ',');
-    const getStatus = (diff: number) => {
-        const absDiff = Math.abs(diff);
-        if (absDiff > 2.0) return 'high';
-        if (absDiff > 1.0) return 'moderate';
+    const getStatus = (v1: number, v2: number) => {
+        const diff = Math.abs(v1 - v2);
+        const maxVal = Math.max(v1, v2);
+        if (maxVal === 0) return 'symmetrical';
+        const pct = (diff / maxVal) * 100;
+
+        if (pct >= 5.0) return 'high';
+        if (pct >= 1.0) return 'moderate';
         return 'symmetrical';
     };
 
@@ -92,7 +96,7 @@ export const AsymmetryTab: React.FC<AsymmetryTabProps> = ({ assessment }) => {
                 leftVal: formatVal(m.armLeft),
                 rightVal: formatVal(m.armRight),
                 diff: formatDiff(m.armRight - m.armLeft),
-                status: getStatus(m.armRight - m.armLeft)
+                status: getStatus(m.armLeft, m.armRight)
             },
             {
                 id: 'antebraco',
@@ -103,7 +107,7 @@ export const AsymmetryTab: React.FC<AsymmetryTabProps> = ({ assessment }) => {
                 leftVal: formatVal(m.forearmLeft),
                 rightVal: formatVal(m.forearmRight),
                 diff: formatDiff(m.forearmRight - m.forearmLeft),
-                status: getStatus(m.forearmRight - m.forearmLeft)
+                status: getStatus(m.forearmLeft, m.forearmRight)
             },
             {
                 id: 'coxa',
@@ -114,7 +118,7 @@ export const AsymmetryTab: React.FC<AsymmetryTabProps> = ({ assessment }) => {
                 leftVal: formatVal(m.thighLeft),
                 rightVal: formatVal(m.thighRight),
                 diff: formatDiff(m.thighRight - m.thighLeft),
-                status: getStatus(m.thighRight - m.thighLeft)
+                status: getStatus(m.thighLeft, m.thighRight)
             },
             {
                 id: 'panturrilha',
@@ -125,7 +129,7 @@ export const AsymmetryTab: React.FC<AsymmetryTabProps> = ({ assessment }) => {
                 leftVal: formatVal(m.calfLeft),
                 rightVal: formatVal(m.calfRight),
                 diff: formatDiff(m.calfRight - m.calfLeft),
-                status: getStatus(m.calfRight - m.calfLeft)
+                status: getStatus(m.calfLeft, m.calfRight)
             }
         ];
     }
@@ -211,12 +215,12 @@ export const AsymmetryTab: React.FC<AsymmetryTabProps> = ({ assessment }) => {
 
                     <AiInsightCard
                         type="AI Insight"
-                        title={assessment ? (Math.abs(assessment.measurements.armRight - assessment.measurements.armLeft) > 2 ? "Dominância Unilateral" : "Boa Simetria") : "Dominância do Hemicorpo Direito"}
+                        title={assessment ? (filteredItems.some(item => item.status !== 'symmetrical') ? "Assimetria Detectada" : "Físico Simétrico") : "Dominância do Hemicorpo Direito"}
                         description={
                             assessment ? (
-                                Math.abs(assessment.measurements.armRight - assessment.measurements.armLeft) > 2 ?
-                                    `Identificamos uma assimetria no Braço (${formatDiff(assessment.measurements.armRight - assessment.measurements.armLeft)}cm).` :
-                                    "Seus membros apresentam bom equilíbrio bilateral."
+                                filteredItems.some(item => item.status !== 'symmetrical') ?
+                                    `Identificamos desequilíbrios em: ${filteredItems.filter(item => item.status !== 'symmetrical').map(item => item.title).join(', ')}.` :
+                                    "Seus membros apresentam excelente equilíbrio bilateral."
                             ) : (
                                 <>
                                     Identificamos uma assimetria significativa no <strong className="text-orange-400">Braço Direito (+3,5cm)</strong> que pode estar relacionada à compensação em exercícios de empurrar.

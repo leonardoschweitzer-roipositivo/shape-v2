@@ -1,6 +1,7 @@
 import React from 'react';
 import { Trophy } from 'lucide-react';
 import { GlassPanel } from '@/components/atoms';
+import { ScaleRuler } from '@/components/molecules';
 import { colors, typography, spacing, borders, colors as designColors } from '@/tokens';
 import { cardStyles } from './styles';
 
@@ -104,44 +105,11 @@ export const ProportionCard: React.FC<ProportionCardProps> = ({
                 </div>
 
                 <div className="mt-3 mb-1 relative flex-1 flex flex-col justify-center">
-                    <div className="relative w-full">
-                        <div style={{
-                            height: '10px',
-                            background: colors.background.dark,
-                            borderRadius: borders.radius.full,
-                            display: 'flex',
-                            overflow: 'hidden',
-                            border: `1px solid rgba(255, 255, 255, 0.05)`,
-                            position: 'relative'
-                        }}>
-                            <div style={{ width: '20%', height: '100%', borderRight: '1px solid rgba(10, 15, 28, 0.5)', background: `${colors.semantic.info}4D` }}></div>
-                            <div style={{ width: '20%', height: '100%', borderRight: '1px solid rgba(10, 15, 28, 0.5)', background: `${colors.semantic.info}66` }}></div>
-                            <div style={{ width: '20%', height: '100%', borderRight: '1px solid rgba(10, 15, 28, 0.5)', background: `${colors.semantic.info}80` }}></div>
-                            <div style={{ width: '20%', height: '100%', borderRight: '1px solid rgba(10, 15, 28, 0.5)', background: `${colors.semantic.info}99`, boxShadow: '0 0 15px rgba(59,130,246,0.3)' }}></div>
-                            <div style={{ width: '20%', height: '100%', background: `${colors.brand.secondary}99` }}></div>
-                        </div>
-
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '8px', color: colors.text.secondary, marginTop: spacing[1.5], textTransform: 'uppercase', fontWeight: typography.fontWeight.bold, letterSpacing: '0.1em', padding: '0 4px' }}>
-                            <span style={{ width: '20%', textAlign: 'center' }}>Bloco</span>
-                            <span style={{ width: '20%', textAlign: 'center' }}>Normal</span>
-                            <span style={{ width: '20%', textAlign: 'center' }}>Atlético</span>
-                            <span style={{ width: '20%', textAlign: 'center', color: colors.semantic.info }}>Estético</span>
-                            <span style={{ width: '20%', textAlign: 'center', opacity: 0.5 }}>Freak</span>
-                        </div>
-
-                        <div className="absolute top-[-18px]" style={{ left: `${userPosition}%`, transform: 'translateX(-50%)' }}>
-                            <div style={{ padding: '1px 5px', background: colors.text.primary, color: colors.background.dark, fontSize: '8px', fontWeight: typography.fontWeight.bold, borderRadius: borders.radius.sm, marginBottom: '2px', whiteSpace: 'nowrap' }}>VOCÊ</div>
-                            <div style={{ width: '12px', height: '12px', borderRadius: borders.radius.full, background: colors.text.primary, border: `3px solid ${colors.background.dark}`, boxShadow: '0 0 8px rgba(255,255,255,0.5)', margin: '0 auto' }}></div>
-                        </div>
-
-                        <div className="absolute top-[-18px]" style={{ left: `${goalPosition}%`, transform: 'translateX(-50%)' }}>
-                            <div className="flex flex-col items-center">
-                                <Trophy size={9} color={colors.semantic.warning} style={{ marginBottom: 1 }} />
-                                <div style={{ fontSize: '7px', fontWeight: typography.fontWeight.bold, color: colors.semantic.warning, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{goalLabel}</div>
-                                <div style={{ width: '2px', height: '20px', background: `${colors.semantic.warning}80`, marginTop: '2px', borderRight: `1px dashed ${colors.semantic.warning}40` }}></div>
-                            </div>
-                        </div>
-                    </div>
+                    <ScaleRuler
+                        value={Number(userPosition)}
+                        goal={Number(goalPosition)}
+                        goalLabel={goalLabel}
+                    />
                 </div>
 
                 <div className="flex justify-between items-end gap-4 mt-auto">

@@ -1,8 +1,8 @@
 # SPEC: Escalas de Proporções Corporais
 
-## Documento de Especificação Técnica v1.0
+## Documento de Especificação Técnica v1.1
 
-**Versão:** 1.0  
+**Versão:** 1.1  
 **Data:** Fevereiro 2026  
 **Projeto:** VITRU IA - Sistema de Escalas Visuais  
 **Aplica-se a:** Masculino e Feminino
@@ -30,46 +30,51 @@ Resultado: Quase todo mundo parece estar em ESTÉTICO/FREAK
 
 ### 1.2 Por que isso é errado?
 
-1. **Ninguém está abaixo de 50%** - Mesmo uma pessoa sedentária tem V-Taper > 1.0
+1. **Ninguém está abaixo de 75%** - Mesmo uma pessoa sedentária tem proporções mínimas
 2. **A escala visual não reflete a distribuição real** - A maioria deveria estar em NORMAL/ATLÉTICO
 3. **Perde-se a capacidade de diferenciar níveis** - Todos parecem "bons"
 
 ---
 
-## 2. SOLUÇÃO: ESCALA RELATIVA
+## 2. SOLUÇÃO: ESCALA RELATIVA (75-110%)
 
 ### 2.1 Conceito
 
-A barra visual deve mostrar apenas o **range relevante** (50-115% do ideal), não 0-100%.
+A barra visual deve mostrar apenas o **range relevante** (75-110% do ideal), não 0-100%.
+
+**Por que 75%?**
+- Ninguém realista terá índice abaixo de 75% do ideal
+- Exemplo: V-Taper ideal = 1.618 → 75% = 1.21 (mínimo razoável)
+- Exemplo: Braço ideal = 2.52 → 75% = 1.89 (mínimo razoável)
 
 ```
-ESCALA CORRIGIDA:
+ESCALA CORRIGIDA (75-110%):
 ├──────────────────────────────────────────────────────────────────────────┤
-50%           70%            85%            95%   100% 102%            115%
-│             │              │              │      │    │               │
-│   BLOCO     │    NORMAL    │   ATLÉTICO   │ EST. │★│ FREAK          │
-│             │              │              │      │    │               │
-│   < 70%     │   70-85%     │   85-95%     │95-102│    │  > 102%      │
-│   do ideal  │   do ideal   │   do ideal   │      │    │               │
+75%           82%            90%            97%   100%  103%           110%
+│             │              │              │      │     │              │
+│   BLOCO     │    NORMAL    │   ATLÉTICO   │ EST. │  ★  │    FREAK     │
+│             │              │              │      │     │              │
+│  75-82%     │   82-90%     │   90-97%     │97-103│     │   > 103%     │
+│  do ideal   │   do ideal   │   do ideal   │      │     │              │
 
-Posição do GOLDEN (★): 77% da barra (representa 100% do ideal)
+Posição do GOLDEN (★): 71.4% da barra (representa 100% do ideal)
 ```
 
 ### 2.2 Mapeamento Visual
 
 | % do Ideal | Posição na Barra | Classificação |
 |:----------:|:----------------:|---------------|
-| 50% | 0% | BLOCO |
-| 60% | 15.4% | BLOCO |
-| 70% | 30.8% | NORMAL (início) |
-| 80% | 46.2% | NORMAL |
-| 85% | 53.8% | ATLÉTICO (início) |
-| 90% | 61.5% | ATLÉTICO |
-| 95% | 69.2% | ESTÉTICO (início) |
-| 100% | **76.9%** | **GOLDEN ★** |
-| 102% | 80% | FREAK (início) |
-| 110% | 92.3% | FREAK |
-| 115% | 100% | FREAK (fim) |
+| 75% | 0% | BLOCO (início) |
+| 78% | 8.6% | BLOCO |
+| 82% | 20% | NORMAL (início) |
+| 86% | 31.4% | NORMAL |
+| 90% | 42.9% | ATLÉTICO (início) |
+| 93% | 51.4% | ATLÉTICO |
+| 97% | 62.9% | ESTÉTICO (início) |
+| 100% | **71.4%** | **GOLDEN ★** |
+| 103% | 80% | FREAK (início) |
+| 106% | 88.6% | FREAK |
+| 110% | 100% | FREAK (fim) |
 
 ---
 
@@ -79,110 +84,141 @@ Posição do GOLDEN (★): 77% da barra (representa 100% do ideal)
 
 Estas faixas se aplicam a **TODAS** as proporções, para **AMBOS** os gêneros.
 
+A nomenclatura é baseada na **jornada de evolução** do atleta, sendo honesta sobre onde ele está.
+
 ```typescript
 const CLASSIFICACOES_PROPORCAO = {
-  BLOCO: {
-    id: 'BLOCO',
+  INICIO: {
+    id: 'INICIO',
     minPercent: 0,
-    maxPercent: 70,
-    label: 'Em Construção',
-    labelCurto: 'BLOCO',
+    maxPercent: 82,
+    label: 'Início',
+    labelCurto: 'INÍCIO',
     cor: '#1E3A5F',           // Azul escuro
     corTexto: '#94A3B8',      // Cinza azulado
-    descricao: 'Proporção precisa de desenvolvimento significativo',
-    emoji: '🧱',
+    descricao: 'Início da jornada - há muito a desenvolver',
+    emoji: '🚀',
   },
   
-  NORMAL: {
-    id: 'NORMAL',
-    minPercent: 70,
-    maxPercent: 85,
-    label: 'Desenvolvendo',
-    labelCurto: 'NORMAL',
+  CAMINHO: {
+    id: 'CAMINHO',
+    minPercent: 82,
+    maxPercent: 90,
+    label: 'Caminho',
+    labelCurto: 'CAMINHO',
     cor: '#2563EB',           // Azul
     corTexto: '#60A5FA',      // Azul claro
-    descricao: 'Proporção na média da população geral',
-    emoji: '📊',
+    descricao: 'No caminho certo - continue evoluindo',
+    emoji: '🛤️',
   },
   
-  ATLETICO: {
-    id: 'ATLETICO',
-    minPercent: 85,
-    maxPercent: 95,
+  QUASE_LA: {
+    id: 'QUASE_LA',
+    minPercent: 90,
+    maxPercent: 97,
     label: 'Quase Lá',
-    labelCurto: 'ATLÉTICO',
+    labelCurto: 'QUASE LÁ',
     cor: '#3B82F6',           // Azul médio
     corTexto: '#93C5FD',      // Azul muito claro
-    descricao: 'Proporção de praticante dedicado',
+    descricao: 'Quase lá - falta pouco para a meta',
     emoji: '💪',
   },
   
-  ESTETICO: {
-    id: 'ESTETICO',
-    minPercent: 95,
-    maxPercent: 102,
-    label: 'Ideal Clássico',
-    labelCurto: 'ESTÉTICO',
+  META: {
+    id: 'META',
+    minPercent: 97,
+    maxPercent: 103,
+    label: 'Meta',
+    labelCurto: 'META',
     cor: '#8B5CF6',           // Roxo
     corTexto: '#C4B5FD',      // Roxo claro
-    descricao: 'Proporção no padrão clássico de estética',
-    emoji: '✨',
+    descricao: 'Meta atingida - proporção no padrão clássico',
+    emoji: '🎯',
   },
   
-  FREAK: {
-    id: 'FREAK',
-    minPercent: 102,
+  ELITE: {
+    id: 'ELITE',
+    minPercent: 103,
     maxPercent: 150,
-    label: 'Além do Ideal',
-    labelCurto: 'FREAK',
+    label: 'Elite',
+    labelCurto: 'ELITE',
     cor: '#EAB308',           // Dourado
     corTexto: '#FDE047',      // Amarelo
-    descricao: 'Proporção acima do padrão clássico',
+    descricao: 'Elite - acima do padrão clássico',
     emoji: '👑',
   },
 }
 ```
 
-### 3.2 Labels Contextuais
+### 3.2 Distribuição das Faixas na Escala 75-110%
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│  % DO IDEAL    75%      82%       90%       97%   100%  103%          110%  │
+│                │        │         │         │      │     │             │    │
+│  FAIXA         │ INÍCIO │ CAMINHO │QUASE LÁ │ META │  ★  │   ELITE     │    │
+│                │        │         │         │      │     │             │    │
+│  EMOJI         │  🚀    │   🛤️    │   💪    │  🎯  │     │    👑       │    │
+│                │        │         │         │      │     │             │    │
+│  ─────────────────────────────────────────────────────────────────────────  │
+│                                                                             │
+│  POSIÇÃO       0%      20%       43%       63%   71%   80%           100%   │
+│  NA BARRA                                         ★                         │
+│                                                GOLDEN                       │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 3.3 Labels Contextuais
 
 Dependendo do % do ideal, mostramos labels diferentes:
 
 ```typescript
 function getLabelContextual(percentualDoIdeal: number): string {
-  if (percentualDoIdeal < 70) return 'EM CONSTRUÇÃO'
-  if (percentualDoIdeal < 85) return 'DESENVOLVENDO'
-  if (percentualDoIdeal < 95) return 'QUASE LÁ'
-  if (percentualDoIdeal < 98) return `QUASE LÁ (${Math.round(percentualDoIdeal)}%)`
+  if (percentualDoIdeal < 82) return 'INÍCIO DA JORNADA'
+  if (percentualDoIdeal < 90) return `NO CAMINHO (${Math.round(percentualDoIdeal)}%)`
+  if (percentualDoIdeal < 97) return `QUASE LÁ (${Math.round(percentualDoIdeal)}%)`
   if (percentualDoIdeal < 100) return `QUASE LÁ (${Math.round(percentualDoIdeal)}%)`
-  if (percentualDoIdeal >= 100 && percentualDoIdeal <= 102) return 'IDEAL CLÁSSICO (100%)'
-  if (percentualDoIdeal > 102 && percentualDoIdeal <= 105) return `IDEAL CLÁSSICO (${Math.round(percentualDoIdeal)}%)`
-  return `ALÉM DO IDEAL (${Math.round(percentualDoIdeal)}%)`
+  if (percentualDoIdeal >= 100 && percentualDoIdeal <= 103) return 'META ATINGIDA! 🎯'
+  return `ELITE (${Math.round(percentualDoIdeal)}%)`
 }
 
 // Exemplos:
-// 65% → "EM CONSTRUÇÃO"
-// 78% → "DESENVOLVENDO"
-// 91% → "QUASE LÁ"
-// 97% → "QUASE LÁ (97%)"
-// 100% → "IDEAL CLÁSSICO (100%)"
-// 109% → "ALÉM DO IDEAL (109%)"
+// 78% → "INÍCIO DA JORNADA"
+// 85% → "NO CAMINHO (85%)"
+// 93% → "QUASE LÁ (93%)"
+// 98% → "QUASE LÁ (98%)"
+// 100% → "META ATINGIDA! 🎯"
+// 107% → "ELITE (107%)"
 ```
 
-### 3.3 Labels para Proporções Inversas (Cintura, WHR)
+### 3.4 Labels para Proporções Inversas (Cintura, WHR)
 
 Para proporções onde **menor é melhor**:
 
 ```typescript
 function getLabelProporcaoInversa(percentualDoIdeal: number): string {
   // Para proporções inversas, estar ABAIXO do ideal é BOM
-  // percentualDoIdeal aqui já foi invertido: 100 + (ideal - atual) / ideal * 100
+  // percentualDoIdeal aqui já foi invertido
   
-  if (percentualDoIdeal >= 100) return 'DENTRO DA META'
-  if (percentualDoIdeal >= 95) return `QUASE LÁ (${Math.round(percentualDoIdeal)}%)`
-  if (percentualDoIdeal >= 85) return 'ATENÇÃO'
-  return 'PRECISA REDUZIR'
+  if (percentualDoIdeal >= 100) return 'DENTRO DA META 🎯'
+  if (percentualDoIdeal >= 97) return `QUASE LÁ (${Math.round(percentualDoIdeal)}%)`
+  if (percentualDoIdeal >= 90) return `NO CAMINHO (${Math.round(percentualDoIdeal)}%)`
+  if (percentualDoIdeal >= 82) return 'PRECISA REDUZIR'
+  return 'FORA DA META'
 }
 ```
+
+### 3.5 Comparação: Nomes Antigos vs Novos
+
+| % do Ideal | Nome Antigo | Nome Novo | Por que é melhor? |
+|:----------:|-------------|-----------|-------------------|
+| < 82% | BLOCO | **INÍCIO** | Não julga, indica começo |
+| 82-90% | NORMAL | **CAMINHO** | Mostra que está progredindo |
+| 90-97% | ATLÉTICO | **QUASE LÁ** | Honesto: ainda falta algo |
+| 97-103% | ESTÉTICO | **META** | Claro: é o objetivo |
+| > 103% | FREAK | **ELITE** | Positivo: destaque real |
 
 ---
 
@@ -193,26 +229,26 @@ function getLabelProporcaoInversa(percentualDoIdeal: number): string {
 ```typescript
 const ESCALA_VISUAL = {
   // Limites da visualização (% do ideal)
-  INICIO: 50,                 // Barra começa em 50% do ideal
-  FIM: 115,                   // Barra termina em 115% do ideal
+  INICIO: 75,                 // Barra começa em 75% do ideal
+  FIM: 110,                   // Barra termina em 110% do ideal
   GOLDEN: 100,                // Posição do marcador Golden
   
   // Largura das faixas (% do ideal)
   FAIXAS: {
-    BLOCO: { inicio: 50, fim: 70 },
-    NORMAL: { inicio: 70, fim: 85 },
-    ATLETICO: { inicio: 85, fim: 95 },
-    ESTETICO: { inicio: 95, fim: 102 },
-    FREAK: { inicio: 102, fim: 115 },
+    INICIO: { inicio: 75, fim: 82 },
+    CAMINHO: { inicio: 82, fim: 90 },
+    QUASE_LA: { inicio: 90, fim: 97 },
+    META: { inicio: 97, fim: 103 },
+    ELITE: { inicio: 103, fim: 110 },
   },
   
   // Cores das faixas
   CORES: {
-    BLOCO: '#1E3A5F',
-    NORMAL: '#2563EB',
-    ATLETICO: '#3B82F6',
-    ESTETICO: '#8B5CF6',
-    FREAK: '#EAB308',
+    INICIO: '#1E3A5F',      // Azul escuro
+    CAMINHO: '#2563EB',     // Azul
+    QUASE_LA: '#3B82F6',    // Azul médio
+    META: '#8B5CF6',        // Roxo
+    ELITE: '#EAB308',       // Dourado
   },
 }
 ```
@@ -222,6 +258,9 @@ const ESCALA_VISUAL = {
 ```typescript
 /**
  * Converte % do ideal para posição na barra (0-100%)
+ * 
+ * Fórmula: ((percentual - 75) / (110 - 75)) × 100
+ *        = ((percentual - 75) / 35) × 100
  */
 function percentualParaPosicaoBarra(percentualDoIdeal: number): number {
   const { INICIO, FIM } = ESCALA_VISUAL
@@ -235,26 +274,32 @@ function percentualParaPosicaoBarra(percentualDoIdeal: number): number {
 
 /**
  * Calcula a posição do marcador GOLDEN na barra
+ * 
+ * GOLDEN = ((100 - 75) / 35) × 100 = 71.43%
  */
 function getPosicaoGolden(): number {
   const { INICIO, FIM, GOLDEN } = ESCALA_VISUAL
   return ((GOLDEN - INICIO) / (FIM - INICIO)) * 100
-  // = ((100 - 50) / (115 - 50)) * 100 = 76.92%
+  // = ((100 - 75) / (110 - 75)) * 100 = 71.43%
 }
 
 /**
  * Calcula os limites visuais de cada faixa na barra
  */
-function getFaixasVisuais(): Record<string, { inicio: number, fim: number }> {
+function getFaixasVisuais(): Record<string, { inicio: number, fim: number, largura: number }> {
   const { INICIO, FIM, FAIXAS } = ESCALA_VISUAL
-  const range = FIM - INICIO
+  const range = FIM - INICIO  // 35
   
   const resultado = {}
   
   for (const [faixa, limites] of Object.entries(FAIXAS)) {
+    const inicioPercent = ((limites.inicio - INICIO) / range) * 100
+    const fimPercent = ((limites.fim - INICIO) / range) * 100
+    
     resultado[faixa] = {
-      inicio: ((limites.inicio - INICIO) / range) * 100,
-      fim: ((limites.fim - INICIO) / range) * 100,
+      inicio: inicioPercent,
+      fim: fimPercent,
+      largura: fimPercent - inicioPercent,
     }
   }
   
@@ -262,11 +307,12 @@ function getFaixasVisuais(): Record<string, { inicio: number, fim: number }> {
 }
 
 // RESULTADO:
-// BLOCO:    0.0% - 30.8%   (50-70% do ideal)
-// NORMAL:   30.8% - 53.8%  (70-85% do ideal)
-// ATLETICO: 53.8% - 69.2%  (85-95% do ideal)
-// ESTETICO: 69.2% - 80.0%  (95-102% do ideal)
-// FREAK:    80.0% - 100%   (102-115% do ideal)
+// INICIO:   0.0% - 20.0%   (75-82% do ideal)  largura: 20%
+// CAMINHO:  20.0% - 42.9%  (82-90% do ideal)  largura: 22.9%
+// QUASE_LA: 42.9% - 62.9%  (90-97% do ideal)  largura: 20%
+// META:     62.9% - 80.0%  (97-103% do ideal) largura: 17.1%
+// ELITE:    80.0% - 100%   (103-110% do ideal) largura: 20%
+// GOLDEN:   71.43%         (100% do ideal)
 ```
 
 ### 4.3 Determinar Classificação
@@ -276,23 +322,37 @@ function getFaixasVisuais(): Record<string, { inicio: number, fim: number }> {
  * Determina a classificação baseada no % do ideal
  */
 function getClassificacao(percentualDoIdeal: number): ClassificacaoProporcao {
-  const { FAIXAS } = ESCALA_VISUAL
-  
-  for (const [faixa, limites] of Object.entries(FAIXAS)) {
-    if (percentualDoIdeal >= limites.inicio && percentualDoIdeal < limites.fim) {
-      return CLASSIFICACOES_PROPORCAO[faixa]
-    }
-  }
-  
-  // Se passou de 115%, ainda é FREAK
-  if (percentualDoIdeal >= FAIXAS.FREAK.fim) {
-    return CLASSIFICACOES_PROPORCAO.FREAK
-  }
-  
-  // Se abaixo de 50%, é BLOCO
-  return CLASSIFICACOES_PROPORCAO.BLOCO
+  if (percentualDoIdeal < 82) return CLASSIFICACOES_PROPORCAO.INICIO
+  if (percentualDoIdeal < 90) return CLASSIFICACOES_PROPORCAO.CAMINHO
+  if (percentualDoIdeal < 97) return CLASSIFICACOES_PROPORCAO.QUASE_LA
+  if (percentualDoIdeal < 103) return CLASSIFICACOES_PROPORCAO.META
+  return CLASSIFICACOES_PROPORCAO.ELITE
 }
 ```
+
+### 4.4 Tabela de Conversão Rápida
+
+| % do Ideal | Posição na Barra | Classificação | Emoji |
+|:----------:|:----------------:|---------------|:-----:|
+| 75% | 0.0% | INÍCIO | 🚀 |
+| 78% | 8.6% | INÍCIO | 🚀 |
+| 80% | 14.3% | INÍCIO | 🚀 |
+| 82% | **20.0%** | **CAMINHO** | 🛤️ |
+| 85% | 28.6% | CAMINHO | 🛤️ |
+| 88% | 37.1% | CAMINHO | 🛤️ |
+| 90% | **42.9%** | **QUASE LÁ** | 💪 |
+| 93% | 51.4% | QUASE LÁ | 💪 |
+| 95% | 57.1% | QUASE LÁ | 💪 |
+| 97% | **62.9%** | **META** | 🎯 |
+| 98% | 65.7% | META | 🎯 |
+| 99% | 68.6% | META | 🎯 |
+| **100%** | **71.4%** | **★ GOLDEN** | 🎯 |
+| 101% | 74.3% | META | 🎯 |
+| 102% | 77.1% | META | 🎯 |
+| 103% | **80.0%** | **ELITE** | 👑 |
+| 105% | 85.7% | ELITE | 👑 |
+| 108% | 94.3% | ELITE | 👑 |
+| 110% | 100.0% | ELITE | 👑 |
 
 ---
 
@@ -321,60 +381,59 @@ function calcularPercentualInverso(
 ): number {
   // Se atual <= ideal, está bom (100% ou mais)
   if (indiceAtual <= indiceIdeal) {
-    // Quanto mais abaixo, melhor (até um limite)
+    // Quanto mais abaixo, melhor (bônus proporcional)
     const bonus = ((indiceIdeal - indiceAtual) / indiceIdeal) * 100
-    return Math.min(115, 100 + bonus * 0.5) // Bônus de até 7.5%
+    return Math.min(110, 100 + bonus * 0.5) // Bônus de até 5%
   }
   
   // Se atual > ideal, penalizar
+  // Cada 1% acima do ideal = -1.5% no score
   const excesso = ((indiceAtual - indiceIdeal) / indiceIdeal) * 100
   
-  // Penalização progressiva
-  // 10% acima → 85% do ideal
-  // 20% acima → 65% do ideal
-  // 30% acima → 45% do ideal
-  
-  return Math.max(30, 100 - excesso * 1.5)
+  return Math.max(75, 100 - excesso * 1.5)
 }
 
 // EXEMPLOS (Cintura masculina, ideal 0.86):
 
-// Caso 1: Cintura 0.80 (6.9% ABAIXO do ideal - ÓTIMO!)
-// → 100 + (6.9 * 0.5) = 103.5%
+// Caso 1: Cintura 0.80 (7% ABAIXO do ideal - ÓTIMO!)
+// → 100 + (7 * 0.5) = 103.5% → ESTÉTICO/FREAK
 
 // Caso 2: Cintura 0.86 (EXATAMENTE no ideal)
-// → 100%
+// → 100% → ESTÉTICO
 
-// Caso 3: Cintura 0.92 (7% ACIMA do ideal)
-// → 100 - (7 * 1.5) = 89.5%
+// Caso 3: Cintura 0.90 (4.7% ACIMA do ideal)
+// → 100 - (4.7 * 1.5) = 93% → ATLÉTICO
 
-// Caso 4: Cintura 0.97 (12.8% ACIMA - João Ogro!)
-// → 100 - (12.8 * 1.5) = 80.8%
+// Caso 4: Cintura 0.95 (10.5% ACIMA)
+// → 100 - (10.5 * 1.5) = 84.3% → NORMAL
 
-// Caso 5: Cintura 1.05 (22% ACIMA)
-// → 100 - (22 * 1.5) = 67%
+// Caso 5: Cintura 1.00 (16.3% ACIMA)
+// → 100 - (16.3 * 1.5) = 75.6% → BLOCO
 ```
 
 ### 5.3 Visualização na Barra (Inversas)
 
-Para proporções inversas, a barra é **espelhada**:
+Para proporções inversas, a interpretação é **invertida**, mas a barra visual é a mesma:
 
 ```
 PROPORÇÃO NORMAL (maior é melhor):
 ├──────────────────────────────────────────────────────────────────────────┤
 │   BLOCO     │    NORMAL    │   ATLÉTICO   │  ESTÉTICO  │     FREAK      │
 ├──────────────────────────────────────────────────────────────────────────┤
-50%           70%            85%            95%   100%  102%            115%
+75%           82%            90%            97%   100%  103%           110%
                                                    ★
+                                             (quanto maior, melhor)
 
 PROPORÇÃO INVERSA (menor é melhor):
 ├──────────────────────────────────────────────────────────────────────────┤
-│     FREAK   │  ESTÉTICO  │   ATLÉTICO   │    NORMAL    │     BLOCO      │
+│   BLOCO     │    NORMAL    │   ATLÉTICO   │  ESTÉTICO  │     FREAK      │
 ├──────────────────────────────────────────────────────────────────────────┤
-115%        102%  100%   95%            85%            70%              50%
-                   ★
+75%           82%            90%            97%   100%  103%           110%
+                                                   ★
+                                 (já convertido: quanto menor o índice
+                                  original, maior o % e melhor a posição)
 
-Nota: Para inversas, o GOLDEN (★) ainda fica em 100%, mas a escala é invertida.
+A diferença está no CÁLCULO do percentual, não na visualização.
 ```
 
 ---
@@ -789,28 +848,56 @@ const proporcoesFemininas = [
 
 ### 10.1 Tabela de Referência Rápida
 
-| % do Ideal | Classificação | Posição Barra | Label |
-|:----------:|---------------|:-------------:|-------|
-| < 70% | BLOCO | 0-31% | EM CONSTRUÇÃO |
-| 70-85% | NORMAL | 31-54% | DESENVOLVENDO |
-| 85-95% | ATLÉTICO | 54-69% | QUASE LÁ |
-| 95-100% | ESTÉTICO | 69-77% | QUASE LÁ (X%) |
-| 100% | ESTÉTICO | **77%** | IDEAL CLÁSSICO ★ |
-| 100-102% | ESTÉTICO | 77-80% | IDEAL CLÁSSICO (X%) |
-| > 102% | FREAK | 80-100% | ALÉM DO IDEAL |
+| % do Ideal | Classificação | Emoji | Posição Barra | Label |
+|:----------:|---------------|:-----:|:-------------:|-------|
+| < 82% | **INÍCIO** | 🚀 | 0-20% | INÍCIO DA JORNADA |
+| 82-90% | **CAMINHO** | 🛤️ | 20-43% | NO CAMINHO (X%) |
+| 90-97% | **QUASE LÁ** | 💪 | 43-63% | QUASE LÁ (X%) |
+| 97-100% | **META** | 🎯 | 63-71% | QUASE LÁ (X%) |
+| **100%** | **GOLDEN ★** | 🎯 | **71.4%** | META ATINGIDA! |
+| 100-103% | **META** | 🎯 | 71-80% | META ATINGIDA! |
+| > 103% | **ELITE** | 👑 | 80-100% | ELITE (X%) |
 
 ### 10.2 Fórmula de Conversão
 
 ```
-Posição na Barra = ((% do Ideal - 50) / (115 - 50)) × 100
-                 = (% do Ideal - 50) / 0.65
+Posição na Barra = ((% do Ideal - 75) / (110 - 75)) × 100
+                 = (% do Ideal - 75) / 0.35
 ```
 
 ### 10.3 Posição do GOLDEN ★
 
 ```
-Posição GOLDEN = ((100 - 50) / 65) × 100 = 76.92%
+Posição GOLDEN = ((100 - 75) / 35) × 100 = 71.43%
 ```
+
+### 10.4 Comparação: Nomes Antigos vs Novos
+
+```
+NOMES ANTIGOS (confusos):
+├──────────────────────────────────────────────────────────────────────────┤
+│   BLOCO    │   NORMAL   │  ATLÉTICO  │  ESTÉTICO  │      FREAK         │
+│            │            │            │            │                    │
+│  Problema: "ATLÉTICO" para 94% passa impressão de que está bom         │
+│  Problema: "NORMAL" para 85% parece aceitável                          │
+
+NOMES NOVOS (honestos):
+├──────────────────────────────────────────────────────────────────────────┤
+│   INÍCIO   │  CAMINHO   │  QUASE LÁ  │    META    │      ELITE         │
+│     🚀     │    🛤️      │     💪     │     🎯     │       👑           │
+│            │            │            │            │                    │
+│  Claro: "QUASE LÁ" indica que ainda falta algo                         │
+│  Claro: "CAMINHO" mostra que está progredindo mas não chegou           │
+```
+
+### 10.5 Exemplo: João Ogro
+
+| Proporção | Valor | % Ideal | Nome Antigo | Nome Novo |
+|-----------|:-----:|:-------:|-------------|-----------|
+| Tríade | 94.3% | 94.3% | ATLÉTICO ❌ | **QUASE LÁ** ✅ |
+| Cintura | 0.97 | ~83% | NORMAL ❌ | **CAMINHO** ✅ |
+
+Agora fica claro que o João Ogro ainda tem trabalho a fazer!
 
 ---
 
@@ -818,9 +905,11 @@ Posição GOLDEN = ((100 - 50) / 65) × 100 = 76.92%
 
 | Versão | Data | Alterações |
 |--------|------|------------|
-| 1.0 | Fev/2026 | Versão inicial - Escala universal para M/F |
+| 1.0 | Fev/2026 | Versão inicial - Escala 50-115% |
+| 1.1 | Fev/2026 | Ajuste de escala para 75-110% |
+| 1.2 | Fev/2026 | **Nova nomenclatura (Jornada):** INÍCIO → CAMINHO → QUASE LÁ → META → ELITE |
 
 ---
 
-**VITRU IA - Escalas de Proporções v1.0**  
-*Universal • Masculino • Feminino*
+**VITRU IA - Escalas de Proporções v1.2**  
+*Universal • Masculino • Feminino • Escala 75-110% • Nomenclatura Jornada*

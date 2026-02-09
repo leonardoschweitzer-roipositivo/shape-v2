@@ -294,7 +294,7 @@ const leo_hist_2: MeasurementHistory = {
 };
 
 export const mockPersonalAthletes: PersonalAthlete[] = [
-    { id: 'athlete-leonardo', name: 'Leonardo Schiwetzer', email: 'atleta.homem@vitru.v', gender: 'MALE', avatarUrl: null, score: 78, scoreVariation: 12, ratio: 1.55, lastMeasurement: '2026-02-09', status: 'active', linkedSince: '2024-01-01', assessments: [leo_current, leo_hist_1, leo_hist_2] },
+    { id: 'athlete-leonardo', name: 'Leonardo Schiwetzer', email: 'leonardo@email.com', gender: 'MALE', avatarUrl: null, score: 78, scoreVariation: 12, ratio: 1.55, lastMeasurement: '2026-02-09', status: 'active', linkedSince: '2024-01-01', assessments: [leo_current, leo_hist_1, leo_hist_2] },
     { id: 'athlete-1', name: 'Ricardo Souza', email: 'ricardo@email.com', gender: 'MALE', avatarUrl: null, score: 92, scoreVariation: 5, ratio: 1.62, lastMeasurement: '2026-02-08', status: 'active', linkedSince: '2024-01-15', assessments: [m1_current, m1_old] },
     { id: 'athlete-2', name: 'Fernanda Lima', email: 'fernanda@email.com', gender: 'FEMALE', avatarUrl: null, score: 89, scoreVariation: 4, ratio: 1.58, lastMeasurement: '2026-02-08', status: 'active', linkedSince: '2024-02-20', assessments: [f1_current, f1_old] },
     { id: 'athlete-3', name: 'Bruno Silva', email: 'bruno@email.com', gender: 'MALE', avatarUrl: null, score: 55, scoreVariation: 8, ratio: 1.22, lastMeasurement: '2026-02-05', status: 'active', linkedSince: '2023-11-10', assessments: [m2_current, m2_old] },

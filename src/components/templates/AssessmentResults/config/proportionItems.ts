@@ -31,11 +31,11 @@ export const getMethodLabel = (mode: ComparisonMode): string => {
 
 // Helper function to get status label based on percentage
 export const getStatus = (percentual: number): string => {
-    if (percentual >= 98) return `IDEAL CLÁSSICO (${Math.round(percentual)}%)`;
-    if (percentual >= 90) return `QUASE LÁ (${Math.round(percentual)}%)`;
-    if (percentual >= 80) return `EM PROGRESSO (${Math.round(percentual)}%)`;
-    if (percentual >= 60) return `DESENVOLVENDO (${Math.round(percentual)}%)`;
-    return `INICIANDO (${Math.round(percentual)}%)`;
+    if (percentual >= 103) return 'ELITE';
+    if (percentual >= 97) return 'META';
+    if (percentual >= 90) return 'QUASE LÁ';
+    if (percentual >= 82) return 'CAMINHO';
+    return 'INÍCIO';
 };
 
 /**
@@ -57,12 +57,21 @@ export const getProportionItems = (
     // Helper to calculate ratio percentage
     // For waist, lower is better. For others, higher is better (up to 100).
     const getRatioPercent = (current: number, target: number, inverse = false) => {
-        if (!target) return 0;
+        if (!target || target <= 0) return 0;
+
         if (inverse) {
-            if (current <= target) return 100;
-            return Math.max(0, (target / current) * 100);
+            // v1.1 calculation for inverse proportions (lower is better)
+            if (current <= target) {
+                const bonus = (target - current) / target;
+                return Math.min(110, 100 + (bonus * 50));
+            }
+            // Penalty: 1.5% for each 1% over target
+            const excessoPercent = ((current - target) / target) * 100;
+            return Math.max(0, 100 - (excessoPercent * 1.5));
         }
-        return Math.min(100, (current / target) * 100);
+
+        // Normal proportions (higher is better, up to 115% for "Elite" status on ruler)
+        return Math.min(115, (current / target) * 100);
     };
 
     // 1. Shape-V (Ombros / Cintura)
@@ -280,9 +289,7 @@ export const getProportionItems = (
                 currentValue: cinturaRatio.toFixed(2),
                 valueLabel: "RATIO ATUAL",
                 description: `${cinturaBaseLabel}. A base do V-Taper. Valor ideal: ${ideais.cintura.toFixed(1)}cm (atual: ${userMeasurements.cintura}cm).`,
-                statusLabel: userMeasurements.cintura <= ideais.cintura
-                    ? `DENTRO DA META`
-                    : `${(userMeasurements.cintura - ideais.cintura).toFixed(1)}cm acima`,
+                statusLabel: getStatus(cinturaPercentual),
                 userPosition: Math.round(cinturaPercentual),
                 goalPosition: 100,
                 image: "/images/widgets/cintura.png",
@@ -334,7 +341,7 @@ export const getProportionItems = (
                 currentValue: (comparisonMode === 'mens' || !ideais.coxa) ? "N/A" : legRatio.toFixed(2),
                 valueLabel: (comparisonMode === 'mens' || !ideais.coxa) ? "" : "RATIO ATUAL",
                 description: `Proporção clássica entre membros inferiores. Meta ideal para ${methodLabel}: ${legTarget}.`,
-                statusLabel: (comparisonMode === 'mens' || !ideais.coxa) ? "NÃO JULGADO" : "PROPORÇÃO DE PERNA",
+                statusLabel: (comparisonMode === 'mens' || !ideais.coxa) ? "NÃO JULGADO" : getStatus(legPercentual),
                 userPosition: Math.round(legPercentual),
                 goalPosition: 100,
                 image: "/images/widgets/leg-ratio.png",

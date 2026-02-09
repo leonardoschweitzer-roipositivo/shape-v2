@@ -143,7 +143,7 @@ export const PeriodSummary: React.FC<PeriodSummaryProps> = ({ period, kpis }) =>
                 <KPICard
                     label={kpis.bestEvolution.label}
                     value={kpis.bestEvolution.metric}
-                    subvalue={`+${kpis.bestEvolution.change}cm (${kpis.bestEvolution.changePercent}%)`}
+                    subvalue={`${kpis.bestEvolution.changePercent > 0 ? '+' : ''}${kpis.bestEvolution.changePercent.toFixed(1)}% de proximidade ao ideal`}
                     status="positive"
                     icon={<TrendingUp size={16} />}
                 />
@@ -151,7 +151,7 @@ export const PeriodSummary: React.FC<PeriodSummaryProps> = ({ period, kpis }) =>
                 <KPICard
                     label={kpis.attention.label}
                     value={kpis.attention.metric}
-                    subvalue={`+${kpis.attention.change}cm (${kpis.attention.changePercent}%)`}
+                    subvalue={`${kpis.attention.changePercent > 0 ? '+' : ''}${kpis.attention.changePercent.toFixed(1)}% de variação no ideal`}
                     status={kpis.attention.status}
                     icon={<AlertTriangle size={16} />}
                 />

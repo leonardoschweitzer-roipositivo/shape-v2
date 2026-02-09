@@ -155,22 +155,25 @@ function interpolate(valor: number, inMin: number, inMax: number, outAtMin: numb
 /**
  * v1.1: Cálculo para proporções inversas (cintura)
  * Se atual < ideal → Bom (100% ou mais)
- * Se atual > ideal → Ruim (penalização progressiva quadrática)
+ * Se atual > ideal → Ruim (penalização linear conforme SPEC v1.1)
  */
 function calcularPercentualProporcaoInversa(indiceAtual: number, indiceIdeal: number): number {
     if (indiceAtual <= 0 || indiceIdeal <= 0) return 0;
 
-    // Cintura MENOR ou IGUAL ao ideal = ÓTIMO
+    // Cintura MENOR ou IGUAL ao ideal = ÓTIMO (Bônus até 110%)
     if (indiceAtual <= indiceIdeal) {
         const bonus = (indiceIdeal - indiceAtual) / indiceIdeal;
-        return Math.min(110, 100 + (bonus * 20));
+        // Ex: 10% abaixo do ideal = 100 + (0.1 * 50) = 105%
+        return Math.min(110, 100 + (bonus * 50));
     }
 
-    // Cintura MAIOR que o ideal = RUIM
-    const excesso = (indiceAtual - indiceIdeal) / indiceIdeal;
-    const penalidade = excesso * excesso * 200; // Penalização quadrática conforme SPEC v1.1
+    // Cintura MAIOR que o ideal = RUIM (Penalização linear)
+    // SPEC: Cada 1% acima do ideal = -1.5% no score
+    const excessoPercent = ((indiceAtual - indiceIdeal) / indiceIdeal) * 100;
+    const penalidade = excessoPercent * 1.5;
 
-    return Math.max(10, 100 - (excesso * 100) - penalidade);
+    // Mínimo de 75% para não quebrar a escala visual (mas pode ir abaixo se for muito ruim)
+    return Math.max(0, 100 - penalidade);
 }
 
 /**
@@ -245,8 +248,9 @@ function calcularScoreProporcoes(
                 (dados as ProportionData).indiceMeta
             );
         } else {
-            // v1.1: Limitar a 105% (pequeno bônus por ultrapassar o ideal)
-            percentual = Math.min(105, (dados as ProportionData).percentualDoIdeal);
+            // v1.1: Permitir valores até 115% para que a régua mostre o status Freak adequadamente
+            // O clamping visual será feito no componente ScaleRuler
+            percentual = Math.min(115, (dados as ProportionData).percentualDoIdeal);
         }
 
         const contribuicao = (percentual * peso) / 100;
@@ -258,6 +262,9 @@ function calcularScoreProporcoes(
             peso,
             percentualDoIdeal: percentual,
             contribuicao,
+            valor: prop === 'triade'
+                ? (dados as TriadeData).harmoniaPercentual
+                : (dados as ProportionData).indiceAtual
         });
     }
 
@@ -417,10 +424,9 @@ function calcularScoreComposicao(composicao: AvaliacaoGeralInput['composicao']):
 // ═══════════════════════════════════════════════════════════
 
 function classificarAssimetria(diferencaPercent: number): { score: number, status: string } {
-    if (diferencaPercent <= 2) return { score: 100, status: 'SIMETRICO' };
-    if (diferencaPercent <= 5) return { score: 85, status: 'SIMETRICO' };
-    if (diferencaPercent <= 10) return { score: 70, status: 'LEVE_ASSIMETRIA' };
-    if (diferencaPercent <= 15) return { score: 50, status: 'ASSIMETRIA' };
+    if (diferencaPercent < 1.0) return { score: 100, status: 'SIMETRICO' };
+    if (diferencaPercent < 5.0) return { score: 80, status: 'LEVE_ASSIMETRIA' };
+    if (diferencaPercent < 10.0) return { score: 60, status: 'ASSIMETRIA' };
     return { score: 30, status: 'ASSIMETRIA_SEVERA' };
 }
 
