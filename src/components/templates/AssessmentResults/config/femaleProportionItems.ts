@@ -2,15 +2,10 @@ import type {
     Measurements,
     IdealMeasurements,
     ProportionItem,
-    ComparisonMode,
-    ProportionDifference
+    ComparisonMode
 } from '../types';
-import { calcularDiferenca } from '@/services/calculations';
 import {
-    FEMALE_GOLDEN_RATIO,
-    BIKINI_CONSTANTS,
-    WELLNESS_CONSTANTS,
-    FIGURE_CONSTANTS
+    METAS_FEMININAS
 } from '@/services/calculations';
 
 // Helper function to get status label
@@ -36,7 +31,7 @@ const getMethodLabel = (mode: ComparisonMode): string => {
 };
 
 /**
- * Generates proportion items configuration for female athletes
+ * Generates proportion items configuration for female athletes based on SPEC v1.0
  */
 export const getFemaleProportionItems = (
     userMeasurements: Measurements,
@@ -44,37 +39,13 @@ export const getFemaleProportionItems = (
     comparisonMode: ComparisonMode
 ): ProportionItem[] => {
 
-    const diferencas: Record<string, ProportionDifference> = {};
-    const campos = ['ombros', 'busto', 'cintura', 'quadril', 'coxa', 'panturrilha', 'braco'];
-
-    // Map 'busto' to 'peito' in measurements if needed, or ensure userMeasurements has busto.
-    // Assuming userMeasurements.peito is used as busto for now or we expect busto property.
-    // In the types update we added 'peito' but not explictly 'busto' on Measurements, 
-    // but we can treat 'peito' as 'busto' for simplicity or access it if added.
-    // Let's safe access.
-
-    // Note: In the Types step, I added 'peito' to Measurements and 'busto' to IdealMeasurements.
-    // Ideally 'peito' in Measurements represents circumference of chest/bust.
-
-    const measurements = {
-        ...userMeasurements,
-        busto: userMeasurements.peito // Alias for clarity
-    };
-
-    for (const campo of campos) {
-        // @ts-ignore
-        const ideal = ideais[campo];
-        // @ts-ignore
-        const atual = measurements[campo];
-
-        if (typeof ideal === 'number' && typeof atual === 'number') {
-            diferencas[campo] = calcularDiferenca(atual, ideal);
-        }
-    }
-
     const methodLabel = getMethodLabel(comparisonMode);
 
-    // Helper for inverse/normal percent calculation (v1.1)
+    // Determine category key for METAS_FEMININAS
+    const cat = comparisonMode === 'female_golden' ? 'golden_ratio' :
+        comparisonMode as keyof typeof METAS_FEMININAS.whr;
+
+    // Helper for percent calculation (v1.1 logic)
     const getRatioPercent = (current: number, target: number, inverse = false) => {
         if (!target || target <= 0) return 0;
         if (inverse) {
@@ -88,156 +59,242 @@ export const getFemaleProportionItems = (
         return Math.min(115, (current / target) * 100);
     };
 
-    // 1. WHR (Waist-to-Hip Ratio) - The most important metric (INVERSE)
-    const whrAtual = measurements.cintura / measurements.quadril;
-    let whrTarget = FEMALE_GOLDEN_RATIO.WHR;
-    if (comparisonMode === 'bikini') whrTarget = BIKINI_CONSTANTS.WHR_TARGET;
-    if (comparisonMode === 'wellness') whrTarget = WELLNESS_CONSTANTS.WHR_TARGET;
-    if (comparisonMode === 'figure') whrTarget = FIGURE_CONSTANTS.WHR_TARGET;
-
+    // 1. WHR (Waist-to-Hip Ratio)
+    const whrAtual = userMeasurements.cintura / userMeasurements.quadril;
+    const whrTarget = METAS_FEMININAS.whr[cat];
     const whrPercentual = getRatioPercent(whrAtual, whrTarget, true);
 
-    // 2. Hourglass Index
-    const hourglassAtual = (measurements.peito + measurements.quadril) / (2 * measurements.cintura);
-    let hourglassTarget = FEMALE_GOLDEN_RATIO.HOURGLASS_INDEX;
-    if (comparisonMode === 'bikini') hourglassTarget = BIKINI_CONSTANTS.HOURGLASS_TARGET;
-    if (comparisonMode === 'wellness') hourglassTarget = WELLNESS_CONSTANTS.HOURGLASS_TARGET;
+    // 2. Ampulheta (Harmonia Index)
+    const bustoCinturaRatio = (userMeasurements.busto || userMeasurements.peito) / userMeasurements.cintura;
+    const quadrilCinturaRatio = userMeasurements.quadril / userMeasurements.cintura;
+    const bustoQuadrilRatio = (userMeasurements.busto || userMeasurements.peito) / userMeasurements.quadril;
 
-    const hgPercentual = getRatioPercent(hourglassAtual, hourglassTarget);
+    const idealBC = METAS_FEMININAS.bustoCintura[cat];
+    const idealQC = METAS_FEMININAS.quadrilCintura[cat];
+    const idealBQ = METAS_FEMININAS.bustoQuadril[cat];
+
+    const desvioBC = Math.abs(bustoCinturaRatio - idealBC) / idealBC;
+    const desvioQC = Math.abs(quadrilCinturaRatio - idealQC) / idealQC;
+    const desvioBQ = Math.abs(bustoQuadrilRatio - idealBQ) / idealBQ;
+
+    const hgScore = Math.max(0, Math.min(100, (1 - ((desvioBC * 0.3) + (desvioQC * 0.4) + (desvioBQ * 0.3))) * 100));
+
+    // 3. Shoulder-Hip Ratio
+    const shrAtual = userMeasurements.ombros / userMeasurements.quadril;
+    const shrTarget = METAS_FEMININAS.ombrosQuadril[cat];
+    const shrPercentual = getRatioPercent(shrAtual, shrTarget);
+
+    // 4. Proporção de Braço (Antebraço ÷ Braço)
+    const brRatioAtual = userMeasurements.antebraco / userMeasurements.braco;
+    const brRatioTarget = METAS_FEMININAS.antebracoBraco[cat];
+    const brRatioPercentual = getRatioPercent(brRatioAtual, brRatioTarget);
+
+    // 5. Hip-Thigh Ratio (Coxa ÷ Quadril)
+    const htrAtual = userMeasurements.coxa / userMeasurements.quadril;
+    const htrTarget = METAS_FEMININAS.coxaQuadril[cat];
+    const htrPercentual = getRatioPercent(htrAtual, htrTarget);
+
+    // 6. Desenvolvimento de Coxa (Coxa ÷ Joelho)
+    const cjAtual = userMeasurements.coxa / userMeasurements.joelho;
+    const cjTarget = METAS_FEMININAS.coxaJoelho[cat];
+    const cjPercentual = getRatioPercent(cjAtual, cjTarget);
+
+    // 7. Proporção de Perna (Coxa ÷ Panturrilha)
+    const cpAtual = userMeasurements.coxa / userMeasurements.panturrilha;
+    const cpTarget = METAS_FEMININAS.coxaPanturrilha[cat];
+    const cpPercentual = getRatioPercent(cpAtual, cpTarget);
+
+    // 8. Desenvolvimento de Panturrilha (Panturrilha ÷ Tornozelo)
+    const ptAtual = userMeasurements.panturrilha / userMeasurements.tornozelo;
+    const ptTarget = METAS_FEMININAS.panturrilhaTornozelo[cat];
+    const ptPercentual = getRatioPercent(ptAtual, ptTarget);
 
     return [
-        // 1. WHR - Waist to Hip Ratio (Metrics #1)
+        // 1. WHR
         {
             card: {
-                title: "WHR (Cintura-Quadril)",
-                badge: "MÉTRICA PRINCIPAL",
+                title: "WHR (Waist-Hip Ratio)",
+                badge: "MÉTRICA #1",
                 metrics: [
                     { label: 'Ratio Atual', value: whrAtual.toFixed(2) },
                     { label: 'Meta', value: whrTarget.toFixed(2) }
                 ],
                 currentValue: whrAtual.toFixed(2),
                 valueLabel: "RATIO ATUAL",
-                description: `A proporção áurea feminina. Para ${methodLabel}, o ideal é ${whrTarget}.`,
+                description: `Relação cintura-quadril. A base da silhueta feminina. Meta para ${methodLabel}: ${whrTarget}.`,
                 statusLabel: getStatus(whrPercentual),
                 userPosition: Math.round(whrPercentual),
                 goalPosition: 100,
-                image: "/images/widgets/cintura.png", // Reuse appropriate image
+                image: "/images/widgets/Cintura_x_Quadril.jpg",
                 rawImage: true,
                 measurementsUsed: ['Cintura', 'Quadril']
             },
             ai: {
-                strength: whrPercentual >= 90 ? `Seu <span class='text-primary font-bold'>WHR</span> está perfeito para a categoria.` : undefined,
-                suggestion: "Mantenha a cintura controlada e foque no desenvolvimento de glúteos para melhorar o ratio."
+                strength: whrPercentual >= 90 ? `Excelente linha de cintura para o padrão ${methodLabel}.` : undefined,
+                suggestion: "Foque no controle da circunferência abdominal e desenvolvimento lateral de glúteos."
             }
         },
-        // 2. Hourglass Index
+        // 2. Ampulheta
         {
             card: {
-                title: "Índice Ampulheta",
-                badge: "HARMONIA",
+                title: "Ampulheta",
+                badge: "HARMONIA X-SHAPE",
                 metrics: [
-                    { label: 'Ratio Atual', value: hourglassAtual.toFixed(2) },
-                    { label: 'Meta', value: hourglassTarget.toFixed(2) }
+                    { label: 'Harmonia', value: `${hgScore.toFixed(1)}%` }
                 ],
-                currentValue: hourglassAtual.toFixed(2),
+                currentValue: hgScore.toFixed(0),
+                valueUnit: "%",
+                valueLabel: "SCORE HARMONIA",
+                description: "Equilíbrio entre Busto, Cintura e Quadril. Mede a simetria lateral absoluta.",
+                statusLabel: getStatus(hgScore),
+                userPosition: Math.round(hgScore),
+                goalPosition: 100,
+                image: "/images/widgets/Busto_vs_Cintura_vs_Quadril.jpg",
+                rawImage: true,
+                measurementsUsed: ['Busto', 'Cintura', 'Quadril']
+            },
+            ai: {
+                strength: hgScore >= 95 ? "Simetria de ampulheta perfeita encontrada." : undefined,
+                suggestion: "Busque equilibrar o desenvolvimento dos dorsais com o volume dos glúteos."
+            }
+        },
+        // 3. Shoulder-Hip Ratio
+        {
+            card: {
+                title: "Shoulder-Hip Ratio",
+                badge: "EQUILÍBRIO SUPERIOR",
+                metrics: [
+                    { label: 'Ratio Atual', value: shrAtual.toFixed(2) },
+                    { label: 'Meta', value: shrTarget.toFixed(2) }
+                ],
+                currentValue: shrAtual.toFixed(2),
                 valueLabel: "RATIO ATUAL",
-                valueUnit: "",
-                description: "Equilíbrio entre Busto e Quadril em relação à Cintura.",
-                statusLabel: getStatus(hgPercentual),
-                userPosition: Math.round(hgPercentual),
+                description: `Proporção entre ombros e quadril. Define o "flow" do tronco para as pernas.`,
+                statusLabel: getStatus(shrPercentual),
+                userPosition: Math.round(shrPercentual),
                 goalPosition: 100,
-                image: "/images/widgets/shape-v.png", // Reuse V-shape image as it implies torso shape
-                rawImage: true,
-                measurementsUsed: ['Busto', 'Quadril', 'Cintura']
-            },
-            ai: {
-                strength: hgPercentual >= 90 ? "Formato de ampulheta (X-Shape) bem estabelecido." : undefined,
-                suggestion: "Busque equilibrar o volume de busto/costas com o quadril."
-            }
-        },
-        // 3. Glúteos (Destaque para Wellness/Bikini)
-        {
-            card: {
-                title: "Glúteos",
-                badge: "VOLUME INFERIOR",
-                metrics: ideais.gluteo ? [{ label: 'Meta', value: `${ideais.gluteo.toFixed(1)}cm` }] : [],
-                currentValue: ideais.gluteo ? String(ideais.gluteo) : "N/A", // Placeholder since we don't have glute measurement in standard set yet, using calculation
-                valueUnit: "CM",
-                description: comparisonMode === 'wellness'
-                    ? "Ponto focal da categoria Wellness."
-                    : "Proporção de glúteos em relação à cintura.",
-                statusLabel: getStatus(70),
-                userPosition: 70, // Mock
-                goalPosition: 100,
-                image: "/images/widgets/coxa.png", // Reuse
-                rawImage: true,
-                measurementsUsed: ['Quadril', 'Cintura']
-            },
-            ai: {
-                suggestion: "Elevação pélvica e agachamento profundo para máxima ativação."
-            }
-        },
-        // 4. Cintura
-        {
-            card: {
-                title: "Cintura",
-                badge: "LINHA CENTRAL",
-                metrics: [{ label: 'Meta', value: `${ideais.cintura.toFixed(1)}cm` }],
-                currentValue: String(measurements.cintura),
-                valueUnit: "CM",
-                description: "Cintura fina é essencial para acentuar as curvas.",
-                statusLabel: getStatus(getRatioPercent(measurements.cintura, ideais.cintura, true)),
-                userPosition: Math.round(getRatioPercent(measurements.cintura, ideais.cintura, true)),
-                goalPosition: 100,
-                image: "/images/widgets/cintura.png",
-                rawImage: true,
-                measurementsUsed: ['Cintura']
-            },
-            ai: {
-                weakness: measurements.cintura > ideais.cintura ? "Cintura acima do ideal estético." : undefined,
-                suggestion: "Vácuo abdominal e controle de dieta."
-            }
-        },
-        // 5. Coxas
-        {
-            card: {
-                title: "Coxas",
-                badge: "DESENVOLVIMENTO",
-                metrics: ideais.coxa ? [{ label: 'Meta', value: `${ideais.coxa.toFixed(1)}cm` }] : [],
-                currentValue: String(measurements.coxa),
-                valueUnit: "CM",
-                description: "Volume de pernas harmonioso com o quadril.",
-                statusLabel: getStatus(getRatioPercent(measurements.coxa, ideais.coxa)),
-                userPosition: Math.round(getRatioPercent(measurements.coxa, ideais.coxa)),
-                goalPosition: 100,
-                image: "/images/widgets/coxa.png",
-                rawImage: true,
-                measurementsUsed: ['Coxa']
-            },
-            ai: {
-                suggestion: "Varie entre exercícios compostos e isoladores."
-            }
-        },
-        // 6. Ombros (Simetria)
-        {
-            card: {
-                title: "Ombros",
-                badge: "ESTRUTURA SUPERIOR",
-                metrics: [{ label: 'Meta', value: `${ideais.ombros.toFixed(1)}cm` }],
-                currentValue: String(measurements.ombros),
-                valueUnit: "CM",
-                description: comparisonMode === 'wellness'
-                    ? "Menos dominantes que o quadril."
-                    : "Largura para criar a ilusão de cintura mais fina.",
-                statusLabel: getStatus(getRatioPercent(measurements.ombros, ideais.ombros)),
-                userPosition: Math.round(getRatioPercent(measurements.ombros, ideais.ombros)),
-                goalPosition: 100,
-                image: "/images/widgets/shape-v.png",
+                image: "/images/widgets/Ombros_vs_Quadril.jpg",
                 rawImage: true,
                 measurementsUsed: ['Ombros', 'Quadril']
             },
             ai: {
-                suggestion: "Elevações laterais para 'caps' de ombro mais desenhados."
+                suggestion: "Elevações laterais ajudam a equilibrar ombros com um quadril mais largo."
+            }
+        },
+        // 4. Proporção de Braço
+        {
+            card: {
+                title: "Proporção de Braço",
+                badge: "MEMBROS SUPERIORES",
+                metrics: [
+                    { label: 'Ratio Atual', value: brRatioAtual.toFixed(2) },
+                    { label: 'Meta', value: brRatioTarget.toFixed(2) }
+                ],
+                currentValue: brRatioAtual.toFixed(2),
+                valueLabel: "RATIO ATUAL",
+                description: `Desenvolvimento harmônico entre braço e antebraço. Meta: ${brRatioTarget}.`,
+                statusLabel: getStatus(brRatioPercentual),
+                userPosition: Math.round(brRatioPercentual),
+                goalPosition: 100,
+                image: "/images/widgets/Braco_vs_Antebraco.jpg",
+                rawImage: true,
+                measurementsUsed: ['Braço', 'Antebraço']
+            },
+            ai: {
+                suggestion: "Rosca martelo e extensões de punho para melhorar a densidade dos antebraços."
+            }
+        },
+        // 5. Hip-Thigh Ratio
+        {
+            card: {
+                title: "Hip-Thigh Ratio",
+                badge: "TRANSIÇÃO INFERIOR",
+                metrics: [
+                    { label: 'Ratio Atual', value: htrAtual.toFixed(2) },
+                    { label: 'Meta', value: htrTarget.toFixed(2) }
+                ],
+                currentValue: htrAtual.toFixed(2),
+                valueLabel: "RATIO ATUAL",
+                description: "Proporção entre coxa e quadril. Crucial para as categorias Wellness e Bikini.",
+                statusLabel: getStatus(htrPercentual),
+                userPosition: Math.round(htrPercentual),
+                goalPosition: 100,
+                image: "/images/widgets/Quadril_vs_Coxa.jpg",
+                rawImage: true,
+                measurementsUsed: ['Coxa', 'Quadril']
+            },
+            ai: {
+                strength: cat === 'wellness' && htrPercentual >= 90 ? "Volume de coxa dominante compatível com Wellness." : undefined,
+                suggestion: "Foque em glúteo médio para preencher a lateral do quadril."
+            }
+        },
+        // 6. Desenvolvimento de Coxa
+        {
+            card: {
+                title: "Desenvolvimento de Coxa",
+                badge: "POTÊNCIA MUSCULAR",
+                metrics: [
+                    { label: 'Ratio Atual', value: cjAtual.toFixed(2) },
+                    { label: 'Meta', value: cjTarget.toFixed(2) }
+                ],
+                currentValue: cjAtual.toFixed(2),
+                valueLabel: "RATIO ATUAL",
+                description: "Volume muscular da coxa relativo à estrutura óssea do joelho.",
+                statusLabel: getStatus(cjPercentual),
+                userPosition: Math.round(cjPercentual),
+                goalPosition: 100,
+                image: "/images/widgets/Coxa_vs_Joelho.jpg",
+                rawImage: true,
+                measurementsUsed: ['Coxa', 'Joelho']
+            },
+            ai: {
+                suggestion: "Agachamento hack e extensora para isolar o quadríceps."
+            }
+        },
+        // 7. Proporção de Perna
+        {
+            card: {
+                title: "Proporção de Perna",
+                badge: "SIMETRIA INFERIOR",
+                metrics: [
+                    { label: 'Ratio Atual', value: cpAtual.toFixed(2) },
+                    { label: 'Meta', value: cpTarget.toFixed(2) }
+                ],
+                currentValue: cpAtual.toFixed(2),
+                valueLabel: "RATIO ATUAL",
+                description: "Equilíbrio visual entre coxa e panturrilha.",
+                statusLabel: getStatus(cpPercentual),
+                userPosition: Math.round(cpPercentual),
+                goalPosition: 100,
+                image: "/images/widgets/Coxa_vs_Panturrilha.jpg",
+                rawImage: true,
+                measurementsUsed: ['Coxa', 'Panturrilha']
+            },
+            ai: {
+                suggestion: "O equilíbrio aqui define o 'flow' das pernas em poses de frente."
+            }
+        },
+        // 8. Desenvolvimento de Panturrilha
+        {
+            card: {
+                title: "Desenvolvimento de Panturrilha",
+                badge: "DETALHAMENTO FINAL",
+                metrics: [
+                    { label: 'Ratio Atual', value: ptAtual.toFixed(2) },
+                    { label: 'Meta', value: ptTarget.toFixed(2) }
+                ],
+                currentValue: ptAtual.toFixed(2),
+                valueLabel: "RATIO ATUAL",
+                description: "Desenvolvimento muscular da panturrilha relativo ao tornozelo.",
+                statusLabel: getStatus(ptPercentual),
+                userPosition: Math.round(ptPercentual),
+                goalPosition: 100,
+                image: "/images/widgets/Panturrilha_vs_Tornozelo.jpg",
+                rawImage: true,
+                measurementsUsed: ['Panturrilha', 'Tornozelo']
+            },
+            ai: {
+                suggestion: "Trabalhe panturrilhas em pé e sentado para atingir gastrocnêmio e sóleo."
             }
         }
     ];

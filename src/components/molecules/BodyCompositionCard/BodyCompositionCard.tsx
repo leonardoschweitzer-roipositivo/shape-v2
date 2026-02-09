@@ -60,7 +60,7 @@ export const BodyCompositionCard: React.FC<BodyCompositionCardProps> = ({
                 <div className="flex items-center gap-2 mt-1">
                     <div className={`flex items-center text-xs font-medium ${trend < 0 ? 'text-emerald-500' : trend > 0 ? 'text-red-500' : 'text-gray-500'}`}>
                         {trend > 0 ? <TrendingUp size={12} className="mr-0.5" /> : trend < 0 ? <TrendingDown size={12} className="mr-0.5" /> : <Minus size={12} className="mr-0.5" />}
-                        <span>{Math.abs(trend)}{unit}</span>
+                        <span>{Math.abs(trend).toFixed(2)}{unit}</span>
                     </div>
                     <span className="text-[10px] text-gray-500">vs início</span>
                 </div>

@@ -22,12 +22,15 @@ import {
 } from 'lucide-react';
 import { PersonalAthlete } from '@/mocks/personal';
 import { Button } from '@/components/atoms/Button/Button';
+import { HeroCard } from '@/components/organisms/HeroCard';
+import { HeroContent } from '@/features/dashboard/types';
 
 interface AthleteDetailsViewProps {
     athlete: PersonalAthlete;
     onBack: () => void;
     onNewAssessment: () => void;
     onConsultAssessment: (assessmentId: string) => void;
+    hideStatusControl?: boolean;
 }
 
 const SectionHeader = ({ icon: Icon, title, subtitle, rightElement }: { icon: any, title: string, subtitle: string, rightElement?: React.ReactNode }) => (
@@ -108,12 +111,29 @@ const StatusSelector = ({ status, onChange }: { status: string, onChange: (s: st
     </div>
 );
 
-export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete, onBack, onNewAssessment, onConsultAssessment }) => {
+export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete, onBack, onNewAssessment, onConsultAssessment, hideStatusControl = false }) => {
     const [openAccordion, setOpenAccordion] = useState<string | null>('basics');
     const [isEditing, setIsEditing] = useState(false);
     const [athleteStatus, setAthleteStatus] = useState(athlete.status);
 
     const latestAssessment = athlete.assessments?.[0];
+
+    const heroContent: HeroContent = {
+        badge: { label: 'FICHA TÉCNICA', variant: 'primary' },
+        date: new Date(),
+        title: 'MANTENHA SEUS \n DADOS ATUALIZADOS',
+        description: 'Seus registros de medidas e fotos são a base para o uso da Inteligência Artificial. Acompanhe sua evolução e alcance seus objetivos com precisão.',
+        cta: {
+            label: 'Nova Avaliação IA',
+            href: '#',
+            onClick: onNewAssessment
+        },
+        image: {
+            src: '/images/athlete-measurement-hero.png',
+            alt: 'Hero Banner',
+            position: 'background'
+        }
+    };
 
     const toggleAccordion = (id: string) => {
         setOpenAccordion(openAccordion === id ? null : id);
@@ -182,6 +202,9 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
 
                 <div className="h-px w-full bg-white/10" />
 
+                {/* Hero Banner Section */}
+                <HeroCard content={heroContent} />
+
                 <div className="space-y-12">
 
                     {/* Section 1: Dados Básicos */}
@@ -192,10 +215,12 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                             subtitle="Informações fundamentais de identificação do atleta"
                             rightElement={
                                 <div className="flex items-center gap-3">
-                                    <StatusSelector
-                                        status={athleteStatus}
-                                        onChange={(s) => setAthleteStatus(s as any)}
-                                    />
+                                    {!hideStatusControl && (
+                                        <StatusSelector
+                                            status={athleteStatus}
+                                            onChange={(s) => setAthleteStatus(s as any)}
+                                        />
+                                    )}
                                     <button
                                         onClick={() => setIsEditing(!isEditing)}
                                         className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all font-bold text-xs uppercase tracking-wider ${isEditing

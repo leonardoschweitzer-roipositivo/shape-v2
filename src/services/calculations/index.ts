@@ -72,7 +72,8 @@ export {
     FEMALE_GOLDEN_RATIO,
     BIKINI_CONSTANTS,
     WELLNESS_CONSTANTS,
-    FIGURE_CONSTANTS
+    FIGURE_CONSTANTS,
+    METAS_FEMININAS
 } from './femaleProportions'
 // Assessment (SPEC v1.0)
 export {

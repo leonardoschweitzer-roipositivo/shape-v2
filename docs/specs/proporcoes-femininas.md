@@ -1,1442 +1,1191 @@
-# SPEC: Calculadora de Proporções Corporais Femininas
+# SPEC: Proporções Corporais Femininas
 
 ## Documento de Especificação Técnica v1.0
 
 **Versão:** 1.0  
 **Data:** Fevereiro 2026  
-**Aplicação:** VITRU IA - Análise de Físico e Proporções Corporais Femininas
+**Projeto:** VITRU IA - Sistema de Análise de Proporções Femininas
 
 ---
 
 ## 1. VISÃO GERAL
 
-Este documento especifica os cálculos e fórmulas para a calculadora de proporções corporais **femininas** com seis métodos de comparação:
+### 1.1 Objetivo
 
-1. **Golden Ratio Feminino (Padrão)** - Proporções áureas femininas naturais (WHR 0.70)
-2. **Bikini** - Baseado em Lauralie Chapados (3x Olympia Bikini)
-3. **Wellness** - Baseado em Francielle Mattos (2x Olympia Wellness)
-4. **Figure** - Baseado em Cydney Gillon (5x Olympia Figure)
-5. **Women's Physique** - Baseado em Sarah Villegas (2x Olympia WP)
-6. **Women's Bodybuilding** - Baseado em Andrea Shaw (4x Ms. Olympia)
+Definir as fórmulas de cálculo para as **8 proporções corporais femininas** baseadas em:
+- **Golden Ratio** (proporção áurea clássica)
+- **Bikini** (foco em curvas e feminilidade)
+- **Wellness** (foco em glúteos e coxas)
+- **Figure** (foco em musculatura definida)
+- **Women's Physique** (foco em massa muscular)
+- **Women's Bodybuilding** (foco em massa extrema)
+
+### 1.2 Categorias e Características
+
+| Categoria | Característica Principal | BF% Típico | Referência |
+|-----------|-------------------------|:----------:|------------|
+| **Golden Ratio** | Proporção áurea clássica | 18-22% | Padrão estético universal |
+| **Bikini** | Curvas femininas, glúteos arredondados | 15-18% | Lauralie Chapados |
+| **Wellness** | Coxas e glúteos volumosos | 14-17% | Francielle Mattos |
+| **Figure** | Musculatura definida, ombros largos | 12-15% | Cydney Gillon |
+| **Women's Physique** | Massa muscular visível | 10-13% | Natalia Abraham Coelho |
+| **Women's Bodybuilding** | Massa muscular extrema | 8-12% | Andrea Shaw |
+
+### 1.3 As 8 Proporções
+
+```
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                                                            │
+│                         8 PROPORÇÕES FEMININAS                             │
+│                                                                            │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                                                                     │   │
+│  │     1. WHR (Waist-Hip Ratio)        Cintura ÷ Quadril               │   │
+│  │     2. Ampulheta                    Busto : Cintura : Quadril       │   │
+│  │     3. Shoulder-Hip Ratio           Ombros ÷ Quadril                │   │
+│  │     4. Proporção de Braço           Antebraço ÷ Braço               │   │
+│  │     5. Hip-Thigh Ratio              Coxa ÷ Quadril                  │   │
+│  │     6. Desenvolvimento de Coxa      Coxa ÷ Joelho                   │   │
+│  │     7. Proporção de Perna           Coxa ÷ Panturrilha              │   │
+│  │     8. Desenvolvimento de Pant.     Panturrilha ÷ Tornozelo         │   │
+│  │                                                                     │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## 2. DIFERENÇAS FUNDAMENTAIS: MASCULINO VS FEMININO
+## 2. MEDIDAS NECESSÁRIAS (INPUT)
 
-### 2.1 Comparativo de Ideais
+### 2.1 Medidas Estruturais (Fixas)
+
+```typescript
+interface MedidasEstruturaisFemininas {
+  altura: number          // cm - altura total
+  punho: number           // cm - circunferência do punho
+  tornozelo: number       // cm - circunferência do tornozelo
+  joelho: number          // cm - circunferência do joelho
+}
+```
+
+### 2.2 Medidas Variáveis (Mudam com treino/dieta)
+
+```typescript
+interface MedidasVariaveisFemininas {
+  // Tronco
+  busto: number           // cm - circunferência do busto (na linha do mamilo)
+  cintura: number         // cm - menor circunferência (umbigo ou acima)
+  quadril: number         // cm - maior circunferência dos glúteos
+  ombros: number          // cm - largura dos ombros (deltoides)
+  
+  // Braços (média E/D)
+  braco: number           // cm - bíceps contraído
+  antebraco: number       // cm - maior circunferência
+  
+  // Pernas (média E/D)
+  coxa: number            // cm - maior circunferência
+  panturrilha: number     // cm - maior circunferência
+}
+```
+
+### 2.3 Medidas para Simetria Bilateral
+
+```typescript
+interface MedidasBilateraisFemininas {
+  bracoEsquerdo: number
+  bracoDireito: number
+  antebracoEsquerdo: number
+  antebracoDireito: number
+  coxaEsquerda: number
+  coxaDireita: number
+  panturrilhaEsquerda: number
+  panturrilhaDireita: number
+}
+```
+
+---
+
+## 3. PROPORÇÃO 1: WHR (WAIST-HIP RATIO)
+
+### 3.1 Descrição
+
+O **WHR** (Waist-Hip Ratio) ou **Relação Cintura-Quadril** é a proporção mais importante para estética feminina. Mede a "ampulheta" do corpo.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│            MASCULINO (V-Shape)    vs    FEMININO (X-Shape)      │
-├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  OBJETIVO PRINCIPAL                                             │
-│  ♂️ V-Taper: Ombros >>> Cintura                                  │
-│  ♀️ Hourglass: Busto ≈ Quadril, Cintura fina                     │
+│                    WHR = Cintura ÷ Quadril                      │
 │                                                                 │
-│  MÉTRICA PRINCIPAL                                              │
-│  ♂️ SWR (Shoulder-to-Waist): 1.618                               │
-│  ♀️ WHR (Waist-to-Hip): 0.70                                     │
+│                         ┌─────────┐                             │
+│                         │         │                             │
+│                      ←──│ CINTURA │──→                          │
+│                         │         │                             │
+│                         └─────────┘                             │
 │                                                                 │
-│  FOCO DE DESENVOLVIMENTO                                        │
-│  ♂️ Ombros, Costas, Peito, Braços                                │
-│  ♀️ Glúteos, Quadril, Cintura, Pernas                            │
+│                      ┌─────────────┐                            │
+│                      │             │                            │
+│                   ←──│   QUADRIL   │──→                         │
+│                      │             │                            │
+│                      └─────────────┘                            │
 │                                                                 │
-│  FORMA IDEAL                                                    │
-│  ♂️      ████████                  ♀️     ██████████              │
-│       ██████████                       ████████████             │
-│      ████████████                     ██████████████            │
-│         ████                              ████                  │
-│         ████                              ████                  │
-│        ██████                          ████████████             │
-│       ████████                        ██████████████            │
-│      ██████████                      ████████████████           │
+│  Quanto MENOR o WHR, mais acentuada a curva (melhor)            │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 2.2 Métricas Exclusivas Femininas
-
-| Métrica | Sigla | Fórmula | Ideal | Descrição |
-|---------|-------|---------|-------|-----------|
-| **Waist-to-Hip Ratio** | WHR | Cintura ÷ Quadril | **0.70** | A proporção MAIS importante |
-| **Waist-to-Chest Ratio** | WCR | Cintura ÷ Busto | **0.70** | Equilíbrio superior |
-| **Shoulder-to-Hip Ratio** | SHR | Ombros ÷ Quadril | **0.90-1.0** | Diferente do masculino |
-| **Hourglass Index** | HGI | (Busto + Quadril) ÷ (2 × Cintura) | **1.40-1.50** | Índice de ampulheta |
-| **Thigh-to-Waist Ratio** | TWR | Coxa ÷ Cintura | **1.0-1.05** | Para Wellness |
-| **Glute-to-Waist Ratio** | GWR | Glúteo ÷ Cintura | **1.60-1.70** | Proporção glúteo |
-
-### 2.3 A Ciência do WHR 0.70
+### 3.2 Fórmula
 
 ```typescript
-/**
- * O WHR (Waist-to-Hip Ratio) de 0.70 é considerado universalmente 
- * atraente em estudos científicos cross-culturais.
- * 
- * Estudos de Referência:
- * - Singh (1993) - Evolutionary psychology
- * - Streeter & McBurney (2003) - Cross-cultural studies  
- * - Platek & Singh (2010) - Neuroimaging studies
- * 
- * Por que 0.70?
- * - Indica fertilidade e saúde hormonal
- * - Associado a níveis ideais de estrogênio
- * - Menor risco de doenças cardiovasculares
- * - Preferência cross-cultural consistente
- * 
- * Exemplos de celebridades com WHR ~0.70:
- * - Marilyn Monroe: 0.69
- * - Scarlett Johansson: 0.70
- * - Jessica Alba: 0.71
- * - Beyoncé: 0.69
- */
+function calcularWHR(cintura: number, quadril: number): ProportionResult {
+  const indiceAtual = cintura / quadril
+  
+  return {
+    nome: 'WHR (Waist-Hip Ratio)',
+    categoria: 'LINHA DE CINTURA',
+    indiceAtual,
+    descricao: 'Relação cintura-quadril. Quanto menor, mais curvilínea.',
+    ehInversa: true,  // Menor é melhor
+  }
+}
+```
+
+### 3.3 Metas por Categoria
+
+| Categoria | Meta WHR | Interpretação |
+|-----------|:--------:|---------------|
+| **Golden Ratio** | **0.70** | Proporção áurea clássica |
+| **Bikini** | **0.68** | Curvas acentuadas |
+| **Wellness** | **0.65** | Quadril muito desenvolvido |
+| **Figure** | **0.72** | Menos ênfase em curvas |
+| **Women's Physique** | **0.75** | Cintura menos marcada |
+| **Women's Bodybuilding** | **0.78** | Musculatura abdominal visível |
+
+### 3.4 Faixas de Classificação (WHR)
+
+```typescript
+const WHR_CLASSIFICACAO = {
+  EXCELENTE: { max: 0.70, label: 'Excelente', cor: '#10B981' },
+  BOM: { min: 0.70, max: 0.75, label: 'Bom', cor: '#3B82F6' },
+  MEDIO: { min: 0.75, max: 0.80, label: 'Médio', cor: '#F59E0B' },
+  ALTO: { min: 0.80, max: 0.85, label: 'Alto', cor: '#EF4444' },
+  MUITO_ALTO: { min: 0.85, label: 'Muito Alto', cor: '#DC2626' },
+}
 ```
 
 ---
 
-## 3. MEDIDAS NECESSÁRIAS (INPUT DA USUÁRIA)
+## 4. PROPORÇÃO 2: AMPULHETA (BUSTO:CINTURA:QUADRIL)
 
-### 3.1 Lista Completa de Medidas Obrigatórias
+### 3.1 Descrição
 
-| # | Medida | Código | Unidade | Como Medir |
-|---|--------|--------|---------|------------|
-| 1 | **Altura** | `altura` | cm | Descalça, coluna ereta contra parede |
-| 2 | **Peso** | `peso` | kg | Em jejum, pela manhã |
-| 3 | **Busto** | `busto` | cm | Parte mais larga do peito, na altura dos mamilos |
-| 4 | **Abaixo do Busto** | `abaixo_busto` | cm | Logo abaixo dos seios (para calcular busto real) |
-| 5 | **Cintura** | `cintura` | cm | Parte mais estreita do abdômen (acima do umbigo) |
-| 6 | **Quadril** | `quadril` | cm | Parte mais larga do quadril/glúteos |
-| 7 | **Ombros** | `ombros` | cm | Ponto mais largo, braços relaxados |
-| 8 | **Braço** | `braco` | cm | Bíceps relaxado, ponto mais grosso |
-| 9 | **Antebraço** | `antebraco` | cm | Ponto mais grosso |
-| 10 | **Punho** | `punho` | cm | Circunferência no osso proeminente |
-| 11 | **Coxa** | `coxa` | cm | Ponto mais grosso, perna relaxada |
-| 12 | **Joelho** | `joelho` | cm | Centro da patela, perna estendida |
-| 13 | **Panturrilha** | `panturrilha` | cm | Ponto mais grosso |
-| 14 | **Tornozelo** | `tornozelo` | cm | Parte mais fina, acima do osso |
-| 15 | **Glúteo (Dobra)** | `gluteo_dobra` | cm | Circunferência na dobra do glúteo (para Wellness) |
+A proporção **Ampulheta** mede a harmonia entre busto, cintura e quadril. O ideal clássico é que busto e quadril tenham medidas similares, com cintura bem menor.
 
-### 3.2 Classificação das Medidas
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│            AMPULHETA = Busto : Cintura : Quadril                │
+│                                                                 │
+│                      ┌─────────────┐                            │
+│                   ←──│    BUSTO    │──→    (ex: 90cm)           │
+│                      └─────────────┘                            │
+│                                                                 │
+│                         ┌───────┐                               │
+│                      ←──│CINTURA│──→       (ex: 65cm)           │
+│                         └───────┘                               │
+│                                                                 │
+│                      ┌─────────────┐                            │
+│                   ←──│   QUADRIL   │──→    (ex: 95cm)           │
+│                      └─────────────┘                            │
+│                                                                 │
+│  Ideal: Busto ≈ Quadril, Cintura = ~70% do Quadril              │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-**Medidas Estruturais (não mudam com treino):**
-- Altura, Punho, Tornozelo, Joelho, Abaixo do Busto
+### 4.2 Fórmulas
 
-**Medidas Variáveis (mudam com treino/dieta):**
-- Peso, Busto, Cintura, Quadril, Ombros, Braço, Antebraço, Coxa, Panturrilha, Glúteo
+```typescript
+interface AmpulhetaResult {
+  // Índices individuais
+  bustoCinturaRatio: number       // Busto ÷ Cintura (ideal: 1.40)
+  quadrilCinturaRatio: number     // Quadril ÷ Cintura (ideal: 1.42)
+  bustoQuadrilRatio: number       // Busto ÷ Quadril (ideal: 0.95-1.00)
+  
+  // Score de harmonia (0-100%)
+  harmoniaPercentual: number
+}
 
-### 3.3 Medidas Opcionais (7 Dobras Cutâneas)
+function calcularAmpulheta(
+  busto: number,
+  cintura: number,
+  quadril: number
+): AmpulhetaResult {
+  
+  const bustoCinturaRatio = busto / cintura
+  const quadrilCinturaRatio = quadril / cintura
+  const bustoQuadrilRatio = busto / quadril
+  
+  // Ideais Golden Ratio
+  const idealBustoCintura = 1.40
+  const idealQuadrilCintura = 1.42
+  const idealBustoQuadril = 0.97  // Busto ligeiramente menor que quadril
+  
+  // Calcular desvios
+  const desvioBustoCintura = Math.abs(bustoCinturaRatio - idealBustoCintura) / idealBustoCintura
+  const desvioQuadrilCintura = Math.abs(quadrilCinturaRatio - idealQuadrilCintura) / idealQuadrilCintura
+  const desvioBustoQuadril = Math.abs(bustoQuadrilRatio - idealBustoQuadril) / idealBustoQuadril
+  
+  // Média ponderada dos desvios
+  const desvioMedio = (desvioBustoCintura * 0.3) + (desvioQuadrilCintura * 0.4) + (desvioBustoQuadril * 0.3)
+  
+  // Converter para percentual de harmonia (100% = perfeito)
+  const harmoniaPercentual = Math.max(0, Math.min(100, (1 - desvioMedio) * 100))
+  
+  return {
+    bustoCinturaRatio,
+    quadrilCinturaRatio,
+    bustoQuadrilRatio,
+    harmoniaPercentual,
+  }
+}
+```
 
-| Dobra | Código | Unidade | Local |
-|-------|--------|---------|-------|
-| Tricipital | `dc_triceps` | mm | Parte posterior do braço |
-| Subescapular | `dc_subescapular` | mm | Abaixo da escápula |
-| Suprailíaca | `dc_suprailíaca` | mm | Acima do osso do quadril |
-| Abdominal | `dc_abdominal` | mm | Ao lado do umbigo |
-| Coxa | `dc_coxa` | mm | Parte frontal da coxa |
-| Peitoral | `dc_peitoral` | mm | Diagonal entre axila e mamilo |
-| Axilar Média | `dc_axilar` | mm | Linha vertical da axila |
+### 4.3 Metas por Categoria
+
+| Categoria | Busto:Cintura | Quadril:Cintura | Busto:Quadril |
+|-----------|:-------------:|:---------------:|:-------------:|
+| **Golden Ratio** | **1.40** | **1.42** | **0.97** |
+| **Bikini** | 1.35 | 1.50 | 0.90 |
+| **Wellness** | 1.30 | 1.55 | 0.84 |
+| **Figure** | 1.38 | 1.38 | 1.00 |
+| **Women's Physique** | 1.35 | 1.35 | 1.00 |
+| **Women's Bodybuilding** | 1.30 | 1.30 | 1.00 |
 
 ---
 
-## 4. QUADRO DE PROPORÇÕES: FÓRMULAS POR MÉTODO
+## 5. PROPORÇÃO 3: SHOULDER-HIP RATIO (OMBROS ÷ QUADRIL)
 
-### 4.1 Tabela Completa de Referência
+### 5.1 Descrição
 
-| # | Proporção | Golden Ratio ♀️ | Bikini 🩱 | Wellness 🏃 | Figure 👙 | W. Physique 💪 |
-|---|-----------|----------------|-----------|-------------|-----------|----------------|
-| 1 | **WHR** | 0.70 | 0.68 | 0.62 | 0.70 | 0.72 |
-| 2 | **WCR** | 0.70 | 0.70 | 0.72 | 0.70 | 0.72 |
-| 3 | **SHR** | 0.95 | 0.95 | 0.85 | 1.00 | 1.05 |
-| 4 | **SWR** | 1.40 | 1.45 | 1.35 | 1.50 | 1.55 |
-| 5 | **Hourglass** | 1.45 | 1.45 | 1.55 | 1.40 | 1.35 |
-| 6 | **TWR** | 0.95 | 0.93 | 1.05 | 0.95 | 0.92 |
-| 7 | **GWR** | 1.60 | 1.55 | 1.70 | 1.55 | 1.50 |
-| 8 | **BF% Ideal** | 18-23% | 12-16% | 14-18% | 10-14% | 8-12% |
+A proporção **Ombros-Quadril** define o equilíbrio entre parte superior e inferior. Nas categorias femininas, o ideal é que quadril seja igual ou maior que ombros.
 
-### 4.2 Comparativo Visual das Categorias
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│          SHOULDER-HIP = Ombros ÷ Quadril                        │
+│                                                                 │
+│                   ┌───────────────────┐                         │
+│                ←──│      OMBROS       │──→                      │
+│                   └───────────────────┘                         │
+│                                                                 │
+│                      ┌─────────────┐                            │
+│                   ←──│   QUADRIL   │──→                         │
+│                      └─────────────┘                            │
+│                                                                 │
+│  Bikini/Wellness: Ombros < Quadril (ratio < 1.0)                │
+│  Figure/Physique: Ombros ≈ Quadril (ratio ≈ 1.0)                │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 5.2 Fórmula
+
+```typescript
+function calcularShoulderHipRatio(
+  ombros: number,
+  quadril: number
+): ProportionResult {
+  
+  const indiceAtual = ombros / quadril
+  
+  return {
+    nome: 'Shoulder-Hip Ratio',
+    categoria: 'EQUILÍBRIO SUPERIOR-INFERIOR',
+    indiceAtual,
+    descricao: 'Proporção entre ombros e quadril. Define o "shape" geral.',
+    ehInversa: false,  // Depende da categoria
+  }
+}
+```
+
+### 5.3 Metas por Categoria
+
+| Categoria | Meta Ratio | Interpretação |
+|-----------|:----------:|---------------|
+| **Golden Ratio** | **1.00** | Ombros = Quadril |
+| **Bikini** | **0.95** | Quadril ligeiramente maior |
+| **Wellness** | **0.90** | Quadril visivelmente maior |
+| **Figure** | **1.05** | Ombros ligeiramente maiores |
+| **Women's Physique** | **1.10** | Ombros visivelmente maiores |
+| **Women's Bodybuilding** | **1.15** | V-Taper feminino |
+
+---
+
+## 6. PROPORÇÃO 4: BRAÇO ÷ ANTEBRAÇO
+
+### 6.1 Descrição
+
+A proporção **Braço-Antebraço** mede o desenvolvimento harmônico dos membros superiores.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│          BRAÇO-ANTEBRAÇO = Antebraço ÷ Braço                    │
+│                                                                 │
+│                    ┌─────────┐                                  │
+│                 ←──│  BRAÇO  │──→   (bíceps contraído)          │
+│                    └─────────┘                                  │
+│                         │                                       │
+│                    ┌────┴────┐                                  │
+│                 ←──│ANTEBRAÇO│──→   (maior circunferência)      │
+│                    └─────────┘                                  │
+│                                                                 │
+│  Ideal: Antebraço = 75-80% do Braço                             │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 6.2 Fórmula
+
+```typescript
+function calcularBracoAntebraco(
+  braco: number,
+  antebraco: number
+): ProportionResult {
+  
+  const indiceAtual = antebraco / braco
+  
+  return {
+    nome: 'Proporção Braço-Antebraço',
+    categoria: 'DESENVOLVIMENTO DE BRAÇO',
+    indiceAtual,
+    descricao: 'Proporção entre antebraço e braço. Ideal: 0.75-0.80.',
+    ehInversa: false,
+  }
+}
+```
+
+### 6.3 Metas por Categoria
+
+| Categoria | Meta Ratio | Interpretação |
+|-----------|:----------:|---------------|
+| **Golden Ratio** | **0.78** | Proporção clássica |
+| **Bikini** | **0.75** | Braços mais finos |
+| **Wellness** | **0.76** | Similar ao Bikini |
+| **Figure** | **0.78** | Desenvolvimento proporcional |
+| **Women's Physique** | **0.80** | Antebraços mais desenvolvidos |
+| **Women's Bodybuilding** | **0.82** | Máximo desenvolvimento |
+
+---
+
+## 7. PROPORÇÃO 5: HIP-THIGH RATIO (COXA ÷ QUADRIL)
+
+### 7.1 Descrição
+
+A proporção **Quadril-Coxa** mede o desenvolvimento das coxas em relação ao quadril. Muito importante para Wellness!
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│            HIP-THIGH = Coxa ÷ Quadril                           │
+│                                                                 │
+│                      ┌─────────────┐                            │
+│                   ←──│   QUADRIL   │──→                         │
+│                      └─────────────┘                            │
+│                             │                                   │
+│                      ┌──────┴──────┐                            │
+│                   ←──│    COXA     │──→                         │
+│                      └─────────────┘                            │
+│                                                                 │
+│  Wellness: Coxas bem desenvolvidas (ratio alto)                 │
+│  Bikini: Coxas proporcionais (ratio moderado)                   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 7.2 Fórmula
+
+```typescript
+function calcularHipThighRatio(
+  coxa: number,
+  quadril: number
+): ProportionResult {
+  
+  const indiceAtual = coxa / quadril
+  
+  return {
+    nome: 'Hip-Thigh Ratio',
+    categoria: 'DESENVOLVIMENTO DE COXA',
+    indiceAtual,
+    descricao: 'Proporção entre coxa e quadril. Wellness enfatiza coxas grandes.',
+    ehInversa: false,
+  }
+}
+```
+
+### 7.3 Metas por Categoria
+
+| Categoria | Meta Ratio | Interpretação |
+|-----------|:----------:|---------------|
+| **Golden Ratio** | **0.58** | Proporção clássica |
+| **Bikini** | **0.56** | Coxas proporcionais |
+| **Wellness** | **0.65** | Coxas muito desenvolvidas! |
+| **Figure** | **0.60** | Bom desenvolvimento |
+| **Women's Physique** | **0.62** | Desenvolvimento muscular |
+| **Women's Bodybuilding** | **0.65** | Máximo desenvolvimento |
+
+---
+
+## 8. PROPORÇÃO 6: COXA ÷ JOELHO
+
+### 8.1 Descrição
+
+A proporção **Coxa-Joelho** mede o desenvolvimento muscular da coxa em relação à estrutura óssea (joelho).
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│            COXA-JOELHO = Coxa ÷ Joelho                          │
+│                                                                 │
+│                      ┌─────────────┐                            │
+│                   ←──│    COXA     │──→  (maior circunferência) │
+│                      └─────────────┘                            │
+│                             │                                   │
+│                         ┌───┴───┐                               │
+│                      ←──│JOELHO │──→    (estrutura óssea)       │
+│                         └───────┘                               │
+│                                                                 │
+│  Quanto maior o ratio, mais desenvolvida a coxa                 │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 8.2 Fórmula
+
+```typescript
+function calcularCoxaJoelho(
+  coxa: number,
+  joelho: number
+): ProportionResult {
+  
+  const indiceAtual = coxa / joelho
+  
+  return {
+    nome: 'Proporção Coxa-Joelho',
+    categoria: 'POTÊNCIA DE PERNAS',
+    indiceAtual,
+    descricao: 'Desenvolvimento muscular da coxa relativo à estrutura óssea.',
+    ehInversa: false,
+  }
+}
+```
+
+### 8.3 Metas por Categoria
+
+| Categoria | Meta Ratio | Interpretação |
+|-----------|:----------:|---------------|
+| **Golden Ratio** | **1.60** | Proporção clássica |
+| **Bikini** | **1.55** | Pernas tonificadas |
+| **Wellness** | **1.75** | Coxas muito volumosas! |
+| **Figure** | **1.65** | Bom desenvolvimento |
+| **Women's Physique** | **1.70** | Desenvolvimento muscular |
+| **Women's Bodybuilding** | **1.80** | Máximo desenvolvimento |
+
+---
+
+## 9. PROPORÇÃO 7: COXA ÷ PANTURRILHA
+
+### 9.1 Descrição
+
+A proporção **Coxa-Panturrilha** mede o equilíbrio entre membros inferiores superior e inferior.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│        COXA-PANTURRILHA = Coxa ÷ Panturrilha                    │
+│                                                                 │
+│                      ┌─────────────┐                            │
+│                   ←──│    COXA     │──→                         │
+│                      └─────────────┘                            │
+│                             │                                   │
+│                         ┌───┴───┐                               │
+│                      ←──│ PANT. │──→                            │
+│                         └───────┘                               │
+│                                                                 │
+│  Ideal: Proporção equilibrada entre coxa e panturrilha          │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 9.2 Fórmula
+
+```typescript
+function calcularCoxaPanturrilha(
+  coxa: number,
+  panturrilha: number
+): ProportionResult {
+  
+  const indiceAtual = coxa / panturrilha
+  
+  return {
+    nome: 'Proporção Coxa-Panturrilha',
+    categoria: 'SIMETRIA INFERIOR',
+    indiceAtual,
+    descricao: 'Equilíbrio entre coxa e panturrilha.',
+    ehInversa: false,
+  }
+}
+```
+
+### 9.3 Metas por Categoria
+
+| Categoria | Meta Ratio | Interpretação |
+|-----------|:----------:|---------------|
+| **Golden Ratio** | **1.40** | Proporção clássica |
+| **Bikini** | **1.45** | Coxas ligeiramente maiores |
+| **Wellness** | **1.55** | Coxas muito maiores que panturrilhas |
+| **Figure** | **1.45** | Equilíbrio |
+| **Women's Physique** | **1.50** | Desenvolvimento proporcional |
+| **Women's Bodybuilding** | **1.50** | Desenvolvimento proporcional |
+
+---
+
+## 10. PROPORÇÃO 8: PANTURRILHA ÷ TORNOZELO
+
+### 10.1 Descrição
+
+A proporção **Panturrilha-Tornozelo** mede o desenvolvimento muscular da panturrilha em relação à estrutura óssea.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│      PANTURRILHA-TORNOZELO = Panturrilha ÷ Tornozelo            │
+│                                                                 │
+│                         ┌───────┐                               │
+│                      ←──│ PANT. │──→  (maior circunferência)    │
+│                         └───────┘                               │
+│                             │                                   │
+│                         ┌───┴───┐                               │
+│                      ←──│TORNOZ.│──→  (estrutura óssea)         │
+│                         └───────┘                               │
+│                                                                 │
+│  Quanto maior o ratio, mais desenvolvida a panturrilha          │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 10.2 Fórmula
+
+```typescript
+function calcularPanturrilhaTornozelo(
+  panturrilha: number,
+  tornozelo: number
+): ProportionResult {
+  
+  const indiceAtual = panturrilha / tornozelo
+  
+  return {
+    nome: 'Proporção Panturrilha-Tornozelo',
+    categoria: 'DETALHAMENTO',
+    indiceAtual,
+    descricao: 'Desenvolvimento muscular da panturrilha relativo à estrutura óssea.',
+    ehInversa: false,
+  }
+}
+```
+
+### 10.3 Metas por Categoria
+
+| Categoria | Meta Ratio | Interpretação |
+|-----------|:----------:|---------------|
+| **Golden Ratio** | **1.80** | Proporção clássica |
+| **Bikini** | **1.70** | Panturrilhas proporcionais |
+| **Wellness** | **1.75** | Desenvolvimento moderado |
+| **Figure** | **1.85** | Bom desenvolvimento |
+| **Women's Physique** | **1.90** | Desenvolvimento muscular |
+| **Women's Bodybuilding** | **1.95** | Máximo desenvolvimento |
+
+---
+
+## 11. TABELA COMPLETA DE METAS
+
+### 11.1 Todas as Proporções por Categoria
+
+```typescript
+const METAS_FEMININAS = {
+  // Proporção 1: WHR (Cintura ÷ Quadril) - INVERSA
+  whr: {
+    golden_ratio: 0.70,
+    bikini: 0.68,
+    wellness: 0.65,
+    figure: 0.72,
+    womens_physique: 0.75,
+    womens_bodybuilding: 0.78,
+  },
+  
+  // Proporção 2: Busto ÷ Cintura
+  bustoCintura: {
+    golden_ratio: 1.40,
+    bikini: 1.35,
+    wellness: 1.30,
+    figure: 1.38,
+    womens_physique: 1.35,
+    womens_bodybuilding: 1.30,
+  },
+  
+  // Proporção 2b: Quadril ÷ Cintura
+  quadrilCintura: {
+    golden_ratio: 1.42,
+    bikini: 1.50,
+    wellness: 1.55,
+    figure: 1.38,
+    womens_physique: 1.35,
+    womens_bodybuilding: 1.30,
+  },
+  
+  // Proporção 2c: Busto ÷ Quadril
+  bustoQuadril: {
+    golden_ratio: 0.97,
+    bikini: 0.90,
+    wellness: 0.84,
+    figure: 1.00,
+    womens_physique: 1.00,
+    womens_bodybuilding: 1.00,
+  },
+  
+  // Proporção 3: Ombros ÷ Quadril
+  ombrosQuadril: {
+    golden_ratio: 1.00,
+    bikini: 0.95,
+    wellness: 0.90,
+    figure: 1.05,
+    womens_physique: 1.10,
+    womens_bodybuilding: 1.15,
+  },
+  
+  // Proporção 4: Antebraço ÷ Braço
+  antebracoBraco: {
+    golden_ratio: 0.78,
+    bikini: 0.75,
+    wellness: 0.76,
+    figure: 0.78,
+    womens_physique: 0.80,
+    womens_bodybuilding: 0.82,
+  },
+  
+  // Proporção 5: Coxa ÷ Quadril
+  coxaQuadril: {
+    golden_ratio: 0.58,
+    bikini: 0.56,
+    wellness: 0.65,
+    figure: 0.60,
+    womens_physique: 0.62,
+    womens_bodybuilding: 0.65,
+  },
+  
+  // Proporção 6: Coxa ÷ Joelho
+  coxaJoelho: {
+    golden_ratio: 1.60,
+    bikini: 1.55,
+    wellness: 1.75,
+    figure: 1.65,
+    womens_physique: 1.70,
+    womens_bodybuilding: 1.80,
+  },
+  
+  // Proporção 7: Coxa ÷ Panturrilha
+  coxaPanturrilha: {
+    golden_ratio: 1.40,
+    bikini: 1.45,
+    wellness: 1.55,
+    figure: 1.45,
+    womens_physique: 1.50,
+    womens_bodybuilding: 1.50,
+  },
+  
+  // Proporção 8: Panturrilha ÷ Tornozelo
+  panturrilhaTornozelo: {
+    golden_ratio: 1.80,
+    bikini: 1.70,
+    wellness: 1.75,
+    figure: 1.85,
+    womens_physique: 1.90,
+    womens_bodybuilding: 1.95,
+  },
+}
+```
+
+### 11.2 Tabela Visual Completa
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────────────────┐
+│                              METAS POR PROPORÇÃO E CATEGORIA                                 │
+├────────────────────────┬────────┬────────┬──────────┬────────┬───────────┬───────────────────┤
+│ PROPORÇÃO              │ GOLDEN │ BIKINI │ WELLNESS │ FIGURE │ W.PHYSIQUE│ W.BODYBUILDING    │
+├────────────────────────┼────────┼────────┼──────────┼────────┼───────────┼───────────────────┤
+│ 1. WHR (Cint÷Quad) ↓   │  0.70  │  0.68  │   0.65   │  0.72  │   0.75    │      0.78         │
+│ 2a. Busto÷Cintura      │  1.40  │  1.35  │   1.30   │  1.38  │   1.35    │      1.30         │
+│ 2b. Quadril÷Cintura    │  1.42  │  1.50  │   1.55   │  1.38  │   1.35    │      1.30         │
+│ 2c. Busto÷Quadril      │  0.97  │  0.90  │   0.84   │  1.00  │   1.00    │      1.00         │
+│ 3. Ombros÷Quadril      │  1.00  │  0.95  │   0.90   │  1.05  │   1.10    │      1.15         │
+│ 4. Anteb.÷Braço        │  0.78  │  0.75  │   0.76   │  0.78  │   0.80    │      0.82         │
+│ 5. Coxa÷Quadril        │  0.58  │  0.56  │   0.65   │  0.60  │   0.62    │      0.65         │
+│ 6. Coxa÷Joelho         │  1.60  │  1.55  │   1.75   │  1.65  │   1.70    │      1.80         │
+│ 7. Coxa÷Panturrilha    │  1.40  │  1.45  │   1.55   │  1.45  │   1.50    │      1.50         │
+│ 8. Pant.÷Tornozelo     │  1.80  │  1.70  │   1.75   │  1.85  │   1.90    │      1.95         │
+├────────────────────────┴────────┴────────┴──────────┴────────┴───────────┴───────────────────┤
+│ ↓ = Proporção INVERSA (menor é melhor)                                                       │
+└──────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 12. PESOS POR CATEGORIA
+
+### 12.1 Importância de Cada Proporção por Categoria
+
+```typescript
+const PESOS_POR_CATEGORIA = {
+  golden_ratio: {
+    whr: 20,                    // WHR muito importante
+    ampulheta: 18,              // Harmonia busto/cintura/quadril
+    ombrosQuadril: 12,          // Equilíbrio
+    antebracoBraco: 5,          // Menor importância
+    coxaQuadril: 12,            // Desenvolvimento de pernas
+    coxaJoelho: 10,             // Desenvolvimento muscular
+    coxaPanturrilha: 10,        // Equilíbrio inferior
+    panturrilhaTornozelo: 8,    // Detalhamento
+    // Simetria: 5% implícito
+  },
+  
+  bikini: {
+    whr: 25,                    // WHR MUITO importante!
+    ampulheta: 20,              // Curvas são essenciais
+    ombrosQuadril: 10,          // Quadril > ombros
+    antebracoBraco: 3,          // Pouca importância
+    coxaQuadril: 15,            // Coxas proporcionais
+    coxaJoelho: 8,              // Tonificação
+    coxaPanturrilha: 10,        // Equilíbrio
+    panturrilhaTornozelo: 5,    // Menor foco
+    // Glúteos têm peso extra via coxaQuadril e WHR
+  },
+  
+  wellness: {
+    whr: 18,                    // Importante mas quadril é maior
+    ampulheta: 12,              // Menos foco em cintura fina
+    ombrosQuadril: 8,           // Quadril domina
+    antebracoBraco: 3,          // Pouca importância
+    coxaQuadril: 25,            // COXAS são o foco!
+    coxaJoelho: 15,             // Desenvolvimento de coxa
+    coxaPanturrilha: 12,        // Coxas > panturrilhas
+    panturrilhaTornozelo: 5,    // Menor foco
+  },
+  
+  figure: {
+    whr: 15,                    // Importante mas menos que bikini
+    ampulheta: 15,              // Simetria geral
+    ombrosQuadril: 18,          // Ombros desenvolvidos!
+    antebracoBraco: 8,          // Braços definidos
+    coxaQuadril: 12,            // Pernas desenvolvidas
+    coxaJoelho: 12,             // Desenvolvimento muscular
+    coxaPanturrilha: 10,        // Equilíbrio
+    panturrilhaTornozelo: 8,    // Detalhamento
+  },
+  
+  womens_physique: {
+    whr: 10,                    // Menos ênfase em curvas
+    ampulheta: 10,              // Menos ênfase
+    ombrosQuadril: 20,          // V-Taper importante!
+    antebracoBraco: 12,         // Braços desenvolvidos
+    coxaQuadril: 15,            // Pernas musculosas
+    coxaJoelho: 12,             // Desenvolvimento
+    coxaPanturrilha: 10,        // Equilíbrio
+    panturrilhaTornozelo: 10,   // Detalhamento
+  },
+  
+  womens_bodybuilding: {
+    whr: 5,                     // Mínima ênfase em curvas
+    ampulheta: 5,               // Mínima ênfase
+    ombrosQuadril: 20,          // V-Taper máximo
+    antebracoBraco: 15,         // Braços muito desenvolvidos
+    coxaQuadril: 18,            // Pernas enormes
+    coxaJoelho: 15,             // Máximo desenvolvimento
+    coxaPanturrilha: 12,        // Equilíbrio
+    panturrilhaTornozelo: 10,   // Detalhamento
+  },
+}
+```
+
+---
+
+## 13. FUNÇÕES DE CÁLCULO COMPLETAS
+
+### 13.1 Calcular Ideais para uma Atleta
+
+```typescript
+interface IdeaisFemininos {
+  whr: number
+  bustoCintura: number
+  quadrilCintura: number
+  bustoQuadril: number
+  ombrosQuadril: number
+  antebracoBraco: number
+  coxaQuadril: number
+  coxaJoelho: number
+  coxaPanturrilha: number
+  panturrilhaTornozelo: number
+}
+
+function calcularIdeaisFemininos(
+  metodo: 'GOLDEN_RATIO' | 'BIKINI' | 'WELLNESS' | 'FIGURE' | 'WOMENS_PHYSIQUE' | 'WOMENS_BODYBUILDING'
+): IdeaisFemininos {
+  
+  const chaveMetodo = metodo.toLowerCase().replace('_', '_')
+  
+  return {
+    whr: METAS_FEMININAS.whr[chaveMetodo],
+    bustoCintura: METAS_FEMININAS.bustoCintura[chaveMetodo],
+    quadrilCintura: METAS_FEMININAS.quadrilCintura[chaveMetodo],
+    bustoQuadril: METAS_FEMININAS.bustoQuadril[chaveMetodo],
+    ombrosQuadril: METAS_FEMININAS.ombrosQuadril[chaveMetodo],
+    antebracoBraco: METAS_FEMININAS.antebracoBraco[chaveMetodo],
+    coxaQuadril: METAS_FEMININAS.coxaQuadril[chaveMetodo],
+    coxaJoelho: METAS_FEMININAS.coxaJoelho[chaveMetodo],
+    coxaPanturrilha: METAS_FEMININAS.coxaPanturrilha[chaveMetodo],
+    panturrilhaTornozelo: METAS_FEMININAS.panturrilhaTornozelo[chaveMetodo],
+  }
+}
+```
+
+### 13.2 Calcular Proporções Atuais
+
+```typescript
+interface ProporcoesAtuaisFemininas {
+  whr: ProportionResult
+  bustoCintura: ProportionResult
+  quadrilCintura: ProportionResult
+  bustoQuadril: ProportionResult
+  ombrosQuadril: ProportionResult
+  antebracoBraco: ProportionResult
+  coxaQuadril: ProportionResult
+  coxaJoelho: ProportionResult
+  coxaPanturrilha: ProportionResult
+  panturrilhaTornozelo: ProportionResult
+  ampulheta: AmpulhetaResult
+}
+
+function calcularProporcoesAtuais(
+  medidas: MedidasVariaveisFemininas & MedidasEstruturaisFemininas
+): ProporcoesAtuaisFemininas {
+  
+  return {
+    // 1. WHR
+    whr: calcularWHR(medidas.cintura, medidas.quadril),
+    
+    // 2. Ampulheta (3 sub-proporções)
+    bustoCintura: {
+      nome: 'Busto ÷ Cintura',
+      indiceAtual: medidas.busto / medidas.cintura,
+      ehInversa: false,
+    },
+    quadrilCintura: {
+      nome: 'Quadril ÷ Cintura',
+      indiceAtual: medidas.quadril / medidas.cintura,
+      ehInversa: false,
+    },
+    bustoQuadril: {
+      nome: 'Busto ÷ Quadril',
+      indiceAtual: medidas.busto / medidas.quadril,
+      ehInversa: false,
+    },
+    ampulheta: calcularAmpulheta(medidas.busto, medidas.cintura, medidas.quadril),
+    
+    // 3. Ombros ÷ Quadril
+    ombrosQuadril: calcularShoulderHipRatio(medidas.ombros, medidas.quadril),
+    
+    // 4. Antebraço ÷ Braço
+    antebracoBraco: calcularBracoAntebraco(medidas.braco, medidas.antebraco),
+    
+    // 5. Coxa ÷ Quadril
+    coxaQuadril: calcularHipThighRatio(medidas.coxa, medidas.quadril),
+    
+    // 6. Coxa ÷ Joelho
+    coxaJoelho: calcularCoxaJoelho(medidas.coxa, medidas.joelho),
+    
+    // 7. Coxa ÷ Panturrilha
+    coxaPanturrilha: calcularCoxaPanturrilha(medidas.coxa, medidas.panturrilha),
+    
+    // 8. Panturrilha ÷ Tornozelo
+    panturrilhaTornozelo: calcularPanturrilhaTornozelo(medidas.panturrilha, medidas.tornozelo),
+  }
+}
+```
+
+### 13.3 Calcular Score Total
+
+```typescript
+interface ScoreFemininoResult {
+  scoreTotal: number
+  classificacao: ClassificacaoNivel
+  scoresDetalhados: {
+    proporcao: string
+    indiceAtual: number
+    indiceMeta: number
+    percentualDoIdeal: number
+    peso: number
+    contribuicao: number
+  }[]
+  recomendacaoCategoria: {
+    categoria: string
+    score: number
+    aderencia: number
+  }[]
+}
+
+function calcularScoreFeminino(
+  medidas: MedidasVariaveisFemininas & MedidasEstruturaisFemininas,
+  metodo: string = 'GOLDEN_RATIO'
+): ScoreFemininoResult {
+  
+  const proporcoes = calcularProporcoesAtuais(medidas)
+  const ideais = calcularIdeaisFemininos(metodo)
+  const pesos = PESOS_POR_CATEGORIA[metodo.toLowerCase()]
+  
+  let scoreAcumulado = 0
+  const scoresDetalhados = []
+  
+  // Lista de proporções para calcular
+  const propList = [
+    { key: 'whr', nome: 'WHR', ehInversa: true },
+    { key: 'bustoCintura', nome: 'Busto ÷ Cintura', ehInversa: false },
+    { key: 'quadrilCintura', nome: 'Quadril ÷ Cintura', ehInversa: false },
+    { key: 'ombrosQuadril', nome: 'Ombros ÷ Quadril', ehInversa: false },
+    { key: 'antebracoBraco', nome: 'Antebraço ÷ Braço', ehInversa: false },
+    { key: 'coxaQuadril', nome: 'Coxa ÷ Quadril', ehInversa: false },
+    { key: 'coxaJoelho', nome: 'Coxa ÷ Joelho', ehInversa: false },
+    { key: 'coxaPanturrilha', nome: 'Coxa ÷ Panturrilha', ehInversa: false },
+    { key: 'panturrilhaTornozelo', nome: 'Panturrilha ÷ Tornozelo', ehInversa: false },
+  ]
+  
+  for (const prop of propList) {
+    const atual = proporcoes[prop.key]?.indiceAtual || proporcoes[prop.key]
+    const meta = ideais[prop.key]
+    const peso = pesos[prop.key] || 0
+    
+    if (!atual || !meta || !peso) continue
+    
+    let percentualDoIdeal: number
+    
+    if (prop.ehInversa) {
+      // WHR: menor é melhor
+      percentualDoIdeal = calcularPercentualInverso(atual, meta)
+    } else {
+      percentualDoIdeal = Math.min(110, (atual / meta) * 100)
+    }
+    
+    const contribuicao = (percentualDoIdeal * peso) / 100
+    scoreAcumulado += contribuicao
+    
+    scoresDetalhados.push({
+      proporcao: prop.nome,
+      indiceAtual: atual,
+      indiceMeta: meta,
+      percentualDoIdeal,
+      peso,
+      contribuicao,
+    })
+  }
+  
+  // Adicionar ampulheta (harmonia)
+  const harmoniaAmpulheta = proporcoes.ampulheta.harmoniaPercentual
+  const pesoAmpulheta = pesos.ampulheta || 15
+  const contribuicaoAmpulheta = (harmoniaAmpulheta * pesoAmpulheta) / 100
+  scoreAcumulado += contribuicaoAmpulheta
+  
+  scoresDetalhados.push({
+    proporcao: 'Harmonia Ampulheta',
+    indiceAtual: harmoniaAmpulheta,
+    indiceMeta: 100,
+    percentualDoIdeal: harmoniaAmpulheta,
+    peso: pesoAmpulheta,
+    contribuicao: contribuicaoAmpulheta,
+  })
+  
+  // Score final (normalizado para 100)
+  const pesoTotal = Object.values(pesos).reduce((a, b) => a + b, 0)
+  const scoreTotal = Math.round((scoreAcumulado / pesoTotal) * 100 * 10) / 10
+  
+  // Calcular recomendação de categoria
+  const recomendacaoCategoria = calcularRecomendacaoCategoria(medidas)
+  
+  return {
+    scoreTotal,
+    classificacao: classificarScore(scoreTotal),
+    scoresDetalhados,
+    recomendacaoCategoria,
+  }
+}
+```
+
+### 13.4 Recomendar Melhor Categoria
+
+```typescript
+function calcularRecomendacaoCategoria(
+  medidas: MedidasVariaveisFemininas & MedidasEstruturaisFemininas
+): { categoria: string; score: number; aderencia: number }[] {
+  
+  const categorias = [
+    'GOLDEN_RATIO',
+    'BIKINI',
+    'WELLNESS',
+    'FIGURE',
+    'WOMENS_PHYSIQUE',
+    'WOMENS_BODYBUILDING',
+  ]
+  
+  const resultados = categorias.map(categoria => {
+    const resultado = calcularScoreFeminino(medidas, categoria)
+    return {
+      categoria: categoria.replace(/_/g, ' '),
+      score: resultado.scoreTotal,
+      aderencia: resultado.scoreTotal, // Simplificado
+    }
+  })
+  
+  // Ordenar por score descendente
+  return resultados.sort((a, b) => b.score - a.score)
+}
+```
+
+---
+
+## 14. EXEMPLO DE CÁLCULO
+
+### 14.1 Dados de Entrada (Atleta Exemplo)
+
+```typescript
+const atletaExemplo = {
+  // Estruturais
+  altura: 165,
+  punho: 15,
+  tornozelo: 20,
+  joelho: 35,
+  
+  // Variáveis
+  busto: 90,
+  cintura: 65,
+  quadril: 98,
+  ombros: 95,
+  braco: 28,
+  antebraco: 22,
+  coxa: 58,
+  panturrilha: 36,
+}
+```
+
+### 14.2 Cálculo das Proporções
+
+```typescript
+// 1. WHR
+const whr = 65 / 98  // = 0.663 ✅ Excelente!
+
+// 2a. Busto ÷ Cintura
+const bustoCintura = 90 / 65  // = 1.385
+
+// 2b. Quadril ÷ Cintura
+const quadrilCintura = 98 / 65  // = 1.508
+
+// 2c. Busto ÷ Quadril
+const bustoQuadril = 90 / 98  // = 0.918
+
+// 3. Ombros ÷ Quadril
+const ombrosQuadril = 95 / 98  // = 0.969
+
+// 4. Antebraço ÷ Braço
+const antebracoBraco = 22 / 28  // = 0.786
+
+// 5. Coxa ÷ Quadril
+const coxaQuadril = 58 / 98  // = 0.592
+
+// 6. Coxa ÷ Joelho
+const coxaJoelho = 58 / 35  // = 1.657
+
+// 7. Coxa ÷ Panturrilha
+const coxaPanturrilha = 58 / 36  // = 1.611
+
+// 8. Panturrilha ÷ Tornozelo
+const panturrilhaTornozelo = 36 / 20  // = 1.800
+```
+
+### 14.3 Comparação com Metas (Golden Ratio)
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│                    ESPECTRO DE CATEGORIAS FEMININAS                          │
-├──────────────────────────────────────────────────────────────────────────────┤
+│                     RESULTADO - ATLETA EXEMPLO                               │
+│                        Método: GOLDEN RATIO                                  │
+├─────────────────────────┬──────────┬──────────┬──────────────┬──────────────┤
+│ PROPORÇÃO               │  ATUAL   │   META   │  % DO IDEAL  │    STATUS    │
+├─────────────────────────┼──────────┼──────────┼──────────────┼──────────────┤
+│ 1. WHR (↓)              │   0.663  │   0.70   │    105%      │ ✅ ELITE     │
+│ 2a. Busto ÷ Cintura     │   1.385  │   1.40   │    99%       │ ✅ META      │
+│ 2b. Quadril ÷ Cintura   │   1.508  │   1.42   │    106%      │ ✅ ELITE     │
+│ 2c. Busto ÷ Quadril     │   0.918  │   0.97   │    95%       │ 💪 QUASE LÁ │
+│ 3. Ombros ÷ Quadril     │   0.969  │   1.00   │    97%       │ ✅ META      │
+│ 4. Antebraço ÷ Braço    │   0.786  │   0.78   │    101%      │ ✅ META      │
+│ 5. Coxa ÷ Quadril       │   0.592  │   0.58   │    102%      │ ✅ ELITE     │
+│ 6. Coxa ÷ Joelho        │   1.657  │   1.60   │    104%      │ ✅ ELITE     │
+│ 7. Coxa ÷ Panturrilha   │   1.611  │   1.40   │    115%      │ 👑 ELITE    │
+│ 8. Pant. ÷ Tornozelo    │   1.800  │   1.80   │    100%      │ ✅ META      │
+├─────────────────────────┴──────────┴──────────┴──────────────┴──────────────┤
 │                                                                              │
-│  ← MENOS MUSCULAR                                    MAIS MUSCULAR →         │
+│  SCORE TOTAL: 92.5 pts                    CLASSIFICAÇÃO: AVANÇADO 🥇        │
 │                                                                              │
-│  🩱 Bikini    🏃 Wellness    👙 Figure    💪 W.Physique    🏆 W.BB          │
-│                                                                              │
-│  WHR: 0.68     WHR: 0.62      WHR: 0.70    WHR: 0.72       WHR: N/A         │
-│  BF: 12-16%    BF: 14-18%     BF: 10-14%   BF: 8-12%       BF: 6-10%        │
-│                                                                              │
-│  Foco:         Foco:          Foco:        Foco:           Foco:            │
-│  Forma geral   Lower body     Simetria     Músculo +       Tamanho          │
-│  Glúteos       Glúteos/Coxas  V-Taper      Feminilidade    máximo           │
-│  Aparência     Cintura fina   Definição    Definição       Definição        │
-│                                                                              │
-│  POPULARIDADE: ★★★★★   ★★★★☆   ★★★☆☆   ★★☆☆☆   ★☆☆☆☆                       │
+│  MELHOR CATEGORIA: WELLNESS (Score: 95.2)                                   │
+│  Motivo: Quadril e coxas muito desenvolvidos!                               │
 │                                                                              │
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 5. FÓRMULAS DETALHADAS - GOLDEN RATIO FEMININO
+## 15. CLASSIFICAÇÕES
 
-### 5.1 Constantes
-
-```javascript
-const FEMALE_GOLDEN_RATIO = {
-  // Razões principais
-  WHR: 0.70,                    // Waist-to-Hip (MAIS IMPORTANTE)
-  WCR: 0.70,                    // Waist-to-Chest  
-  SHR: 0.95,                    // Shoulder-to-Hip
-  SWR: 1.40,                    // Shoulder-to-Waist
-  HOURGLASS_INDEX: 1.45,        // (Busto + Quadril) / (2 × Cintura)
-  
-  // Proporções de membros
-  COXA_JOELHO: 1.60,            // Multiplicador coxa (menor que masculino)
-  PANTURRILHA_TORNOZELO: 1.80,  // Multiplicador panturrilha
-  BRACO_PUNHO: 2.20,            // Multiplicador braço (menor que masculino)
-  ANTEBRACO_BRACO: 0.78,        // Proporção antebraço/braço
-  
-  // Proporções corporais
-  BUSTO_QUADRIL: 0.97,          // Busto quase igual ao quadril
-  OMBROS_QUADRIL: 0.95,         // Ombros levemente menores que quadril
-  CINTURA_ALTURA: 0.38,         // Cintura ideal = 38% da altura
-  
-  // Gordura corporal
-  BF_MIN: 18,
-  BF_MAX: 23,
-  BF_IDEAL: 20,
-}
-```
-
-### 5.2 Funções de Cálculo
-
-```javascript
-function calcularIdeaisFemininoGoldenRatio(medidas) {
-  const { altura, quadril, punho, tornozelo, joelho, abaixo_busto } = medidas
-  
-  // Calcular cintura ideal baseada no quadril
-  const cintura_ideal = quadril * FEMALE_GOLDEN_RATIO.WHR
-  
-  // Calcular busto ideal (similar ao quadril para forma ampulheta)
-  const busto_ideal = quadril * FEMALE_GOLDEN_RATIO.BUSTO_QUADRIL
-  
-  // Calcular ombros ideais (não muito largos)
-  const ombros_ideal = quadril * FEMALE_GOLDEN_RATIO.OMBROS_QUADRIL
-  
-  // Calcular membros
-  const braco_ideal = punho * FEMALE_GOLDEN_RATIO.BRACO_PUNHO
-  const antebraco_ideal = braco_ideal * FEMALE_GOLDEN_RATIO.ANTEBRACO_BRACO
-  const panturrilha_ideal = tornozelo * FEMALE_GOLDEN_RATIO.PANTURRILHA_TORNOZELO
-  const coxa_ideal = joelho * FEMALE_GOLDEN_RATIO.COXA_JOELHO
-  
-  return {
-    // Proporções principais
-    cintura: cintura_ideal,
-    busto: busto_ideal,
-    ombros: ombros_ideal,
-    
-    // Razões calculadas
-    whr_ideal: FEMALE_GOLDEN_RATIO.WHR,
-    wcr_ideal: FEMALE_GOLDEN_RATIO.WCR,
-    shr_ideal: FEMALE_GOLDEN_RATIO.SHR,
-    hourglass_ideal: FEMALE_GOLDEN_RATIO.HOURGLASS_INDEX,
-    
-    // Membros
-    braco: braco_ideal,
-    antebraco: antebraco_ideal,
-    coxa: coxa_ideal,
-    panturrilha: panturrilha_ideal,
-    
-    // Composição corporal
-    bf_ideal: {
-      min: FEMALE_GOLDEN_RATIO.BF_MIN,
-      max: FEMALE_GOLDEN_RATIO.BF_MAX,
-      ideal: FEMALE_GOLDEN_RATIO.BF_IDEAL,
-    },
-  }
-}
-```
-
-### 5.3 Cálculo de Score Golden Ratio Feminino
-
-```javascript
-function calcularScoreFemininoGoldenRatio(medidas) {
-  const { busto, cintura, quadril, ombros, coxa, panturrilha } = medidas
-  const ideais = calcularIdeaisFemininoGoldenRatio(medidas)
-  
-  // Calcular razões atuais
-  const whr_atual = cintura / quadril
-  const wcr_atual = cintura / busto
-  const shr_atual = ombros / quadril
-  const hourglass_atual = (busto + quadril) / (2 * cintura)
-  
-  // Pesos de cada proporção (total = 100)
-  const pesos = {
-    whr: 25,              // WHR é a métrica MAIS importante
-    hourglass: 20,        // Índice ampulheta
-    wcr: 15,              // Equilíbrio cintura-busto
-    shr: 10,              // Ombros-quadril
-    coxa: 12,             // Proporção de coxa
-    panturrilha: 8,       // Proporção de panturrilha
-    braco: 5,             // Braços (menos importante)
-    simetria: 5,          // Simetria bilateral
-  }
-  
-  let scores = {}
-  
-  // 1. WHR (quanto mais próximo de 0.70, melhor)
-  scores.whr = calcularScoreProximidade(whr_atual, FEMALE_GOLDEN_RATIO.WHR, 0.10, pesos.whr)
-  
-  // 2. Hourglass Index (quanto mais próximo de 1.45, melhor)
-  scores.hourglass = calcularScoreProximidade(hourglass_atual, FEMALE_GOLDEN_RATIO.HOURGLASS_INDEX, 0.15, pesos.hourglass)
-  
-  // 3. WCR (quanto mais próximo de 0.70, melhor)
-  scores.wcr = calcularScoreProximidade(wcr_atual, FEMALE_GOLDEN_RATIO.WCR, 0.10, pesos.wcr)
-  
-  // 4. SHR (quanto mais próximo de 0.95, melhor)
-  scores.shr = calcularScoreProximidade(shr_atual, FEMALE_GOLDEN_RATIO.SHR, 0.10, pesos.shr)
-  
-  // 5. Coxa
-  scores.coxa = calcularScoreProporcional(coxa, ideais.coxa, pesos.coxa)
-  
-  // 6. Panturrilha
-  scores.panturrilha = calcularScoreProporcional(panturrilha, ideais.panturrilha, pesos.panturrilha)
-  
-  // 7. Braço
-  scores.braco = calcularScoreProporcional(medidas.braco, ideais.braco, pesos.braco)
-  
-  // 8. Simetria bilateral
-  scores.simetria = calcularScoreSimetria(medidas, pesos.simetria)
-  
-  const scoreTotal = Object.values(scores).reduce((a, b) => a + b, 0)
-  
-  return {
-    scores_detalhados: scores,
-    score_total: Math.round(scoreTotal * 100) / 100,
-    ideais: ideais,
-    razoes_atuais: {
-      whr: whr_atual,
-      wcr: wcr_atual,
-      shr: shr_atual,
-      hourglass: hourglass_atual,
-    },
-    diferencas: calcularDiferencasFeminino(medidas, ideais),
-  }
-}
-
-// Função auxiliar: Score de proximidade (para razões)
-function calcularScoreProximidade(atual, ideal, tolerancia, peso) {
-  const diff = Math.abs(atual - ideal)
-  const maxDiff = ideal * tolerancia
-  
-  let percentual
-  if (diff <= maxDiff * 0.25) percentual = 100
-  else if (diff <= maxDiff * 0.50) percentual = 90
-  else if (diff <= maxDiff * 0.75) percentual = 75
-  else if (diff <= maxDiff) percentual = 60
-  else percentual = Math.max(0, 50 - (diff - maxDiff) * 200)
-  
-  return percentual * (peso / 100)
-}
-
-// Função auxiliar: Score proporcional (para medidas absolutas)
-function calcularScoreProporcional(atual, ideal, peso) {
-  const percentual = Math.min(100, (atual / ideal) * 100)
-  return percentual * (peso / 100)
-}
-```
-
----
-
-## 6. FÓRMULAS DETALHADAS - BIKINI 🩱
-
-### 6.1 Constantes e Referência
-
-```javascript
-/**
- * REFERÊNCIA: Lauralie Chapados
- * - 3x Olympia Bikini Champion (2022, 2023, 2024)
- * - Altura: 163 cm
- * - Peso (stage): ~52-54 kg
- * - Conhecida por: Glúteos arredondados, cintura tiny, ombros com caps
- */
-
-const BIKINI_CONSTANTS = {
-  name: 'Bikini',
-  icon: '🩱',
-  reference: {
-    name: 'Lauralie Chapados',
-    titles: '3x Olympia Bikini',
-    height: 163,
-    weight_stage: 53,
-    measurements: {
-      busto: 86,
-      cintura: 58,
-      quadril: 88,
-    },
-  },
-  
-  // Razões alvo
-  WHR_TARGET: 0.68,           // Cintura/Quadril (mais apertada)
-  WCR_TARGET: 0.70,           // Cintura/Busto
-  SHR_TARGET: 0.95,           // Ombros/Quadril (quase iguais)
-  SWR_TARGET: 1.45,           // Ombros/Cintura
-  HOURGLASS_TARGET: 1.47,     // (Busto+Quadril)/(2×Cintura)
-  
-  // Gordura corporal
-  BF_MIN: 12,
-  BF_MAX: 16,
-  BF_IDEAL: 14,
-  
-  // Áreas de foco (julgamento)
-  focusAreas: [
-    'glutes',         // Glúteos arredondados e cheios
-    'shoulders',      // Caps de deltóide
-    'waist',          // Cintura fina
-    'overall_shape',  // Forma geral (S-curve)
-    'skin',           // Condição da pele
-    'presentation',   // Apresentação/Pose
-  ],
-  
-  // Critérios de julgamento IFBB
-  judgingCriteria: {
-    balance_symmetry: 25,     // Equilíbrio e simetria
-    shape: 25,                // Forma (S-curve, ampulheta)
-    skin_tone: 20,            // Condição da pele
-    presentation: 15,         // Apresentação de palco
-    muscle_tone: 15,          // Tônus muscular (não excessivo)
-  },
-  
-  // Pesos do score VITRU IA
-  weights: {
-    whr: 0.25,                // WHR é crucial
-    hourglass: 0.20,          // Forma ampulheta
-    shoulders: 0.15,          // Caps arredondados
-    glutes: 0.20,             // Glúteos arredondados
-    legs: 0.10,               // Pernas proporcionais
-    conditioning: 0.10,       // Condicionamento (não muito seco)
-  },
-}
-```
-
-### 6.2 Funções de Cálculo Bikini
-
-```javascript
-function calcularIdeaisBikini(medidas) {
-  const { altura, quadril, punho, tornozelo, joelho } = medidas
-  
-  // Escalar baseado na referência
-  const fator_escala = altura / BIKINI_CONSTANTS.reference.height
-  
-  // Cintura ideal (WHR de 0.68)
-  const cintura_ideal = quadril * BIKINI_CONSTANTS.WHR_TARGET
-  
-  // Busto ideal (hourglass index)
-  // (Busto + Quadril) / (2 × Cintura) = 1.47
-  // Busto = (1.47 × 2 × Cintura) - Quadril
-  const busto_ideal = (BIKINI_CONSTANTS.HOURGLASS_TARGET * 2 * cintura_ideal) - quadril
-  
-  // Ombros ideais
-  const ombros_ideal = quadril * BIKINI_CONSTANTS.SHR_TARGET
-  
-  // Membros (proporcionais, não volumosos)
-  const braco_ideal = punho * 2.15  // Menor que Golden Ratio
-  const coxa_ideal = joelho * 1.55
-  const panturrilha_ideal = tornozelo * 1.75
-  
-  // Glúteo ideal (proeminente)
-  const gluteo_ideal = cintura_ideal * 1.55
-  
-  return {
-    cintura: cintura_ideal,
-    busto: busto_ideal,
-    ombros: ombros_ideal,
-    braco: braco_ideal,
-    coxa: coxa_ideal,
-    panturrilha: panturrilha_ideal,
-    gluteo: gluteo_ideal,
-    
-    razoes: {
-      whr: BIKINI_CONSTANTS.WHR_TARGET,
-      wcr: BIKINI_CONSTANTS.WCR_TARGET,
-      shr: BIKINI_CONSTANTS.SHR_TARGET,
-      hourglass: BIKINI_CONSTANTS.HOURGLASS_TARGET,
-    },
-    
-    bf: {
-      min: BIKINI_CONSTANTS.BF_MIN,
-      max: BIKINI_CONSTANTS.BF_MAX,
-      ideal: BIKINI_CONSTANTS.BF_IDEAL,
-    },
-    
-    peso_ideal: {
-      min: Math.round((altura - 100) * 0.75),
-      max: Math.round((altura - 100) * 0.85),
-    },
-  }
-}
-
-function calcularScoreBikini(medidas) {
-  const ideais = calcularIdeaisBikini(medidas)
-  const { busto, cintura, quadril, ombros, coxa, panturrilha, braco } = medidas
-  
-  // Razões atuais
-  const whr = cintura / quadril
-  const wcr = cintura / busto
-  const shr = ombros / quadril
-  const hourglass = (busto + quadril) / (2 * cintura)
-  
-  // Scores individuais
-  const scores = {
-    whr: calcularScoreProximidade(whr, BIKINI_CONSTANTS.WHR_TARGET, 0.08, 25),
-    hourglass: calcularScoreProximidade(hourglass, BIKINI_CONSTANTS.HOURGLASS_TARGET, 0.12, 20),
-    shoulders: calcularScoreProximidade(shr, BIKINI_CONSTANTS.SHR_TARGET, 0.10, 15),
-    glutes: calcularScoreProporcional(medidas.gluteo_dobra || quadril * 0.7, ideais.gluteo, 20),
-    legs: (calcularScoreProporcional(coxa, ideais.coxa, 5) + 
-           calcularScoreProporcional(panturrilha, ideais.panturrilha, 5)),
-    conditioning: 10, // Avaliado separadamente
-  }
-  
-  const scoreTotal = Object.values(scores).reduce((a, b) => a + b, 0)
-  
-  return {
-    categoria: 'Bikini',
-    icon: '🩱',
-    referencia: BIKINI_CONSTANTS.reference.name,
-    score_total: Math.round(scoreTotal * 100) / 100,
-    scores_detalhados: scores,
-    ideais: ideais,
-    razoes_atuais: { whr, wcr, shr, hourglass },
-    diferencas: calcularDiferencasBikini(medidas, ideais),
-    recomendacoes: gerarRecomendacoesBikini(medidas, ideais),
-  }
-}
-```
-
----
-
-## 7. FÓRMULAS DETALHADAS - WELLNESS 🏃
-
-### 7.1 Constantes e Referência
-
-```javascript
-/**
- * REFERÊNCIA: Francielle Mattos
- * - 2x Olympia Wellness Champion (2022, 2023)
- * - Altura: 158 cm
- * - Peso (stage): ~58-60 kg
- * - Conhecida por: Lower body extremamente desenvolvido, glúteos enormes
- * 
- * A categoria Wellness foi criada para mulheres com lower body naturalmente
- * mais desenvolvido. É a categoria que mais cresce no Brasil.
- */
-
-const WELLNESS_CONSTANTS = {
-  name: 'Wellness',
-  icon: '🏃',
-  reference: {
-    name: 'Francielle Mattos',
-    titles: '2x Olympia Wellness',
-    height: 158,
-    weight_stage: 59,
-    measurements: {
-      cintura: 60,
-      quadril: 100,
-      coxa: 63,
-    },
-  },
-  
-  // Razões alvo (WHR mais baixo = quadril maior)
-  WHR_TARGET: 0.62,           // Cintura/Quadril MENOR (quadril dominante)
-  WCR_TARGET: 0.72,           // Cintura/Busto
-  SHR_TARGET: 0.85,           // Ombros/Quadril (ombros menores que quadril)
-  SWR_TARGET: 1.35,           // Ombros/Cintura (V-Taper suave)
-  HOURGLASS_TARGET: 1.55,     // Índice ampulheta MAIOR
-  TWR_TARGET: 1.05,           // Coxa/Cintura (Coxa MAIOR que cintura)
-  GWR_TARGET: 1.70,           // Glúteo/Cintura
-  
-  // Gordura corporal (um pouco maior - não muito seco)
-  BF_MIN: 14,
-  BF_MAX: 18,
-  BF_IDEAL: 16,
-  
-  // Áreas de foco (julgamento) - 70% lower body!
-  focusAreas: [
-    'glutes',         // PRINCIPAL: Glúteos grandes e arredondados
-    'thighs',         // Coxas desenvolvidas
-    'hamstrings',     // Posterior de coxa
-    'waist',          // Cintura fina (contraste)
-    'lower_back',     // Lower back (lombares)
-  ],
-  
-  // Critérios de julgamento IFBB
-  judgingCriteria: {
-    lower_body: 40,           // Lower body é 40%!
-    glutes: 25,               // Glúteos especificamente
-    waist: 15,                // Cintura fina
-    upper_body: 10,           // Upper body (não deve ser grande)
-    presentation: 10,         // Apresentação
-  },
-  
-  // Pesos do score VITRU IA
-  weights: {
-    whr: 0.15,                // WHR importante mas não principal
-    lowerBody: 0.40,          // MAIOR PESO - Lower body é o foco
-    glutes: 0.20,             // Glúteos especificamente
-    thighs: 0.15,             // Coxas
-    waist: 0.10,              // Cintura fina
-  },
-}
-```
-
-### 7.2 Funções de Cálculo Wellness
-
-```javascript
-function calcularIdeaisWellness(medidas) {
-  const { altura, quadril, punho, tornozelo, joelho, cintura } = medidas
-  
-  // Escalar baseado na referência
-  const fator_escala = altura / WELLNESS_CONSTANTS.reference.height
-  
-  // Cintura ideal (WHR de 0.62 - quadril dominante)
-  const cintura_ideal = quadril * WELLNESS_CONSTANTS.WHR_TARGET
-  
-  // Coxa ideal (MAIOR que cintura - diferencial da categoria)
-  const coxa_ideal = cintura_ideal * WELLNESS_CONSTANTS.TWR_TARGET
-  
-  // Glúteo ideal (muito desenvolvido)
-  const gluteo_ideal = cintura_ideal * WELLNESS_CONSTANTS.GWR_TARGET
-  
-  // Ombros ideais (menores que quadril)
-  const ombros_ideal = quadril * WELLNESS_CONSTANTS.SHR_TARGET
-  
-  // Busto (proporcional, não é foco)
-  const busto_ideal = cintura_ideal / WELLNESS_CONSTANTS.WCR_TARGET
-  
-  // Membros superiores (proporcionais, não volumosos)
-  const braco_ideal = punho * 2.10
-  
-  // Panturrilha (proporcional às coxas desenvolvidas)
-  const panturrilha_ideal = coxa_ideal * 0.65
-  
-  return {
-    cintura: cintura_ideal,
-    busto: busto_ideal,
-    ombros: ombros_ideal,
-    coxa: coxa_ideal,
-    gluteo: gluteo_ideal,
-    panturrilha: panturrilha_ideal,
-    braco: braco_ideal,
-    
-    razoes: {
-      whr: WELLNESS_CONSTANTS.WHR_TARGET,
-      twr: WELLNESS_CONSTANTS.TWR_TARGET,
-      gwr: WELLNESS_CONSTANTS.GWR_TARGET,
-      shr: WELLNESS_CONSTANTS.SHR_TARGET,
-      hourglass: WELLNESS_CONSTANTS.HOURGLASS_TARGET,
-    },
-    
-    bf: {
-      min: WELLNESS_CONSTANTS.BF_MIN,
-      max: WELLNESS_CONSTANTS.BF_MAX,
-      ideal: WELLNESS_CONSTANTS.BF_IDEAL,
-    },
-  }
-}
-
-function calcularScoreWellness(medidas) {
-  const ideais = calcularIdeaisWellness(medidas)
-  const { busto, cintura, quadril, ombros, coxa, panturrilha } = medidas
-  const gluteo = medidas.gluteo_dobra || quadril * 0.70
-  
-  // Razões atuais
-  const whr = cintura / quadril
-  const twr = coxa / cintura        // Coxa/Cintura - DIFERENCIAL
-  const gwr = gluteo / cintura      // Glúteo/Cintura
-  const shr = ombros / quadril
-  const hourglass = (busto + quadril) / (2 * cintura)
-  
-  // Scores - FOCO EM LOWER BODY
-  const scores = {
-    // WHR (quadril grande = bom)
-    whr: calcularScoreProximidade(whr, WELLNESS_CONSTANTS.WHR_TARGET, 0.08, 15),
-    
-    // Lower body (40% do score!)
-    lowerBody: (
-      calcularScoreProximidade(twr, WELLNESS_CONSTANTS.TWR_TARGET, 0.10, 20) +
-      calcularScoreProporcional(coxa, ideais.coxa, 12) +
-      calcularScoreProporcional(panturrilha, ideais.panturrilha, 8)
-    ),
-    
-    // Glúteos (20%)
-    glutes: calcularScoreProximidade(gwr, WELLNESS_CONSTANTS.GWR_TARGET, 0.12, 20),
-    
-    // Coxas (15%)
-    thighs: calcularScoreProporcional(coxa, ideais.coxa, 15),
-    
-    // Cintura fina (10%) - INVERTIDO (menor é melhor)
-    waist: calcularScoreInverso(cintura, ideais.cintura, 10),
-  }
-  
-  const scoreTotal = Object.values(scores).reduce((a, b) => a + b, 0)
-  
-  return {
-    categoria: 'Wellness',
-    icon: '🏃',
-    referencia: WELLNESS_CONSTANTS.reference.name,
-    score_total: Math.round(scoreTotal * 100) / 100,
-    scores_detalhados: scores,
-    ideais: ideais,
-    razoes_atuais: { whr, twr, gwr, shr, hourglass },
-    diferencas: calcularDiferencasWellness(medidas, ideais),
-    recomendacoes: gerarRecomendacoesWellness(medidas, ideais),
-  }
-}
-```
-
----
-
-## 8. FÓRMULAS DETALHADAS - FIGURE 👙
-
-### 8.1 Constantes e Referência
-
-```javascript
-/**
- * REFERÊNCIA: Cydney Gillon
- * - 5x Olympia Figure Champion (2019-2023)
- * - Altura: 165 cm
- * - Peso (stage): ~55-58 kg
- * - Conhecida por: Simetria perfeita, V-Taper moderado, condicionamento
- */
-
-const FIGURE_CONSTANTS = {
-  name: 'Figure',
-  icon: '👙',
-  reference: {
-    name: 'Cydney Gillon',
-    titles: '5x Olympia Figure',
-    height: 165,
-    weight_stage: 56,
-  },
-  
-  // Razões alvo
-  WHR_TARGET: 0.70,           // WHR clássico
-  WCR_TARGET: 0.70,           // Cintura/Busto
-  SHR_TARGET: 1.00,           // Ombros = Quadril (simetria)
-  SWR_TARGET: 1.50,           // V-Taper mais pronunciado
-  HOURGLASS_TARGET: 1.40,     // Índice ampulheta
-  
-  // Gordura corporal (mais seco que Bikini)
-  BF_MIN: 10,
-  BF_MAX: 14,
-  BF_IDEAL: 12,
-  
-  // Áreas de foco
-  focusAreas: [
-    'shoulders',      // Caps de deltóide arredondados
-    'back',           // Largura e detalhamento
-    'waist',          // Cintura fina
-    'legs',           // Pernas desenvolvidas e simétricas
-    'symmetry',       // Simetria é CRUCIAL
-    'conditioning',   // Condicionamento/Definição
-  ],
-  
-  // Pesos do score
-  weights: {
-    vTaper: 0.20,
-    symmetry: 0.25,           // Simetria é muito importante
-    shoulders: 0.15,
-    back: 0.15,
-    legs: 0.15,
-    conditioning: 0.10,
-  },
-}
-```
-
-### 8.2 Funções de Cálculo Figure
-
-```javascript
-function calcularIdeaisFigure(medidas) {
-  const { altura, quadril, punho, tornozelo, joelho } = medidas
-  
-  const fator_escala = altura / FIGURE_CONSTANTS.reference.height
-  
-  // Cintura ideal (WHR de 0.70)
-  const cintura_ideal = quadril * FIGURE_CONSTANTS.WHR_TARGET
-  
-  // Ombros ideais (iguais ao quadril para simetria)
-  const ombros_ideal = quadril * FIGURE_CONSTANTS.SHR_TARGET
-  
-  // Busto ideal
-  const busto_ideal = cintura_ideal / FIGURE_CONSTANTS.WCR_TARGET
-  
-  // Membros (mais desenvolvidos que Bikini)
-  const braco_ideal = punho * 2.30
-  const coxa_ideal = joelho * 1.65
-  const panturrilha_ideal = tornozelo * 1.85
-  
-  return {
-    cintura: cintura_ideal,
-    busto: busto_ideal,
-    ombros: ombros_ideal,
-    braco: braco_ideal,
-    coxa: coxa_ideal,
-    panturrilha: panturrilha_ideal,
-    
-    razoes: {
-      whr: FIGURE_CONSTANTS.WHR_TARGET,
-      shr: FIGURE_CONSTANTS.SHR_TARGET,
-      swr: FIGURE_CONSTANTS.SWR_TARGET,
-      hourglass: FIGURE_CONSTANTS.HOURGLASS_TARGET,
-    },
-    
-    bf: {
-      min: FIGURE_CONSTANTS.BF_MIN,
-      max: FIGURE_CONSTANTS.BF_MAX,
-      ideal: FIGURE_CONSTANTS.BF_IDEAL,
-    },
-  }
-}
-
-function calcularScoreFigure(medidas) {
-  const ideais = calcularIdeaisFigure(medidas)
-  const { busto, cintura, quadril, ombros, coxa, panturrilha, braco } = medidas
-  
-  // Razões atuais
-  const whr = cintura / quadril
-  const shr = ombros / quadril
-  const swr = ombros / cintura
-  const hourglass = (busto + quadril) / (2 * cintura)
-  
-  // V-Taper Score
-  const vTaperScore = calcularScoreProximidade(swr, FIGURE_CONSTANTS.SWR_TARGET, 0.12, 20)
-  
-  // Symmetry Score (diferença entre lados)
-  const symmetryScore = calcularScoreSimetriaBilateral(medidas, 25)
-  
-  // Outros scores
-  const scores = {
-    vTaper: vTaperScore,
-    symmetry: symmetryScore,
-    shoulders: calcularScoreProporcional(ombros, ideais.ombros, 15),
-    back: 15, // Avaliado visualmente
-    legs: (calcularScoreProporcional(coxa, ideais.coxa, 8) +
-           calcularScoreProporcional(panturrilha, ideais.panturrilha, 7)),
-    conditioning: 10, // Avaliado separadamente
-  }
-  
-  const scoreTotal = Object.values(scores).reduce((a, b) => a + b, 0)
-  
-  return {
-    categoria: 'Figure',
-    icon: '👙',
-    referencia: FIGURE_CONSTANTS.reference.name,
-    score_total: Math.round(scoreTotal * 100) / 100,
-    scores_detalhados: scores,
-    ideais: ideais,
-    razoes_atuais: { whr, shr, swr, hourglass },
-  }
-}
-```
-
----
-
-## 9. FÓRMULAS DETALHADAS - WOMEN'S PHYSIQUE 💪
-
-### 9.1 Constantes e Referência
-
-```javascript
-/**
- * REFERÊNCIA: Sarah Villegas
- * - 2x Olympia Women's Physique Champion (2022, 2023)
- * - Altura: 163 cm
- * - Peso (stage): ~60-65 kg
- * - Conhecida por: Muscularidade + feminilidade, condicionamento extremo
- */
-
-const WOMENS_PHYSIQUE_CONSTANTS = {
-  name: "Women's Physique",
-  icon: '💪',
-  reference: {
-    name: 'Sarah Villegas',
-    titles: "2x Olympia Women's Physique",
-    height: 163,
-    weight_stage: 62,
-  },
-  
-  // Razões alvo (mais muscular)
-  WHR_TARGET: 0.72,           // WHR maior (mais músculo no core)
-  SWR_TARGET: 1.55,           // V-Taper mais agressivo
-  SHR_TARGET: 1.05,           // Ombros > Quadril
-  HOURGLASS_TARGET: 1.35,     // Menos ampulheta, mais V
-  
-  // Gordura corporal (muito seco)
-  BF_MIN: 8,
-  BF_MAX: 12,
-  BF_IDEAL: 10,
-  
-  // Áreas de foco
-  focusAreas: [
-    'muscle_mass',    // Desenvolvimento muscular significativo
-    'v_taper',        // V-Taper pronunciado
-    'conditioning',   // Condicionamento/Definição extrema
-    'symmetry',       // Simetria
-    'posing',         // Poses de fisiculturismo (front/back)
-  ],
-  
-  // Pesos do score
-  weights: {
-    muscleMass: 0.25,
-    vTaper: 0.20,
-    symmetry: 0.20,
-    conditioning: 0.20,
-    posing: 0.15,
-  },
-}
-```
-
-### 9.2 Funções de Cálculo Women's Physique
-
-```javascript
-function calcularIdeaisWomensPhysique(medidas) {
-  const { altura, quadril, punho, tornozelo, joelho } = medidas
-  
-  const fator_escala = altura / WOMENS_PHYSIQUE_CONSTANTS.reference.height
-  
-  // Cintura ideal
-  const cintura_ideal = quadril * WOMENS_PHYSIQUE_CONSTANTS.WHR_TARGET
-  
-  // Ombros ideais (maiores que quadril)
-  const ombros_ideal = quadril * WOMENS_PHYSIQUE_CONSTANTS.SHR_TARGET
-  
-  // Membros (mais desenvolvidos)
-  const braco_ideal = punho * 2.45  // Braços mais volumosos
-  const coxa_ideal = joelho * 1.70
-  const panturrilha_ideal = tornozelo * 1.90
-  
-  return {
-    cintura: cintura_ideal,
-    ombros: ombros_ideal,
-    braco: braco_ideal,
-    coxa: coxa_ideal,
-    panturrilha: panturrilha_ideal,
-    
-    razoes: {
-      whr: WOMENS_PHYSIQUE_CONSTANTS.WHR_TARGET,
-      shr: WOMENS_PHYSIQUE_CONSTANTS.SHR_TARGET,
-      swr: WOMENS_PHYSIQUE_CONSTANTS.SWR_TARGET,
-    },
-    
-    bf: {
-      min: WOMENS_PHYSIQUE_CONSTANTS.BF_MIN,
-      max: WOMENS_PHYSIQUE_CONSTANTS.BF_MAX,
-      ideal: WOMENS_PHYSIQUE_CONSTANTS.BF_IDEAL,
-    },
-  }
-}
-```
-
----
-
-## 10. FÓRMULAS DETALHADAS - WOMEN'S BODYBUILDING 🏆
-
-### 10.1 Constantes e Referência
-
-```javascript
-/**
- * REFERÊNCIA: Andrea Shaw
- * - 4x Ms. Olympia (2020-2023)
- * - Altura: 173 cm
- * - Peso (stage): ~77-80 kg
- * - Conhecida por: Tamanho muscular extremo mantendo feminilidade
- */
-
-const WOMENS_BODYBUILDING_CONSTANTS = {
-  name: "Women's Bodybuilding",
-  icon: '🏆',
-  reference: {
-    name: 'Andrea Shaw',
-    titles: '4x Ms. Olympia',
-    height: 173,
-    weight_stage: 78,
-  },
-  
-  // Razões alvo (similar ao masculino)
-  SWR_TARGET: 1.60,           // V-Taper extremo
-  SYMMETRY_TARGET: 1.0,       // Simetria perfeita
-  
-  // Gordura corporal (extremamente seco)
-  BF_MIN: 6,
-  BF_MAX: 10,
-  BF_IDEAL: 8,
-  
-  // Áreas de foco
-  focusAreas: [
-    'muscle_mass',    // Tamanho muscular máximo
-    'definition',     // Definição extrema
-    'symmetry',       // Simetria
-    'posing',         // Poses obrigatórias e livres
-  ],
-  
-  // Pesos do score
-  weights: {
-    muscleMass: 0.30,
-    symmetry: 0.25,
-    conditioning: 0.25,
-    posing: 0.20,
-  },
-}
-```
-
----
-
-## 11. CÁLCULO DE GORDURA CORPORAL FEMININO
-
-### 11.1 Método Navy (US Navy)
-
-```javascript
-/**
- * Fórmula Navy para MULHERES
- * Diferente da masculina - usa quadril além de cintura e pescoço
- */
-function calcularBFNavyFeminino(altura, cintura, quadril, pescoco) {
-  // Fórmula: BF% = 163.205 × log10(cintura + quadril - pescoço) - 97.684 × log10(altura) - 78.387
-  const bf = 163.205 * Math.log10(cintura + quadril - pescoco) 
-             - 97.684 * Math.log10(altura) 
-             - 78.387
-  
-  return Math.max(0, Math.min(50, Math.round(bf * 10) / 10))
-}
-```
-
-### 11.2 Método Pollock 7 Dobras (Jackson-Pollock para Mulheres)
-
-```javascript
-/**
- * Fórmula Jackson-Pollock para MULHERES (7 dobras)
- */
-function calcularBFPollock7Feminino(dobras, idade) {
-  const {
-    triceps, subescapular, suprailíaca, abdominal, 
-    coxa, peitoral, axilar
-  } = dobras
-  
-  // Soma das 7 dobras
-  const soma = triceps + subescapular + suprailíaca + abdominal + coxa + peitoral + axilar
-  
-  // Densidade corporal (fórmula para mulheres)
-  const densidade = 1.097 
-                    - (0.00046971 * soma) 
-                    + (0.00000056 * soma * soma) 
-                    - (0.00012828 * idade)
-  
-  // Percentual de gordura (Siri equation)
-  const bf = (495 / densidade) - 450
-  
-  return Math.max(0, Math.min(50, Math.round(bf * 10) / 10))
-}
-```
-
-### 11.3 Classificação de BF% Feminino
-
-```javascript
-const CLASSIFICACAO_BF_FEMININO = {
-  // Atletas de competição
-  competicao: { min: 8, max: 14, descricao: 'Nível de competição' },
-  
-  // Atletas (treino regular)
-  atletico: { min: 14, max: 20, descricao: 'Físico atlético' },
-  
-  // Fitness (saudável e ativo)
-  fitness: { min: 20, max: 24, descricao: 'Fitness/Saudável' },
-  
-  // Normal
-  normal: { min: 24, max: 31, descricao: 'Normal' },
-  
-  // Acima do ideal
-  acima: { min: 31, max: 40, descricao: 'Acima do recomendado' },
-  
-  // Obesidade
-  obesidade: { min: 40, max: 100, descricao: 'Obesidade' },
-}
-
-function classificarBFFeminino(bf) {
-  for (const [nivel, range] of Object.entries(CLASSIFICACAO_BF_FEMININO)) {
-    if (bf >= range.min && bf < range.max) {
-      return {
-        nivel,
-        descricao: range.descricao,
-        faixa: `${range.min}-${range.max}%`,
-      }
-    }
-  }
-  return { nivel: 'indefinido', descricao: 'Valor fora do range' }
-}
-```
-
----
-
-## 12. CALCULADORA COMPLETA FEMININA
-
-### 12.1 Função Principal
-
-```javascript
-function calcularProporcoesFeminino(medidas, preferencia = 'golden_ratio') {
-  // Validar medidas
-  const validacao = validarMedidasFeminino(medidas)
-  if (!validacao.valido) {
-    return { erro: true, mensagem: validacao.erros }
-  }
-  
-  // Calcular todas as categorias
-  const goldenRatio = calcularScoreFemininoGoldenRatio(medidas)
-  const bikini = calcularScoreBikini(medidas)
-  const wellness = calcularScoreWellness(medidas)
-  const figure = calcularScoreFigure(medidas)
-  const womensPhysique = calcularScoreWomensPhysique(medidas)
-  
-  // Ranking de categorias
-  const categorias = [
-    { nome: 'Golden Ratio', icon: '🏛️', score: goldenRatio.score_total },
-    { nome: 'Bikini', icon: '🩱', score: bikini.score_total },
-    { nome: 'Wellness', icon: '🏃', score: wellness.score_total },
-    { nome: 'Figure', icon: '👙', score: figure.score_total },
-    { nome: "Women's Physique", icon: '💪', score: womensPhysique.score_total },
-  ].sort((a, b) => b.score - a.score)
-  
-  // Calcular gordura corporal
-  const bf_navy = calcularBFNavyFeminino(
-    medidas.altura, medidas.cintura, medidas.quadril, medidas.pescoco || medidas.cintura * 0.4
-  )
-  
-  // Calcular razões principais
-  const razoes = {
-    whr: medidas.cintura / medidas.quadril,
-    wcr: medidas.cintura / medidas.busto,
-    shr: medidas.ombros / medidas.quadril,
-    hourglass: (medidas.busto + medidas.quadril) / (2 * medidas.cintura),
-  }
-  
-  return {
-    medidas_input: medidas,
-    genero: 'feminino',
-    
-    razoes_atuais: razoes,
-    
-    gordura_corporal: {
-      navy: bf_navy,
-      classificacao: classificarBFFeminino(bf_navy),
-    },
-    
-    resultados: {
-      golden_ratio: goldenRatio,
-      bikini: bikini,
-      wellness: wellness,
-      figure: figure,
-      womens_physique: womensPhysique,
-    },
-    
-    recomendacao: {
-      melhor_categoria: categorias[0].nome,
-      icon: categorias[0].icon,
-      score: categorias[0].score,
-      ranking: categorias,
-    },
-    
-    classificacao: getClassificacaoFeminino(categorias[0].score),
-  }
-}
-
-function getClassificacaoFeminino(score) {
-  if (score >= 95) return { nivel: 'ELITE', emoji: '👑', descricao: 'Proporções excepcionais' }
-  if (score >= 85) return { nivel: 'AVANÇADO', emoji: '🥇', descricao: 'Muito acima da média' }
-  if (score >= 75) return { nivel: 'INTERMEDIÁRIO', emoji: '🥈', descricao: 'Boas proporções' }
-  if (score >= 60) return { nivel: 'INICIANTE', emoji: '💪', descricao: 'Em desenvolvimento' }
-  return { nivel: 'INICIANTE', emoji: '🚀', descricao: 'Início da jornada' }
-}
-```
-
-### 12.2 Validação de Medidas Femininas
-
-```javascript
-function validarMedidasFeminino(medidas) {
-  const obrigatorias = ['altura', 'busto', 'cintura', 'quadril', 'ombros']
-  const erros = []
-  
-  for (const campo of obrigatorias) {
-    if (!medidas[campo] || medidas[campo] <= 0) {
-      erros.push(`${campo} é obrigatório`)
-    }
-  }
-  
-  // Validar ranges femininos
-  const limites = {
-    altura: [145, 195],
-    busto: [70, 130],
-    cintura: [50, 100],
-    quadril: [70, 140],
-    ombros: [80, 130],
-    peso: [40, 120],
-    coxa: [40, 80],
-    braco: [20, 45],
-  }
-  
-  for (const [campo, [min, max]] of Object.entries(limites)) {
-    if (medidas[campo] && (medidas[campo] < min || medidas[campo] > max)) {
-      erros.push(`${campo} deve estar entre ${min} e ${max} cm`)
-    }
-  }
-  
-  // Validar lógica (cintura deve ser menor que quadril e busto)
-  if (medidas.cintura >= medidas.quadril) {
-    erros.push('Cintura deve ser menor que quadril')
-  }
-  if (medidas.cintura >= medidas.busto) {
-    erros.push('Cintura deve ser menor que busto')
-  }
-  
-  return { valido: erros.length === 0, erros }
-}
-```
-
----
-
-## 13. EXEMPLO DE USO COMPLETO
-
-### 13.1 Input da Usuária
-
-```javascript
-const medidasUsuaria = {
-  // Dados básicos
-  altura: 165,        // cm
-  peso: 58,           // kg
-  idade: 28,          // anos
-  
-  // Medidas estruturais
-  punho: 15,          // cm
-  tornozelo: 21,      // cm
-  joelho: 35,         // cm
-  abaixo_busto: 75,   // cm
-  
-  // Medidas variáveis
-  busto: 88,          // cm
-  cintura: 64,        // cm
-  quadril: 94,        // cm
-  ombros: 96,         // cm
-  braco: 28,          // cm
-  antebraco: 23,      // cm
-  coxa: 56,           // cm
-  panturrilha: 35,    // cm
-  gluteo_dobra: 98,   // cm (opcional, para Wellness)
-}
-```
-
-### 13.2 Output Esperado
-
-```javascript
-{
-  medidas_input: { /* medidasUsuaria */ },
-  genero: 'feminino',
-  
-  razoes_atuais: {
-    whr: 0.68,        // 64/94 = 0.68 ✓ Excelente!
-    wcr: 0.73,        // 64/88 = 0.73
-    shr: 1.02,        // 96/94 = 1.02
-    hourglass: 1.42,  // (88+94)/(2×64) = 1.42
-  },
-  
-  gordura_corporal: {
-    navy: 22.5,
-    classificacao: {
-      nivel: 'fitness',
-      descricao: 'Fitness/Saudável',
-      faixa: '20-24%',
-    },
-  },
-  
-  resultados: {
-    golden_ratio: {
-      score_total: 87.3,
-      ideais: {
-        cintura: 65.8,   // 94 × 0.70
-        busto: 91.2,     // 94 × 0.97
-        ombros: 89.3,    // 94 × 0.95
-      },
-      razoes_ideais: {
-        whr: 0.70,
-        hourglass: 1.45,
-      },
-    },
-    
-    bikini: {
-      score_total: 91.2,   // MELHOR MATCH!
-      ideais: {
-        cintura: 63.9,     // 94 × 0.68
-        // ...
-      },
-    },
-    
-    wellness: {
-      score_total: 78.5,
-      // Coxa/Cintura está abaixo do ideal (precisa mais lower body)
-    },
-    
-    figure: {
-      score_total: 84.1,
-    },
-    
-    womens_physique: {
-      score_total: 72.3,
-      // Precisa mais massa muscular
-    },
-  },
-  
-  recomendacao: {
-    melhor_categoria: 'Bikini',
-    icon: '🩱',
-    score: 91.2,
-    ranking: [
-      { nome: 'Bikini', icon: '🩱', score: 91.2 },
-      { nome: 'Golden Ratio', icon: '🏛️', score: 87.3 },
-      { nome: 'Figure', icon: '👙', score: 84.1 },
-      { nome: 'Wellness', icon: '🏃', score: 78.5 },
-      { nome: "Women's Physique", icon: '💪', score: 72.3 },
-    ],
-  },
-  
-  classificacao: {
-    nivel: 'AVANÇADO',
-    emoji: '🥇',
-    descricao: 'Muito acima da média',
-  },
-}
-```
-
----
-
-## 14. INTEGRAÇÃO COM VITRU IA
-
-### 14.1 Mudanças no Data Model
+### 15.1 Escala de Classificação (mesma do masculino)
 
 ```typescript
-// Adicionar ao modelo de usuário
-interface User {
-  // ... campos existentes
-  gender: 'male' | 'female'
+const CLASSIFICACOES_FEMININAS = {
+  INICIO: { min: 0, max: 82, label: 'Início', emoji: '🚀' },
+  CAMINHO: { min: 82, max: 90, label: 'Caminho', emoji: '🛤️' },
+  QUASE_LA: { min: 90, max: 97, label: 'Quase Lá', emoji: '💪' },
+  META: { min: 97, max: 103, label: 'Meta', emoji: '🎯' },
+  ELITE: { min: 103, max: 150, label: 'Elite', emoji: '👑' },
 }
-
-// Adicionar às preferências
-interface UserPreferences {
-  // ... campos existentes
-  
-  // Para mulheres
-  femaleCategory?: FemaleCategory
-}
-
-type FemaleCategory = 
-  | 'golden_ratio'
-  | 'bikini'
-  | 'wellness'
-  | 'figure'
-  | 'womens_physique'
-  | 'womens_bodybuilding'
-
-// Adicionar medidas específicas femininas
-interface FemaleMeasurements extends BaseMeasurements {
-  bust: number
-  underbust: number
-  hip: number
-  gluteFold?: number
-}
-```
-
-### 14.2 Mudanças no Onboarding
-
-```typescript
-// Adicionar step de gênero no onboarding
-const ONBOARDING_STEPS_FEMALE = [
-  'welcome',
-  'gender',              // NOVO: Seleção de gênero
-  'category',            // Seleção de categoria (muda baseado no gênero)
-  'structural',          // Medidas estruturais (diferentes para mulheres)
-  'goals',
-  'experience',
-  'complete',
-]
-```
-
-### 14.3 Mudanças no Coach IA (VITRÚVIO)
-
-```typescript
-// Contexto adicional para VITRÚVIO quando usuária é mulher
-const FEMALE_COACH_CONTEXT = `
-Você está analisando uma MULHER. As proporções ideais femininas são DIFERENTES das masculinas:
-
-PRINCIPAL MÉTRICA FEMININA: WHR (Waist-to-Hip Ratio)
-- Ideal: 0.70 (cintura = 70% do quadril)
-- Isso cria a forma "ampulheta" desejada
-
-NÃO foque em V-Taper extremo como para homens.
-Foque em:
-- Cintura fina
-- Quadril/Glúteos desenvolvidos
-- Forma de ampulheta
-- Pernas proporcionais
-- Ombros arredondados (não excessivamente largos)
-
-Categorias de referência:
-- Golden Ratio: WHR 0.70, forma natural
-- Bikini: WHR 0.68, glúteos arredondados, caps de ombro
-- Wellness: WHR 0.62, lower body MUITO desenvolvido
-- Figure: WHR 0.70, mais muscular, V-Taper moderado
-- Women's Physique: WHR 0.72, muscularidade significativa
-`
 ```
 
 ---
 
-## 15. CONSIDERAÇÕES FINAIS
+## 16. REFERÊNCIAS DE ATLETAS
 
-### 15.1 Resumo das Diferenças Masculino vs Feminino
+### 16.1 Atletas de Referência por Categoria
 
-| Aspecto | Masculino | Feminino |
-|---------|-----------|----------|
-| **Métrica Principal** | SWR (V-Taper) | WHR (Ampulheta) |
-| **Ideal da Métrica** | 1.618 | 0.70 |
-| **Foco** | Ombros, Costas | Quadril, Glúteos |
-| **Forma** | V-Shape | X-Shape / Hourglass |
-| **BF% Competição** | 3-8% | 8-18% |
-| **Categorias** | 3 (Golden, Classic, MP) | 5 (Golden, Bikini, Wellness, Figure, WP) |
-
-### 15.2 Referências
-
-- **Golden Ratio Feminino**: Estudos de Singh, Platek (WHR 0.70)
-- **Bikini**: Lauralie Chapados (3x Olympia)
-- **Wellness**: Francielle Mattos (2x Olympia)
-- **Figure**: Cydney Gillon (5x Olympia)
-- **Women's Physique**: Sarah Villegas (2x Olympia)
-- **Women's Bodybuilding**: Andrea Shaw (4x Ms. Olympia)
-- **IFBB Pro League**: Critérios oficiais de julgamento 2024
-
-### 15.3 Observações Importantes
-
-1. **WHR é a métrica mais importante** para estética feminina (não V-Taper)
-2. **Wellness** é a categoria que mais cresce, especialmente no Brasil
-3. **Bikini** é a categoria mais popular globalmente
-4. **BF% feminino** é naturalmente maior que masculino (essencial para saúde hormonal)
-5. A **forma ampulheta** (hourglass) é o ideal estético universal feminino
+| Categoria | Atleta | Medidas Estimadas |
+|-----------|--------|-------------------|
+| **Bikini** | Lauralie Chapados | WHR: 0.66, Busto:Cintura 1.38 |
+| **Wellness** | Francielle Mattos | Coxa÷Joelho: 1.80, Coxa÷Quadril: 0.68 |
+| **Figure** | Cydney Gillon | Ombros÷Quadril: 1.08, Definição muscular |
+| **W. Physique** | Natalia Abraham Coelho | V-Taper feminino, massa muscular |
+| **W. Bodybuilding** | Andrea Shaw | Máxima massa, V-Taper extremo |
 
 ---
 
-## 16. CHANGELOG
+## 17. CHANGELOG
 
 | Versão | Data | Alterações |
 |--------|------|------------|
-| 1.0 | Fev/2026 | Versão inicial - Proporções Femininas completas |
+| 1.0 | Fev/2026 | Versão inicial - 8 proporções femininas |
 
 ---
 
 **VITRU IA - Proporções Corporais Femininas v1.0**  
-*WHR • Hourglass • Bikini • Wellness • Figure • Women's Physique*
+*Golden Ratio • Bikini • Wellness • Figure • Women's Physique • Women's Bodybuilding*

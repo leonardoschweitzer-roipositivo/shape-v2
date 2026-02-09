@@ -448,6 +448,7 @@ const App: React.FC = () => {
             onNewAssessment={() => {
               setCurrentView('assessment');
             }}
+            hideStatusControl={true}
           />
         );
       case 'dashboard':

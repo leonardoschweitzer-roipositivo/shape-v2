@@ -20,6 +20,7 @@ export interface Measurements {
     peso: number;
     ombros: number;
     peito: number;
+    busto: number; // Específico feminino (na linha do mamilo)
     costas: number; // Adicionado v3.0
     cintura: number;
     quadril: number; // Essencial para feminino

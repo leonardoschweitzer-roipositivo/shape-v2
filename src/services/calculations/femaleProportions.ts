@@ -1,24 +1,113 @@
 import { Measurements, IdealMeasurements } from '@/components/templates/AssessmentResults/types';
 
 // ============================================
-// CONSTANTES & CONFIGURAÇÕES
+// CONSTANTES & METAS (SPEC v1.0)
 // ============================================
 
+export const METAS_FEMININAS = {
+    // Proporção 1: WHR (Cintura ÷ Quadril) - INVERSA
+    whr: {
+        golden_ratio: 0.70,
+        bikini: 0.68,
+        wellness: 0.65,
+        figure: 0.72,
+        womens_physique: 0.75,
+        womens_bodybuilding: 0.78,
+    },
+
+    // Proporção 2: Busto ÷ Cintura
+    bustoCintura: {
+        golden_ratio: 1.40,
+        bikini: 1.35,
+        wellness: 1.30,
+        figure: 1.38,
+        womens_physique: 1.35,
+        womens_bodybuilding: 1.30,
+    },
+
+    // Proporção 2b: Quadril ÷ Cintura
+    quadrilCintura: {
+        golden_ratio: 1.42,
+        bikini: 1.50,
+        wellness: 1.55,
+        figure: 1.38,
+        womens_physique: 1.35,
+        womens_bodybuilding: 1.30,
+    },
+
+    // Proporção 2c: Busto ÷ Quadril
+    bustoQuadril: {
+        golden_ratio: 0.97,
+        bikini: 0.90,
+        wellness: 0.84,
+        figure: 1.00,
+        womens_physique: 1.00,
+        womens_bodybuilding: 1.00,
+    },
+
+    // Proporção 3: Ombros ÷ Quadril
+    ombrosQuadril: {
+        golden_ratio: 1.00,
+        bikini: 0.95,
+        wellness: 0.90,
+        figure: 1.05,
+        womens_physique: 1.10,
+        womens_bodybuilding: 1.15,
+    },
+
+    // Proporção 4: Antebraço ÷ Braço
+    antebracoBraco: {
+        golden_ratio: 0.78,
+        bikini: 0.75,
+        wellness: 0.76,
+        figure: 0.78,
+        womens_physique: 0.80,
+        womens_bodybuilding: 0.82,
+    },
+
+    // Proporção 5: Coxa ÷ Quadril
+    coxaQuadril: {
+        golden_ratio: 0.58,
+        bikini: 0.56,
+        wellness: 0.65,
+        figure: 0.60,
+        womens_physique: 0.62,
+        womens_bodybuilding: 0.65,
+    },
+
+    // Proporção 6: Coxa ÷ Joelho
+    coxaJoelho: {
+        golden_ratio: 1.60,
+        bikini: 1.55,
+        wellness: 1.75,
+        figure: 1.65,
+        womens_physique: 1.70,
+        womens_bodybuilding: 1.80,
+    },
+
+    // Proporção 7: Coxa ÷ Panturrilha
+    coxaPanturrilha: {
+        golden_ratio: 1.40,
+        bikini: 1.45,
+        wellness: 1.55,
+        figure: 1.45,
+        womens_physique: 1.50,
+        womens_bodybuilding: 1.50,
+    },
+
+    // Proporção 8: Panturrilha ÷ Tornozelo
+    panturrilhaTornozelo: {
+        golden_ratio: 1.80,
+        bikini: 1.70,
+        wellness: 1.75,
+        figure: 1.85,
+        womens_physique: 1.90,
+        womens_bodybuilding: 1.95,
+    },
+};
+
+// Legacy support placeholders (to be migrated or removed)
 export const FEMALE_GOLDEN_RATIO = {
-    // Razões principais
-    WHR: 0.70,                    // Waist-to-Hip (MAIS IMPORTANTE)
-    WCR: 0.70,                    // Waist-to-Chest  
-    SHR: 0.95,                    // Shoulder-to-Hip
-    SWR: 1.40,                    // Shoulder-to-Waist
-    HOURGLASS_INDEX: 1.45,        // (Busto + Quadril) / (2 × Cintura)
-
-    // Proporções de membros
-    COXA_JOELHO: 1.60,            // Multiplicador coxa (menor que masculino)
-    PANTURRILHA_TORNOZELO: 1.80,  // Multiplicador panturrilha
-    BRACO_PUNHO: 2.20,            // Multiplicador braço (menor que masculino)
-    ANTEBRACO_BRACO: 0.78,        // Proporção antebraço/braço
-
-    // Proporções corporais
     BUSTO_QUADRIL: 0.97,          // Busto quase igual ao quadril
     OMBROS_QUADRIL: 0.95,         // Ombros levemente menores que quadril
     CINTURA_ALTURA: 0.38,         // Cintura ideal = 38% da altura

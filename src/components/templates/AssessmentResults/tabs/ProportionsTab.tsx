@@ -13,6 +13,7 @@ const MOCK_MALE_MEASUREMENTS: Measurements = {
     peso: 88.5,
     ombros: 130,
     peito: 115,
+    busto: 115,
     costas: 122,
     cintura: 82,
     quadril: 100,
@@ -34,6 +35,7 @@ const MOCK_FEMALE_MEASUREMENTS: Measurements = {
     peso: 62.0,
     ombros: 108,
     peito: 92, // Busto
+    busto: 92,
     costas: 95,
     cintura: 64,
     quadril: 102,
@@ -171,6 +173,18 @@ export const ProportionsTab: React.FC<ProportionsTabProps> = ({
                                 style={tokenStyles.filterButton(comparisonMode === 'figure')}
                             >
                                 👙 Figure
+                            </button>
+                            <button
+                                onClick={() => setComparisonMode('womens_physique')}
+                                style={tokenStyles.filterButton(comparisonMode === 'womens_physique')}
+                            >
+                                💪 Physique
+                            </button>
+                            <button
+                                onClick={() => setComparisonMode('womens_bodybuilding')}
+                                style={tokenStyles.filterButton(comparisonMode === 'womens_bodybuilding')}
+                            >
+                                🏆 W.BB
                             </button>
                         </>
                     ) : (
