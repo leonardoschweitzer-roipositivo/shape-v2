@@ -7,9 +7,19 @@ export interface ScoreWidgetProps {
     score: number;
     label?: string;
     change?: string;
+    classification?: {
+        nivel: string;
+        emoji: string;
+        cor: string;
+    };
 }
 
-export const ScoreWidget: React.FC<ScoreWidgetProps> = ({ score, label = "Pontos", change = "+5%" }) => {
+export const ScoreWidget: React.FC<ScoreWidgetProps> = ({
+    score,
+    label = "Pontos",
+    change = "+5%",
+    classification = { nivel: 'Shape Atlético', emoji: '💪', cor: colors.brand.primary }
+}) => {
     return (
         <GlassPanel className="rounded-2xl p-1 relative flex flex-col items-center justify-center min-h-[300px]" hoverEffect={false}>
             <div style={{ position: 'absolute', top: spacing[6], left: spacing[6], fontSize: typography.fontSize.xs, color: colors.text.muted, fontWeight: typography.fontWeight.bold, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Avaliação Geral</div>
@@ -37,12 +47,12 @@ export const ScoreWidget: React.FC<ScoreWidgetProps> = ({ score, label = "Pontos
                     borderRadius: borders.radius.full,
                     background: 'rgba(255, 255, 255, 0.05)',
                     border: `1px solid rgba(255, 255, 255, 0.1)`,
-                    color: colors.brand.primary,
+                    color: classification.cor,
                     fontSize: typography.fontSize.xs,
                     fontWeight: typography.fontWeight.bold,
                     textTransform: 'uppercase',
                     letterSpacing: '0.05em'
-                }}>Shape Atlético</span>
+                }}>{classification.emoji} {classification.nivel}</span>
                 <span style={{ fontSize: '10px', color: colors.semantic.success, fontWeight: typography.fontWeight.bold }}>
                     {change} <span style={{ color: colors.text.secondary, fontWeight: typography.fontWeight.medium }}>vs. mês anterior</span>
                 </span>

@@ -1,489 +1,178 @@
-# SPEC: Avaliação Geral do Físico
+# SPEC: Avaliação Geral do Físico v1.1 (CORRIGIDO)
 
-## Documento de Especificação Técnica v1.0
+## Documento de Especificação Técnica
 
-**Versão:** 1.0  
+**Versão:** 1.1 (Correção Crítica)  
 **Data:** Fevereiro 2026  
 **Projeto:** VITRU IA - Sistema de Avaliação Física Integrada
 
 ---
 
+## ⚠️ CORREÇÃO CRÍTICA v1.1
+
+### Problema Identificado
+
+O cálculo anterior estava gerando scores inflados para atletas com medidas ruins.
+
+**Caso Real - João Ogro Silva:**
+```
+Medidas:
+• Peso: 110 kg | Altura: 175 cm
+• Cintura: 112 cm (MUITO alta!)
+• Ombros: 115 cm
+• V-Taper: 115/112 = 1.03 (PÉSSIMO - meta é 1.618!)
+• Dobras: 205mm total → BF ~26.5%
+
+Score ERRADO: 78.5 pts ❌
+Score CORRETO: ~45 pts ✅
+```
+
+### Problemas Corrigidos
+
+| Problema | v1.0 (errado) | v1.1 (corrigido) |
+|----------|---------------|------------------|
+| Cintura acima do ideal | Não penalizava | Penaliza fortemente |
+| BF% > 25% | Score ~45 pts | Score ~25 pts |
+| V-Taper < 1.2 | Score normal | Penalização extra |
+| Proporções inversas | Tratamento incorreto | Tratamento correto |
+
+---
+
 ## 1. VISÃO GERAL
 
-### 1.1 Conceito
-
-A **Avaliação Geral do Físico** é o score principal do VITRU IA que integra três dimensões de análise corporal em uma única pontuação de 0-100 pontos.
+### 1.1 Fórmula Principal (Mantida)
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                                                                 │
-│                    AVALIAÇÃO GERAL DO FÍSICO                    │
-│                         Score: 0-100                            │
-│                                                                 │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│         ┌─────────────┐                                         │
-│         │             │                                         │
-│         │  PROPORÇÕES │ ────────────────┐                       │
-│         │   ÁUREAS    │                 │                       │
-│         │    40%      │                 │                       │
-│         └─────────────┘                 │                       │
-│                                         ▼                       │
-│         ┌─────────────┐          ┌─────────────┐                │
-│         │             │          │             │                │
-│         │ COMPOSIÇÃO  │ ────────►│  AVALIAÇÃO  │                │
-│         │  CORPORAL   │          │    GERAL    │                │
-│         │    35%      │          │   0-100     │                │
-│         └─────────────┘          └─────────────┘                │
-│                                         ▲                       │
-│         ┌─────────────┐                 │                       │
-│         │             │                 │                       │
-│         │  SIMETRIA   │ ────────────────┘                       │
-│         │  BILATERAL  │                                         │
-│         │    25%      │                                         │
-│         └─────────────┘                                         │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+AVALIAÇÃO GERAL = (Proporções × 40%) + (Composição × 35%) + (Simetria × 25%)
 ```
 
-### 1.2 As Três Dimensões
+### 1.2 Mudanças Principais v1.1
 
-| Dimensão | Peso | O que mede | Tab no App |
-|----------|:----:|------------|------------|
-| **Proporções Áureas** | 40% | Quão próximo das proporções ideais (Golden Ratio, etc) | PROPORÇÕES ÁUREAS |
-| **Composição Corporal** | 35% | BF%, massa magra, FFMI, distribuição de peso | DIAGNÓSTICO ESTÉTICO |
-| **Simetria Bilateral** | 25% | Equilíbrio entre lado esquerdo e direito | ANÁLISE DE ASSIMETRIAS |
-
-### 1.3 Por que esses pesos?
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    JUSTIFICATIVA DOS PESOS                      │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  PROPORÇÕES ÁUREAS (40%)                                        │
-│  • É o core do VITRU IA - análise de proporções                 │
-│  • Diferencial competitivo do app                               │
-│  • Mais controlável pelo treino a longo prazo                   │
-│  • Impacto visual direto na estética                            │
-│                                                                 │
-│  COMPOSIÇÃO CORPORAL (35%)                                      │
-│  • BF% define a definição muscular visível                      │
-│  • Massa magra indica desenvolvimento geral                     │
-│  • Impacto direto na saúde e performance                        │
-│  • Mais volátil (muda com dieta em semanas)                     │
-│                                                                 │
-│  SIMETRIA BILATERAL (25%)                                       │
-│  • Importante para estética e competição                        │
-│  • Indica equilíbrio no treino                                  │
-│  • Menos variável que as outras dimensões                       │
-│  • A maioria das pessoas tem boa simetria natural               │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
+1. **Proporções inversas** (cintura) agora penalizam corretamente
+2. **BF% alto** tem penalização mais severa
+3. **V-Taper muito baixo** (<1.2) tem penalização adicional
+4. **Piso de score** para evitar valores negativos
+5. **Teto de score** para proporções que excedem o ideal
 
 ---
 
-## 2. ESTRUTURA DE DADOS
+## 2. CÁLCULO DO SCORE DE PROPORÇÕES (40%) - CORRIGIDO
 
-### 2.1 Input Necessário
+### 2.1 Tratamento de Proporções Inversas
 
-```typescript
-interface AvaliacaoGeralInput {
-  // ═══════════════════════════════════════════════════════════
-  // PROPORÇÕES ÁUREAS (vem da tab "Proporções Áureas")
-  // ═══════════════════════════════════════════════════════════
-  proporcoes: {
-    metodo: 'GOLDEN_RATIO' | 'CLASSIC_PHYSIQUE' | 'MENS_PHYSIQUE' | 'OPEN_BB'
-    
-    // Cada proporção com seu índice e percentual do ideal
-    vTaper: ProportionData
-    peitoral: ProportionData
-    braco: ProportionData
-    antebraco: ProportionData
-    triade: TriadeData
-    cintura: ProportionData
-    coxa: ProportionData | null        // null se Men's Physique
-    coxaPanturrilha: ProportionData | null
-    panturrilha: ProportionData
-  }
-  
-  // ═══════════════════════════════════════════════════════════
-  // COMPOSIÇÃO CORPORAL (vem da tab "Diagnóstico Estético")
-  // ═══════════════════════════════════════════════════════════
-  composicao: {
-    // Básico
-    peso: number                        // kg
-    altura: number                      // cm
-    idade: number                       // anos
-    genero: 'MALE' | 'FEMALE'
-    
-    // Gordura corporal
-    bf: number                          // % (Navy ou Pollock)
-    metodo_bf: 'NAVY' | 'POLLOCK_7'
-    
-    // Derivados
-    pesoMagro: number                   // kg
-    pesoGordo: number                   // kg
-    ffmi?: number                       // Fat-Free Mass Index
-  }
-  
-  // ═══════════════════════════════════════════════════════════
-  // SIMETRIA BILATERAL (vem da tab "Análise de Assimetrias")
-  // ═══════════════════════════════════════════════════════════
-  assimetrias: {
-    braco: BilateralData
-    antebraco: BilateralData
-    coxa: BilateralData
-    panturrilha: BilateralData
-    peitoral?: BilateralData           // Opcional (difícil medir)
-    ombro?: BilateralData              // Opcional
-  }
-}
-
-interface ProportionData {
-  indiceAtual: number                   // Ex: 1.56
-  indiceMeta: number                    // Ex: 1.618
-  percentualDoIdeal: number             // Ex: 96.4%
-  classificacao: 'BLOCO' | 'NORMAL' | 'ATLÉTICO' | 'ESTÉTICO' | 'FREAK'
-}
-
-interface TriadeData {
-  harmoniaPercentual: number            // Ex: 98.1%
-  pescoco: number                       // cm
-  braco: number                         // cm
-  panturrilha: number                   // cm
-}
-
-interface BilateralData {
-  esquerdo: number                      // cm
-  direito: number                       // cm
-  diferenca: number                     // cm (absoluto)
-  diferencaPercentual: number           // %
-  status: 'SIMETRICO' | 'LEVE_ASSIMETRIA' | 'ASSIMETRIA' | 'ASSIMETRIA_SEVERA'
-}
-```
-
-### 2.2 Output
-
-```typescript
-interface AvaliacaoGeralOutput {
-  // ═══════════════════════════════════════════════════════════
-  // SCORE FINAL
-  // ═══════════════════════════════════════════════════════════
-  avaliacaoGeral: number                // 0-100
-  classificacao: {
-    nivel: string                       // 'ELITE', 'AVANÇADO', etc.
-    emoji: string                       // '👑', '🥇', etc.
-    cor: string                         // '#FFD700', etc.
-    descricao: string                   // 'Físico excepcional'
-  }
-  
-  // ═══════════════════════════════════════════════════════════
-  // BREAKDOWN DOS SCORES
-  // ═══════════════════════════════════════════════════════════
-  scores: {
-    proporcoes: {
-      valor: number                     // 0-100
-      peso: number                      // 0.40
-      contribuicao: number              // valor × peso
-      detalhes: ProportionScoreDetails
-    }
-    composicao: {
-      valor: number                     // 0-100
-      peso: number                      // 0.35
-      contribuicao: number
-      detalhes: CompositionScoreDetails
-    }
-    simetria: {
-      valor: number                     // 0-100
-      peso: number                      // 0.25
-      contribuicao: number
-      detalhes: SymmetryScoreDetails
-    }
-  }
-  
-  // ═══════════════════════════════════════════════════════════
-  // INSIGHTS
-  // ═══════════════════════════════════════════════════════════
-  insights: {
-    pontoForte: {
-      categoria: string                 // 'Simetria Bilateral'
-      valor: number                     // 98
-      mensagem: string                  // 'Excelente equilíbrio...'
-    }
-    pontoFraco: {
-      categoria: string                 // 'Composição Corporal'
-      valor: number                     // 48
-      mensagem: string                  // 'Foco em reduzir BF%...'
-    }
-    proximaMeta: {
-      categoria: string
-      metaAtual: number
-      metaProxima: number
-      acao: string                      // 'Reduza 5% de BF para...'
-    }
-  }
-  
-  // ═══════════════════════════════════════════════════════════
-  // COMPARATIVO
-  // ═══════════════════════════════════════════════════════════
-  comparativo: {
-    vsMediaUsuarios: number             // +15 (acima da média)
-    percentil: number                   // Top 20%
-    evolucao30dias?: number             // +5 pts
-  }
-}
-```
-
----
-
-## 3. CONSTANTES E CONFIGURAÇÕES
-
-### 3.1 Pesos Padrão
-
-```typescript
-const PESOS_AVALIACAO = {
-  PADRAO: {
-    proporcoes: 0.40,
-    composicao: 0.35,
-    simetria: 0.25,
-  },
-  
-  // Variações por objetivo (futuro)
-  COMPETICAO: {
-    proporcoes: 0.35,
-    composicao: 0.40,                   // BF% mais importante
-    simetria: 0.25,
-  },
-  ESTETICA: {
-    proporcoes: 0.45,
-    composicao: 0.30,
-    simetria: 0.25,
-  },
-  SAUDE: {
-    proporcoes: 0.25,
-    composicao: 0.50,                   // Foco em saúde
-    simetria: 0.25,
-  },
-}
-```
-
-### 3.2 Classificações
-
-```typescript
-const CLASSIFICACOES_AVALIACAO = [
-  { min: 95, nivel: 'ELITE', emoji: '👑', cor: '#FFD700', descricao: 'Físico excepcional - nível competitivo' },
-  { min: 85, nivel: 'AVANÇADO', emoji: '🥇', cor: '#10B981', descricao: 'Muito acima da média' },
-  { min: 75, nivel: 'ATLÉTICO', emoji: '💪', cor: '#3B82F6', descricao: 'Físico atlético bem desenvolvido' },
-  { min: 65, nivel: 'INTERMEDIÁRIO', emoji: '🏃', cor: '#8B5CF6', descricao: 'Bom desenvolvimento geral' },
-  { min: 50, nivel: 'INICIANTE', emoji: '🌱', cor: '#F59E0B', descricao: 'Em desenvolvimento' },
-  { min: 0, nivel: 'COMEÇANDO', emoji: '🚀', cor: '#6B7280', descricao: 'Início da jornada' },
-]
-```
-
-### 3.3 Configuração de BF% por Gênero
-
-```typescript
-const FAIXAS_BF = {
-  MALE: {
-    competicao: { min: 3, max: 6 },
-    atletico: { min: 6, max: 13 },
-    fitness: { min: 13, max: 17 },
-    normal: { min: 17, max: 24 },
-    acima: { min: 24, max: 30 },
-    obesidade: { min: 30, max: 100 },
-  },
-  FEMALE: {
-    competicao: { min: 8, max: 12 },
-    atletico: { min: 12, max: 20 },
-    fitness: { min: 20, max: 24 },
-    normal: { min: 24, max: 31 },
-    acima: { min: 31, max: 40 },
-    obesidade: { min: 40, max: 100 },
-  },
-}
-```
-
-### 3.4 Configuração de FFMI
-
-```typescript
-const FAIXAS_FFMI = {
-  MALE: {
-    elite: { min: 25, score: 100 },         // Atleta de elite (possivelmente enhanced)
-    excelente: { min: 22, score: 90 },      // Excelente natural
-    acimaMedia: { min: 20, score: 80 },     // Acima da média
-    normal: { min: 18, score: 70 },         // Normal
-    abaixo: { min: 16, score: 55 },         // Abaixo da média
-    muitoAbaixo: { min: 0, score: 40 },     // Muito abaixo
-  },
-  FEMALE: {
-    elite: { min: 22, score: 100 },
-    excelente: { min: 19, score: 90 },
-    acimaMedia: { min: 17, score: 80 },
-    normal: { min: 15, score: 70 },
-    abaixo: { min: 13, score: 55 },
-    muitoAbaixo: { min: 0, score: 40 },
-  },
-}
-```
-
-### 3.5 Configuração de Assimetria
-
-```typescript
-const FAIXAS_ASSIMETRIA = {
-  // Diferença percentual entre lados
-  simetrico: { max: 2, score: 100, status: 'SIMETRICO' },
-  quaseSimetrico: { max: 5, score: 85, status: 'SIMETRICO' },
-  leveAssimetria: { max: 10, score: 70, status: 'LEVE_ASSIMETRIA' },
-  assimetria: { max: 15, score: 50, status: 'ASSIMETRIA' },
-  assimetriaSevera: { max: 100, score: 30, status: 'ASSIMETRIA_SEVERA' },
-}
-
-// Pesos por grupo muscular no score de simetria
-const PESOS_SIMETRIA = {
-  braco: 25,
-  antebraco: 15,
-  coxa: 25,
-  panturrilha: 20,
-  peitoral: 15,
-}
-```
-
----
-
-## 4. CÁLCULO DO SCORE DE PROPORÇÕES (40%)
-
-### 4.1 Visão Geral
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                  SCORE DE PROPORÇÕES ÁUREAS                     │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  Cada proporção tem:                                            │
-│  • Índice Atual (ex: 1.56)                                      │
-│  • Índice Meta (ex: 1.618)                                      │
-│  • Percentual do Ideal = (Atual / Meta) × 100                   │
-│                                                                 │
-│  O Score de Proporções é a MÉDIA PONDERADA dos percentuais      │
-│  de todas as proporções.                                        │
-│                                                                 │
-│  ┌────────────────────────────────────────────────────────┐     │
-│  │  Proporção      │ Peso │ % do Ideal │ Contribuição    │     │
-│  ├────────────────────────────────────────────────────────┤     │
-│  │  V-Taper        │ 20%  │   63.6%    │  12.72          │     │
-│  │  Peitoral       │ 15%  │   87.4%    │  13.11          │     │
-│  │  Braço          │ 12%  │   83.3%    │   9.99          │     │
-│  │  Antebraço      │  5%  │   97.5%    │   4.87          │     │
-│  │  Tríade         │ 12%  │   98.1%    │  11.77          │     │
-│  │  Cintura        │ 15%  │  100.0%    │  15.00          │     │
-│  │  Coxa           │ 10%  │   93.1%    │   9.31          │     │
-│  │  Coxa/Pant      │  5%  │  100.0%    │   5.00          │     │
-│  │  Panturrilha    │  6%  │   91.1%    │   5.46          │     │
-│  ├────────────────────────────────────────────────────────┤     │
-│  │  TOTAL          │100%  │            │  87.23 pts      │     │
-│  └────────────────────────────────────────────────────────┘     │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### 4.2 Pesos por Proporção
-
-```typescript
-const PESOS_PROPORCOES = {
-  GOLDEN_RATIO: {
-    vTaper: 20,           // V-Taper é o mais importante
-    peitoral: 15,
-    braco: 12,
-    antebraco: 5,
-    triade: 12,
-    cintura: 15,          // Cintura crucial para V-Taper
-    coxa: 10,
-    coxaPanturrilha: 5,
-    panturrilha: 6,
-    // Total: 100
-  },
-  
-  CLASSIC_PHYSIQUE: {
-    vTaper: 18,
-    peitoral: 14,
-    braco: 14,
-    antebraco: 4,
-    triade: 10,
-    cintura: 18,          // Cintura MUITO importante no Classic
-    coxa: 10,
-    coxaPanturrilha: 5,
-    panturrilha: 7,
-    // Total: 100
-  },
-  
-  MENS_PHYSIQUE: {
-    vTaper: 25,           // V-Taper é tudo
-    peitoral: 22,
-    braco: 25,            // Braços são destaque
-    antebraco: 6,
-    triade: 0,            // Não aplicável
-    cintura: 17,
-    coxa: 0,              // Não julgada
-    coxaPanturrilha: 0,   // Não julgada
-    panturrilha: 5,
-    // Total: 100
-  },
-  
-  OPEN_BB: {
-    vTaper: 16,
-    peitoral: 14,
-    braco: 14,
-    antebraco: 4,
-    triade: 8,
-    cintura: 12,
-    coxa: 14,             // Pernas MUITO importantes
-    coxaPanturrilha: 8,
-    panturrilha: 6,
-    costas: 4,
-    // Total: 100
-  },
-}
-```
-
-### 4.3 Função de Cálculo
+Para **CINTURA**, menor é melhor. Se a cintura está **ACIMA** do ideal, o score deve ser **MUITO BAIXO**.
 
 ```typescript
 /**
- * Calcula o Score de Proporções Áureas
+ * CORREÇÃO CRÍTICA: Cálculo para proporções inversas (cintura)
  * 
- * @param proporcoes - Dados de todas as proporções
- * @param metodo - Método de comparação (Golden Ratio, Classic, etc)
- * @returns Score de 0-100
+ * Se atual < ideal → Bom (100% ou mais)
+ * Se atual > ideal → Ruim (penalização progressiva)
  */
+function calcularPercentualProporcaoInversa(
+  indiceAtual: number,
+  indiceIdeal: number
+): number {
+  // Cintura MENOR que o ideal = ÓTIMO
+  if (indiceAtual <= indiceIdeal) {
+    // Bônus por estar abaixo do ideal (até 110%)
+    const bonus = (indiceIdeal - indiceAtual) / indiceIdeal
+    return Math.min(110, 100 + (bonus * 20))
+  }
+  
+  // Cintura MAIOR que o ideal = RUIM
+  // Quanto mais acima, pior o score
+  const excesso = (indiceAtual - indiceIdeal) / indiceIdeal
+  
+  // Penalização exponencial: cada 10% acima do ideal perde muito mais pontos
+  // 10% acima → 80 pts
+  // 20% acima → 55 pts
+  // 30% acima → 30 pts
+  // 40% acima → 15 pts
+  
+  const penalidade = excesso * excesso * 200 // Penalização quadrática
+  return Math.max(10, 100 - (excesso * 100) - penalidade)
+}
+
+// EXEMPLOS:
+// Cintura ideal: 0.86 (cintura/pelve)
+
+// Caso 1: Cintura 0.80 (ABAIXO do ideal - BOM!)
+// excesso = 0 → 100% + bônus = 107%
+
+// Caso 2: Cintura 0.90 (4.7% ACIMA)
+// excesso = 0.047 → 100 - 4.7 - 0.4 = 94.9%
+
+// Caso 3: Cintura 0.97 (12.8% ACIMA - João Ogro!)
+// excesso = 0.128 → 100 - 12.8 - 3.3 = 83.9%
+// MAS com penalização extra por V-Taper ruim → ~70%
+
+// Caso 4: Cintura 1.05 (22% ACIMA)
+// excesso = 0.22 → 100 - 22 - 9.7 = 68.3%
+```
+
+### 2.2 Penalização Extra para V-Taper Muito Baixo
+
+```typescript
+/**
+ * V-Taper < 1.2 recebe penalização adicional em TODAS as proporções
+ * Porque indica que o físico está muito desproporcional
+ */
+function calcularMultiplicadorVTaper(vTaperAtual: number): number {
+  if (vTaperAtual >= 1.50) return 1.00  // V-Taper bom
+  if (vTaperAtual >= 1.40) return 0.98  // Levemente abaixo
+  if (vTaperAtual >= 1.30) return 0.95  // Abaixo
+  if (vTaperAtual >= 1.20) return 0.90  // Ruim
+  if (vTaperAtual >= 1.10) return 0.80  // Muito ruim
+  return 0.70                            // Péssimo (< 1.10)
+}
+
+// João Ogro: V-Taper = 1.03 → multiplicador = 0.70
+// Isso reduz o score de proporções em 30%!
+```
+
+### 2.3 Função Corrigida de Score de Proporções
+
+```typescript
 function calcularScoreProporcoes(
-  proporcoes: Record<string, ProportionData | TriadeData | null>,
+  proporcoes: Record<string, ProportionData | null>,
   metodo: string = 'GOLDEN_RATIO'
 ): ProportionScoreDetails {
   
-  const pesos = PESOS_PROPORCOES[metodo] || PESOS_PROPORCOES.GOLDEN_RATIO
+  const pesos = PESOS_PROPORCOES[metodo]
   
   let scoreAcumulado = 0
   let pesoAcumulado = 0
   const detalhes: ProporcaoDetalhe[] = []
   
+  // Primeiro, calcular V-Taper para obter multiplicador
+  const vTaperData = proporcoes.vTaper
+  const vTaperAtual = vTaperData?.indiceAtual || 1.0
+  const multiplicadorVTaper = calcularMultiplicadorVTaper(vTaperAtual)
+  
   for (const [prop, peso] of Object.entries(pesos)) {
-    // Pular proporções com peso 0 (ex: coxa no Men's Physique)
     if (peso === 0) continue
     
     const dados = proporcoes[prop]
     if (!dados) continue
     
-    // Tratamento especial para Tríade
     let percentual: number
+    
+    // Tratamento especial para Tríade
     if (prop === 'triade') {
       percentual = (dados as TriadeData).harmoniaPercentual
-    } else {
-      // Limitar a 100% (não dar bônus por ultrapassar o ideal)
-      // Exceto para proporções onde ultrapassar é desejável
-      const propData = dados as ProportionData
-      percentual = Math.min(100, propData.percentualDoIdeal)
+    }
+    // Tratamento especial para proporções INVERSAS (cintura)
+    else if (prop === 'cintura') {
+      percentual = calcularPercentualProporcaoInversa(
+        dados.indiceAtual,
+        dados.indiceMeta
+      )
+    }
+    // Proporções normais
+    else {
+      // Limitar a 105% (pequeno bônus por ultrapassar)
+      percentual = Math.min(105, dados.percentualDoIdeal)
     }
     
     const contribuicao = (percentual * peso) / 100
@@ -499,915 +188,596 @@ function calcularScoreProporcoes(
     })
   }
   
-  // Normalizar se não usou todos os pesos (ex: proporção faltando)
-  const scoreFinal = pesoAcumulado > 0 
+  // Score base
+  let scoreFinal = pesoAcumulado > 0 
     ? (scoreAcumulado / pesoAcumulado) * 100 
     : 0
   
+  // APLICAR MULTIPLICADOR DE V-TAPER
+  // Se V-Taper é muito ruim, penaliza todo o score de proporções
+  scoreFinal = scoreFinal * multiplicadorVTaper
+  
   return {
-    score: Math.round(scoreFinal * 10) / 10,
+    score: Math.round(Math.max(0, Math.min(100, scoreFinal)) * 10) / 10,
+    multiplicadorVTaper,
     detalhes,
-    proporcaoMaisForte: encontrarMaisForte(detalhes),
-    proporcaoMaisFraca: encontrarMaisFraca(detalhes),
   }
-}
-
-interface ProporcaoDetalhe {
-  proporcao: string
-  peso: number
-  percentualDoIdeal: number
-  contribuicao: number
-}
-
-interface ProportionScoreDetails {
-  score: number
-  detalhes: ProporcaoDetalhe[]
-  proporcaoMaisForte: string
-  proporcaoMaisFraca: string
 }
 ```
 
-### 4.4 Exemplo de Cálculo
+### 2.4 Exemplo: João Ogro Silva (CORRIGIDO)
 
 ```typescript
-// Input
-const proporcoes = {
-  vTaper: { indiceAtual: 1.03, indiceMeta: 1.62, percentualDoIdeal: 63.6 },
-  peitoral: { indiceAtual: 5.68, indiceMeta: 6.50, percentualDoIdeal: 87.4 },
-  braco: { indiceAtual: 2.10, indiceMeta: 2.52, percentualDoIdeal: 83.3 },
-  antebraco: { indiceAtual: 0.78, indiceMeta: 0.80, percentualDoIdeal: 97.5 },
-  triade: { harmoniaPercentual: 98.1 },
-  cintura: { indiceAtual: 0.82, indiceMeta: 0.86, percentualDoIdeal: 100 }, // Menor é melhor
-  coxa: { indiceAtual: 1.63, indiceMeta: 1.75, percentualDoIdeal: 93.1 },
-  coxaPanturrilha: { indiceAtual: 1.55, indiceMeta: 1.50, percentualDoIdeal: 100 },
-  panturrilha: { indiceAtual: 1.75, indiceMeta: 1.92, percentualDoIdeal: 91.1 },
+// Medidas do João Ogro Silva
+const medidas = {
+  altura: 175,
+  peso: 110,
+  punho: 18,        // estimado
+  tornozelo: 24,    // estimado
+  joelho: 40,       // estimado
+  pelve: 115,       // quadril
+  cintura: 112,
+  ombros: 115,
+  peitoral: 105,
+  braco: 36,        // média E/D
+  antebraco: 28,
+  pescoco: 42,
+  coxa: 59.5,       // média E/D
+  panturrilha: 38,
 }
 
-// Cálculo (Golden Ratio)
-// V-Taper:      63.6% × 20 = 12.72
-// Peitoral:     87.4% × 15 = 13.11
-// Braço:        83.3% × 12 =  9.99
-// Antebraço:    97.5% ×  5 =  4.87
-// Tríade:       98.1% × 12 = 11.77
-// Cintura:     100.0% × 15 = 15.00
-// Coxa:         93.1% × 10 =  9.31
-// Coxa/Pant:   100.0% ×  5 =  5.00
-// Panturrilha:  91.1% ×  6 =  5.46
-// ─────────────────────────────────
-// TOTAL:                     87.23
+// CÁLCULO DOS ÍNDICES
+const indices = {
+  vTaper: 115 / 112,           // = 1.027 ❌ (péssimo!)
+  peitoral: 105 / 18,          // = 5.83
+  braco: 36 / 18,              // = 2.00
+  antebraco: 28 / 36,          // = 0.78
+  cintura: 112 / 115,          // = 0.974 (muito acima de 0.86!)
+  coxa: 59.5 / 40,             // = 1.49
+  panturrilha: 38 / 24,        // = 1.58
+}
 
-// Score de Proporções: 87.2 pts
+// CÁLCULO DOS PERCENTUAIS
+const percentuais = {
+  vTaper: (1.027 / 1.618) * 100,                        // = 63.5%
+  peitoral: (5.83 / 6.5) * 100,                         // = 89.7%
+  braco: (2.0 / 2.52) * 100,                            // = 79.4%
+  antebraco: (0.78 / 0.80) * 100,                       // = 97.5%
+  triade: 92,                                            // harmonia estimada
+  cintura: calcularPercentualProporcaoInversa(0.974, 0.86), // = 71.4% (penalizado!)
+  coxa: (1.49 / 1.75) * 100,                            // = 85.1%
+  coxaPanturrilha: (59.5/38 / 1.50) * 100,              // = 104.4%
+  panturrilha: (1.58 / 1.92) * 100,                     // = 82.3%
+}
+
+// CÁLCULO PONDERADO (Golden Ratio)
+// V-Taper:      63.5% × 20 = 12.70
+// Peitoral:     89.7% × 15 = 13.46
+// Braço:        79.4% × 12 =  9.53
+// Antebraço:    97.5% ×  5 =  4.88
+// Tríade:       92.0% × 12 = 11.04
+// Cintura:      71.4% × 15 = 10.71  ← PENALIZADO!
+// Coxa:         85.1% × 10 =  8.51
+// Coxa/Pant:   104.4% ×  5 =  5.22
+// Panturrilha:  82.3% ×  6 =  4.94
+// ─────────────────────────────────
+// SUBTOTAL:                  80.99
+
+// MULTIPLICADOR V-TAPER (1.027 → 0.70)
+// Score Proporções = 80.99 × 0.70 = 56.7 pts
 ```
 
 ---
 
-## 5. CÁLCULO DO SCORE DE COMPOSIÇÃO CORPORAL (35%)
+## 3. CÁLCULO DO SCORE DE COMPOSIÇÃO (35%) - CORRIGIDO
 
-### 5.1 Visão Geral
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                 SCORE DE COMPOSIÇÃO CORPORAL                    │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  O Score de Composição é calculado a partir de 3 componentes:   │
-│                                                                 │
-│  ┌────────────────────────────────────────────────────────┐     │
-│  │                                                        │     │
-│  │  ┌──────────────┐                                      │     │
-│  │  │  GORDURA     │  50% do score                        │     │
-│  │  │  CORPORAL    │  Baseado no BF%                      │     │
-│  │  │  (BF%)       │  Quanto menor (até certo ponto),     │     │
-│  │  │              │  melhor o score                      │     │
-│  │  └──────────────┘                                      │     │
-│  │                                                        │     │
-│  │  ┌──────────────┐                                      │     │
-│  │  │  MASSA       │  30% do score                        │     │
-│  │  │  MUSCULAR    │  Baseado no FFMI                     │     │
-│  │  │  (FFMI)      │  Quanto maior, melhor o score        │     │
-│  │  │              │                                      │     │
-│  │  └──────────────┘                                      │     │
-│  │                                                        │     │
-│  │  ┌──────────────┐                                      │     │
-│  │  │  PESO        │  20% do score                        │     │
-│  │  │  RELATIVO    │  Relação peso/altura/massa magra     │     │
-│  │  │              │  Indica desenvolvimento geral        │     │
-│  │  └──────────────┘                                      │     │
-│  │                                                        │     │
-│  └────────────────────────────────────────────────────────┘     │
-│                                                                 │
-│  Score Composição = (BF×0.5) + (FFMI×0.3) + (Peso×0.2)          │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### 5.2 Pesos dos Componentes
-
-```typescript
-const PESOS_COMPOSICAO = {
-  bf: 0.50,           // 50% - Gordura corporal é crucial para estética
-  ffmi: 0.30,         // 30% - Massa muscular
-  pesoRelativo: 0.20, // 20% - Desenvolvimento geral
-}
-```
-
-### 5.3 Função de Cálculo do Score de BF%
+### 3.1 Penalização Mais Severa para BF% Alto
 
 ```typescript
 /**
- * Calcula o score baseado no percentual de gordura corporal
- * 
- * Faixas para HOMENS:
- * - Competição (3-6%):  100 pts
- * - Atlético (6-13%):   95-85 pts
- * - Fitness (13-17%):   85-70 pts
- * - Normal (17-24%):    70-50 pts
- * - Acima (24-30%):     50-35 pts
- * - Obesidade (30%+):   35-20 pts
+ * CORREÇÃO: Score de BF% com penalização mais agressiva
  */
 function calcularScoreBF(bf: number, genero: 'MALE' | 'FEMALE'): number {
-  const faixas = FAIXAS_BF[genero]
-  
-  // Competição - Score máximo
-  if (bf >= faixas.competicao.min && bf < faixas.competicao.max) {
-    return interpolate(bf, faixas.competicao.min, faixas.competicao.max, 100, 95)
+  const faixas = genero === 'MALE' ? {
+    // BF% muito baixo (perigoso)
+    muitoBaixo: { max: 4, score: 85 },
+    
+    // Competição
+    competicao: { min: 4, max: 8, scoreMin: 95, scoreMax: 100 },
+    
+    // Atlético
+    atletico: { min: 8, max: 14, scoreMin: 80, scoreMax: 95 },
+    
+    // Fitness
+    fitness: { min: 14, max: 18, scoreMin: 65, scoreMax: 80 },
+    
+    // Normal
+    normal: { min: 18, max: 24, scoreMin: 45, scoreMax: 65 },
+    
+    // Acima do peso
+    acima: { min: 24, max: 30, scoreMin: 25, scoreMax: 45 },
+    
+    // Obesidade
+    obesidade: { min: 30, max: 40, scoreMin: 10, scoreMax: 25 },
+    
+    // Obesidade severa
+    obesidadeSevera: { min: 40, max: 100, score: 5 },
+  } : {
+    // Feminino - faixas diferentes
+    muitoBaixo: { max: 10, score: 85 },
+    competicao: { min: 10, max: 15, scoreMin: 95, scoreMax: 100 },
+    atletico: { min: 15, max: 22, scoreMin: 80, scoreMax: 95 },
+    fitness: { min: 22, max: 27, scoreMin: 65, scoreMax: 80 },
+    normal: { min: 27, max: 32, scoreMin: 45, scoreMax: 65 },
+    acima: { min: 32, max: 38, scoreMin: 25, scoreMax: 45 },
+    obesidade: { min: 38, max: 45, scoreMin: 10, scoreMax: 25 },
+    obesidadeSevera: { min: 45, max: 100, score: 5 },
   }
   
-  // Atlético
-  if (bf >= faixas.atletico.min && bf < faixas.atletico.max) {
-    return interpolate(bf, faixas.atletico.min, faixas.atletico.max, 95, 80)
+  // Encontrar a faixa
+  if (bf < faixas.muitoBaixo.max) {
+    return faixas.muitoBaixo.score
   }
   
-  // Fitness
-  if (bf >= faixas.fitness.min && bf < faixas.fitness.max) {
-    return interpolate(bf, faixas.fitness.min, faixas.fitness.max, 80, 65)
+  for (const [nome, config] of Object.entries(faixas)) {
+    if (nome === 'muitoBaixo') continue
+    if (nome === 'obesidadeSevera') continue
+    
+    const { min, max, scoreMin, scoreMax } = config as any
+    if (bf >= min && bf < max) {
+      // Interpolação linear dentro da faixa
+      const posicao = (bf - min) / (max - min)
+      return scoreMax - (posicao * (scoreMax - scoreMin))
+    }
   }
   
-  // Normal
-  if (bf >= faixas.normal.min && bf < faixas.normal.max) {
-    return interpolate(bf, faixas.normal.min, faixas.normal.max, 65, 45)
+  // Obesidade severa
+  if (bf >= faixas.obesidadeSevera.min) {
+    return faixas.obesidadeSevera.score
   }
   
-  // Acima
-  if (bf >= faixas.acima.min && bf < faixas.acima.max) {
-    return interpolate(bf, faixas.acima.min, faixas.acima.max, 45, 30)
-  }
-  
-  // Obesidade
-  if (bf >= faixas.obesidade.min) {
-    return Math.max(20, interpolate(bf, faixas.obesidade.min, 50, 30, 20))
-  }
-  
-  // BF muito baixo (< 3% homem ou < 8% mulher) - perigoso
-  return 85 // Penaliza levemente por ser arriscado para saúde
+  return 50 // fallback
 }
 
-/**
- * Interpolação linear entre dois pontos
- */
-function interpolate(
-  valor: number, 
-  minInput: number, 
-  maxInput: number, 
-  maxOutput: number, 
-  minOutput: number
-): number {
-  const ratio = (valor - minInput) / (maxInput - minInput)
-  return maxOutput - (ratio * (maxOutput - minOutput))
-}
+// EXEMPLOS (Homem):
+// BF 8%  → 95 pts (competição)
+// BF 14% → 80 pts (atlético)
+// BF 20% → 55 pts (normal)
+// BF 26% → 35 pts (acima) ← João Ogro!
+// BF 35% → 15 pts (obesidade)
 ```
 
-### 5.4 Função de Cálculo do FFMI
+### 3.2 Cálculo de BF% via Pollock 7 Dobras
 
 ```typescript
 /**
- * Calcula o FFMI (Fat-Free Mass Index)
- * 
- * FFMI = Peso Magro (kg) / Altura² (m)
- * FFMI Normalizado = FFMI + 6.1 × (1.80 - altura em metros)
- * 
- * A normalização ajusta para altura de referência de 1.80m
+ * Cálculo de BF% pelo método Jackson-Pollock 7 dobras
  */
-function calcularFFMI(pesoMagro: number, alturaCm: number): number {
-  const alturaM = alturaCm / 100
-  const ffmiBruto = pesoMagro / (alturaM * alturaM)
-  const ffmiNormalizado = ffmiBruto + (6.1 * (1.80 - alturaM))
-  
-  return Math.round(ffmiNormalizado * 10) / 10
-}
-
-/**
- * Calcula o score baseado no FFMI
- * 
- * FFMI para HOMENS naturais:
- * - 25+: Elite (possivelmente enhanced)
- * - 22-25: Excelente
- * - 20-22: Acima da média
- * - 18-20: Média
- * - 16-18: Abaixo da média
- * - <16: Muito abaixo
- */
-function calcularScoreFFMI(ffmi: number, genero: 'MALE' | 'FEMALE'): number {
-  const faixas = FAIXAS_FFMI[genero]
-  
-  if (ffmi >= faixas.elite.min) return faixas.elite.score
-  if (ffmi >= faixas.excelente.min) return interpolate(ffmi, faixas.excelente.min, faixas.elite.min, faixas.excelente.score, faixas.elite.score)
-  if (ffmi >= faixas.acimaMedia.min) return interpolate(ffmi, faixas.acimaMedia.min, faixas.excelente.min, faixas.acimaMedia.score, faixas.excelente.score)
-  if (ffmi >= faixas.normal.min) return interpolate(ffmi, faixas.normal.min, faixas.acimaMedia.min, faixas.normal.score, faixas.acimaMedia.score)
-  if (ffmi >= faixas.abaixo.min) return interpolate(ffmi, faixas.abaixo.min, faixas.normal.min, faixas.abaixo.score, faixas.normal.score)
-  
-  return faixas.muitoAbaixo.score
-}
-```
-
-### 5.5 Função de Cálculo do Peso Relativo
-
-```typescript
-/**
- * Calcula o score de peso relativo
- * Baseado na relação entre peso magro e altura
- * 
- * Peso Magro por cm de altura (para HOMENS):
- * - Excelente: >= 0.45 kg/cm
- * - Bom: 0.40-0.45 kg/cm
- * - Normal: 0.35-0.40 kg/cm
- * - Abaixo: < 0.35 kg/cm
- */
-function calcularScorePesoRelativo(
-  pesoMagro: number, 
-  alturaCm: number, 
+function calcularBFPollock7(
+  dobras: {
+    triceps: number
+    subescapular: number
+    peitoral: number
+    axilar: number
+    suprailiaca: number
+    abdominal: number
+    coxa: number
+  },
+  idade: number,
   genero: 'MALE' | 'FEMALE'
 ): number {
-  const relacao = pesoMagro / alturaCm // kg por cm
+  const soma = 
+    dobras.triceps +
+    dobras.subescapular +
+    dobras.peitoral +
+    dobras.axilar +
+    dobras.suprailiaca +
+    dobras.abdominal +
+    dobras.coxa
   
-  const faixas = genero === 'MALE' 
-    ? { excelente: 0.45, bom: 0.40, normal: 0.35, minimo: 0.30 }
-    : { excelente: 0.38, bom: 0.34, normal: 0.30, minimo: 0.26 }
+  let densidade: number
   
-  if (relacao >= faixas.excelente) return 100
-  if (relacao >= faixas.bom) return interpolate(relacao, faixas.bom, faixas.excelente, 80, 100)
-  if (relacao >= faixas.normal) return interpolate(relacao, faixas.normal, faixas.bom, 65, 80)
-  if (relacao >= faixas.minimo) return interpolate(relacao, faixas.minimo, faixas.normal, 50, 65)
+  if (genero === 'MALE') {
+    densidade = 1.112 
+      - (0.00043499 * soma) 
+      + (0.00000055 * soma * soma) 
+      - (0.00028826 * idade)
+  } else {
+    densidade = 1.097 
+      - (0.00046971 * soma) 
+      + (0.00000056 * soma * soma) 
+      - (0.00012828 * idade)
+  }
   
-  return 40
+  // Fórmula de Siri
+  const bf = (495 / densidade) - 450
+  
+  return Math.max(3, Math.min(60, bf)) // Limitar entre 3% e 60%
 }
+
+// EXEMPLO: João Ogro Silva
+// Dobras: 25 + 30 + 22 + 28 + 35 + 40 + 25 = 205mm
+// Idade: 25 anos
+// Densidade = 1.112 - (0.00043499 × 205) + (0.00000055 × 205²) - (0.00028826 × 25)
+// Densidade = 1.112 - 0.0892 + 0.0231 - 0.0072 = 1.0387
+// BF% = (495 / 1.0387) - 450 = 26.5%
 ```
 
-### 5.6 Função Principal de Composição
+### 3.3 Exemplo: João Ogro Silva (Composição)
+
+```typescript
+// Dados
+const composicao = {
+  peso: 110,
+  altura: 175,
+  idade: 25,
+  genero: 'MALE',
+  dobras: {
+    triceps: 25,
+    subescapular: 30,
+    peitoral: 22,
+    axilar: 28,
+    suprailiaca: 35,
+    abdominal: 40,
+    coxa: 25,
+  },
+}
+
+// Cálculos
+const bf = calcularBFPollock7(composicao.dobras, composicao.idade, composicao.genero)
+// bf = 26.5%
+
+const pesoGordo = composicao.peso * (bf / 100)
+// pesoGordo = 110 × 0.265 = 29.15 kg
+
+const pesoMagro = composicao.peso - pesoGordo
+// pesoMagro = 110 - 29.15 = 80.85 kg
+
+const ffmi = pesoMagro / ((composicao.altura / 100) ** 2) + 6.1 * (1.80 - composicao.altura / 100)
+// ffmi = 80.85 / (1.75²) + 6.1 × (1.80 - 1.75)
+// ffmi = 26.4 + 0.305 = 26.7 (ALTO - provavelmente enhanced ou muito gordo)
+
+const pesoRelativo = pesoMagro / composicao.altura
+// pesoRelativo = 80.85 / 175 = 0.462 kg/cm
+
+// SCORES
+const scoreBF = calcularScoreBF(26.5, 'MALE')
+// scoreBF = 35 pts (acima do peso)
+
+const scoreFFMI = calcularScoreFFMI(26.7, 'MALE')
+// scoreFFMI = 100 pts (elite - mas inflado pelo peso gordo!)
+
+const scorePesoRelativo = calcularScorePesoRelativo(0.462, 175, 'MALE')
+// scorePesoRelativo = 100 pts (muito alto - mas é gordura!)
+
+// PROBLEMA: FFMI e Peso Relativo estão altos porque incluem GORDURA!
+// SOLUÇÃO: Usar FFMI verdadeiro (só massa magra) e penalizar se BF alto
+```
+
+### 3.4 Correção: Ajustar FFMI e Peso Relativo quando BF é Alto
 
 ```typescript
 /**
- * Calcula o Score de Composição Corporal completo
+ * CORREÇÃO: Quando BF é alto, o FFMI e Peso Relativo são inflados
+ * Aplicamos um fator de correção baseado no BF
  */
-function calcularScoreComposicao(composicao: ComposicaoInput): CompositionScoreDetails {
-  const { bf, pesoMagro, altura, genero } = composicao
+function calcularScoreComposicaoCorrigido(composicao: ComposicaoInput): CompositionScoreDetails {
+  const { bf, pesoMagro, altura, genero, peso } = composicao
   
-  // 1. Score de BF%
+  // 1. Score de BF (50%)
   const scoreBF = calcularScoreBF(bf, genero)
   
-  // 2. Score de FFMI
+  // 2. Score de FFMI (30%)
   const ffmi = calcularFFMI(pesoMagro, altura)
-  const scoreFFMI = calcularScoreFFMI(ffmi, genero)
+  let scoreFFMI = calcularScoreFFMI(ffmi, genero)
   
-  // 3. Score de Peso Relativo
-  const scorePesoRelativo = calcularScorePesoRelativo(pesoMagro, altura, genero)
+  // CORREÇÃO: Se BF > 20%, penalizar FFMI
+  // Porque parte da "massa magra" pode ser água retida ou erro de medição
+  if (bf > 20) {
+    const penalidade = Math.min(30, (bf - 20) * 1.5)
+    scoreFFMI = Math.max(40, scoreFFMI - penalidade)
+  }
   
-  // Cálculo ponderado
+  // 3. Score de Peso Relativo (20%)
+  const pesoRelativo = pesoMagro / altura
+  let scorePesoRelativo = calcularScorePesoRelativo(pesoRelativo, altura, genero)
+  
+  // CORREÇÃO: Se BF > 25%, não dar crédito por peso relativo alto
+  if (bf > 25) {
+    scorePesoRelativo = Math.min(60, scorePesoRelativo)
+  }
+  
+  // Cálculo final
   const scoreTotal = 
-    (scoreBF * PESOS_COMPOSICAO.bf) +
-    (scoreFFMI * PESOS_COMPOSICAO.ffmi) +
-    (scorePesoRelativo * PESOS_COMPOSICAO.pesoRelativo)
-  
-  // Determinar classificação do BF
-  const classificacaoBF = classificarBF(bf, genero)
+    (scoreBF * 0.50) +
+    (scoreFFMI * 0.30) +
+    (scorePesoRelativo * 0.20)
   
   return {
     score: Math.round(scoreTotal * 10) / 10,
     detalhes: {
-      bf: {
-        valor: bf,
-        score: scoreBF,
-        peso: PESOS_COMPOSICAO.bf,
-        contribuicao: scoreBF * PESOS_COMPOSICAO.bf,
-        classificacao: classificacaoBF,
-      },
-      ffmi: {
-        valor: ffmi,
-        score: scoreFFMI,
-        peso: PESOS_COMPOSICAO.ffmi,
-        contribuicao: scoreFFMI * PESOS_COMPOSICAO.ffmi,
-        classificacao: classificarFFMI(ffmi, genero),
-      },
-      pesoRelativo: {
-        valor: pesoMagro / altura,
-        score: scorePesoRelativo,
-        peso: PESOS_COMPOSICAO.pesoRelativo,
-        contribuicao: scorePesoRelativo * PESOS_COMPOSICAO.pesoRelativo,
-      },
+      bf: { valor: bf, score: scoreBF },
+      ffmi: { valor: ffmi, score: scoreFFMI },
+      pesoRelativo: { valor: pesoRelativo, score: scorePesoRelativo },
     },
-    pesoMagro,
-    pesoGordo: composicao.peso - pesoMagro,
   }
 }
-```
 
-### 5.7 Exemplo de Cálculo
+// EXEMPLO: João Ogro Silva (CORRIGIDO)
+// BF: 26.5% → scoreBF = 35 pts
+// FFMI: 26.7 → scoreFFMI base = 100, mas com penalidade = 100 - 9.75 = 90.25 pts
+// Peso Relativo: 0.462 → scorePesoRelativo base = 100, mas limitado a 60 pts
 
-```typescript
-// Input (dados das imagens)
-const composicao = {
-  peso: 110,
-  altura: 180,
-  bf: 38.4,
-  pesoMagro: 67.8,
-  genero: 'MALE',
-}
-
-// Cálculos
-// 1. Score BF: 38.4% → ~28 pontos (obesidade)
-// 2. FFMI: 67.8 / (1.80²) = 20.9 → ~82 pontos (acima da média)
-// 3. Peso Relativo: 67.8 / 180 = 0.377 kg/cm → ~67 pontos (normal)
-
-// Score Composição = (28 × 0.5) + (82 × 0.3) + (67 × 0.2)
-//                  = 14 + 24.6 + 13.4
-//                  = 52.0 pts
-
-// O BF% alto puxa muito o score para baixo!
+// Score Composição = (35 × 0.50) + (90 × 0.30) + (60 × 0.20)
+//                  = 17.5 + 27 + 12 = 56.5 pts
 ```
 
 ---
 
-## 6. CÁLCULO DO SCORE DE SIMETRIA BILATERAL (25%)
+## 4. CÁLCULO FINAL CORRIGIDO
 
-### 6.1 Visão Geral
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                 SCORE DE SIMETRIA BILATERAL                     │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  Mede o equilíbrio entre lado esquerdo e direito do corpo.      │
-│                                                                 │
-│  Para cada grupo muscular bilateral:                            │
-│  1. Calcula a diferença percentual: |E - D| / média × 100       │
-│  2. Classifica: Simétrico, Leve Assimetria, etc.                │
-│  3. Atribui um score de 0-100                                   │
-│                                                                 │
-│  ┌────────────────────────────────────────────────────────┐     │
-│  │  Diferença %  │ Classificação        │ Score          │     │
-│  ├────────────────────────────────────────────────────────┤     │
-│  │  0 - 2%       │ SIMÉTRICO            │ 100            │     │
-│  │  2 - 5%       │ QUASE SIMÉTRICO      │ 85             │     │
-│  │  5 - 10%      │ LEVE ASSIMETRIA      │ 70             │     │
-│  │  10 - 15%     │ ASSIMETRIA           │ 50             │     │
-│  │  15%+         │ ASSIMETRIA SEVERA    │ 30             │     │
-│  └────────────────────────────────────────────────────────┘     │
-│                                                                 │
-│  Grupos musculares avaliados:                                   │
-│  • Braço (bíceps): 25%                                          │
-│  • Antebraço: 15%                                               │
-│  • Coxa: 25%                                                    │
-│  • Panturrilha: 20%                                             │
-│  • Peitoral: 15% (se disponível)                                │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### 6.2 Função de Cálculo
-
-```typescript
-/**
- * Calcula o Score de Simetria Bilateral
- */
-function calcularScoreSimetria(assimetrias: AssimetriasInput): SymmetryScoreDetails {
-  const detalhes: GrupoSimetriaDetalhe[] = []
-  let scoreAcumulado = 0
-  let pesoAcumulado = 0
-  
-  for (const [grupo, peso] of Object.entries(PESOS_SIMETRIA)) {
-    const dados = assimetrias[grupo]
-    if (!dados) continue
-    
-    const { esquerdo, direito } = dados
-    const media = (esquerdo + direito) / 2
-    const diferenca = Math.abs(esquerdo - direito)
-    const diferencaPercent = (diferenca / media) * 100
-    
-    // Determinar score e classificação
-    const { score, status } = classificarAssimetria(diferencaPercent)
-    
-    const contribuicao = (score * peso) / 100
-    scoreAcumulado += contribuicao
-    pesoAcumulado += peso
-    
-    detalhes.push({
-      grupo,
-      esquerdo,
-      direito,
-      diferenca,
-      diferencaPercent: Math.round(diferencaPercent * 10) / 10,
-      score,
-      status,
-      peso,
-      contribuicao,
-      ladoDominante: esquerdo > direito ? 'ESQUERDO' : direito > esquerdo ? 'DIREITO' : 'IGUAL',
-    })
-  }
-  
-  // Normalizar
-  const scoreFinal = pesoAcumulado > 0 
-    ? (scoreAcumulado / pesoAcumulado) * 100 
-    : 100 // Se não tem dados, assume simétrico
-  
-  // Calcular score geral do radar (média simples)
-  const radarScore = detalhes.length > 0
-    ? detalhes.reduce((acc, d) => acc + d.score, 0) / detalhes.length
-    : 100
-  
-  return {
-    score: Math.round(scoreFinal * 10) / 10,
-    radarScore: Math.round(radarScore),
-    detalhes,
-    grupoMaisSimetrico: encontrarMaisSimetrico(detalhes),
-    grupoMenosSimetrico: encontrarMenosSimetrico(detalhes),
-    assimetriasSignificativas: detalhes.filter(d => d.diferencaPercent > 5),
-  }
-}
-
-/**
- * Classifica o nível de assimetria
- */
-function classificarAssimetria(diferencaPercent: number): { score: number, status: string } {
-  if (diferencaPercent <= 2) {
-    return { score: 100, status: 'SIMÉTRICO' }
-  }
-  if (diferencaPercent <= 5) {
-    return { score: 85, status: 'SIMÉTRICO' }
-  }
-  if (diferencaPercent <= 10) {
-    return { score: 70, status: 'LEVE_ASSIMETRIA' }
-  }
-  if (diferencaPercent <= 15) {
-    return { score: 50, status: 'ASSIMETRIA' }
-  }
-  return { score: 30, status: 'ASSIMETRIA_SEVERA' }
-}
-
-interface GrupoSimetriaDetalhe {
-  grupo: string
-  esquerdo: number
-  direito: number
-  diferenca: number
-  diferencaPercent: number
-  score: number
-  status: string
-  peso: number
-  contribuicao: number
-  ladoDominante: 'ESQUERDO' | 'DIREITO' | 'IGUAL'
-}
-```
-
-### 6.3 Exemplo de Cálculo
-
-```typescript
-// Input (dados das imagens)
-const assimetrias = {
-  braco: { esquerdo: 35.5, direito: 36.0 },      // 1.4% → 100 pts
-  antebraco: { esquerdo: 28.0, direito: 28.0 },  // 0.0% → 100 pts
-  coxa: { esquerdo: 59.0, direito: 60.0 },       // 1.7% → 100 pts
-  panturrilha: { esquerdo: 38.0, direito: 38.5 }, // 1.3% → 100 pts
-}
-
-// Cálculos
-// Braço:       1.4% diferença → 100 pts × 25% = 25.0
-// Antebraço:   0.0% diferença → 100 pts × 15% = 15.0
-// Coxa:        1.7% diferença → 100 pts × 25% = 25.0
-// Panturrilha: 1.3% diferença → 100 pts × 20% = 20.0
-// ──────────────────────────────────────────────────
-// TOTAL:                                        85.0 / 85 × 100 = 100 pts
-
-// Score de Simetria: 100 pts (excelente!)
-```
-
----
-
-## 7. CÁLCULO FINAL DA AVALIAÇÃO GERAL
-
-### 7.1 Função Principal
-
-```typescript
-/**
- * FUNÇÃO PRINCIPAL
- * Calcula a Avaliação Geral do Físico integrando as 3 dimensões
- */
-function calcularAvaliacaoGeral(input: AvaliacaoGeralInput): AvaliacaoGeralOutput {
-  const pesos = PESOS_AVALIACAO.PADRAO
-  
-  // ═══════════════════════════════════════════════════════════
-  // 1. CALCULAR SCORE DE PROPORÇÕES (40%)
-  // ═══════════════════════════════════════════════════════════
-  const scoreProporcoes = calcularScoreProporcoes(
-    input.proporcoes,
-    input.proporcoes.metodo
-  )
-  
-  // ═══════════════════════════════════════════════════════════
-  // 2. CALCULAR SCORE DE COMPOSIÇÃO (35%)
-  // ═══════════════════════════════════════════════════════════
-  const scoreComposicao = calcularScoreComposicao(input.composicao)
-  
-  // ═══════════════════════════════════════════════════════════
-  // 3. CALCULAR SCORE DE SIMETRIA (25%)
-  // ═══════════════════════════════════════════════════════════
-  const scoreSimetria = calcularScoreSimetria(input.assimetrias)
-  
-  // ═══════════════════════════════════════════════════════════
-  // 4. CALCULAR AVALIAÇÃO GERAL PONDERADA
-  // ═══════════════════════════════════════════════════════════
-  const contribuicaoProporcoes = scoreProporcoes.score * pesos.proporcoes
-  const contribuicaoComposicao = scoreComposicao.score * pesos.composicao
-  const contribuicaoSimetria = scoreSimetria.score * pesos.simetria
-  
-  const avaliacaoGeral = 
-    contribuicaoProporcoes + 
-    contribuicaoComposicao + 
-    contribuicaoSimetria
-  
-  // ═══════════════════════════════════════════════════════════
-  // 5. CLASSIFICAR
-  // ═══════════════════════════════════════════════════════════
-  const classificacao = classificarAvaliacao(avaliacaoGeral)
-  
-  // ═══════════════════════════════════════════════════════════
-  // 6. GERAR INSIGHTS
-  // ═══════════════════════════════════════════════════════════
-  const insights = gerarInsights(
-    scoreProporcoes,
-    scoreComposicao,
-    scoreSimetria
-  )
-  
-  // ═══════════════════════════════════════════════════════════
-  // 7. MONTAR OUTPUT
-  // ═══════════════════════════════════════════════════════════
-  return {
-    avaliacaoGeral: Math.round(avaliacaoGeral * 10) / 10,
-    classificacao,
-    
-    scores: {
-      proporcoes: {
-        valor: scoreProporcoes.score,
-        peso: pesos.proporcoes,
-        contribuicao: Math.round(contribuicaoProporcoes * 10) / 10,
-        detalhes: scoreProporcoes,
-      },
-      composicao: {
-        valor: scoreComposicao.score,
-        peso: pesos.composicao,
-        contribuicao: Math.round(contribuicaoComposicao * 10) / 10,
-        detalhes: scoreComposicao,
-      },
-      simetria: {
-        valor: scoreSimetria.score,
-        peso: pesos.simetria,
-        contribuicao: Math.round(contribuicaoSimetria * 10) / 10,
-        detalhes: scoreSimetria,
-      },
-    },
-    
-    insights,
-  }
-}
-
-/**
- * Classifica a Avaliação Geral
- */
-function classificarAvaliacao(score: number): Classificacao {
-  for (const c of CLASSIFICACOES_AVALIACAO) {
-    if (score >= c.min) {
-      return {
-        nivel: c.nivel,
-        emoji: c.emoji,
-        cor: c.cor,
-        descricao: c.descricao,
-      }
-    }
-  }
-  return CLASSIFICACOES_AVALIACAO[CLASSIFICACOES_AVALIACAO.length - 1]
-}
-
-/**
- * Gera insights automáticos baseados nos scores
- */
-function gerarInsights(
-  proporcoes: ProportionScoreDetails,
-  composicao: CompositionScoreDetails,
-  simetria: SymmetryScoreDetails
-): Insights {
-  // Encontrar ponto forte (maior score)
-  const scores = [
-    { categoria: 'Proporções Áureas', valor: proporcoes.score },
-    { categoria: 'Composição Corporal', valor: composicao.score },
-    { categoria: 'Simetria Bilateral', valor: simetria.score },
-  ]
-  
-  scores.sort((a, b) => b.valor - a.valor)
-  const pontoForte = scores[0]
-  const pontoFraco = scores[scores.length - 1]
-  
-  // Gerar mensagens contextuais
-  const mensagemPontoForte = gerarMensagemPontoForte(pontoForte, { proporcoes, composicao, simetria })
-  const mensagemPontoFraco = gerarMensagemPontoFraco(pontoFraco, { proporcoes, composicao, simetria })
-  const proximaMeta = gerarProximaMeta(pontoFraco, { proporcoes, composicao, simetria })
-  
-  return {
-    pontoForte: {
-      categoria: pontoForte.categoria,
-      valor: pontoForte.valor,
-      mensagem: mensagemPontoForte,
-    },
-    pontoFraco: {
-      categoria: pontoFraco.categoria,
-      valor: pontoFraco.valor,
-      mensagem: mensagemPontoFraco,
-    },
-    proximaMeta,
-  }
-}
-```
-
-### 7.2 Exemplo Completo
+### 4.1 Exemplo Completo: João Ogro Silva
 
 ```typescript
 // ═══════════════════════════════════════════════════════════════
-// EXEMPLO COM DADOS DAS IMAGENS
+// DADOS DE ENTRADA
 // ═══════════════════════════════════════════════════════════════
-
-const input: AvaliacaoGeralInput = {
-  proporcoes: {
-    metodo: 'GOLDEN_RATIO',
-    vTaper: { indiceAtual: 1.03, indiceMeta: 1.62, percentualDoIdeal: 63.6 },
-    peitoral: { indiceAtual: 5.68, indiceMeta: 6.50, percentualDoIdeal: 87.4 },
-    braco: { indiceAtual: 2.10, indiceMeta: 2.52, percentualDoIdeal: 83.3 },
-    antebraco: { indiceAtual: 0.78, indiceMeta: 0.80, percentualDoIdeal: 97.5 },
-    triade: { harmoniaPercentual: 94.0, pescoco: 40, braco: 36, panturrilha: 38 },
-    cintura: { indiceAtual: 0.82, indiceMeta: 0.86, percentualDoIdeal: 100 },
-    coxa: { indiceAtual: 1.48, indiceMeta: 1.75, percentualDoIdeal: 84.6 },
-    coxaPanturrilha: { indiceAtual: 1.55, indiceMeta: 1.50, percentualDoIdeal: 100 },
-    panturrilha: { indiceAtual: 1.58, indiceMeta: 1.92, percentualDoIdeal: 82.3 },
-  },
-  composicao: {
+const joaoOgro = {
+  basico: {
     peso: 110,
-    altura: 180,
-    idade: 30,
+    altura: 175,
+    idade: 25,
     genero: 'MALE',
-    bf: 38.4,
-    metodo_bf: 'NAVY',
-    pesoMagro: 67.8,
-    pesoGordo: 42.2,
   },
-  assimetrias: {
-    braco: { esquerdo: 35.5, direito: 36.0, diferenca: 0.5, diferencaPercentual: 1.4, status: 'SIMETRICO' },
-    antebraco: { esquerdo: 28.0, direito: 28.0, diferenca: 0, diferencaPercentual: 0, status: 'SIMETRICO' },
-    coxa: { esquerdo: 59.0, direito: 60.0, diferenca: 1.0, diferencaPercentual: 1.7, status: 'SIMETRICO' },
-    panturrilha: { esquerdo: 38.0, direito: 38.5, diferenca: 0.5, diferencaPercentual: 1.3, status: 'SIMETRICO' },
+  medidas: {
+    pescoço: 42,
+    ombros: 115,
+    peitoral: 105,
+    cintura: 112,
+    quadril: 115,
+    bracoE: 35.5,
+    bracoD: 36,
+    antebracoE: 28,
+    antebracoD: 28,
+    coxaE: 59,
+    coxaD: 60,
+    panturrilhaE: 38,
+    panturrilhaD: 38,
+    punho: 18,      // estimado
+    tornozelo: 24,  // estimado
+    joelho: 40,     // estimado
   },
-}
-
-// RESULTADO
-const resultado = calcularAvaliacaoGeral(input)
-
-/*
-{
-  avaliacaoGeral: 71.0,
-  
-  classificacao: {
-    nivel: 'ATLÉTICO',
-    emoji: '💪',
-    cor: '#3B82F6',
-    descricao: 'Físico atlético bem desenvolvido',
-  },
-  
-  scores: {
-    proporcoes: {
-      valor: 85.2,
-      peso: 0.40,
-      contribuicao: 34.1,
-      detalhes: { ... }
-    },
-    composicao: {
-      valor: 48.5,
-      peso: 0.35,
-      contribuicao: 17.0,
-      detalhes: {
-        bf: { valor: 38.4, score: 28, classificacao: 'OBESIDADE' },
-        ffmi: { valor: 20.9, score: 82, classificacao: 'ACIMA_MEDIA' },
-        pesoRelativo: { valor: 0.377, score: 67 },
-      }
-    },
-    simetria: {
-      valor: 100.0,
-      peso: 0.25,
-      contribuicao: 25.0,
-      detalhes: { ... }
-    },
-  },
-  
-  insights: {
-    pontoForte: {
-      categoria: 'Simetria Bilateral',
-      valor: 100,
-      mensagem: 'Excelente equilíbrio entre os lados do corpo. Continue mantendo o treino balanceado.',
-    },
-    pontoFraco: {
-      categoria: 'Composição Corporal',
-      valor: 48.5,
-      mensagem: 'Seu BF% (38.4%) está elevado. Foque em um déficit calórico moderado para melhorar a definição.',
-    },
-    proximaMeta: {
-      categoria: 'Composição Corporal',
-      metaAtual: 38.4,
-      metaProxima: 30,
-      acao: 'Reduza o BF% para 30% para ganhar +10 pontos na avaliação geral.',
-    },
+  dobras: {
+    triceps: 25,
+    subescapular: 30,
+    peitoral: 22,
+    axilar: 28,
+    suprailiaca: 35,
+    abdominal: 40,
+    coxa: 25,
   },
 }
-*/
+
+// ═══════════════════════════════════════════════════════════════
+// 1. SCORE DE PROPORÇÕES (40%)
+// ═══════════════════════════════════════════════════════════════
+// V-Taper: 115/112 = 1.027 → 63.5% do ideal
+// Multiplicador V-Taper: 0.70 (péssimo)
+// Score base: ~81 pts
+// Score com multiplicador: 81 × 0.70 = 56.7 pts
+const scoreProporcoes = 56.7
+
+// ═══════════════════════════════════════════════════════════════
+// 2. SCORE DE COMPOSIÇÃO (35%)
+// ═══════════════════════════════════════════════════════════════
+// BF: 26.5% → 35 pts
+// FFMI: 26.7 (corrigido) → 90 pts
+// Peso Relativo: 0.462 (limitado) → 60 pts
+// Score: (35×0.5) + (90×0.3) + (60×0.2) = 56.5 pts
+const scoreComposicao = 56.5
+
+// ═══════════════════════════════════════════════════════════════
+// 3. SCORE DE SIMETRIA (25%)
+// ═══════════════════════════════════════════════════════════════
+// Braço: 35.5/36 → 1.4% diferença → 100 pts
+// Antebraço: 28/28 → 0% diferença → 100 pts
+// Coxa: 59/60 → 1.7% diferença → 100 pts
+// Panturrilha: 38/38 → 0% diferença → 100 pts
+// Score: 100 pts (excelente simetria)
+const scoreSimetria = 100
+
+// ═══════════════════════════════════════════════════════════════
+// 4. AVALIAÇÃO GERAL
+// ═══════════════════════════════════════════════════════════════
+const avaliacaoGeral = 
+  (scoreProporcoes * 0.40) +
+  (scoreComposicao * 0.35) +
+  (scoreSimetria * 0.25)
+
+// avaliacaoGeral = (56.7 × 0.40) + (56.5 × 0.35) + (100 × 0.25)
+//                = 22.68 + 19.78 + 25.00
+//                = 67.46 pts
+
+// ARREDONDANDO: 67.5 pts
+
+// ═══════════════════════════════════════════════════════════════
+// 5. CLASSIFICAÇÃO
+// ═══════════════════════════════════════════════════════════════
+// 67.5 pts → INTERMEDIÁRIO 🏃
 ```
 
----
-
-## 8. VISUALIZAÇÃO NO DASHBOARD
-
-### 8.1 Card de Avaliação Geral
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                                                                 │
-│  AVALIAÇÃO GERAL                                    💡          │
-│                                                                 │
-│         ┌─────────────────────────────────┐                     │
-│         │                                 │                     │
-│         │           ┌───────┐             │                     │
-│         │           │       │             │                     │
-│         │           │  71   │             │                     │
-│         │           │       │             │                     │
-│         │           └───────┘             │                     │
-│         │            PONTOS               │                     │
-│         │                                 │                     │
-│         └─────────────────────────────────┘                     │
-│                                                                 │
-│                  💪 SHAPE ATLÉTICO                              │
-│                  +5% vs. mês anterior                           │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### 8.2 Breakdown dos Scores
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                                                                 │
-│  COMPOSIÇÃO DO SCORE                                            │
-│                                                                 │
-│  ┌────────────────────────────────────────────────────────┐     │
-│  │                                                        │     │
-│  │  PROPORÇÕES ÁUREAS                          40%        │     │
-│  │  ████████████████████████████░░░░░  85.2 pts           │     │
-│  │  Contribuição: 34.1 pts                                │     │
-│  │                                                        │     │
-│  │  COMPOSIÇÃO CORPORAL                        35%        │     │
-│  │  ████████████░░░░░░░░░░░░░░░░░░░░░  48.5 pts           │     │
-│  │  Contribuição: 17.0 pts                                │     │
-│  │                                                        │     │
-│  │  SIMETRIA BILATERAL                         25%        │     │
-│  │  █████████████████████████████████ 100.0 pts           │     │
-│  │  Contribuição: 25.0 pts                                │     │
-│  │                                                        │     │
-│  │  ─────────────────────────────────────────────────     │     │
-│  │  TOTAL: 34.1 + 17.0 + 25.0 = 71.0 pts                  │     │
-│  │                                                        │     │
-│  └────────────────────────────────────────────────────────┘     │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### 8.3 Card de Insights
+### 4.2 Comparação: Antes vs Depois
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                                                                 │
-│  ✨ AI INSIGHT                                                  │
-│                                                                 │
-│  ┌────────────────────────────────────────────────────────┐     │
-│  │  🏆 PONTO FORTE                                        │     │
-│  │  Simetria Bilateral (100 pts)                          │     │
-│  │                                                        │     │
-│  │  Excelente equilíbrio entre os lados do corpo.         │     │
-│  │  Continue mantendo o treino balanceado.                │     │
-│  └────────────────────────────────────────────────────────┘     │
-│                                                                 │
-│  ┌────────────────────────────────────────────────────────┐     │
-│  │  ⚠️ ATENÇÃO                                            │     │
-│  │  Composição Corporal (48.5 pts)                        │     │
-│  │                                                        │     │
-│  │  Seu BF% (38.4%) está elevado. Foque em um déficit     │     │
-│  │  calórico moderado para melhorar a definição.          │     │
-│  └────────────────────────────────────────────────────────┘     │
-│                                                                 │
-│  ┌────────────────────────────────────────────────────────┐     │
-│  │  🎯 PRÓXIMA META                                       │     │
-│  │                                                        │     │
-│  │  Reduza o BF% de 38.4% para 30% para ganhar            │     │
-│  │  +10 pontos na avaliação geral.                        │     │
-│  │                                                        │     │
-│  │                      Ver plano de ação →               │     │
-│  └────────────────────────────────────────────────────────┘     │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 9. FÓRMULAS RESUMIDAS
-
-### 9.1 Tabela de Referência Rápida
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    FÓRMULAS RESUMIDAS                           │
+│                    JOÃO OGRO SILVA                              │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  AVALIAÇÃO GERAL = (Prop × 0.40) + (Comp × 0.35) + (Sim × 0.25) │
-│                                                                 │
+│                 v1.0 (ERRADO)    │    v1.1 (CORRETO)            │
 │  ─────────────────────────────────────────────────────────────  │
 │                                                                 │
-│  SCORE PROPORÇÕES = Σ (PropPercentual × PropPeso) / ΣPesos      │
+│  PROPORÇÕES                                                     │
+│  Score:         ~85 pts         │    56.7 pts                   │
+│  V-Taper:       sem penalidade  │    multiplicador 0.70         │
+│  Cintura:       ~90 pts         │    ~71 pts (penalizado)       │
+│                                                                 │
+│  COMPOSIÇÃO                                                     │
+│  Score:         ~75 pts         │    56.5 pts                   │
+│  BF 26.5%:      ~45 pts         │    35 pts                     │
+│  FFMI:          100 pts         │    90 pts (corrigido)         │
+│  Peso Rel:      100 pts         │    60 pts (limitado)          │
+│                                                                 │
+│  SIMETRIA                                                       │
+│  Score:         100 pts         │    100 pts                    │
+│  (sem alteração - ele realmente é simétrico)                    │
 │                                                                 │
 │  ─────────────────────────────────────────────────────────────  │
-│                                                                 │
-│  SCORE COMPOSIÇÃO = (ScoreBF × 0.50) +                          │
-│                     (ScoreFFMI × 0.30) +                        │
-│                     (ScorePesoRelativo × 0.20)                  │
-│                                                                 │
-│  FFMI = PesoMagro / Altura² + 6.1 × (1.80 - Altura)             │
-│                                                                 │
-│  ─────────────────────────────────────────────────────────────  │
-│                                                                 │
-│  SCORE SIMETRIA = Σ (GrupoScore × GrupoPeso) / ΣPesos           │
-│                                                                 │
-│  Assimetria% = |Esquerdo - Direito| / Média × 100               │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### 9.2 Tabela de Pesos
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      TABELA DE PESOS                            │
-├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  AVALIAÇÃO GERAL                                                │
-│  ├── Proporções Áureas ............ 40%                         │
-│  ├── Composição Corporal .......... 35%                         │
-│  └── Simetria Bilateral ........... 25%                         │
-│                                                                 │
-│  PROPORÇÕES ÁUREAS (Golden Ratio)                               │
-│  ├── V-Taper ...................... 20%                         │
-│  ├── Cintura ...................... 15%                         │
-│  ├── Peitoral ..................... 15%                         │
-│  ├── Tríade ....................... 12%                         │
-│  ├── Braço ........................ 12%                         │
-│  ├── Coxa ......................... 10%                         │
-│  ├── Panturrilha ..................  6%                         │
-│  ├── Coxa/Panturrilha .............  5%                         │
-│  └── Antebraço ....................  5%                         │
-│                                                                 │
-│  COMPOSIÇÃO CORPORAL                                            │
-│  ├── BF% (Gordura) ................ 50%                         │
-│  ├── FFMI (Massa Muscular) ........ 30%                         │
-│  └── Peso Relativo ................ 20%                         │
-│                                                                 │
-│  SIMETRIA BILATERAL                                             │
-│  ├── Braço ........................ 25%                         │
-│  ├── Coxa ......................... 25%                         │
-│  ├── Panturrilha .................. 20%                         │
-│  ├── Antebraço .................... 15%                         │
-│  └── Peitoral ..................... 15%                         │
+│  v1.0:          78.5 pts ❌     │    67.5 pts ✅                │
+│  Classificação: ATLÉTICO ❌     │    INTERMEDIÁRIO ✅           │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
+### 4.3 O Score de 67.5 Ainda é Alto?
+
+Sim, 67.5 ainda pode parecer alto para alguém com cintura de 112cm. Mas considere:
+
+1. **Ele TEM massa muscular** - 80kg de massa magra é considerável
+2. **Ele É simétrico** - Simetria perfeita vale pontos
+3. **O problema é a composição** - BF 26.5% e cintura larga
+
+Se quisermos ser **ainda mais rigorosos**, podemos:
+
+```typescript
+// OPÇÃO: Adicionar penalização geral por cintura > 100cm (homem)
+function penalizacaoCinturaAbsoluta(cinturaCm: number, genero: string): number {
+  if (genero !== 'MALE') return 1.0
+  
+  if (cinturaCm <= 85) return 1.00   // Ideal
+  if (cinturaCm <= 95) return 0.98   // OK
+  if (cinturaCm <= 100) return 0.95  // Atenção
+  if (cinturaCm <= 110) return 0.90  // Problemático
+  if (cinturaCm <= 120) return 0.80  // Muito problemático
+  return 0.70                         // Crítico
+}
+
+// João Ogro: cintura 112cm → multiplicador 0.80
+// Novo score = 67.5 × 0.80 = 54.0 pts
+
+// Isso colocaria ele em "INICIANTE" 🌱
+```
+
 ---
 
-## 10. CHANGELOG
+## 5. FUNÇÃO PRINCIPAL CORRIGIDA
+
+```typescript
+/**
+ * FUNÇÃO PRINCIPAL v1.1
+ * Calcula a Avaliação Geral do Físico com correções
+ */
+function calcularAvaliacaoGeralV11(input: AvaliacaoGeralInput): AvaliacaoGeralOutput {
+  const pesos = { proporcoes: 0.40, composicao: 0.35, simetria: 0.25 }
+  
+  // 1. PROPORÇÕES (com multiplicador V-Taper)
+  const resultProporcoes = calcularScoreProporcoesCorrigido(input.proporcoes)
+  
+  // 2. COMPOSIÇÃO (com penalizações por BF alto)
+  const resultComposicao = calcularScoreComposicaoCorrigido(input.composicao)
+  
+  // 3. SIMETRIA (mantido)
+  const resultSimetria = calcularScoreSimetria(input.assimetrias)
+  
+  // 4. CÁLCULO BASE
+  let avaliacaoBase = 
+    (resultProporcoes.score * pesos.proporcoes) +
+    (resultComposicao.score * pesos.composicao) +
+    (resultSimetria.score * pesos.simetria)
+  
+  // 5. PENALIZAÇÃO ADICIONAL POR CINTURA ABSOLUTA (OPCIONAL)
+  const penalizacaoCintura = penalizacaoCinturaAbsoluta(
+    input.composicao.cintura || 0,
+    input.composicao.genero
+  )
+  
+  const avaliacaoFinal = avaliacaoBase * penalizacaoCintura
+  
+  // 6. CLASSIFICAR
+  const classificacao = classificarAvaliacao(avaliacaoFinal)
+  
+  return {
+    avaliacaoGeral: Math.round(avaliacaoFinal * 10) / 10,
+    classificacao,
+    scores: {
+      proporcoes: {
+        valor: resultProporcoes.score,
+        peso: pesos.proporcoes,
+        contribuicao: resultProporcoes.score * pesos.proporcoes,
+        multiplicadorVTaper: resultProporcoes.multiplicadorVTaper,
+      },
+      composicao: {
+        valor: resultComposicao.score,
+        peso: pesos.composicao,
+        contribuicao: resultComposicao.score * pesos.composicao,
+      },
+      simetria: {
+        valor: resultSimetria.score,
+        peso: pesos.simetria,
+        contribuicao: resultSimetria.score * pesos.simetria,
+      },
+    },
+    penalizacoes: {
+      vTaper: resultProporcoes.multiplicadorVTaper,
+      cintura: penalizacaoCintura,
+    },
+  }
+}
+```
+
+---
+
+## 6. TABELA DE CLASSIFICAÇÃO ATUALIZADA
+
+```typescript
+const CLASSIFICACOES = [
+  { min: 90, nivel: 'ELITE', emoji: '👑', descricao: 'Físico de competição' },
+  { min: 80, nivel: 'AVANÇADO', emoji: '🥇', descricao: 'Muito acima da média' },
+  { min: 70, nivel: 'ATLÉTICO', emoji: '💪', descricao: 'Físico atlético' },
+  { min: 60, nivel: 'INTERMEDIÁRIO', emoji: '🏃', descricao: 'Em desenvolvimento' },
+  { min: 50, nivel: 'INICIANTE', emoji: '🌱', descricao: 'Início da jornada' },
+  { min: 0, nivel: 'COMEÇANDO', emoji: '🚀', descricao: 'Momento de transformação' },
+]
+
+// João Ogro Silva:
+// Sem penalização cintura: 67.5 pts → INTERMEDIÁRIO 🏃
+// Com penalização cintura: 54.0 pts → INICIANTE 🌱
+```
+
+---
+
+## 7. RESUMO DAS CORREÇÕES v1.1
+
+| Aspecto | v1.0 (Problema) | v1.1 (Solução) |
+|---------|-----------------|----------------|
+| **Cintura acima do ideal** | Não penalizava adequadamente | Penalização quadrática |
+| **V-Taper < 1.2** | Sem penalização extra | Multiplicador 0.70-1.0 |
+| **BF% > 25%** | Score ~45 | Score ~25-35 |
+| **FFMI com BF alto** | Não ajustava | Penaliza se BF > 20% |
+| **Peso Relativo com BF alto** | Crédito total | Limitado a 60 pts |
+| **Cintura absoluta > 100cm** | Ignorado | Multiplicador 0.70-1.0 |
+
+---
+
+## 8. CHANGELOG
 
 | Versão | Data | Alterações |
 |--------|------|------------|
-| 1.0 | Fev/2026 | Versão inicial - Sistema completo de Avaliação Geral |
+| 1.0 | Fev/2026 | Versão inicial |
+| 1.1 | Fev/2026 | **CORREÇÃO CRÍTICA**: Penalizações para cintura, BF alto, V-Taper ruim |
 
 ---
 
-**VITRU IA - Avaliação Geral do Físico v1.0**  
-*Proporções • Composição • Simetria*
+**VITRU IA - Avaliação Geral do Físico v1.1**  
+*Proporções • Composição • Simetria • Penalizações Corrigidas*

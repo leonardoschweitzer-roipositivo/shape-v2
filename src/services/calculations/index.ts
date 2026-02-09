@@ -74,3 +74,7 @@ export {
     WELLNESS_CONSTANTS,
     FIGURE_CONSTANTS
 } from './femaleProportions'
+// Assessment (SPEC v1.0)
+export {
+    calcularAvaliacaoGeral
+} from './assessment.ts'

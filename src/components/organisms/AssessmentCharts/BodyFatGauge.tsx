@@ -16,7 +16,8 @@ export const BodyFatGauge: React.FC<BodyFatGaugeProps> = ({
         if (val < 14) return { label: 'Nível Atleta', color: '#00C9A7' };
         if (val < 18) return { label: 'Fitness', color: '#3B82F6' };
         if (val < 25) return { label: 'Média', color: '#F59E0B' };
-        return { label: 'Acima da Média', color: '#EF4444' };
+        if (val < 30) return { label: 'Acima da Média', color: '#EF4444' };
+        return { label: 'Obesidade', color: '#B91C1C' };
     };
 
     const level = getLevelInfo(value);
