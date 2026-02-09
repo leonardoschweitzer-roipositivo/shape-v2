@@ -3,9 +3,11 @@ import { Layers } from 'lucide-react';
 
 interface FooterProps {
   onOpenDesignSystem: () => void;
+  onOpenTerms: () => void;
+  onOpenPrivacy: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onOpenDesignSystem }) => {
+export const Footer: React.FC<FooterProps> = ({ onOpenDesignSystem, onOpenTerms, onOpenPrivacy }) => {
   return (
     <footer className="w-full border-t border-card-border bg-[#0A0F1C] py-6 px-8 mt-auto z-10">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
@@ -23,8 +25,18 @@ export const Footer: React.FC<FooterProps> = ({ onOpenDesignSystem }) => {
           </button>
 
           <div className="flex gap-4">
-            <a href="#" className="text-xs text-gray-600 hover:text-gray-400">Termos</a>
-            <a href="#" className="text-xs text-gray-600 hover:text-gray-400">Privacidade</a>
+            <button
+              onClick={onOpenTerms}
+              className="text-xs text-gray-600 hover:text-gray-400 transition-colors"
+            >
+              Termos
+            </button>
+            <button
+              onClick={onOpenPrivacy}
+              className="text-xs text-gray-600 hover:text-gray-400 transition-colors"
+            >
+              Privacidade
+            </button>
           </div>
         </div>
       </div>

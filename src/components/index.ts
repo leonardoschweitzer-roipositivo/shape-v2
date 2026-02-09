@@ -20,3 +20,5 @@ export * from './organisms'
 
 // Templates
 export * from './templates'
+// Debug
+export * from './DebugAccess'

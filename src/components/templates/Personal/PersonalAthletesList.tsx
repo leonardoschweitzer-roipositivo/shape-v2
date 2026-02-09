@@ -8,6 +8,7 @@ interface PersonalAthletesListProps {
     onInviteAthlete: () => void;
     onRegisterStudent: () => void;
     onRegisterMeasurement: (athleteId: string) => void;
+    onViewLatestAssessment: (athleteId: string) => void;
     athletes?: PersonalAthlete[];
 }
 
@@ -19,6 +20,7 @@ export const PersonalAthletesList: React.FC<PersonalAthletesListProps> = ({
     onInviteAthlete,
     onRegisterStudent,
     onRegisterMeasurement,
+    onViewLatestAssessment,
     athletes = mockPersonalAthletes,
 }) => {
     // State for student details modal
@@ -238,6 +240,18 @@ export const PersonalAthletesList: React.FC<PersonalAthletesListProps> = ({
                                                 >
                                                     <ClipboardList size={18} className="text-gray-400 hover:text-primary" />
                                                 </button>
+                                                {athlete.assessments && athlete.assessments.length > 0 && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            onViewLatestAssessment(athlete.id);
+                                                        }}
+                                                        className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                                                        title="Visualizar Última Avaliação"
+                                                    >
+                                                        <Activity size={18} className="text-gray-400 hover:text-primary" />
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

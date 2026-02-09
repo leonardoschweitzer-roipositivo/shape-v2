@@ -87,6 +87,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       default:
         return [
           { icon: LayoutDashboard, label: 'Início', id: 'dashboard' },
+          { icon: Users, label: 'Minha Ficha', id: 'my-record' },
           { icon: Activity, label: 'Avaliação', id: 'assessment' },
           { icon: TrendingUp, label: 'Evolução', id: 'evolution' },
           { icon: Bot, label: 'Coach IA', id: 'coach', isPro: true },

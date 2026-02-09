@@ -20,6 +20,7 @@ import {
 import { useDashboard } from '@/features/dashboard/hooks/useDashboard';
 import { Target, BarChart2, Ruler, Zap, Trophy, Scale, Layout, Activity } from 'lucide-react';
 import { getHeroContent } from '@/features/dashboard/utils/heroContent';
+import { useAthleteStore } from '@/stores/athleteStore';
 
 const SectionHeader: React.FC<{
     icon: React.ReactNode;
@@ -43,6 +44,7 @@ const SectionHeader: React.FC<{
 
 export const DashboardView: React.FC<{ userProfile?: ProfileType }> = ({ userProfile = 'atleta' }) => {
     const { data, isLoading, error } = useDashboard();
+    const { profile } = useAthleteStore();
 
     if (isLoading) {
         return (
@@ -68,7 +70,7 @@ export const DashboardView: React.FC<{ userProfile?: ProfileType }> = ({ userPro
         );
     }
 
-    const heroContent = getHeroContent(data);
+    const heroContent = getHeroContent(data, profile?.gender);
 
     return (
         <div className="flex-1 p-4 md:p-8 flex flex-col">

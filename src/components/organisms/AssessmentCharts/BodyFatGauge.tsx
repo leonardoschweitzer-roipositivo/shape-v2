@@ -3,28 +3,41 @@ interface BodyFatGaugeProps {
     value: number;
     method?: 'navy' | 'pollock';
     onMethodChange?: (method: 'navy' | 'pollock') => void;
+    gender?: 'male' | 'female';
 }
 
 export const BodyFatGauge: React.FC<BodyFatGaugeProps> = ({
     value,
     method = 'navy',
-    onMethodChange
+    onMethodChange,
+    gender = 'male'
 }) => {
-    // Standard BF categories for males (default)
-    const getLevelInfo = (val: number) => {
-        if (val < 6) return { label: 'Essencial', color: '#9CA3AF' };
-        if (val < 14) return { label: 'Nível Atleta', color: '#00C9A7' };
-        if (val < 18) return { label: 'Fitness', color: '#3B82F6' };
-        if (val < 25) return { label: 'Média', color: '#F59E0B' };
-        if (val < 30) return { label: 'Acima da Média', color: '#EF4444' };
-        return { label: 'Obesidade', color: '#B91C1C' };
+    // Standard BF categories according to gender
+    const getLevelInfo = (val: number, g: 'male' | 'female') => {
+        if (g === 'male') {
+            if (val < 6) return { label: 'Essencial', color: '#9CA3AF' };
+            if (val < 14) return { label: 'Nível Atleta', color: '#00C9A7' };
+            if (val < 18) return { label: 'Fitness', color: '#3B82F6' };
+            if (val < 25) return { label: 'Média', color: '#F59E0B' };
+            if (val < 30) return { label: 'Acima da Média', color: '#EF4444' };
+            return { label: 'Obesidade', color: '#B91C1C' };
+        } else {
+            // Female categories
+            if (val < 12) return { label: 'Essencial', color: '#9CA3AF' };
+            if (val < 21) return { label: 'Nível Atleta', color: '#00C9A7' };
+            if (val < 25) return { label: 'Fitness', color: '#3B82F6' };
+            if (val < 32) return { label: 'Média', color: '#F59E0B' };
+            if (val < 39) return { label: 'Acima da Média', color: '#EF4444' };
+            return { label: 'Obesidade', color: '#B91C1C' };
+        }
     };
 
-    const level = getLevelInfo(value);
+    const level = getLevelInfo(value, gender as 'male' | 'female');
 
     // Calculate gauge dasharray (semi-circle is approx 235 units long)
-    // 0% to 40% range for display
-    const percentage = Math.min(Math.max(value, 0), 40) / 40;
+    // 0% to 50% range for display for females, 0% to 40% for males
+    const maxRange = gender === 'female' ? 50 : 40;
+    const percentage = Math.min(Math.max(value, 0), maxRange) / maxRange;
     const dashValue = percentage * 235;
 
     return (
@@ -80,15 +93,15 @@ export const BodyFatGauge: React.FC<BodyFatGaugeProps> = ({
             <div className="w-full grid grid-cols-3 gap-2 mt-6 border-t border-white/5 pt-4">
                 <div className="text-center">
                     <p className="text-[9px] text-gray-500 font-bold uppercase">Essencial</p>
-                    <p className="text-xs font-bold text-white">2-5%</p>
+                    <p className="text-xs font-bold text-white">{gender === 'male' ? '2-5%' : '10-13%'}</p>
                 </div>
                 <div className="text-center">
                     <p className="text-[9px] text-[#00C9A7] font-bold uppercase">Atleta</p>
-                    <p className="text-xs font-bold text-[#00C9A7]">6-13%</p>
+                    <p className="text-xs font-bold text-[#00C9A7]">{gender === 'male' ? '6-13%' : '14-20%'}</p>
                 </div>
                 <div className="text-center">
                     <p className="text-[9px] text-gray-500 font-bold uppercase">Fitness</p>
-                    <p className="text-xs font-bold text-white">14-17%</p>
+                    <p className="text-xs font-bold text-white">{gender === 'male' ? '14-17%' : '21-24%'}</p>
                 </div>
             </div>
         </div>

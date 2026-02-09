@@ -28,16 +28,16 @@ export const mockAcademyStats: AcademyStats = {
     maxPersonals: 20,
     totalAthletes: 145,
     measuredThisWeek: 92,
-    averageScore: 74.8,
-    scoreVariation: 2.3,
+    averageScore: 71.5,
+    scoreVariation: -1.2,
 };
 
 export const mockPersonalsSummary: PersonalSummary[] = [
     {
         id: 'p1',
-        name: 'Carlos Souza',
+        name: 'Carlos Lima',
         athleteCount: 24,
-        averageStudentScore: 78.5,
+        averageStudentScore: 61.2,
         status: 'active',
     },
     {

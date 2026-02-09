@@ -152,6 +152,62 @@ function interpolate(valor: number, inMin: number, inMax: number, outAtMin: numb
     return Math.max(minBound, Math.min(result, maxBound));
 }
 
+/**
+ * v1.1: Cálculo para proporções inversas (cintura)
+ * Se atual < ideal → Bom (100% ou mais)
+ * Se atual > ideal → Ruim (penalização progressiva quadrática)
+ */
+function calcularPercentualProporcaoInversa(indiceAtual: number, indiceIdeal: number): number {
+    if (indiceAtual <= 0 || indiceIdeal <= 0) return 0;
+
+    // Cintura MENOR ou IGUAL ao ideal = ÓTIMO
+    if (indiceAtual <= indiceIdeal) {
+        const bonus = (indiceIdeal - indiceAtual) / indiceIdeal;
+        return Math.min(110, 100 + (bonus * 20));
+    }
+
+    // Cintura MAIOR que o ideal = RUIM
+    const excesso = (indiceAtual - indiceIdeal) / indiceIdeal;
+    const penalidade = excesso * excesso * 200; // Penalização quadrática conforme SPEC v1.1
+
+    return Math.max(10, 100 - (excesso * 100) - penalidade);
+}
+
+/**
+ * v1.1: V-Taper < 1.3 recebe penalização adicional em TODAS as proporções
+ */
+function calcularMultiplicadorVTaper(vTaperAtual: number): number {
+    if (vTaperAtual >= 1.50) return 1.00;
+    if (vTaperAtual >= 1.40) return 0.98;
+    if (vTaperAtual >= 1.30) return 0.95;
+    if (vTaperAtual >= 1.20) return 0.90;
+    if (vTaperAtual >= 1.10) return 0.80;
+    return 0.70; // Péssimo (< 1.10)
+}
+
+/**
+ * v1.1: Penalização por cintura absoluta (saúde e estética)
+ */
+function penalizacaoCinturaAbsoluta(cinturaCm: number, genero: 'MALE' | 'FEMALE'): number {
+    if (cinturaCm <= 0) return 1.0;
+
+    if (genero === 'MALE') {
+        if (cinturaCm <= 85) return 1.00;
+        if (cinturaCm <= 95) return 0.98;
+        if (cinturaCm <= 100) return 0.95;
+        if (cinturaCm <= 110) return 0.90;
+        if (cinturaCm <= 120) return 0.80;
+        return 0.70;
+    } else {
+        if (cinturaCm <= 70) return 1.00;
+        if (cinturaCm <= 80) return 0.98;
+        if (cinturaCm <= 88) return 0.95;
+        if (cinturaCm <= 95) return 0.90;
+        if (cinturaCm <= 105) return 0.80;
+        return 0.70;
+    }
+}
+
 // ═══════════════════════════════════════════════════════════
 // 1. PROPORTION SCORE CALCULATION
 // ═══════════════════════════════════════════════════════════
@@ -166,10 +222,13 @@ function calcularScoreProporcoes(
     let pesoAcumulado = 0;
     const detalhes: ProporcaoDetalhe[] = [];
 
+    // v1.1: Calcular multiplicador V-Taper primeiro
+    const vTaperAtual = proporcoes.vTaper?.indiceAtual || 0;
+    const multiplicadorVTaper = calcularMultiplicadorVTaper(vTaperAtual);
+
     for (const [prop, peso] of Object.entries(pesos)) {
         if (peso === 0) continue;
 
-        // Type safety: access property dynamically
         const key = prop as keyof typeof proporcoes;
         const dados = proporcoes[key];
 
@@ -179,10 +238,15 @@ function calcularScoreProporcoes(
 
         if (prop === 'triade') {
             percentual = (dados as TriadeData).harmoniaPercentual;
+        } else if (prop === 'cintura') {
+            // v1.1: Tratamento especial para proporções INVERSAS (cintura)
+            percentual = calcularPercentualProporcaoInversa(
+                (dados as ProportionData).indiceAtual,
+                (dados as ProportionData).indiceMeta
+            );
         } else {
-            // For standard proportions, use percentualDoIdeal
-            // Cap at 100% unless specified otherwise (spec says cap at 100)
-            percentual = Math.min(100, (dados as ProportionData).percentualDoIdeal);
+            // v1.1: Limitar a 105% (pequeno bônus por ultrapassar o ideal)
+            percentual = Math.min(105, (dados as ProportionData).percentualDoIdeal);
         }
 
         const contribuicao = (percentual * peso) / 100;
@@ -197,17 +261,20 @@ function calcularScoreProporcoes(
         });
     }
 
-    const scoreFinal = pesoAcumulado > 0 ? (scoreAcumulado / pesoAcumulado) * 100 : 0;
+    // Score base
+    let scoreFinal = pesoAcumulado > 0 ? (scoreAcumulado / pesoAcumulado) * 100 : 0;
 
-    // Find strongest/weakest
-    // Sort logic to be defined, here simple max/min
+    // v1.1: Aplicar multiplicador de V-Taper
+    scoreFinal = scoreFinal * multiplicadorVTaper;
+
     const sorted = [...detalhes].sort((a, b) => b.percentualDoIdeal - a.percentualDoIdeal);
 
     return {
-        score: Math.round(scoreFinal * 10) / 10,
+        score: Math.round(Math.max(0, Math.min(100, scoreFinal)) * 10) / 10,
         detalhes,
         proporcaoMaisForte: sorted.length > 0 ? sorted[0].proporcao : '',
         proporcaoMaisFraca: sorted.length > 0 ? sorted[sorted.length - 1].proporcao : '',
+        multiplicadorVTaper,
     };
 }
 
@@ -216,54 +283,40 @@ function calcularScoreProporcoes(
 // ═══════════════════════════════════════════════════════════
 
 function calcularScoreBF(bf: number, genero: 'MALE' | 'FEMALE'): number {
-    const faixas = FAIXAS_BF[genero];
+    // v1.1: Faixas de BF com penalização mais agressiva conforme SPEC
+    const faixas = genero === 'MALE' ? {
+        muitoBaixo: { max: 4, score: 85 },
+        competicao: { min: 4, max: 8, scoreMin: 95, scoreMax: 100 },
+        atletico: { min: 8, max: 14, scoreMin: 80, scoreMax: 95 },
+        fitness: { min: 14, max: 18, scoreMin: 65, scoreMax: 80 },
+        normal: { min: 18, max: 24, scoreMin: 45, scoreMax: 65 },
+        acima: { min: 24, max: 30, scoreMin: 25, scoreMax: 45 },
+        obesidade: { min: 30, max: 40, scoreMin: 10, scoreMax: 25 },
+        obesidadeSevera: { min: 40, max: 100, score: 5 },
+    } : {
+        muitoBaixo: { max: 10, score: 85 },
+        competicao: { min: 10, max: 15, scoreMin: 95, scoreMax: 100 },
+        atletico: { min: 15, max: 22, scoreMin: 80, scoreMax: 95 },
+        fitness: { min: 22, max: 27, scoreMin: 65, scoreMax: 80 },
+        normal: { min: 27, max: 32, scoreMin: 45, scoreMax: 65 },
+        acima: { min: 32, max: 38, scoreMin: 25, scoreMax: 45 },
+        obesidade: { min: 38, max: 45, scoreMin: 10, scoreMax: 25 },
+        obesidadeSevera: { min: 45, max: 100, score: 5 },
+    };
 
-    // Special case for very low BF (risky)
-    if ((genero === 'MALE' && bf < 3) || (genero === 'FEMALE' && bf < 8)) {
-        return 85;
+    if (bf < faixas.muitoBaixo.max) return faixas.muitoBaixo.score;
+
+    for (const [key, config] of Object.entries(faixas)) {
+        if (key === 'muitoBaixo' || key === 'obesidadeSevera') continue;
+
+        const { min, max, scoreMin, scoreMax } = config as any;
+        if (bf >= min && bf < max) {
+            // v1.1: Interpolação linear dentro da faixa (scoreMax em min, scoreMin em max)
+            return interpolate(bf, min, max, scoreMax, scoreMin);
+        }
     }
 
-    if (bf < faixas.competicao.max) return interpolate(bf, faixas.competicao.min, faixas.competicao.max, 95, 100); // 100 -> 95 logic inverted in helper? No, helper is minOutput + ratio... wait.
-    // Spec: "Competição (3-6%): 100 pts". Actually 3% is best? 
-    // Usually defined ranges: min is best.
-    // Let's assume lower bound of range is ideal for low ranges.
-    // Re-reading spec: interpolate(bf, min, max, 100, 95) -> min gets 100, max gets 95.
-    // My interpolate function: minOutput + ratio * (maxOutput - minOutput). 
-    // If I want minInput to map to 100 and maxInput to map to 95:
-    // ratio 0 -> 100. ratio 1 -> 95.
-    // minOutput should be 100, maxOutput should be 95? No.
-    // Typically interpolate(val, inMin, inMax, outMin, outMax).
-    // If val = inMin, returns outMin.
-    // So if I want inMin -> 100, then call interpolate(bf, min, max, 100, 95).
-
-    // Correct implementation of interpolate for this usage:
-    // function interpolate(val, inMin, inMax, outStart, outEnd)
-    // return outStart + (val - inMin)/(inMax-inMin) * (outEnd - outStart)
-
-    // Competicao
-    if (bf >= faixas.competicao.min && bf < faixas.competicao.max)
-        return interpolate(bf, faixas.competicao.min, faixas.competicao.max, 100, 95);
-
-    // Atletico
-    if (bf >= faixas.atletico.min && bf < faixas.atletico.max)
-        return interpolate(bf, faixas.atletico.min, faixas.atletico.max, 95, 80);
-
-    // Fitness
-    if (bf >= faixas.fitness.min && bf < faixas.fitness.max)
-        return interpolate(bf, faixas.fitness.min, faixas.fitness.max, 80, 65);
-
-    // Normal
-    if (bf >= faixas.normal.min && bf < faixas.normal.max)
-        return interpolate(bf, faixas.normal.min, faixas.normal.max, 60, 40);
-
-    // Acima
-    if (bf >= faixas.acima.min && bf < faixas.acima.max)
-        return interpolate(bf, faixas.acima.min, faixas.acima.max, 40, 20);
-
-    // Obesidade
-    if (bf >= faixas.obesidade.min) {
-        return Math.max(0, interpolate(bf, faixas.obesidade.min, 45, 20, 0)); // 45%+ BF gets 0 for this component
-    }
+    if (bf >= faixas.obesidadeSevera.min) return faixas.obesidadeSevera.score;
 
     return 0; // Default fallback
 }
@@ -308,16 +361,28 @@ function calcularScoreComposicao(composicao: AvaliacaoGeralInput['composicao']):
     const scoreBF = calcularScoreBF(bf, genero);
 
     const ffmi = calcularFFMI(pesoMagro, altura);
-    const scoreFFMI = calcularScoreFFMI(ffmi, genero);
+    let scoreFFMI = calcularScoreFFMI(ffmi, genero);
 
-    const scorePesoRelativo = calcularScorePesoRelativo(pesoMagro, altura, genero);
+    // v1.1: Se BF > 20%, penalizar FFMI (massa magra pode estar inflada ou retida)
+    if (bf > 20) {
+        const penalidade = Math.min(30, (bf - 20) * 1.5);
+        scoreFFMI = Math.max(40, scoreFFMI - penalidade);
+    }
+
+    const scorePesoRelativoResult = calcularScorePesoRelativo(pesoMagro, altura, genero);
+    let scorePesoRelativo = scorePesoRelativoResult;
+
+    // v1.1: Se BF > 25%, não dar crédito total por peso relativo alto (provavelmente excesso de gordura)
+    if (bf > 25) {
+        scorePesoRelativo = Math.min(60, scorePesoRelativo);
+    }
 
     const scoreTotal =
         (scoreBF * PESOS_COMPOSICAO.bf) +
         (scoreFFMI * PESOS_COMPOSICAO.ffmi) +
         (scorePesoRelativo * PESOS_COMPOSICAO.pesoRelativo);
 
-    const classificacaoBF = scoreBF < 50 ? 'OBESIDADE' : scoreBF < 70 ? 'ACIMA_MEDIA' : 'NORMAL'; // Simplified logic for classification string, ideally should reuse ranges
+    const classificacaoBF = scoreBF < 25 ? 'OBESIDADE' : scoreBF < 45 ? 'ACIMA_MEDIA' : scoreBF < 80 ? 'NORMAL' : 'ATLETA';
 
     return {
         score: Math.round(scoreTotal * 10) / 10,
@@ -419,7 +484,17 @@ function calcularScoreSimetria(assimetrias: AvaliacaoGeralInput['assimetrias']):
 // ═══════════════════════════════════════════════════════════
 
 function classificarAvaliacao(score: number): Classificacao {
-    for (const c of CLASSIFICACOES_AVALIACAO) {
+    // v1.1: Tabela de classificação atualizada conforme SPEC
+    const CLASSIFICACOES = [
+        { min: 90, nivel: 'ELITE', emoji: '👑', cor: '#FFD700', descricao: 'Físico excepcional - nível competitivo' },
+        { min: 80, nivel: 'AVANÇADO', emoji: '🥇', cor: '#10B981', descricao: 'Muito acima da média' },
+        { min: 70, nivel: 'ATLÉTICO', emoji: '💪', cor: '#3B82F6', descricao: 'Físico atlético bem desenvolvido' },
+        { min: 60, nivel: 'INTERMEDIÁRIO', emoji: '🏃', cor: '#8B5CF6', descricao: 'Bom desenvolvimento geral' },
+        { min: 50, nivel: 'INICIANTE', emoji: '🌱', cor: '#F59E0B', descricao: 'Em desenvolvimento' },
+        { min: 0, nivel: 'COMEÇANDO', emoji: '🚀', cor: '#6B7280', descricao: 'Início da jornada' },
+    ];
+
+    for (const c of CLASSIFICACOES) {
         if (score >= c.min) {
             return {
                 nivel: c.nivel,
@@ -429,7 +504,7 @@ function classificarAvaliacao(score: number): Classificacao {
             };
         }
     }
-    return CLASSIFICACOES_AVALIACAO[CLASSIFICACOES_AVALIACAO.length - 1];
+    return CLASSIFICACOES[CLASSIFICACOES.length - 1];
 }
 
 function gerarInsights(
@@ -458,7 +533,7 @@ function gerarInsights(
             categoria: 'Composição Corporal',
             metaAtual: bf,
             metaProxima: targetBf,
-            acao: `Reduza o BF% para ${targetBf}% para melhorar sua avaliação.`
+            acao: bf > 20 ? `Foque na redução de gordura (cutting). Reduza para ${targetBf}% para melhorar sua estética.` : `Mantenha a recomposição corporal.`
         };
     } else if (pontoFraco.categoria === 'Simetria Bilateral') {
         proximaMeta = {
@@ -472,7 +547,7 @@ function gerarInsights(
             categoria: 'Proporções Áureas',
             metaAtual: proporcoes.score,
             metaProxima: 100,
-            acao: `Dê prioridade para ${proporcoes.proporcaoMaisFraca} no treino.`
+            acao: `Dê prioridade para ${proporcoes.proporcaoMaisFraca} no treino para equilibrar o físico.`
         };
     }
 
@@ -480,7 +555,7 @@ function gerarInsights(
         pontoForte: {
             categoria: pontoForte.categoria,
             valor: pontoForte.valor,
-            mensagem: `Seu ponto forte é ${pontoForte.categoria} com ${pontoForte.valor} pontos.`
+            mensagem: `Seu ponto forte é ${pontoForte.categoria} (${pontoForte.valor} pts).`
         },
         pontoFraco: {
             categoria: pontoFraco.categoria,
@@ -494,20 +569,32 @@ function gerarInsights(
 export function calcularAvaliacaoGeral(input: AvaliacaoGeralInput): AvaliacaoGeralOutput {
     const pesos = PESOS_AVALIACAO.PADRAO;
 
+    // 1. Calcular scores individuais
     const scoreProporcoes = calcularScoreProporcoes(input.proporcoes, input.proporcoes.metodo);
     const scoreComposicao = calcularScoreComposicao(input.composicao);
     const scoreSimetria = calcularScoreSimetria(input.assimetrias);
 
+    // 2. Cálculo base (ponderado)
     const contribuicaoProporcoes = scoreProporcoes.score * pesos.proporcoes;
     const contribuicaoComposicao = scoreComposicao.score * pesos.composicao;
     const contribuicaoSimetria = scoreSimetria.score * pesos.simetria;
 
-    const avaliacaoGeral = contribuicaoProporcoes + contribuicaoComposicao + contribuicaoSimetria;
-    const classificacao = classificarAvaliacao(avaliacaoGeral);
+    let avaliacaoBase = contribuicaoProporcoes + contribuicaoComposicao + contribuicaoSimetria;
+
+    // 3. v1.1: Penalização por cintura absoluta
+    const penalizacaoCinturaVal = penalizacaoCinturaAbsoluta(
+        input.composicao.cintura || 0,
+        input.composicao.genero
+    );
+
+    const avaliacaoFinal = avaliacaoBase * penalizacaoCinturaVal;
+
+    // 4. Classificar e gerar insights
+    const classificacao = classificarAvaliacao(avaliacaoFinal);
     const insights = gerarInsights(scoreProporcoes, scoreComposicao, scoreSimetria);
 
     return {
-        avaliacaoGeral: Math.round(avaliacaoGeral * 10) / 10,
+        avaliacaoGeral: Math.round(avaliacaoFinal * 10) / 10,
         classificacao,
         scores: {
             proporcoes: {
@@ -528,6 +615,10 @@ export function calcularAvaliacaoGeral(input: AvaliacaoGeralInput): AvaliacaoGer
                 contribuicao: Math.round(contribuicaoSimetria * 10) / 10,
                 detalhes: scoreSimetria,
             },
+        },
+        penalizacoes: {
+            vTaper: scoreProporcoes.multiplicadorVTaper || 1.0,
+            cintura: penalizacaoCinturaVal
         },
         insights,
     };

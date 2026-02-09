@@ -54,6 +54,7 @@ export interface AvaliacaoGeralInput {
         pesoMagro: number;         // kg
         pesoGordo: number;         // kg
         ffmi?: number;             // Fat-Free Mass Index
+        cintura?: number;          // cm (para penalização absoluta)
     };
 
     // SIMETRIA BILATERAL
@@ -83,6 +84,7 @@ export interface ProportionScoreDetails {
     detalhes: ProporcaoDetalhe[];
     proporcaoMaisForte: string;
     proporcaoMaisFraca: string;
+    multiplicadorVTaper?: number;
 }
 
 export interface CompositionComponentDetail {
@@ -176,6 +178,9 @@ export interface AvaliacaoGeralOutput {
             detalhes: SymmetryScoreDetails;
         };
     };
-
+    penalizacoes?: {
+        vTaper: number;
+        cintura: number;
+    };
     insights: Insights;
 }

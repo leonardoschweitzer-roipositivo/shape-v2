@@ -36,7 +36,7 @@ export const ScoreWidget: React.FC<ScoreWidgetProps> = ({
                     />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span style={{ fontSize: typography.fontSize['5xl'], fontWeight: typography.fontWeight.bold, color: colors.text.primary, letterSpacing: typography.letterSpacing.tight }}>{score}</span>
+                    <span style={{ fontSize: typography.fontSize['3xl'], fontWeight: typography.fontWeight.bold, color: colors.text.primary, letterSpacing: typography.letterSpacing.tight }}>{score}</span>
                     <span style={{ fontSize: '10px', color: colors.text.muted, fontWeight: typography.fontWeight.bold, textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: spacing[1] }}>{label}</span>
                 </div>
             </div>

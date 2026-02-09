@@ -101,7 +101,7 @@ export const DiagnosticTab: React.FC<DiagnosticTabProps> = ({ assessment, gender
             // Formula from PRD: BF% = 86.010 × log10(cintura - pescoço) - 70.041 × log10(altura) + 36.76
             // Note: This is the metric version coefficients
             if (gender === 'male') {
-                bf = 86.010 * Math.log10(waist - neck) - 70.041 * Math.log10(height) + 36.76;
+                bf = 86.010 * Math.log10(waist - neck) - 70.041 * Math.log10(height) + 30.30;
             } else {
                 // Female Navy (Metric): 163.205 × log10(waist + hip - neck) - 97.684 × log10(height) - 104.912
                 bf = 163.205 * Math.log10(waist + (hips || waist) - neck) - 97.684 * Math.log10(height) - 104.912;
@@ -169,6 +169,7 @@ export const DiagnosticTab: React.FC<DiagnosticTabProps> = ({ assessment, gender
                 metodo_bf: bfMethod === 'pollock' ? 'POLLOCK_7' : 'NAVY',
                 pesoMagro: leanMass,
                 pesoGordo: fatMass,
+                cintura: waist,
             },
             assimetrias: {
                 braco: { esquerdo: m.armLeft, direito: m.armRight, diferenca: Math.abs(m.armLeft - m.armRight), diferencaPercentual: (Math.abs(m.armLeft - m.armRight) / ((m.armLeft + m.armRight) / 2)) * 100, status: 'SIMETRICO' },
@@ -255,6 +256,7 @@ export const DiagnosticTab: React.FC<DiagnosticTabProps> = ({ assessment, gender
                                 value={metrics.bf}
                                 method={bfMethod}
                                 onMethodChange={setBfMethod}
+                                gender={gender}
                             />
                         </GlassPanel>
                     )}
@@ -273,7 +275,12 @@ export const DiagnosticTab: React.FC<DiagnosticTabProps> = ({ assessment, gender
                 <AiAnalysisWidget
                     analysis={
                         <>
-                            Com base na análise de simetria bilateral, o cliente apresenta um <span className="text-white font-medium">{metrics.score > 80 ? 'excelente equilíbrio' : 'desequilíbrio leve'}</span>. O percentual de gordura ({metrics.bf.toFixed(1)}%) indica necessidade de <span className="text-primary font-bold">{metrics.bf > 25 ? 'foco em redução de gordura (cutting)' : metrics.bf > 15 ? 'recomposição corporal' : 'bulking limpo'}</span> para otimização estética e saúde.
+                            Com base na análise de simetria bilateral, o cliente apresenta um <span className="text-white font-medium">{metrics.score > 80 ? 'excelente equilíbrio' : 'desequilíbrio leve'}</span>. O percentual de gordura ({metrics.bf.toFixed(1)}%) indica necessidade de <span className="text-primary font-bold">
+                                {gender === 'male'
+                                    ? (metrics.bf > 25 ? 'foco em redução de gordura (cutting)' : metrics.bf > 15 ? 'recomposição corporal' : 'bulking limpo')
+                                    : (metrics.bf > 32 ? 'foco em redução de gordura (cutting)' : metrics.bf > 22 ? 'recomposição corporal' : 'bulking limpo')
+                                }
+                            </span> para otimização estética e saúde.
                         </>
                     }
                 />

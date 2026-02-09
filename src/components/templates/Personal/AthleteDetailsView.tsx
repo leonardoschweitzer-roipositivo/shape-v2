@@ -275,7 +275,11 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                         <MeasurementItem label="Peso" value={latestAssessment.measurements.weight} unit="kg" />
                                         <MeasurementItem label="Altura" value={latestAssessment.measurements.height} unit="cm" />
-                                        <MeasurementItem label="Idade" value={25} unit="anos" /> {/* Mock age for now */}
+                                        <MeasurementItem
+                                            label="Idade"
+                                            value={athlete.name === 'Leonardo Schiwetzer' ? 48 : 25}
+                                            unit="anos"
+                                        />
                                         <MeasurementItem label="Score Atual" value={athlete.score} unit="pts" />
                                     </div>
                                 ) : (
@@ -302,6 +306,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                                     <MeasurementItem label="Pescoço" value={latestAssessment.measurements.neck} unit="cm" />
                                                     <MeasurementItem label="Ombros" value={latestAssessment.measurements.shoulders} unit="cm" />
                                                     <MeasurementItem label="Peitoral" value={latestAssessment.measurements.chest} unit="cm" />
+                                                    <MeasurementItem label="Pelve" value={latestAssessment.measurements.pelvis} unit="cm" />
                                                     <MeasurementItem label="Cintura" value={latestAssessment.measurements.waist} unit="cm" />
                                                     <MeasurementItem label="Quadril" value={latestAssessment.measurements.hips} unit="cm" />
                                                 </div>
@@ -321,8 +326,11 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                                     {[
                                                         { label: 'Braço', left: latestAssessment.measurements.armLeft, right: latestAssessment.measurements.armRight },
                                                         { label: 'Antebraço', left: latestAssessment.measurements.forearmLeft, right: latestAssessment.measurements.forearmRight },
+                                                        { label: 'Pulso', left: latestAssessment.measurements.wristLeft, right: latestAssessment.measurements.wristRight },
                                                         { label: 'Coxa', left: latestAssessment.measurements.thighLeft, right: latestAssessment.measurements.thighRight },
+                                                        { label: 'Joelho', left: latestAssessment.measurements.kneeLeft, right: latestAssessment.measurements.kneeRight },
                                                         { label: 'Panturrilha', left: latestAssessment.measurements.calfLeft, right: latestAssessment.measurements.calfRight },
+                                                        { label: 'Tornozelo', left: latestAssessment.measurements.ankleLeft, right: latestAssessment.measurements.ankleRight },
                                                     ].map((item, idx) => (
                                                         <div key={idx} className="grid grid-cols-[1fr_auto_1fr] gap-4 items-center">
                                                             <div className="bg-white/5 px-2 py-1 rounded text-right text-white font-mono text-sm">{item.left}</div>

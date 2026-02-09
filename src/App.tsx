@@ -29,12 +29,15 @@ import {
   AthleteInvitationModal,
   PersonalInvitationModal,
   StudentRegistration,
+  DebugAccess,
+  TermsOfUse,
+  PrivacyPolicy,
   type ProfileType
 } from '@/components';
 import { useAthleteStore } from '@/stores/athleteStore';
 import { mockPersonalAthletes, PersonalAthlete, MeasurementHistory } from '@/mocks/personal';
 
-type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details';
+type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details' | 'terms' | 'privacy' | 'my-record';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -45,7 +48,7 @@ const App: React.FC = () => {
   const [isPersonalInviteModalOpen, setIsPersonalInviteModalOpen] = useState(false);
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
   const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(null);
-  const { settings, profile } = useAthleteStore();
+  const { settings, profile, initializeProfile } = useAthleteStore();
 
   // State for assessment flow
   const [assessmentData, setAssessmentData] = useState<{ studentName?: string; gender?: 'male' | 'female', assessment?: MeasurementHistory }>({});
@@ -118,7 +121,21 @@ const App: React.FC = () => {
   };
 
   const handleConsultAssessment = (assessmentId: string) => {
-    const selectedAthlete = personalAthletes.find(a => a.id === selectedAthleteId);
+    // Try to find in personal athletes first (trainer view)
+    let selectedAthlete = personalAthletes.find(a => a.id === selectedAthleteId);
+
+    // If not found (maybe athlete view), check if it's the current user and we have their assessment
+    if (!selectedAthlete && assessmentData.assessment?.id === assessmentId) {
+      setCurrentView('results');
+      return;
+    }
+
+    // Fallback: search all mock athletes if we're in "my record" view as an athlete
+    if (!selectedAthlete && userProfile === 'atleta') {
+      selectedAthlete = personalAthletes.find(a => a.id === profile?.id) ||
+        personalAthletes.find(a => a.email === profile?.email);
+    }
+
     if (selectedAthlete) {
       const assessment = selectedAthlete.assessments.find(a => a.id === assessmentId);
       if (assessment) {
@@ -129,6 +146,20 @@ const App: React.FC = () => {
         });
         setCurrentView('results');
       }
+    }
+  };
+
+  const handleViewLatestAssessment = (athleteId: string) => {
+    const athlete = personalAthletes.find(a => a.id === athleteId);
+    if (athlete && athlete.assessments.length > 0) {
+      const latestAssessment = athlete.assessments[0];
+      setAssessmentData({
+        studentName: athlete.name,
+        gender: athlete.gender === 'FEMALE' ? 'female' : 'male',
+        assessment: latestAssessment
+      });
+      setSelectedAthleteId(athleteId);
+      setCurrentView('results');
     }
   };
 
@@ -157,9 +188,34 @@ const App: React.FC = () => {
     setCurrentView('dashboard');
   };
 
+  const handleQuickLogin = (user: any) => {
+    setUserProfile(user.role);
+    setIsAuthenticated(true);
+    setCurrentView('dashboard');
+
+    if (user.role === 'atleta') {
+      const birthDate = user.name === 'Leonardo Schiwetzer' ? new Date(1978, 5, 15) : new Date(1995, 5, 15);
+      initializeProfile({
+        name: user.name,
+        email: user.email,
+        gender: user.gender,
+        birthDate: birthDate,
+        goal: 'aesthetics'
+      });
+    }
+  };
+
 
 
   const renderContent = () => {
+    // Shared views
+    if (currentView === 'terms') {
+      return <TermsOfUse onBack={() => setCurrentView('dashboard')} />;
+    }
+    if (currentView === 'privacy') {
+      return <PrivacyPolicy onBack={() => setCurrentView('dashboard')} />;
+    }
+
     // Se usuário é Academia, renderiza views específicas
     if (userProfile === 'academia') {
       switch (currentView) {
@@ -237,6 +293,7 @@ const App: React.FC = () => {
                 if (athlete) setAthleteForEvaluation(athlete);
                 setCurrentView('assessment');
               }}
+              onViewLatestAssessment={handleViewLatestAssessment}
             />
           );
         case 'athlete-details':
@@ -308,7 +365,14 @@ const App: React.FC = () => {
     // Renderização para Atleta (lógica existente)
     switch (currentView) {
       case 'results':
-        return <AssessmentResults onBack={() => setCurrentView('dashboard')} />;
+        return (
+          <AssessmentResults
+            onBack={() => setCurrentView('dashboard')}
+            studentName={assessmentData.studentName}
+            gender={assessmentData.gender}
+            assessment={assessmentData.assessment}
+          />
+        );
       case 'assessment':
         return <AssessmentPage onConfirm={(data: any) => handleAssessmentSubmit(data)} />;
       case 'design-system':
@@ -332,6 +396,42 @@ const App: React.FC = () => {
             <p>Funcionalidade em desenvolvimento ({currentView})</p>
           </div>
         );
+      case 'my-record':
+        if (!profile) return <DashboardView userProfile={userProfile} />;
+
+        // Try to find if this athlete exists in our mock data to show more history
+        const foundMockAthlete = personalAthletes.find(a =>
+          a.id === profile.id ||
+          a.email.toLowerCase() === profile.email.toLowerCase() ||
+          (profile.email === 'atleta.homem@vitru.v' && a.id === 'athlete-leonardo')
+        );
+
+        // Convert store profile to PersonalAthlete shape for the view
+        const currentAthlete: PersonalAthlete = foundMockAthlete || {
+          id: profile.id,
+          name: profile.name,
+          email: profile.email,
+          gender: profile.gender,
+          avatarUrl: profile.avatarUrl || null,
+          score: profile.latestScore?.overall || 0,
+          scoreVariation: 0,
+          ratio: profile.latestScore?.ratio || 0,
+          lastMeasurement: new Date().toISOString(),
+          status: 'active',
+          linkedSince: profile.createdAt.toISOString(),
+          assessments: assessmentData.assessment ? [assessmentData.assessment] : []
+        };
+
+        return (
+          <AthleteDetailsView
+            athlete={currentAthlete}
+            onBack={() => setCurrentView('dashboard')}
+            onConsultAssessment={handleConsultAssessment}
+            onNewAssessment={() => {
+              setCurrentView('assessment');
+            }}
+          />
+        );
       case 'dashboard':
       default:
         return <DashboardView userProfile={userProfile} />;
@@ -340,6 +440,9 @@ const App: React.FC = () => {
 
 
   const getPageTitle = () => {
+    if (currentView === 'terms') return 'TERMOS DE USO';
+    if (currentView === 'privacy') return 'POLÍTICA DE PRIVACIDADE';
+
     if (userProfile === 'academia') {
       switch (currentView) {
         case 'dashboard': return 'DASHBOARD ACADEMIA';
@@ -366,7 +469,6 @@ const App: React.FC = () => {
         case 'design-system': return 'DESIGN SYSTEM';
         case 'trainers-ranking': return 'RANKING PERSONAIS';
         case 'profile': return 'MEU PERFIL';
-        case 'profile': return 'MEU PERFIL';
         case 'settings': return 'CONFIGURAÇÕES';
         case 'student-registration': return 'CADASTRO DE ALUNO';
         case 'athlete-details': return 'DETALHES DO ATLETA';
@@ -386,6 +488,7 @@ const App: React.FC = () => {
       case 'trainers-ranking': return 'RANKING PERSONAIS';
       case 'profile': return 'MEU PERFIL';
       case 'settings': return 'CONFIGURAÇÕES';
+      case 'my-record': return 'MINHA FICHA';
       default: return currentView.toUpperCase();
     }
   }
@@ -425,7 +528,11 @@ const App: React.FC = () => {
         <div className="flex-1 overflow-y-auto relative flex flex-col custom-scrollbar">
           {renderContent()}
 
-          <Footer onOpenDesignSystem={() => setCurrentView('design-system')} />
+          <Footer
+            onOpenDesignSystem={() => setCurrentView('design-system')}
+            onOpenTerms={() => setCurrentView('terms')}
+            onOpenPrivacy={() => setCurrentView('privacy')}
+          />
         </div>
       </main>
 
@@ -455,6 +562,11 @@ const App: React.FC = () => {
           console.log('Inviting personal:', data);
           alert(`Convite de Personal enviado/Gerado!`);
         }}
+      />
+
+      <DebugAccess
+        onLogin={handleQuickLogin}
+        isVisible={true}
       />
     </div>
   );

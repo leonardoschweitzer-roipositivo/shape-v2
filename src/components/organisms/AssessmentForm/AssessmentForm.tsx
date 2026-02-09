@@ -10,6 +10,7 @@ interface Measurements {
     chest: number;
     waist: number;
     hips: number;
+    pelvis: number;
     armRight: number;
     armLeft: number;
     forearmRight: number;
@@ -107,6 +108,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onConfirm, isMod
             chest: measurements.chest || 0,
             waist: measurements.waist || 0,
             hips: measurements.hips || 0,
+            pelvis: measurements.pelvis || 0,
             armRight: measurements.armRight || 0,
             armLeft: measurements.armLeft || 0,
             forearmRight: measurements.forearmRight || 0,
@@ -186,6 +188,11 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onConfirm, isMod
                                 label="Peitoral" unit="cm"
                                 value={measurements.chest || ''}
                                 onChange={(e) => handleMeasurementChange('chest', e.target.value)}
+                            />
+                            <InputField
+                                label="Pelve" unit="cm"
+                                value={measurements.pelvis || ''}
+                                onChange={(e) => handleMeasurementChange('pelvis', e.target.value)}
                             />
                         </div>
                     </div>
