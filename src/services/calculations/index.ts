@@ -53,3 +53,23 @@ export {
     getMensPhysiqueWeights,
     getMensPhysiqueNotes,
 } from './mensPhysique'
+
+// Open Bodybuilding (Derek Lunsford)
+export {
+    calcularIdeaisOpenBodybuilding,
+    getOpenBodybuildingWeights,
+} from './openBodybuilding'
+
+// Female Categories (SPEC v1.0)
+export {
+    calcularIdeaisFemaleGoldenRatio,
+    calcularIdeaisBikini,
+    calcularIdeaisWellness,
+    calcularIdeaisFigure,
+    calcularIdeaisWomensPhysique,
+    calcularIdeaisWomensBodybuilding,
+    FEMALE_GOLDEN_RATIO,
+    BIKINI_CONSTANTS,
+    WELLNESS_CONSTANTS,
+    FIGURE_CONSTANTS
+} from './femaleProportions'

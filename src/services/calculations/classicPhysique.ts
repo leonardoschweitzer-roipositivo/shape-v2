@@ -7,7 +7,7 @@
  * @see docs/specs/calculo-proporcoes.md v2.0
  */
 
-import { CLASSIC_PHYSIQUE } from './constants'
+import { CLASSIC_PHYSIQUE, SCORE_WEIGHTS } from './constants'
 import { getPesoMaximoClassic } from './utils'
 import type { UserMeasurements, ProportionIdeals } from '@/types/proportions'
 
@@ -22,6 +22,7 @@ export function calcularIdeaisClassicPhysique(medidas: UserMeasurements): Propor
     // Fator de escala baseado na altura do CBum
     const fatorAltura = altura / CLASSIC_PHYSIQUE.CBUM_ALTURA
     const bracoIdeal = fatorAltura * CLASSIC_PHYSIQUE.CBUM_BRACO
+    const panturrilhaIdeal = bracoIdeal * CLASSIC_PHYSIQUE.PANTURRILHA_BRACO
 
     return {
         ombros: cintura * CLASSIC_PHYSIQUE.OMBROS_CINTURA,
@@ -29,12 +30,18 @@ export function calcularIdeaisClassicPhysique(medidas: UserMeasurements): Propor
         braco: bracoIdeal,
         antebraco: bracoIdeal * CLASSIC_PHYSIQUE.ANTEBRACO_BRACO,
         cintura: altura * CLASSIC_PHYSIQUE.CINTURA_ALTURA,
-        coxa: cintura * CLASSIC_PHYSIQUE.COXA_CINTURA,
-        panturrilha: bracoIdeal * CLASSIC_PHYSIQUE.PANTURRILHA_BRACO,
-        pescoco: bracoIdeal * CLASSIC_PHYSIQUE.PESCOCO_BRACO,
+        coxa: (altura * CLASSIC_PHYSIQUE.CINTURA_ALTURA) * CLASSIC_PHYSIQUE.COXA_CINTURA,
+        panturrilha: panturrilhaIdeal,
+        pescoco: bracoIdeal,
+        costas: cintura * CLASSIC_PHYSIQUE.COSTAS_CINTURA,
         triade: {
             valor_ideal: bracoIdeal,
-            regra: 'Braço ≈ Panturrilha ≈ Pescoço',
+            regra: 'Pescoço ≈ Braço ≈ Panturrilha (Harmonia)',
+        },
+        coxa_panturrilha: {
+            coxa_ideal: panturrilhaIdeal * CLASSIC_PHYSIQUE.COXA_PANTURRILHA,
+            panturrilha_ref: panturrilhaIdeal,
+            ratio: CLASSIC_PHYSIQUE.COXA_PANTURRILHA,
         },
         peso_maximo: getPesoMaximoClassic(altura),
     }
@@ -44,15 +51,6 @@ export function calcularIdeaisClassicPhysique(medidas: UserMeasurements): Propor
  * Retorna os pesos de score para o método Classic Physique
  */
 export function getClassicPhysiqueWeights() {
-    return {
-        ombros: 20,
-        peito: 15,
-        braco: 18,
-        antebraco: 4,
-        cintura: 18,
-        coxa: 10,
-        panturrilha: 7,
-        pescoco: 3,
-        triade: 5,
-    }
+    return SCORE_WEIGHTS.classic_physique;
 }
+

@@ -36,6 +36,37 @@ export interface RecentActivity {
     type: 'measurement' | 'goal' | 'record';
 }
 
+export interface MeasurementHistory {
+    id: string;
+    date: string;
+    measurements: {
+        weight: number;
+        height: number;
+        neck: number;
+        shoulders: number;
+        chest: number;
+        waist: number;
+        hips: number;
+        armRight: number;
+        armLeft: number;
+        forearmRight: number;
+        forearmLeft: number;
+        thighRight: number;
+        thighLeft: number;
+        calfRight: number;
+        calfLeft: number;
+    };
+    skinfolds: {
+        tricep: number;
+        subscapular: number;
+        chest: number;
+        axillary: number;
+        suprailiac: number;
+        abdominal: number;
+        thigh: number;
+    };
+}
+
 export interface PersonalAthlete {
     id: string;
     name: string;
@@ -48,6 +79,7 @@ export interface PersonalAthlete {
     lastMeasurement: string;
     status: 'active' | 'inactive' | 'attention';
     linkedSince: string;
+    assessments: MeasurementHistory[];
 }
 
 export interface PersonalProfile {
@@ -198,6 +230,72 @@ export const mockRecentActivity: RecentActivity[] = [
     },
 ];
 
+const generateAssessments = (gender: 'MALE' | 'FEMALE'): MeasurementHistory[] => {
+    const isMale = gender === 'MALE';
+    return [
+        {
+            id: 'ass-1',
+            date: '2026-02-07',
+            measurements: {
+                weight: isMale ? 88.5 : 62.0,
+                height: isMale ? 178 : 165,
+                neck: isMale ? 42 : 32,
+                shoulders: isMale ? 133 : 108,
+                chest: isMale ? 120 : 92,
+                waist: isMale ? 85 : 64,
+                hips: isMale ? 100 : 102,
+                armRight: isMale ? 44.5 : 30,
+                armLeft: isMale ? 44.0 : 30,
+                forearmRight: isMale ? 32.2 : 24,
+                forearmLeft: isMale ? 32.0 : 24,
+                thighRight: isMale ? 60.5 : 58,
+                thighLeft: isMale ? 60.0 : 58,
+                calfRight: isMale ? 38.0 : 36,
+                calfLeft: isMale ? 38.0 : 36,
+            },
+            skinfolds: {
+                tricep: 12,
+                subscapular: 15,
+                chest: 8,
+                axillary: 10,
+                suprailiac: 14,
+                abdominal: 18,
+                thigh: 12,
+            },
+        },
+        {
+            id: 'ass-2',
+            date: '2026-01-07',
+            measurements: {
+                weight: isMale ? 86 : 60.0,
+                height: isMale ? 178 : 165,
+                neck: isMale ? 41 : 31,
+                shoulders: isMale ? 130 : 105,
+                chest: isMale ? 118 : 90,
+                waist: isMale ? 88 : 66,
+                hips: isMale ? 98 : 100,
+                armRight: isMale ? 43 : 29,
+                armLeft: isMale ? 43 : 29,
+                forearmRight: isMale ? 31 : 23,
+                forearmLeft: isMale ? 31 : 23,
+                thighRight: isMale ? 59 : 57,
+                thighLeft: isMale ? 59 : 57,
+                calfRight: isMale ? 37 : 35,
+                calfLeft: isMale ? 37 : 35,
+            },
+            skinfolds: {
+                tricep: 14,
+                subscapular: 16,
+                chest: 9,
+                axillary: 11,
+                suprailiac: 16,
+                abdominal: 20,
+                thigh: 14,
+            },
+        },
+    ];
+};
+
 export const mockPersonalAthletes: PersonalAthlete[] = [
     {
         id: 'athlete-1',
@@ -211,6 +309,7 @@ export const mockPersonalAthletes: PersonalAthlete[] = [
         lastMeasurement: '2026-02-07',
         status: 'active',
         linkedSince: '2023-03-10',
+        assessments: generateAssessments('FEMALE'),
     },
     {
         id: 'athlete-2',
@@ -224,6 +323,7 @@ export const mockPersonalAthletes: PersonalAthlete[] = [
         lastMeasurement: '2026-02-05',
         status: 'active',
         linkedSince: '2023-05-22',
+        assessments: generateAssessments('MALE'),
     },
     {
         id: 'athlete-3',
@@ -237,6 +337,7 @@ export const mockPersonalAthletes: PersonalAthlete[] = [
         lastMeasurement: '2026-01-20',
         status: 'inactive',
         linkedSince: '2023-08-15',
+        assessments: generateAssessments('MALE'),
     },
     {
         id: 'athlete-4',
@@ -250,6 +351,7 @@ export const mockPersonalAthletes: PersonalAthlete[] = [
         lastMeasurement: '2026-02-02',
         status: 'active',
         linkedSince: '2023-06-18',
+        assessments: generateAssessments('FEMALE'),
     },
     {
         id: 'athlete-5',
@@ -263,6 +365,7 @@ export const mockPersonalAthletes: PersonalAthlete[] = [
         lastMeasurement: '2026-02-06',
         status: 'active',
         linkedSince: '2023-09-05',
+        assessments: generateAssessments('MALE'),
     },
     {
         id: 'athlete-6',
@@ -276,6 +379,7 @@ export const mockPersonalAthletes: PersonalAthlete[] = [
         lastMeasurement: '2026-02-05',
         status: 'attention',
         linkedSince: '2024-01-12',
+        assessments: generateAssessments('FEMALE'),
     },
     {
         id: 'athlete-7',
@@ -289,6 +393,7 @@ export const mockPersonalAthletes: PersonalAthlete[] = [
         lastMeasurement: '2026-02-07',
         status: 'active',
         linkedSince: '2023-11-20',
+        assessments: generateAssessments('FEMALE'),
     },
     {
         id: 'athlete-8',
@@ -302,6 +407,7 @@ export const mockPersonalAthletes: PersonalAthlete[] = [
         lastMeasurement: '2026-02-04',
         status: 'attention',
         linkedSince: '2024-02-08',
+        assessments: generateAssessments('MALE'),
     },
     {
         id: 'athlete-9',
@@ -315,6 +421,7 @@ export const mockPersonalAthletes: PersonalAthlete[] = [
         lastMeasurement: '2026-02-06',
         status: 'active',
         linkedSince: '2023-10-30',
+        assessments: generateAssessments('FEMALE'),
     },
     {
         id: 'athlete-10',
@@ -328,6 +435,7 @@ export const mockPersonalAthletes: PersonalAthlete[] = [
         lastMeasurement: '2026-02-03',
         status: 'active',
         linkedSince: '2024-03-15',
+        assessments: generateAssessments('MALE'),
     },
     {
         id: 'athlete-11',
@@ -341,6 +449,7 @@ export const mockPersonalAthletes: PersonalAthlete[] = [
         lastMeasurement: '2026-01-28',
         status: 'inactive',
         linkedSince: '2024-04-22',
+        assessments: generateAssessments('FEMALE'),
     },
     {
         id: 'athlete-12',
@@ -354,5 +463,6 @@ export const mockPersonalAthletes: PersonalAthlete[] = [
         lastMeasurement: '2026-02-01',
         status: 'active',
         linkedSince: '2024-05-10',
+        assessments: generateAssessments('MALE'),
     },
 ];

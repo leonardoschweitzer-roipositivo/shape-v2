@@ -85,7 +85,11 @@ const tokenStyles = {
     })
 };
 
-export const AssessmentResults: React.FC<AssessmentResultsProps> = ({ onBack }) => {
+export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
+    onBack,
+    studentName,
+    gender
+}) => {
     const [activeTab, setActiveTab] = useState<'diagnostic' | 'golden' | 'asymmetry'>('diagnostic');
 
     const tabs = [
@@ -146,7 +150,7 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({ onBack }) 
                         </button>
                         <h2 style={tokenStyles.headerTitle}>RESULTADOS DA AVALIAÇÃO</h2>
                         <p className="text-sm text-gray-400 flex items-center gap-2 mt-2 font-light">
-                            Análise completa do físico de <strong className="text-gray-200 font-medium">João Silva</strong> • 24/10/2023
+                            Análise completa do físico de <strong className="text-gray-200 font-medium">{studentName || 'João Silva'}</strong> • {new Date().toLocaleDateString()}
                         </p>
                     </div>
                     <div className="flex gap-3 flex-wrap">
@@ -185,7 +189,7 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({ onBack }) 
                 {/* Main Content - Render active tab */}
                 <div className="flex flex-col gap-6">
                     {activeTab === 'diagnostic' && <DiagnosticTab />}
-                    {activeTab === 'golden' && <ProportionsTab />}
+                    {activeTab === 'golden' && <ProportionsTab gender={gender} />}
                     {activeTab === 'asymmetry' && <AsymmetryTab />}
                 </div>
             </div>

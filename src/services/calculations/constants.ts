@@ -22,9 +22,6 @@ export const GOLDEN_RATIO = {
     /** Antebraço = Braço × 0.80 */
     ANTEBRACO_BRACO: 0.80,
 
-    /** Antebraço = Peito × 0.29 (alternativo) */
-    ANTEBRACO_PEITO: 0.29,
-
     /** Cintura = Pelve × 0.86 */
     CINTURA_PELVIS: 0.86,
 
@@ -37,9 +34,11 @@ export const GOLDEN_RATIO = {
     /** Panturrilha = Tornozelo × 1.92 */
     PANTURRILHA_TORNOZELO: 1.92,
 
-    /** Pescoço = Cabeça × 0.79 */
-    PESCOCO_CABECA: 0.79,
-} as const
+    /** BF Ideal */
+    BF_MIN: 8,
+    BF_MAX: 12,
+    BF_IDEAL: 10,
+} as const;
 
 // ============================================================================
 // CLASSIC PHYSIQUE (Chris Bumstead)
@@ -64,15 +63,23 @@ export const CLASSIC_PHYSIQUE = {
     /** Antebraço = Braço × 0.80 */
     ANTEBRACO_BRACO: 0.80,
 
-    /** Pescoço ≈ Braço (Tríade) */
-    PESCOCO_BRACO: 1.0,
+    /** Proporção Coxa/Panturrilha = 1.5 */
+    COXA_PANTURRILHA: 1.5,
+
+    /** Costas = Cintura × 1.6 */
+    COSTAS_CINTURA: 1.6,
 
     /** Altura do CBum (referência) */
     CBUM_ALTURA: 185,
 
     /** Braço do CBum em cm (referência) */
     CBUM_BRACO: 50,
-} as const
+
+    /** BF Ideal */
+    BF_MIN: 3,
+    BF_MAX: 6,
+    BF_IDEAL: 4,
+} as const;
 
 // ============================================================================
 // MEN'S PHYSIQUE (Ryan Terry)
@@ -88,24 +95,67 @@ export const MENS_PHYSIQUE = {
     /** Cintura = Altura × 0.455 (menos extrema) */
     CINTURA_ALTURA: 0.455,
 
-    /** Antebraço = Punho × 1.6 */
-    ANTEBRACO_PUNHO: 1.6,
-
     /** Antebraço = Braço × 0.80 */
     ANTEBRACO_BRACO: 0.80,
 
     /** Panturrilha = Tornozelo × 1.8 (estética geral) */
     PANTURRILHA_TORNOZELO: 1.8,
 
-    /** Pescoço = Braço × 0.9 */
-    PESCOCO_BRACO: 0.9,
+    /** Costas = Cintura × 1.5 */
+    COSTAS_CINTURA: 1.5,
 
     /** Altura do Ryan Terry (referência) */
     RYAN_ALTURA: 178,
 
     /** Braço do Ryan Terry em cm (referência) */
     RYAN_BRACO: 43,
-} as const
+
+    /** BF Ideal */
+    BF_MIN: 5,
+    BF_MAX: 8,
+    BF_IDEAL: 6,
+} as const;
+
+// ============================================================================
+// OPEN BODYBUILDING (Derek Lunsford) - NOVO v3.0
+// ============================================================================
+
+export const OPEN_BODYBUILDING = {
+    /** Ombros = Cintura × 1.75 (V-Taper Extremo) */
+    OMBROS_CINTURA: 1.75,
+
+    /** Peitoral = Punho × 7.5 */
+    PEITO_PUNHO: 7.5,
+
+    /** Cintura = Altura × 0.44 */
+    CINTURA_ALTURA: 0.44,
+
+    /** Coxa = Joelho × 1.85 */
+    COXA_JOELHO: 1.85,
+
+    /** Panturrilha = Braço × 0.98 */
+    PANTURRILHA_BRACO: 0.98,
+
+    /** Antebraço = Braço × 0.78 */
+    ANTEBRACO_BRACO: 0.78,
+
+    /** Proporção Coxa/Panturrilha = 1.55 */
+    COXA_PANTURRILHA: 1.55,
+
+    /** Costas = Cintura × 1.7 */
+    COSTAS_CINTURA: 1.7,
+
+    /** Altura do Derek Lunsford (referência) */
+    DEREK_ALTURA: 166,
+
+    /** Braço do Derek Lunsford em cm (referência) */
+    DEREK_BRACO: 56,
+
+    /** BF Ideal */
+    BF_MIN: 2,
+    BF_MAX: 5,
+    BF_IDEAL: 3,
+} as const;
 
 // ============================================================================
 // TABELA DE PESO IFBB PRO CLASSIC PHYSIQUE
@@ -129,47 +179,62 @@ export const CLASSIC_WEIGHT_LIMITS: Record<number, number> = {
     188.0: 108.9,
     190.5: 112.0,
     193.0: 115.2,
-} as const
+} as const;
 
 // ============================================================================
-// PESOS DE SCORE POR MÉTODO
+// PESOS DE SCORE POR MÉTODO (SPEC v3.0 - Seção 4.2)
 // ============================================================================
 
 export const SCORE_WEIGHTS = {
     golden_ratio: {
-        ombros: 20,
-        peito: 15,
-        braco: 15,
+        ombros: 18,
+        peito: 14,
+        braco: 14,
         antebraco: 5,
-        cintura: 15,
+        triade: 10,
+        cintura: 12,
         coxa: 10,
-        panturrilha: 8,
-        pescoco: 5,
-        triade: 7,
+        coxa_panturrilha: 8,
+        panturrilha: 9,
+        costas: 0,
     },
     classic_physique: {
-        ombros: 20,
-        peito: 15,
-        braco: 18,
+        ombros: 18,
+        peito: 14,
+        braco: 16,
         antebraco: 4,
-        cintura: 18,
+        triade: 8,
+        cintura: 16,
         coxa: 10,
-        panturrilha: 7,
-        pescoco: 3,
-        triade: 5,
+        coxa_panturrilha: 6,
+        panturrilha: 8,
+        costas: 0,
     },
     mens_physique: {
         ombros: 25,
-        peito: 20,
+        peito: 22,
         braco: 25,
-        antebraco: 5,
-        cintura: 15,
-        coxa: 0,      // Não julgada
+        antebraco: 6,
+        triade: 0,
+        cintura: 17,
+        coxa: 0,
+        coxa_panturrilha: 0,
         panturrilha: 5,
-        pescoco: 5,
-        triade: 0,    // Não aplicável
+        costas: 0,
     },
-} as const
+    open_bodybuilding: {
+        ombros: 16,
+        peito: 14,
+        braco: 14,
+        antebraco: 4,
+        triade: 6,
+        cintura: 12,
+        coxa: 14,
+        coxa_panturrilha: 8,
+        panturrilha: 8,
+        costas: 4,
+    },
+} as const;
 
 // ============================================================================
 // CLASSIFICAÇÕES DE SCORE
@@ -181,10 +246,11 @@ export const SCORE_CLASSIFICATIONS = {
     INTERMEDIARIO: { min: 75, emoji: '🥈', descricao: 'Boas proporções' },
     INICIANTE: { min: 60, emoji: '💪', descricao: 'Em desenvolvimento' },
     DESENVOLVENDO: { min: 0, emoji: '🚀', descricao: 'Início da jornada' },
-} as const
+} as const;
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-export type ComparisonMethod = 'golden_ratio' | 'classic_physique' | 'mens_physique'
+export type ComparisonMethod = 'golden_ratio' | 'classic_physique' | 'mens_physique' | 'open_bodybuilding';
+

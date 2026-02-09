@@ -15,6 +15,9 @@ export const PersonalAthletesList: React.FC<PersonalAthletesListProps> = ({
     onInviteAthlete,
     onRegisterMeasurement,
 }) => {
+    // State for student details modal
+    const [selectedStudentForDetails, setSelectedStudentForDetails] = useState<PersonalAthlete | null>(null);
+
     const [searchQuery, setSearchQuery] = useState('');
     const [filter, setFilter] = useState<AthleteStatus>('all');
     const [currentPage, setCurrentPage] = useState(1);
@@ -51,6 +54,12 @@ export const PersonalAthletesList: React.FC<PersonalAthletesListProps> = ({
     const totalPages = Math.ceil(filteredAthletes.length / itemsPerPage);
 
     const getStatusBadge = (status: string) => {
+        const ATHLETE_DATA = [
+            { id: '1', name: 'João Silva', status: 'active', lastCheckin: 'Hoje, 09:30', plan: 'Pro', gender: 'male' },
+            { id: '2', name: 'Maria Oliveira', status: 'active', lastCheckin: 'Ontem', plan: 'Basic', gender: 'female' },
+            { id: '3', name: 'Pedro Santos', status: 'inactive', lastCheckin: 'Há 5 dias', plan: 'Pro', gender: 'male' },
+            { id: '4', name: 'Ana Costa', status: 'active', lastCheckin: 'Hoje, 14:00', plan: 'Premium', gender: 'female' },
+        ];
         const config = {
             active: {
                 label: 'Ativo',
@@ -89,6 +98,232 @@ export const PersonalAthletesList: React.FC<PersonalAthletesListProps> = ({
         if (diffDays === 1) return 'Ontem';
         if (diffDays < 7) return `${diffDays} dias`;
         return `${Math.floor(diffDays / 7)} semanas`;
+    };
+
+    // Modal Component (Inline for simplicity, can be extracted later)
+    const StudentDetailsModal = ({ athlete, onClose }: { athlete: PersonalAthlete; onClose: () => void }) => {
+        const [activeTab, setActiveTab] = useState<'basic' | 'measurements' | 'history'>('basic');
+
+        if (!athlete) return null;
+
+        const latestAssessment = athlete.assessments?.[0];
+
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+                <div className="bg-[#131B2C] border border-white/10 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+
+                    {/* Header */}
+                    <div className="p-6 border-b border-white/10 flex items-center justify-between bg-[#1A2234]">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center text-xl">
+                                {athlete.avatarUrl ? <img src={athlete.avatarUrl} alt={athlete.name} className="w-full h-full rounded-full" /> : '👤'}
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-bold text-white uppercase tracking-wide">{athlete.name}</h2>
+                                <div className="flex items-center gap-2 text-sm text-gray-400">
+                                    <span>{athlete.email}</span>
+                                    <span className="w-1 h-1 rounded-full bg-gray-600"></span>
+                                    <span>{athlete.gender === 'MALE' ? 'Masculino' : athlete.gender === 'FEMALE' ? 'Feminino' : 'Outro'}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors">
+                            ✕
+                        </button>
+                    </div>
+
+                    {/* Tabs */}
+                    <div className="flex border-b border-white/5 bg-[#1A2234]/50">
+                        <button
+                            onClick={() => setActiveTab('basic')}
+                            className={`flex-1 py-4 text-sm font-bold uppercase tracking-wider transition-colors border-b-2 ${activeTab === 'basic' ? 'border-primary text-primary bg-white/5' : 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'
+                                }`}
+                        >
+                            Informações Básicas
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('measurements')}
+                            className={`flex-1 py-4 text-sm font-bold uppercase tracking-wider transition-colors border-b-2 ${activeTab === 'measurements' ? 'border-primary text-primary bg-white/5' : 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'
+                                }`}
+                        >
+                            Últimas Medidas
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('history')}
+                            className={`flex-1 py-4 text-sm font-bold uppercase tracking-wider transition-colors border-b-2 ${activeTab === 'history' ? 'border-primary text-primary bg-white/5' : 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'
+                                }`}
+                        >
+                            Histórico de Avaliações
+                        </button>
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar bg-[#0A0F1C]/30">
+
+                        {/* Tab: Basic Info */}
+                        {activeTab === 'basic' && (
+                            <div className="animate-fade-in">
+                                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Resumo do Aluno</h3>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                                    <div className="bg-[#0A0F1C] p-4 rounded-xl border border-white/5">
+                                        <span className="text-gray-400 text-xs uppercase font-bold tracking-wider">Score Atual</span>
+                                        <div className="text-2xl font-bold text-white mt-1">{athlete.score}</div>
+                                    </div>
+                                    <div className="bg-[#0A0F1C] p-4 rounded-xl border border-white/5">
+                                        <span className="text-gray-400 text-xs uppercase font-bold tracking-wider">Ratio</span>
+                                        <div className="text-2xl font-bold text-white mt-1">{athlete.ratio}</div>
+                                    </div>
+                                    <div className="bg-[#0A0F1C] p-4 rounded-xl border border-white/5">
+                                        <span className="text-gray-400 text-xs uppercase font-bold tracking-wider">Status</span>
+                                        <div className="mt-1">{getStatusBadge(athlete.status)}</div>
+                                    </div>
+                                    <div className="bg-[#0A0F1C] p-4 rounded-xl border border-white/5">
+                                        <span className="text-gray-400 text-xs uppercase font-bold tracking-wider">Desde</span>
+                                        <div className="text-lg font-medium text-white mt-1">{new Date(athlete.linkedSince).getFullYear()}</div>
+                                    </div>
+                                </div>
+
+                                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Contato & Detalhes</h3>
+                                <div className="bg-[#0A0F1C] p-6 rounded-xl border border-white/5 space-y-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <span className="text-gray-500 text-xs uppercase block mb-1">E-mail</span>
+                                            <span className="text-white font-medium">{athlete.email}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-gray-500 text-xs uppercase block mb-1">Telefone</span>
+                                            <span className="text-white font-medium">-</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-gray-500 text-xs uppercase block mb-1">Plano</span>
+                                            <span className="text-white font-medium">Consultoria Pro</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-gray-500 text-xs uppercase block mb-1">Último Check-in</span>
+                                            <span className="text-white font-medium">{formatRelativeDate(athlete.lastMeasurement)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Tab: Latest Measurements */}
+                        {activeTab === 'measurements' && (
+                            <div className="animate-fade-in">
+                                {latestAssessment ? (
+                                    <>
+                                        <div className="flex justify-between items-center mb-6">
+                                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                                                Medidas de {new Date(latestAssessment.date).toLocaleDateString()}
+                                            </h3>
+                                            <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded">
+                                                Avaliação Mais Recente
+                                            </span>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                            {/* Helper to render measurement item */}
+                                            {Object.entries(latestAssessment.measurements).map(([key, value]) => (
+                                                <div key={key} className="bg-[#0A0F1C] p-4 rounded-xl border border-white/5 flex justify-between items-center">
+                                                    <span className="text-gray-400 text-xs uppercase font-bold tracking-wider">
+                                                        {key.replace(/([A-Z])/g, ' $1').trim()}
+                                                    </span>
+                                                    <span className="text-white font-mono font-bold text-lg">
+                                                        {value} <span className="text-xs text-gray-500 font-normal">
+                                                            {key === 'weight' ? 'kg' : 'cm'}
+                                                        </span>
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-8 mb-4">Dobras Cutâneas</h3>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                            {Object.entries(latestAssessment.skinfolds).map(([key, value]) => (
+                                                <div key={key} className="bg-[#0A0F1C] p-3 rounded-xl border border-white/5 text-center">
+                                                    <span className="text-white font-mono font-bold text-lg block">{value}mm</span>
+                                                    <span className="text-gray-500 text-[10px] uppercase font-bold tracking-wider">
+                                                        {key}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="text-center py-12">
+                                        <p className="text-gray-400">Nenhuma medida registrada recente.</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Tab: History */}
+                        {activeTab === 'history' && (
+                            <div className="animate-fade-in space-y-4">
+                                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Histórico Completo</h3>
+                                {athlete.assessments && athlete.assessments.length > 0 ? (
+                                    athlete.assessments.map((assessment, index) => (
+                                        <div key={assessment.id} className="bg-[#0A0F1C]/50 border border-white/5 rounded-xl p-5 hover:border-primary/30 transition-all group">
+                                            <div className="flex justify-between items-start mb-4">
+                                                <div>
+                                                    <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded mb-2 inline-block">
+                                                        AVALIAÇÃO {athlete.assessments.length - index}
+                                                    </span>
+                                                    <p className="text-white font-medium text-lg">
+                                                        {new Date(assessment.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                                                    </p>
+                                                </div>
+                                                <button className="text-xs font-bold text-white uppercase border border-white/20 px-3 py-1.5 rounded hover:bg-white/5 transition-colors">
+                                                    Ver Detalhes
+                                                </button>
+                                            </div>
+
+                                            {/* Measurement Preview Grid */}
+                                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 text-sm">
+                                                <div className="bg-[#131B2C] p-2 rounded border border-white/5">
+                                                    <span className="text-gray-500 text-[10px] block uppercase">Peso</span>
+                                                    <span className="text-white font-mono">{assessment.measurements.weight}kg</span>
+                                                </div>
+                                                <div className="bg-[#131B2C] p-2 rounded border border-white/5">
+                                                    <span className="text-gray-500 text-[10px] block uppercase">Cintura</span>
+                                                    <span className="text-white font-mono">{assessment.measurements.waist}cm</span>
+                                                </div>
+                                                <div className="bg-[#131B2C] p-2 rounded border border-white/5">
+                                                    <span className="text-gray-500 text-[10px] block uppercase">Quadril</span>
+                                                    <span className="text-white font-mono">{assessment.measurements.hips}cm</span>
+                                                </div>
+                                                <div className="bg-[#131B2C] p-2 rounded border border-white/5">
+                                                    <span className="text-gray-500 text-[10px] block uppercase">Peitoral</span>
+                                                    <span className="text-white font-mono">{assessment.measurements.chest}cm</span>
+                                                </div>
+                                                <div className="bg-[#131B2C] p-2 rounded border border-white/5">
+                                                    <span className="text-gray-500 text-[10px] block uppercase">% GC Est.</span>
+                                                    <span className="text-white font-mono">12%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-8 bg-[#0A0F1C]/30 rounded-xl border border-white/5 border-dashed">
+                                        <p className="text-gray-400">Nenhuma avaliação registrada.</p>
+                                        <button
+                                            onClick={() => {
+                                                onClose();
+                                                onRegisterMeasurement(athlete.id);
+                                            }}
+                                            className="mt-2 text-primary text-sm font-bold hover:underline"
+                                        >
+                                            Registrar Primeira Avaliação
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                    </div>
+                </div>
+            </div>
+        );
     };
 
     return (
@@ -176,7 +411,7 @@ export const PersonalAthletesList: React.FC<PersonalAthletesListProps> = ({
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center text-lg">
-                                                    👤
+                                                    {athlete.avatarUrl ? <img src={athlete.avatarUrl} alt={athlete.name} className="w-full h-full rounded-full" /> : '👤'}
                                                 </div>
                                                 <div>
                                                     <p className="text-white font-medium">{athlete.name}</p>
@@ -212,7 +447,7 @@ export const PersonalAthletesList: React.FC<PersonalAthletesListProps> = ({
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        onSelectAthlete(athlete.id);
+                                                        setSelectedStudentForDetails(athlete);
                                                     }}
                                                     className="p-2 hover:bg-white/10 rounded-lg transition-colors"
                                                     title="Ver Perfil"
@@ -300,6 +535,14 @@ export const PersonalAthletesList: React.FC<PersonalAthletesListProps> = ({
                     </div>
                 )}
             </div>
+
+            {/* Modal Injection */}
+            {selectedStudentForDetails && (
+                <StudentDetailsModal
+                    athlete={selectedStudentForDetails}
+                    onClose={() => setSelectedStudentForDetails(null)}
+                />
+            )}
         </div>
     );
 };

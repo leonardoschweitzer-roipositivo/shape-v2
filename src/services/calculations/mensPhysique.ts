@@ -7,7 +7,7 @@
  * @see docs/specs/calculo-proporcoes.md v2.0
  */
 
-import { MENS_PHYSIQUE } from './constants'
+import { MENS_PHYSIQUE, SCORE_WEIGHTS } from './constants'
 import type { UserMeasurements, ProportionIdeals } from '@/types/proportions'
 
 /**
@@ -29,11 +29,12 @@ export function calcularIdeaisMensPhysique(medidas: UserMeasurements): Proportio
         ombros: cintura * MENS_PHYSIQUE.OMBROS_CINTURA,
         peito: punho * MENS_PHYSIQUE.PEITO_PUNHO,
         braco: bracoIdeal,
-        antebraco: punho * MENS_PHYSIQUE.ANTEBRACO_PUNHO,
+        antebraco: bracoIdeal * MENS_PHYSIQUE.ANTEBRACO_BRACO,
         cintura: altura * MENS_PHYSIQUE.CINTURA_ALTURA,
         coxa: null, // N/A - Não julgada na categoria Men's Physique
         panturrilha: tornozelo * MENS_PHYSIQUE.PANTURRILHA_TORNOZELO,
-        pescoco: bracoIdeal * MENS_PHYSIQUE.PESCOCO_BRACO,
+        pescoco: bracoIdeal,
+        costas: cintura * MENS_PHYSIQUE.COSTAS_CINTURA,
         // Tríade não é aplicável em Men's Physique
     }
 }
@@ -43,18 +44,9 @@ export function calcularIdeaisMensPhysique(medidas: UserMeasurements): Proportio
  * Nota: coxa e triade têm peso 0 (não julgadas)
  */
 export function getMensPhysiqueWeights() {
-    return {
-        ombros: 25,
-        peito: 20,
-        braco: 25,
-        antebraco: 5,
-        cintura: 15,
-        coxa: 0,        // Não julgada
-        panturrilha: 5,
-        pescoco: 5,
-        triade: 0,      // Não aplicável
-    }
+    return SCORE_WEIGHTS.mens_physique;
 }
+
 
 /**
  * Retorna as notas específicas para Men's Physique

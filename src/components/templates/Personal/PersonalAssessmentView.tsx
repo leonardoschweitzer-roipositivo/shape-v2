@@ -5,11 +5,31 @@ import { PersonalAthleteSelector } from './PersonalAthleteSelector';
 import { PersonalAthlete } from '@/mocks/personal';
 
 interface PersonalAssessmentViewProps {
-    onConfirm: () => void;
+    onConfirm: (data: { studentId: string; gender: 'male' | 'female'; studentName: string }) => void;
 }
 
 export const PersonalAssessmentView: React.FC<PersonalAssessmentViewProps> = ({ onConfirm }) => {
-    const [selectedAthlete, setSelectedAthlete] = useState<PersonalAthlete | null>(null);
+    // Add gender property to PersonalAthlete type locally if not present in mocks/personal
+    // In a real app, this would come from the backend model
+    const [selectedAthlete, setSelectedAthlete] = useState<(PersonalAthlete & { gender?: 'male' | 'female' }) | null>(null);
+
+    // Mock gender assignment based on name for this demo flow if not present
+    const getGender = (name: string): 'male' | 'female' => {
+        // Simple heuristic for demo purposes
+        return name.split(' ')[0].endsWith('a') ? 'female' : 'male';
+    };
+
+    const handleConfirm = () => {
+        if (!selectedAthlete) return;
+
+        const gender = selectedAthlete.gender || getGender(selectedAthlete.name);
+
+        onConfirm({
+            studentId: selectedAthlete.id,
+            studentName: selectedAthlete.name,
+            gender: gender
+        });
+    };
 
     return (
         <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth custom-scrollbar flex flex-col">
@@ -74,7 +94,7 @@ export const PersonalAssessmentView: React.FC<PersonalAssessmentViewProps> = ({ 
                             </div>
                         </div>
 
-                        <AssessmentForm onConfirm={onConfirm} isModal={false} />
+                        <AssessmentForm onConfirm={handleConfirm} isModal={false} />
                     </div>
                 )}
             </div>

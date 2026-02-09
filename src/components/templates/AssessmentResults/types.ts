@@ -1,5 +1,17 @@
 // Types for Assessment Results
-export type ComparisonMode = 'golden' | 'classic' | 'mens' | 'open';
+export type ComparisonMode =
+    | 'golden'
+    | 'classic'
+    | 'mens'
+    | 'open'
+    // Female Modes
+    | 'female_golden'
+    | 'bikini'
+    | 'wellness'
+    | 'figure'
+    | 'womens_physique'
+    | 'womens_bodybuilding';
+
 export type TabType = 'diagnostic' | 'golden' | 'asymmetry';
 export type FilterType = 'geral' | 'comp' | 'metrics';
 
@@ -8,7 +20,10 @@ export interface Measurements {
     peso: number;
     ombros: number;
     peito: number;
+    costas: number; // Adicionado v3.0
     cintura: number;
+    quadril: number; // Essencial para feminino
+    abaixo_busto?: number; // Opcional (calculado ou input)
     braco: number;
     antebraco: number;
     punho: number;
@@ -17,20 +32,26 @@ export interface Measurements {
     joelho: number;
     panturrilha: number;
     tornozelo: number;
-    pelvis: number;
+    pelvis: number; // Usado como "quadril ósseo" em alguns cálculos masculinos, mas "quadril" é a circunferência máxima
     cabeca: number;
+    gluteo_dobra?: number; // Opcional para Wellness
 }
 
 export interface IdealMeasurements {
     ombros: number;
-    peito: number;
+    peito?: number; // Pode não ter ideal em algumas categorias femininas
+    busto?: number; // Específico feminino
     cintura: number;
+    quadril?: number; // Específico feminino
     braco: number;
-    antebraco: number;
-    pescoco: number;
-    coxa: number;
+    antebraco?: number;
+    pescoco?: number;
+    coxa: number | null;
     panturrilha: number;
+    costas?: number; // Adicionado v3.0
+    gluteo?: number; // Específico feminino (Wellness/Bikini)
 }
+
 
 export interface ProportionDifference {
     percentual: number;

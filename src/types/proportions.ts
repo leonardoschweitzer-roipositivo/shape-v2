@@ -1,6 +1,6 @@
 // Types for Proportion Calculator
 
-export type ComparisonMode = 'golden' | 'classic' | 'mens';
+export type ComparisonMode = 'golden' | 'classic' | 'mens' | 'open';
 
 export interface UserMeasurements {
     // Medidas estruturais (não mudam com treino)
@@ -9,12 +9,13 @@ export interface UserMeasurements {
     tornozelo: number;   // cm
     joelho: number;      // cm
     pelvis: number;      // cm
-    cabeca: number;      // cm
+    peso: number;        // kg - Adicionado v3.0
 
     // Medidas variáveis (mudam com treino/dieta)
     cintura: number;     // cm
     ombros: number;      // cm
     peito: number;       // cm
+    costas: number;      // cm - Adicionado v3.0
     braco: number;       // cm
     antebraco: number;   // cm
     coxa: number;        // cm
@@ -31,6 +32,7 @@ export interface ProportionIdeals {
     coxa: number | null;  // null para Men's Physique (não julgada)
     panturrilha: number;
     pescoco: number;
+    costas?: number;      // Adicionado v3.0
     triade?: {
         valor_ideal: number;
         regra: string;
@@ -40,7 +42,7 @@ export interface ProportionIdeals {
         panturrilha_ref: number;
         ratio: number;
     };
-    peso_maximo?: number; // Apenas para Classic Physique
+    peso_maximo?: number; // Para Classic e Open
 }
 
 export interface ProportionDiff {
@@ -56,13 +58,15 @@ export interface ProportionScore {
     antebraco: number;
     cintura: number;
     coxa: number;
-    coxa_panturrilha: number;  // Proporção #8
+    coxa_panturrilha: number;
     panturrilha: number;
     pescoco: number;
+    costas: number;       // Adicionado v3.0
     triade: number;
 }
 
 export interface ProportionResult {
+    metodo: ComparisonMode; // Adicionado v3.0
     ideais: ProportionIdeals;
     diferencas: Record<string, ProportionDiff>;
     scores: ProportionScore;

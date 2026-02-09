@@ -5,13 +5,17 @@ import { colors as designColors, typography as designTypography, spacing as desi
 import type { ComparisonMode, Measurements } from '../types';
 import { useProportionCalculations } from '../hooks/useProportionCalculations';
 
+import { useAthleteStore } from '@/stores/athleteStore';
+
 // Mock data - in future this will come from assessment context
-const MOCK_USER_MEASUREMENTS: Measurements = {
+const MOCK_MALE_MEASUREMENTS: Measurements = {
     altura: 178,
     peso: 88.5,
     ombros: 130,
     peito: 115,
+    costas: 122,
     cintura: 82,
+    quadril: 100,
     braco: 44,
     antebraco: 32,
     punho: 17.5,
@@ -23,6 +27,29 @@ const MOCK_USER_MEASUREMENTS: Measurements = {
     pelvis: 100,
     cabeca: 56
 };
+
+// Mock Female Measurements (Wellness/Bikini Profile)
+const MOCK_FEMALE_MEASUREMENTS: Measurements = {
+    altura: 165,
+    peso: 62.0,
+    ombros: 108,
+    peito: 92, // Busto
+    costas: 95,
+    cintura: 64,
+    quadril: 102,
+    braco: 30,
+    antebraco: 24,
+    punho: 15,
+    pescoco: 32,
+    coxa: 58,
+    joelho: 36,
+    panturrilha: 36,
+    tornozelo: 20,
+    pelvis: 90,
+    cabeca: 54,
+    gluteo_dobra: 102 // Approximated
+};
+
 
 // Token styles (shared with parent)
 const tokenStyles = {
@@ -73,15 +100,29 @@ const tokenStyles = {
 
 interface ProportionsTabProps {
     userMeasurements?: Measurements;
+    gender?: 'male' | 'female'; // Optional override
 }
 
 export const ProportionsTab: React.FC<ProportionsTabProps> = ({
-    userMeasurements = MOCK_USER_MEASUREMENTS
+    userMeasurements,
+    gender
 }) => {
-    const [comparisonMode, setComparisonMode] = useState<ComparisonMode>('golden');
+    const { profile } = useAthleteStore();
+
+    // Determine effective gender: prop > store > default(male)
+    const effectiveGender = gender || (profile?.gender === 'FEMALE' ? 'female' : 'male');
+
+    // Determine initial mode based on gender
+    const [comparisonMode, setComparisonMode] = useState<ComparisonMode>(
+        effectiveGender === 'female' ? 'female_golden' : 'golden'
+    );
+
+    // Use mock data if not provided, selecting based on gender
+    // In a real scenario, we should get real measurements from profile or assessment context
+    const activeMeasurements = userMeasurements || (effectiveGender === 'female' ? MOCK_FEMALE_MEASUREMENTS : MOCK_MALE_MEASUREMENTS);
 
     // Use custom hook for calculations
-    const { proportionItems } = useProportionCalculations(userMeasurements, comparisonMode);
+    const { proportionItems } = useProportionCalculations(activeMeasurements, comparisonMode);
 
     return (
         <div className="flex flex-col gap-8 animate-fade-in-up w-full">
@@ -92,39 +133,75 @@ export const ProportionsTab: React.FC<ProportionsTabProps> = ({
                         <div style={tokenStyles.iconBadge}>
                             <Sparkles size={16} color={designColors.brand.primary} />
                         </div>
-                        <h3 style={tokenStyles.sectionTitle}>DIMENSÕES ÁUREAS</h3>
+                        <h3 style={tokenStyles.sectionTitle}>DIMENSÕES ÁUREAS {effectiveGender === 'female' && 'FEMININAS'}</h3>
                     </div>
                     <p style={tokenStyles.description} className="max-w-2xl">
-                        Mapeamento matemático do seu físico em relação aos ideais clássicos. O <span style={{ color: designColors.brand.primary, fontWeight: designTypography.fontWeight.medium }}>Shape-V</span> é o pilar central da sua jornada, definindo a harmonia estética através da convergência entre largura de ombros e linha de cintura.
+                        Mapeamento matemático do seu físico em relação aos ideais clássicos.
+                        {effectiveGender === 'female'
+                            ? " Foco em WHR (Cintura-Quadril) e harmonia de silhueta (Ampulheta)."
+                            : <><span style={{ color: designColors.brand.primary, fontWeight: designTypography.fontWeight.medium }}> Shape-V</span> é o pilar central, definindo a harmonia estética.</>
+                        }
                     </p>
                 </div>
 
                 <div style={tokenStyles.filterContainer}>
-                    <button
-                        onClick={() => setComparisonMode('golden')}
-                        style={tokenStyles.filterButton(comparisonMode === 'golden')}
-                    >
-                        {comparisonMode === 'golden' && <Sparkles size={12} color={designColors.brand.primary} />}
-                        Golden Ratio
-                    </button>
-                    <button
-                        onClick={() => setComparisonMode('classic')}
-                        style={tokenStyles.filterButton(comparisonMode === 'classic')}
-                    >
-                        Classic Physique
-                    </button>
-                    <button
-                        onClick={() => setComparisonMode('mens')}
-                        style={tokenStyles.filterButton(comparisonMode === 'mens')}
-                    >
-                        Men's Physique
-                    </button>
-                    <button
-                        onClick={() => setComparisonMode('open')}
-                        style={tokenStyles.filterButton(comparisonMode === 'open')}
-                    >
-                        Open
-                    </button>
+                    {effectiveGender === 'female' ? (
+                        <>
+                            <button
+                                onClick={() => setComparisonMode('female_golden')}
+                                style={tokenStyles.filterButton(comparisonMode === 'female_golden')}
+                            >
+                                {comparisonMode === 'female_golden' && <Sparkles size={12} color={designColors.brand.primary} />}
+                                Golden ♀
+                            </button>
+                            <button
+                                onClick={() => setComparisonMode('bikini')}
+                                style={tokenStyles.filterButton(comparisonMode === 'bikini')}
+                            >
+                                🩱 Bikini
+                            </button>
+                            <button
+                                onClick={() => setComparisonMode('wellness')}
+                                style={tokenStyles.filterButton(comparisonMode === 'wellness')}
+                            >
+                                🏃 Wellness
+                            </button>
+                            <button
+                                onClick={() => setComparisonMode('figure')}
+                                style={tokenStyles.filterButton(comparisonMode === 'figure')}
+                            >
+                                👙 Figure
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <button
+                                onClick={() => setComparisonMode('golden')}
+                                style={tokenStyles.filterButton(comparisonMode === 'golden')}
+                            >
+                                {comparisonMode === 'golden' && <Sparkles size={12} color={designColors.brand.primary} />}
+                                Golden Ratio
+                            </button>
+                            <button
+                                onClick={() => setComparisonMode('classic')}
+                                style={tokenStyles.filterButton(comparisonMode === 'classic')}
+                            >
+                                Classic Physique
+                            </button>
+                            <button
+                                onClick={() => setComparisonMode('mens')}
+                                style={tokenStyles.filterButton(comparisonMode === 'mens')}
+                            >
+                                Men's Physique
+                            </button>
+                            <button
+                                onClick={() => setComparisonMode('open')}
+                                style={tokenStyles.filterButton(comparisonMode === 'open')}
+                            >
+                                Open
+                            </button>
+                        </>
+                    )}
                 </div>
             </div>
 

@@ -40,7 +40,7 @@ export const getProportionItems = (
 ): ProportionItem[] => {
     // Calculate differences for each proportion
     const diferencas: Record<string, ProportionDifference> = {};
-    const campos = ['ombros', 'peito', 'braco', 'antebraco', 'cintura', 'coxa', 'panturrilha', 'pescoco'];
+    const campos = ['ombros', 'peito', 'braco', 'antebraco', 'cintura', 'coxa', 'panturrilha', 'pescoco', 'costas'];
 
     for (const campo of campos) {
         const ideal = ideais[campo as keyof typeof ideais];
@@ -48,6 +48,9 @@ export const getProportionItems = (
 
         if (typeof ideal === 'number' && typeof atual === 'number') {
             diferencas[campo] = calcularDiferenca(atual, ideal);
+        } else if (ideal === null) {
+            // Caso de Men's Physique para coxa
+            diferencas[campo] = { percentual: 0, necessario: 'manter', diferenca: 0 };
         }
     }
 
@@ -55,7 +58,13 @@ export const getProportionItems = (
 
     // Calculate derived values
     const shapeVAtual = userMeasurements.ombros / userMeasurements.cintura;
-    const shapeVPercentual = Math.min(100, (shapeVAtual / 1.618) * 100);
+
+    // Target Shape-V por categoria
+    const shapeVTarget = comparisonMode === 'golden' ? 1.618 :
+        comparisonMode === 'classic' ? 1.70 :
+            comparisonMode === 'mens' ? 1.55 : 1.75;
+
+    const shapeVPercentual = Math.min(100, (shapeVAtual / shapeVTarget) * 100);
 
     const triadeMedia = (userMeasurements.braco + userMeasurements.panturrilha + userMeasurements.pescoco) / 3;
     const triadeDesvio = (Math.abs(userMeasurements.braco - triadeMedia) +
@@ -70,12 +79,12 @@ export const getProportionItems = (
                 title: "Shape-V",
                 badge: "ESCALA SHAPE-V",
                 metrics: [
-                    { label: 'Ombros', value: `${userMeasurements.ombros}cm` },
-                    { label: 'Cintura', value: `${userMeasurements.cintura}cm` }
+                    { label: 'Ratio Atual', value: shapeVAtual.toFixed(2) },
+                    { label: 'Meta', value: shapeVTarget.toFixed(2) }
                 ],
                 currentValue: shapeVAtual.toFixed(2),
                 valueLabel: "RATIO ATUAL",
-                description: "V-Taper Index: A proporção estética entre a largura dos ombros e a circunferência da cintura, definindo o 'Shape em V'.",
+                description: `V-Taper Index: A proporção estética entre ombros e cintura. No modo ${methodLabel}, a meta é ${shapeVTarget}.`,
                 statusLabel: getStatus(shapeVPercentual),
                 userPosition: Math.round(shapeVPercentual),
                 goalPosition: 100,
@@ -84,8 +93,8 @@ export const getProportionItems = (
                 measurementsUsed: ['Ombros', 'Cintura']
             },
             ai: {
-                strength: `Seu <span class='text-primary font-bold'>Shape-V (${shapeVAtual.toFixed(2)})</span> ${shapeVPercentual >= 90 ? 'está excepcional' : 'está em bom progresso'}. A relação ombro-cintura é ${shapeVPercentual >= 85 ? 'seu maior trunfo estético' : 'uma área de foco'} no momento.`,
-                suggestion: "Mantenha o foco em deltoides laterais para preservar essa vantagem visual."
+                strength: `Seu <span class='text-primary font-bold'>Shape-V (${shapeVAtual.toFixed(2)})</span> para o modo ${methodLabel} está ${shapeVPercentual >= 90 ? 'excelente' : 'em evolução'}.`,
+                suggestion: "Maximize o trabalho de deltoides laterais e controle a linha de cintura para elevar o ratio."
             }
         },
         // 2. Peitoral
@@ -96,7 +105,7 @@ export const getProportionItems = (
                 metrics: [{ label: methodLabel, value: `${ideais.peito.toFixed(1)}cm` }],
                 currentValue: String(userMeasurements.peito),
                 valueUnit: "CM",
-                description: "A base do físico. Largura e espessura torácica.",
+                description: "Volume e densidade torácica em relação à estrutura óssea.",
                 statusLabel: getStatus(diferencas.peito?.percentual || 0),
                 userPosition: diferencas.peito?.percentual || 0,
                 goalPosition: 100,
@@ -106,33 +115,35 @@ export const getProportionItems = (
             },
             ai: {
                 weakness: diferencas.peito?.necessario === 'aumentar'
-                    ? `A proporção de <strong class='text-white'>Peitoral</strong> está em ${diferencas.peito?.percentual}%, indicando que o volume do tronco ainda não acompanha a largura dos seus ombros.`
+                    ? `O <strong class='text-white'>Peitoral</strong> está em ${diferencas.peito?.percentual}% da meta. Volume torácico é fundamental para o V-Taper.`
                     : undefined,
                 strength: diferencas.peito?.necessario !== 'aumentar'
-                    ? `Seu <span class='text-primary font-bold'>Peitoral</span> está bem desenvolvido em relação ao método ${comparisonMode === 'golden' ? 'Golden Ratio' : comparisonMode === 'classic' ? 'Classic Physique' : "Men's Physique"}.`
+                    ? `Seu <span class='text-primary font-bold'>Peitoral</span> atingiu a densidade ideal para o padrão ${methodLabel}.`
                     : undefined,
-                suggestion: "Priorize supinos com halteres focando na amplitude máxima e crossover para detalhamento."
+                suggestion: "Incorpore variações de supino inclinado para preencher a porção superior do peito."
             }
         },
-        // 3. Braço vs Punho
+        // 3. Braço
         {
             card: {
-                title: "Braço vs Punho",
-                badge: "POTENCIAL GENÉTICO",
-                metrics: [{ label: 'Ratio Atual', value: (userMeasurements.braco / userMeasurements.punho).toFixed(2) }],
-                currentValue: (userMeasurements.braco / userMeasurements.punho).toFixed(2),
-                valueUnit: ":1",
-                description: "Relação entre circunferência do punho e tamanho do braço. Indica potencial de massa.",
-                statusLabel: `${(userMeasurements.braco / userMeasurements.punho).toFixed(2)} (Meta: 2.52)`,
-                userPosition: Math.min(100, Math.round((userMeasurements.braco / userMeasurements.punho) / 2.52 * 100)),
+                title: "Braço",
+                badge: "VOLUME MUSCULAR",
+                metrics: [{ label: methodLabel, value: `${ideais.braco.toFixed(1)}cm` }],
+                currentValue: String(userMeasurements.braco),
+                valueUnit: "CM",
+                description: comparisonMode === 'golden'
+                    ? "Braço ideal baseado na estrutura do punho (2.52x)."
+                    : `Braço ideal para ${methodLabel} escalado pela sua altura.`,
+                statusLabel: getStatus(diferencas.braco?.percentual || 0),
+                userPosition: diferencas.braco?.percentual || 0,
                 goalPosition: 100,
                 image: "/images/widgets/braco.png",
                 rawImage: true,
-                measurementsUsed: ['Braço', 'Punho']
+                measurementsUsed: ['Braço', comparisonMode === 'golden' ? 'Punho' : 'Altura']
             },
             ai: {
-                strength: `Sua estrutura de <span class='text-primary font-bold'>punho fino</span> (${userMeasurements.punho}cm) permite que seus braços pareçam maiores visualmente.`,
-                suggestion: "Aproveite essa vantagem estrutural para maximizar o pico do bíceps."
+                strength: `Seu <span class='text-primary font-bold'>Braço</span> de ${userMeasurements.braco}cm está em harmonia com sua estrutura física.`,
+                suggestion: "Foque na cabeça longa do tríceps para adicionar volume lateral visível de frente."
             }
         },
         // 4. Antebraço
@@ -143,7 +154,7 @@ export const getProportionItems = (
                 metrics: [{ label: methodLabel, value: `${ideais.antebraco.toFixed(1)}cm` }],
                 currentValue: String(userMeasurements.antebraco),
                 valueUnit: "CM",
-                description: "Volume do antebraço em relação ao braço. Proporção ideal: 80% do braço.",
+                description: `Proporção ideal: ${comparisonMode === 'open' ? '78%' : '80%'} do braço.`,
                 statusLabel: getStatus(diferencas.antebraco?.percentual || 0),
                 userPosition: diferencas.antebraco?.percentual || 0,
                 goalPosition: 100,
@@ -152,13 +163,10 @@ export const getProportionItems = (
                 measurementsUsed: ['Antebraço', 'Braço']
             },
             ai: {
-                strength: (diferencas.antebraco?.percentual || 0) >= 90
-                    ? `Seu <span class='text-primary font-bold'>Antebraço</span> está em excelente proporção (${(userMeasurements.antebraco / userMeasurements.braco * 100).toFixed(0)}% do braço).`
+                strength: (diferencas.antebraco?.percentual || 0) >= 95
+                    ? `Seu <span class='text-primary font-bold'>Antebraço</span> é um ponto forte de simetria.`
                     : undefined,
-                weakness: (diferencas.antebraco?.percentual || 0) < 90
-                    ? `O antebraço está em ${diferencas.antebraco?.percentual}% da meta. A proporção atual é de ${(userMeasurements.antebraco / userMeasurements.braco * 100).toFixed(0)}% (meta: 80%).`
-                    : undefined,
-                suggestion: "Trabalhe rosca martelo e rosca inversa para desenvolver os braquiorradiais."
+                suggestion: "Rosca inversa e extensão de punho ajudam a equilibrar o volume com o braço."
             }
         },
         // 5. Tríade
@@ -166,29 +174,24 @@ export const getProportionItems = (
             card: {
                 title: "Tríade",
                 badge: "A TRINDADE",
-                metrics: [{ label: 'Meta', value: '100%' }],
+                metrics: [{ label: 'Meta', value: '100% Harmonia' }],
                 currentValue: triadeScore.toFixed(1),
                 valueUnit: "%",
                 description: comparisonMode === 'mens'
-                    ? "Tríade não é prioridade na categoria Men's Physique."
-                    : "A Tríade: Pescoço, Braço e Panturrilha em harmonia perfeita.",
-                statusLabel: comparisonMode === 'mens' ? "N/A (Men's Physique)" : getStatus(triadeScore),
-                userPosition: comparisonMode === 'mens' ? 50 : Math.round(triadeScore),
+                    ? "Tríade não é julgada na categoria Men's Physique."
+                    : "Equilíbrio absoluto entre Pescoço, Braço e Panturrilha.",
+                statusLabel: comparisonMode === 'mens' ? "N/A" : getStatus(triadeScore),
+                userPosition: comparisonMode === 'mens' ? 0 : Math.round(triadeScore),
                 goalPosition: 100,
                 image: "/images/widgets/peitoral.png",
                 rawImage: true,
                 measurementsUsed: ['Pescoço', 'Braço', 'Panturrilha']
             },
             ai: {
-                strength: comparisonMode !== 'mens' && triadeScore >= 90
-                    ? `Sua <span class='text-primary font-bold'>Tríade</span> está extremamente equilibrada, o que garante um visual harmonioso e clássico.`
+                strength: comparisonMode !== 'mens' && triadeScore >= 95
+                    ? `Sua <span class='text-primary font-bold'>Tríade Clássica</span> é perfeita. Simetria de elite.`
                     : undefined,
-                weakness: comparisonMode !== 'mens' && triadeScore < 90
-                    ? `A Tríade está em ${triadeScore.toFixed(0)}%. Trabalhe o equilíbrio entre braço (${userMeasurements.braco}cm), panturrilha (${userMeasurements.panturrilha}cm) e pescoço (${userMeasurements.pescoco}cm).`
-                    : undefined,
-                suggestion: comparisonMode === 'mens'
-                    ? "Na categoria Men's Physique, a Tríade não é prioridade. Foque em deltoides e V-taper."
-                    : "Manutenção de carga é suficiente para garantir que essa proporção não se perca."
+                suggestion: "Manter o equilíbrio é a chave do físico clássico."
             }
         },
         // 6. Cintura
@@ -198,10 +201,10 @@ export const getProportionItems = (
                 badge: "LINHA DE CINTURA",
                 metrics: [{ label: methodLabel, value: `${ideais.cintura.toFixed(1)}cm` }],
                 currentValue: String(userMeasurements.cintura),
-                valueUnit: "cm",
-                description: "Ponto focal da estética. Estreita para acentuar o V-Shape.",
+                valueUnit: "CM",
+                description: "A base do V-Taper. Quanto mais estreita, mais larga parece a dorsal.",
                 statusLabel: userMeasurements.cintura <= ideais.cintura
-                    ? `IDEAL (${Math.round((ideais.cintura / userMeasurements.cintura) * 100)}%)`
+                    ? `DENTRO DA META`
                     : `${(userMeasurements.cintura - ideais.cintura).toFixed(1)}cm acima`,
                 userPosition: Math.min(100, Math.round((ideais.cintura / userMeasurements.cintura) * 100)),
                 goalPosition: 100,
@@ -210,90 +213,99 @@ export const getProportionItems = (
                 measurementsUsed: ['Cintura', comparisonMode === 'golden' ? 'Pélvis' : 'Altura']
             },
             ai: {
-                strength: userMeasurements.cintura <= ideais.cintura
-                    ? `Sua cintura está <span class='text-primary font-bold'>fina e controlada</span>, o que potencializa visualmente a largura dos seus ombros.`
-                    : undefined,
                 weakness: userMeasurements.cintura > ideais.cintura
-                    ? `A cintura está <strong class='text-orange-400'>${(userMeasurements.cintura - ideais.cintura).toFixed(1)}cm acima</strong> da meta ${methodLabel}. ${comparisonMode === 'classic' ? 'Classic Physique exige cintura extremamente apertada.' : ''}`
+                    ? `Sua <strong class='text-orange-400'>Cintura</strong> está ${(userMeasurements.cintura - ideais.cintura).toFixed(1)}cm acima da meta ideal para ${methodLabel}.`
                     : undefined,
-                suggestion: "Evite treinos de oblíquos com muita carga para não alargar a cintura."
+                suggestion: "Foque em exercícios de vácuo abdominal para fortalecer o transverso pulmonar e afinar a linha."
             }
         },
-        // 7. Coxa vs Joelho
+        // 7. Coxa
         {
             card: {
-                title: "Coxa vs Joelho",
-                badge: "ESTÉTICA DE PERNA",
-                metrics: [{ label: 'Ratio Atual', value: (userMeasurements.coxa / userMeasurements.joelho).toFixed(2) }],
-                currentValue: (userMeasurements.coxa / userMeasurements.joelho).toFixed(2),
-                valueUnit: ":1",
-                description: "Proporção que define o formato de 'gota' da coxa em relação ao joelho.",
-                statusLabel: comparisonMode === 'mens' ? 'N/A' : `${Math.round((userMeasurements.coxa / userMeasurements.joelho) / 1.75 * 100)}% (Meta: 1.75)`,
-                userPosition: Math.min(100, Math.round((userMeasurements.coxa / userMeasurements.joelho) / 1.75 * 100)),
+                title: "Coxa",
+                badge: "POTÊNCIA DE PERNAS",
+                metrics: ideais.coxa ? [{ label: methodLabel, value: `${ideais.coxa.toFixed(1)}cm` }] : [],
+                currentValue: comparisonMode === 'mens' ? "N/A" : String(userMeasurements.coxa),
+                valueUnit: comparisonMode === 'mens' ? "" : "CM",
+                description: comparisonMode === 'mens' ? "Pernas não são julgadas nesta categoria." : "Desenvolvimento do quadríceps e isquiotibiais.",
+                statusLabel: comparisonMode === 'mens' ? "NÃO JULGADO" : getStatus(diferencas.coxa?.percentual || 0),
+                userPosition: comparisonMode === 'mens' ? 0 : (diferencas.coxa?.percentual || 0),
                 goalPosition: 100,
                 image: "/images/widgets/coxa.png",
                 rawImage: true,
-                measurementsUsed: ['Coxa', 'Joelho']
+                measurementsUsed: ['Coxa', comparisonMode === 'golden' || comparisonMode === 'open' ? 'Joelho' : 'Cintura']
             },
             ai: {
-                weakness: (userMeasurements.coxa / userMeasurements.joelho) < 1.6
-                    ? "A proporção <strong class='text-white'>Coxa/Joelho</strong> pode melhorar com mais volume no vasto medial."
+                strength: comparisonMode !== 'mens' && (diferencas.coxa?.percentual || 0) >= 90
+                    ? `Suas <span class='text-primary font-bold'>Coxas</span> possuem volume compatível com o tronco.`
                     : undefined,
-                strength: (userMeasurements.coxa / userMeasurements.joelho) >= 1.6
-                    ? "A proporção <span class='text-primary font-bold'>Coxa/Joelho</span> está boa, criando o formato de 'gota' desejado."
-                    : undefined,
-                suggestion: "Agachamentos com base fechada podem ajudar a enfatizar o vasto medial."
+                suggestion: comparisonMode === 'mens' ? "Pernas cobertas por bermudas, foco total no tronco." : "Agachamento hack e extensora para detalhamento de quadríceps."
             }
         },
         // 8. Coxa vs Panturrilha
         {
             card: {
                 title: "Coxa vs Panturrilha",
-                badge: "LEG GOLDEN RATIO",
+                badge: "SIMETRIA INFERIOR",
                 metrics: [{ label: 'Ratio Atual', value: (userMeasurements.coxa / userMeasurements.panturrilha).toFixed(2) }],
-                currentValue: (userMeasurements.coxa / userMeasurements.panturrilha).toFixed(2),
-                valueUnit: ":1",
-                description: "Equilíbrio entre a porção superior e inferior da perna.",
-                statusLabel: comparisonMode === 'mens' ? "N/A (Men's Physique)" : "PROPORÇÃO DE PERNA",
-                userPosition: 95,
+                currentValue: comparisonMode === 'mens' ? "N/A" : (userMeasurements.coxa / userMeasurements.panturrilha).toFixed(2),
+                valueUnit: comparisonMode === 'mens' ? "" : ":1",
+                description: `Proporção clássica de pernas. Meta: ${comparisonMode === 'open' ? '1.55' : '1.50'}.`,
+                statusLabel: comparisonMode === 'mens' ? "NÃO JULGADO" : "PROPORÇÃO DE PERNA",
+                userPosition: 90,
                 goalPosition: 100,
                 image: "/images/widgets/leg-ratio.png",
                 rawImage: true,
                 measurementsUsed: ['Coxa', 'Panturrilha']
             },
             ai: {
-                strength: "A relação entre coxa e panturrilha está <span class='text-primary font-bold'>muito boa</span>, criando um fluxo visual contínuo.",
-                suggestion: "Trabalhe o sóleo para dar mais volume lateral à panturrilha e destacar a separação."
+                suggestion: "O equilíbrio entre coxa e panturrilha é o que define o 'flow' das pernas."
             }
         },
-        // 9. Panturrilha vs Tornozelo
+        // 9. Panturrilha
         {
             card: {
-                title: "Panturrilha vs Tornozelo",
-                badge: "PROPORÇÃO #9",
+                title: "Panturrilha",
+                badge: "DETALHAMENTO",
                 metrics: [{ label: methodLabel, value: `${ideais.panturrilha.toFixed(1)}cm` }],
                 currentValue: String(userMeasurements.panturrilha),
                 valueUnit: "CM",
-                description: comparisonMode === 'golden'
-                    ? "Panturrilha ideal: Tornozelo × 1.92. Tornozelos finos criam ilusão de volume."
-                    : comparisonMode === 'classic'
-                        ? "Panturrilha ideal: Braço × 0.96. Deve ter tamanho similar ao braço."
-                        : "Estética geral, menos ênfase na categoria Men's Physique.",
+                description: "Desenvolvimento da panturrilha em relação à estrutura óssea ou volume do braço.",
                 statusLabel: getStatus(diferencas.panturrilha?.percentual || 0),
                 userPosition: diferencas.panturrilha?.percentual || 0,
                 goalPosition: 100,
                 image: "/images/widgets/leg-ratio.png",
                 rawImage: true,
-                measurementsUsed: ['Panturrilha', 'Tornozelo']
+                measurementsUsed: ['Panturrilha', comparisonMode === 'golden' || comparisonMode === 'mens' ? 'Tornozelo' : 'Braço']
             },
             ai: {
-                strength: (diferencas.panturrilha?.percentual || 0) >= 90
-                    ? `Sua <span class='text-primary font-bold'>Panturrilha</span> está em excelente proporção para o método ${methodLabel}.`
-                    : `Seus <span class='text-primary font-bold'>tornozelos finos</span> (${userMeasurements.tornozelo}cm) são uma grande vantagem genética.`,
                 weakness: (diferencas.panturrilha?.percentual || 0) < 85
-                    ? `A panturrilha está em ${diferencas.panturrilha?.percentual}% da meta. Faltam <strong class='text-orange-400'>${diferencas.panturrilha?.diferenca}cm</strong>.`
+                    ? "Volume de panturrilha abaixo do ideal clássico."
                     : undefined,
-                suggestion: "Foque na porção gastrocnêmia para criar um formato de diamante perfeito."
+                suggestion: "Realize panturrilha em pé com máxima extensão para atingir fibras mais profundas."
+            }
+        },
+        // 10. Costas (NOVO v3.0)
+        {
+            card: {
+                title: "Costas",
+                badge: "AMPLITUDE V-TAPER",
+                metrics: ideais.costas ? [{ label: methodLabel, value: `${ideais.costas.toFixed(1)}cm` }] : [],
+                currentValue: ideais.costas ? String(userMeasurements.costas) : "N/A",
+                valueUnit: ideais.costas ? "CM" : "",
+                description: "Largura das dorsais (lat spread). Essencial para o V-Taper extremo.",
+                statusLabel: ideais.costas ? getStatus(diferencas.costas?.percentual || 0) : "N/A",
+                userPosition: ideais.costas ? (diferencas.costas?.percentual || 0) : 0,
+                goalPosition: 100,
+                image: "/images/widgets/shape-v.png",
+                rawImage: true,
+                measurementsUsed: ['Costas', 'Cintura']
+            },
+            ai: {
+                strength: comparisonMode === 'open' && (diferencas.costas?.percentual || 0) >= 90
+                    ? `Sua <span class='text-primary font-bold'>Amplitude de Costas</span> é digna da categoria Open.`
+                    : undefined,
+                suggestion: "Puxadas frontais e remadas curvadas para ganhar largura e densidade nas dorsais."
             }
         }
     ];

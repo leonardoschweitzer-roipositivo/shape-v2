@@ -42,6 +42,21 @@ const App: React.FC = () => {
   const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(null);
   const { settings } = useAthleteStore();
 
+  // State for assessment flow
+  const [assessmentData, setAssessmentData] = useState<{ studentName?: string; gender?: 'male' | 'female' }>({});
+
+  const handleAssessmentSubmit = (data?: { studentName: string; gender: 'male' | 'female' }) => {
+    setIsAssessmentOpen(false);
+    if (data) {
+      setAssessmentData({ studentName: data.studentName, gender: data.gender });
+    }
+
+    // Simulate loading or transition
+    setTimeout(() => {
+      setCurrentView('results');
+    }, 300);
+  };
+
   const handleInviteAthlete = () => {
     setIsInviteModalOpen(true);
   };
@@ -63,13 +78,7 @@ const App: React.FC = () => {
     setCurrentView('dashboard');
   };
 
-  const handleAssessmentSubmit = () => {
-    setIsAssessmentOpen(false);
-    // Simulate loading or transition
-    setTimeout(() => {
-      setCurrentView('results');
-    }, 300);
-  };
+
 
   const renderContent = () => {
     // Se usuário é Academia, renderiza views específicas
@@ -151,7 +160,10 @@ const App: React.FC = () => {
             />
           );
         case 'assessment':
-          return <PersonalAssessmentView onConfirm={handleAssessmentSubmit} />;
+          return <PersonalAssessmentView onConfirm={(data) => handleAssessmentSubmit({
+            studentName: data.studentName,
+            gender: data.gender
+          })} />;
         case 'evolution':
           return <PersonalEvolutionView />;
         case 'coach':
@@ -159,7 +171,13 @@ const App: React.FC = () => {
         case 'hall':
           return <HallDosDeuses />;
         case 'results':
-          return <AssessmentResults onBack={() => setCurrentView('dashboard')} />;
+          return (
+            <AssessmentResults
+              onBack={() => setCurrentView('dashboard')}
+              studentName={assessmentData.studentName}
+              gender={assessmentData.gender}
+            />
+          );
         case 'design-system':
           return <DesignSystem />;
         case 'profile':
@@ -182,7 +200,7 @@ const App: React.FC = () => {
       case 'results':
         return <AssessmentResults onBack={() => setCurrentView('dashboard')} />;
       case 'assessment':
-        return <AssessmentPage onConfirm={handleAssessmentSubmit} />;
+        return <AssessmentPage onConfirm={() => handleAssessmentSubmit()} />;
       case 'design-system':
         return <DesignSystem />;
       case 'evolution':
