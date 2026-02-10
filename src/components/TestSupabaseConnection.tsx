@@ -13,8 +13,8 @@ export function TestSupabaseConnection() {
         return (
             <div style={{
                 position: 'fixed',
-                bottom: 20,
-                right: 20,
+                bottom: 24,
+                right: 100,
                 zIndex: 9999
             }}>
                 <button
@@ -39,8 +39,8 @@ export function TestSupabaseConnection() {
     return (
         <div style={{
             position: 'fixed',
-            bottom: 20,
-            right: 20,
+            bottom: 24,
+            right: 100,
             background: 'rgba(19, 27, 44, 0.95)',
             backdropFilter: 'blur(12px)',
             border: '1px solid rgba(255, 255, 255, 0.1)',

@@ -658,6 +658,8 @@ const App: React.FC = () => {
         }}
       />
 
+      <TestSupabaseConnection />
+
       <DebugAccess
         onLogin={handleQuickLogin}
         isVisible={true}

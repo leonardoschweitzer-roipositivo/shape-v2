@@ -29,9 +29,10 @@ export function useSupabaseConnection() {
         setError(null)
 
         try {
-            const { data, error } = await supabase
-                .from('academias')
-                .select('count')
+            // Testamos a tabela 'profiles' que já sabemos ser usada no sistema
+            const { error } = await supabase
+                .from('profiles')
+                .select('id')
                 .limit(1)
 
             if (error) {
