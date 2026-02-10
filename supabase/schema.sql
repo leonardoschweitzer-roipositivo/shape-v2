@@ -398,8 +398,13 @@ CREATE POLICY "consultoria_atleta" ON consultorias FOR ALL
 -- ===== PROFILES (já deve existir, mas por segurança) =====
 -- A tabela profiles já foi criada na configuração de Auth
 -- Apenas garantimos a policy
-CREATE POLICY IF NOT EXISTS "profiles_own" ON profiles FOR ALL
-    USING (auth.uid() = id);
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "profiles_own" ON profiles;
+    CREATE POLICY "profiles_own" ON profiles FOR ALL
+        USING (auth.uid() = id);
+EXCEPTION WHEN undefined_table THEN
+    RAISE NOTICE 'Tabela profiles não encontrada, pulando policy.';
+END $$;
 
 -- ===== TRIGGERS =====
 

@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import type { Database } from '@/lib/database.types';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -8,5 +7,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
     console.error('Missing Supabase URL or Anon Key. Check .env file.');
 }
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
-
+/**
+ * Cliente Supabase sem tipagem genérica.
+ * 
+ * Os types de Row são usados via casting nos serviços.
+ * Quando o schema estabilizar, rodar:
+ * npx supabase gen types typescript --project-id <ID> > src/lib/database.types.ts
+ */
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);

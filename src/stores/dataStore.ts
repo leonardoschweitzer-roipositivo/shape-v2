@@ -4,11 +4,18 @@ import { MeasurementHistory, PersonalAthlete, mockPersonalAthletes } from '@/moc
 import { PersonalSummary, mockPersonalsSummary, AcademyStats, mockAcademyStats } from '@/mocks/academy';
 import { mapMeasurementToInput } from '@/services/calculations/evolutionProcessor';
 import { calcularAvaliacaoGeral } from '@/services/calculations/assessment';
+import { supabase } from '@/services/supabase';
+import { mapAtletaToPersonalAthlete } from '@/services/mappers';
+import type { Atleta, Ficha, Medida, Avaliacao } from '@/lib/database.types';
+
+type DataSource = 'MOCK' | 'SUPABASE';
 
 interface DataState {
     personalAthletes: PersonalAthlete[];
     personals: PersonalSummary[];
     academyStats: AcademyStats;
+    dataSource: DataSource;
+    isLoadingFromDB: boolean;
 
     // Actions
     addAssessment: (data: {
@@ -25,6 +32,9 @@ interface DataState {
     getPersonals: () => PersonalSummary[];
     updatePersonalStats: (personalId: string) => void;
 
+    // Supabase integration
+    loadFromSupabase: (personalId: string) => Promise<void>;
+
     resetToMocks: () => void;
 }
 
@@ -34,6 +44,73 @@ export const useDataStore = create<DataState>()(
             personalAthletes: mockPersonalAthletes,
             personals: mockPersonalsSummary,
             academyStats: mockAcademyStats,
+            dataSource: 'MOCK' as DataSource,
+            isLoadingFromDB: false,
+
+            /**
+             * Carrega dados do Supabase para um Personal.
+             * Se encontrar atletas no banco, usa eles.
+             * Senão, mantém os mocks.
+             */
+            loadFromSupabase: async (personalId: string) => {
+                set({ isLoadingFromDB: true });
+
+                try {
+                    // 1. Buscar atletas deste personal
+                    const { data: atletas, error: atletasError } = await supabase
+                        .from('atletas')
+                        .select('*')
+                        .eq('personal_id', personalId)
+                        .order('nome', { ascending: true });
+
+                    if (atletasError || !atletas || atletas.length === 0) {
+                        console.info('[DataStore] Nenhum atleta no Supabase, usando mocks.');
+                        set({ isLoadingFromDB: false, dataSource: 'MOCK' });
+                        return;
+                    }
+
+                    // 2. Para cada atleta, buscar ficha, medidas e avaliações
+                    const mappedAthletes: PersonalAthlete[] = await Promise.all(
+                        atletas.map(async (atleta: Atleta) => {
+                            const [fichaRes, medidasRes, avaliacoesRes] = await Promise.all([
+                                supabase
+                                    .from('fichas')
+                                    .select('*')
+                                    .eq('atleta_id', atleta.id)
+                                    .single(),
+                                supabase
+                                    .from('medidas')
+                                    .select('*')
+                                    .eq('atleta_id', atleta.id)
+                                    .order('data', { ascending: false }),
+                                supabase
+                                    .from('avaliacoes')
+                                    .select('*')
+                                    .eq('atleta_id', atleta.id)
+                                    .order('data', { ascending: false }),
+                            ]);
+
+                            return mapAtletaToPersonalAthlete(
+                                atleta,
+                                fichaRes.data as Ficha | null,
+                                (medidasRes.data || []) as Medida[],
+                                (avaliacoesRes.data || []) as Avaliacao[]
+                            );
+                        })
+                    );
+
+                    console.info(`[DataStore] ✅ Carregou ${mappedAthletes.length} atletas do Supabase`);
+                    set({
+                        personalAthletes: mappedAthletes,
+                        dataSource: 'SUPABASE',
+                        isLoadingFromDB: false,
+                    });
+
+                } catch (err) {
+                    console.error('[DataStore] Erro ao carregar do Supabase:', err);
+                    set({ isLoadingFromDB: false, dataSource: 'MOCK' });
+                }
+            },
 
             addAssessment: ({ athleteId, measurements, skinfolds, gender }) => {
                 // Calculate score
@@ -71,9 +148,7 @@ export const useDataStore = create<DataState>()(
                         return athlete;
                     });
 
-                    // In a real app, we'd know which personal this athlete belongs to.
-                    // For this mock, we'll assume most of them belong to 'p1' (Carlos Lima)
-                    // or we just find the personal p1 and update their stats.
+                    // Update personal stats if using mocks
                     const p1 = state.personals.find(p => p.id === 'p1');
                     if (p1) {
                         const personalAthletesList = updatedAthletes.filter(a =>
@@ -88,7 +163,6 @@ export const useDataStore = create<DataState>()(
                             return p;
                         });
 
-                        // Also update academy stats
                         const totalAvg = updatedPersonals.reduce((acc, p) => acc + p.averageStudentScore, 0) / updatedPersonals.length;
                         const updatedAcademyStats = {
                             ...state.academyStats,
@@ -105,6 +179,59 @@ export const useDataStore = create<DataState>()(
 
                     return { personalAthletes: updatedAthletes };
                 });
+
+                // Se usando Supabase, também persiste no banco
+                const state = get();
+                if (state.dataSource === 'SUPABASE') {
+                    // Async sem bloquear - persistir no Supabase em background
+                    (async () => {
+                        try {
+                            // Criar medida
+                            const medidaInsert = {
+                                atleta_id: athleteId,
+                                peso: measurements.weight,
+                                pescoco: measurements.neck,
+                                ombros: measurements.shoulders,
+                                peitoral: measurements.chest,
+                                cintura: measurements.waist,
+                                quadril: measurements.hips,
+                                braco_direito: measurements.armRight,
+                                braco_esquerdo: measurements.armLeft,
+                                antebraco_direito: measurements.forearmRight,
+                                antebraco_esquerdo: measurements.forearmLeft,
+                                coxa_direita: measurements.thighRight,
+                                coxa_esquerda: measurements.thighLeft,
+                                panturrilha_direita: measurements.calfRight,
+                                panturrilha_esquerda: measurements.calfLeft,
+                            };
+
+                            const { data: medida } = await supabase
+                                .from('medidas')
+                                .insert(medidaInsert as any)
+                                .select()
+                                .single();
+
+                            if (medida) {
+                                const avaliacaoInsert = {
+                                    atleta_id: athleteId,
+                                    medidas_id: (medida as any).id,
+                                    peso: measurements.weight,
+                                    score_geral: result.avaliacaoGeral,
+                                    classificacao_geral: getClassificacao(result.avaliacaoGeral),
+                                    proporcoes: result.scores,
+                                };
+
+                                await supabase
+                                    .from('avaliacoes')
+                                    .insert(avaliacaoInsert as any);
+
+                                console.info('[DataStore] ✅ Avaliação persistida no Supabase');
+                            }
+                        } catch (err) {
+                            console.error('[DataStore] Erro ao persistir no Supabase:', err);
+                        }
+                    })();
+                }
 
                 return { assessment: newAssessment, result };
             },
@@ -126,9 +253,7 @@ export const useDataStore = create<DataState>()(
             },
 
             updatePersonalStats: (personalId) => {
-                // Logic to recalculate average student score for a personal
                 set(state => {
-                    // Implementation here if needed, but we do it in addAssessment
                     return state;
                 });
             },
@@ -137,7 +262,8 @@ export const useDataStore = create<DataState>()(
                 set({
                     personalAthletes: mockPersonalAthletes,
                     personals: mockPersonalsSummary,
-                    academyStats: mockAcademyStats
+                    academyStats: mockAcademyStats,
+                    dataSource: 'MOCK' as DataSource
                 });
             }
         }),
@@ -146,3 +272,12 @@ export const useDataStore = create<DataState>()(
         }
     )
 );
+
+// Helper para classificação
+function getClassificacao(score: number): 'INICIO' | 'CAMINHO' | 'QUASE_LA' | 'META' | 'ELITE' {
+    if (score >= 90) return 'ELITE';
+    if (score >= 80) return 'META';
+    if (score >= 70) return 'QUASE_LA';
+    if (score >= 60) return 'CAMINHO';
+    return 'INICIO';
+}

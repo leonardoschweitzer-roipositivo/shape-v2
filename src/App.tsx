@@ -44,6 +44,7 @@ import { TestSupabaseConnection } from '@/components/TestSupabaseConnection';
 import { useAthleteStore } from '@/stores/athleteStore';
 import { useDataStore } from '@/stores/dataStore';
 import { useAuthStore } from '@/stores/authStore';
+import { useSupabaseSync } from '@/hooks/useSupabaseSync';
 import { PersonalAthlete, MeasurementHistory } from '@/mocks/personal';
 
 type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details' | 'terms' | 'privacy' | 'my-record' | 'gamification' | 'athlete-portal' | 'personal-details' | 'student-details';
@@ -81,6 +82,9 @@ const App: React.FC = () => {
 
   // Hook for persistent Data Store
   const { personalAthletes, addAssessment } = useDataStore();
+
+  // Supabase Sync - carrega dados reais quando autenticado
+  const { dataSource } = useSupabaseSync();
 
   const handleAssessmentSubmit = (data?: {
     studentId?: string;
