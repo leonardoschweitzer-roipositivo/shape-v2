@@ -26,7 +26,10 @@ import {
   AthleteDetailsView,
   AcademyDashboard,
   AcademyPersonalsList,
+  AcademyPersonalDetails,
   AcademyProfilePage,
+  AcademyAthletesList,
+  AcademyAthleteDetails,
   AthleteInvitationModal,
   PersonalInvitationModal,
   StudentRegistration,
@@ -41,7 +44,7 @@ import { useAthleteStore } from '@/stores/athleteStore';
 import { useDataStore } from '@/stores/dataStore';
 import { PersonalAthlete, MeasurementHistory } from '@/mocks/personal';
 
-type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details' | 'terms' | 'privacy' | 'my-record' | 'gamification' | 'athlete-portal';
+type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details' | 'terms' | 'privacy' | 'my-record' | 'gamification' | 'athlete-portal' | 'personal-details' | 'student-details';
 
 const App: React.FC = () => {
   console.log('🎯 App component rendering...');
@@ -248,21 +251,57 @@ const App: React.FC = () => {
           return (
             <AcademyPersonalsList
               onSelectPersonal={(id) => {
-                alert(`Ver detalhes do personal ${id}`);
+                setSelectedAthleteId(id);
+                setCurrentView('personal-details');
               }}
               onInvitePersonal={handleInvitePersonal}
             />
           );
+        case 'personal-details':
+          if (!selectedAthleteId) {
+            setCurrentView('trainers');
+            return null;
+          }
+          return (
+            <AcademyPersonalDetails
+              personalId={selectedAthleteId}
+              onBack={() => setCurrentView('trainers')}
+            />
+          );
         case 'students':
           return (
-            <div className="flex-1 flex items-center justify-center text-gray-500">
-              <p>Visão de Todos os Alunos da Academia (Agregado)</p>
-            </div>
+            <AcademyAthletesList
+              onSelectAthlete={(id) => {
+                setSelectedAthleteId(id);
+                setCurrentView('student-details');
+              }}
+              onViewEvolution={(id) => {
+                setSelectedAthleteId(id);
+                setCurrentView('evolution');
+              }}
+            />
+          );
+        case 'student-details':
+          if (!selectedAthleteId) {
+            setCurrentView('students');
+            return null;
+          }
+          return (
+            <AcademyAthleteDetails
+              athleteId={selectedAthleteId}
+              onBack={() => setCurrentView('students')}
+              onConsultAssessment={(assessmentId) => {
+                // Note: Academia can only view, not modify assessments
+                alert(`Visualizar avaliação ${assessmentId} - funcionalidade em desenvolvimento`);
+              }}
+            />
           );
         case 'profile':
           return <AcademyProfilePage />;
         case 'settings':
           return <AthleteSettingsPage />;
+        case 'evolution':
+          return <PersonalEvolutionView initialAthleteId={selectedAthleteId} />;
         case 'hall':
           return <HallDosDeuses />;
         case 'trainers-ranking':
@@ -489,7 +528,9 @@ const App: React.FC = () => {
       switch (currentView) {
         case 'dashboard': return 'DASHBOARD ACADEMIA';
         case 'trainers': return 'PERSONAIS DA ACADEMIA';
+        case 'personal-details': return 'DETALHES DO PERSONAL';
         case 'students': return 'TODOS OS ALUNOS';
+        case 'student-details': return 'DETALHES DO ALUNO';
         case 'hall': return 'HALL DOS DEUSES';
         case 'design-system': return 'DESIGN SYSTEM';
         case 'trainers-ranking': return 'RANKING PERSONAIS';

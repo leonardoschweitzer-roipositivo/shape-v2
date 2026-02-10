@@ -306,3 +306,161 @@ export const mockPersonalAthletes: PersonalAthlete[] = [
     { id: 'athlete-7', name: 'João Ogro Silva', email: 'joao.ogro@email.com', gender: 'MALE', avatarUrl: null, score: 42, scoreVariation: 6, ratio: 0.98, lastMeasurement: '2026-02-09', status: 'attention', linkedSince: '2024-05-01', assessments: [m4_current, m4_old] },
     { id: 'athlete-8', name: 'Maria Curva Oliveira', email: 'maria.curva@email.com', gender: 'FEMALE', avatarUrl: null, score: 44, scoreVariation: 5, ratio: 0.96, lastMeasurement: '2026-02-09', status: 'attention', linkedSince: '2024-05-10', assessments: [f4_current, f4_old] },
 ];
+
+// --- FUNÇÃO PARA TELA DE DETALHE DO PERSONAL (VISÃO ACADEMIA) ---
+
+import type { DetalhePersonalAcademia, AlunoResumo } from '@/types/personal-academy'
+import {
+    calcularRankingPersonal,
+    identificarAlunosAtencao,
+    calcularDistribuicaoClassificacao
+} from '@/services/calculations/personal-calculations'
+
+function mapAthleteToAlunoResumo(athlete: PersonalAthlete): AlunoResumo {
+    const classificacaoMap: Record<number, string> = {
+        90: 'ELITE',
+        80: 'META',
+        70: 'QUASE_LA',
+        60: 'CAMINHO',
+        0: 'INICIO'
+    }
+
+    let classificacao = 'INICIO'
+    for (const [scoreMin, label] of Object.entries(classificacaoMap).reverse()) {
+        if (athlete.score >= Number(scoreMin)) {
+            classificacao = label
+            break
+        }
+    }
+
+    return {
+        id: athlete.id,
+        nome: athlete.name,
+        fotoUrl: athlete.avatarUrl || undefined,
+        score: athlete.score,
+        classificacao,
+        ultimaAvaliacao: new Date(athlete.lastMeasurement),
+        evolucaoUltimoMes: athlete.scoreVariation,
+        status: athlete.status === 'active' ? 'ATIVO' : 'INATIVO'
+    }
+}
+
+export function getPersonalDetails(personalId: string, academiaId: string): DetalhePersonalAcademia {
+    // Mock: Professor Carlos Lima
+    const personal = {
+        id: personalId,
+        nome: 'Professor Carlos Lima',
+        fotoUrl: undefined,
+        email: 'carlos.lima@vitruia.com',
+        telefone: '(11) 98765-4321',
+        cpf: '123.456.789-00',
+        cref: '012345-G/SP',
+        status: 'ATIVO' as const,
+        dataVinculo: new Date('2024-03-15'),
+        diasNaAcademia: Math.floor((Date.now() - new Date('2024-03-15').getTime()) / (1000 * 60 * 60 * 24))
+    }
+
+    // Converter athletes para AlunoResumo
+    const alunos = mockPersonalAthletes.map(mapAthleteToAlunoResumo)
+
+    // Calcular KPIs
+    const totalAtivos = alunos.filter(a => a.status === 'ATIVO').length
+    const scoreMedio = alunos.reduce((sum, a) => sum + a.score, 0) / alunos.length
+    const evolucaoMedia = alunos.reduce((sum, a) => sum + a.evolucaoUltimoMes, 0) / alunos.length
+
+    const kpis = {
+        alunos: {
+            total: alunos.length,
+            ativos: totalAtivos,
+            inativos: alunos.length - totalAtivos,
+            novosEsteMes: 2
+        },
+        score: {
+            medio: Math.round(scoreMedio * 10) / 10,
+            evolucaoMensal: Math.round(evolucaoMedia * 10) / 10,
+            tendencia: (evolucaoMedia > 2 ? 'SUBINDO' : evolucaoMedia < -2 ? 'CAINDO' : 'ESTAVEL') as 'SUBINDO' | 'ESTAVEL' | 'CAINDO'
+        },
+        avaliacoes: {
+            esteMes: 12,
+            mesPassado: 10,
+            total: 145,
+            variacaoPercentual: 20
+        },
+        classificacoes: {
+            elite: alunos.filter(a => a.classificacao === 'ELITE').length,
+            meta: alunos.filter(a => a.classificacao === 'META').length,
+            quaseLa: alunos.filter(a => a.classificacao === 'QUASE_LA').length,
+            caminho: alunos.filter(a => a.classificacao === 'CAMINHO').length,
+            inicio: alunos.filter(a => a.classificacao === 'INICIO').length
+        }
+    }
+
+
+    // Calcular ranking (mock: 1º de 12 personals)
+    const mockPersonals = [
+        { id: personalId, scoreMedio: kpis.score.medio, evolucaoMedia: kpis.score.evolucaoMensal, alunosAtivos: kpis.alunos.ativos, avaliacoesMes: kpis.avaliacoes.esteMes },
+        { id: 'p2', scoreMedio: 68, evolucaoMedia: 3, alunosAtivos: 25, avaliacoesMes: 8 },
+        { id: 'p3', scoreMedio: 72, evolucaoMedia: 2, alunosAtivos: 30, avaliacoesMes: 10 },
+    ]
+    const ranking = calcularRankingPersonal(personalId, mockPersonals)
+
+    // Top 5 alunos
+    const alunosOrdenados = [...alunos].sort((a, b) => b.score - a.score)
+    const topAlunos = alunosOrdenados.slice(0, 5).map((aluno, index) => ({
+        posicao: index + 1,
+        medalha: (index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : undefined) as any,
+        aluno: {
+            id: aluno.id,
+            nome: aluno.nome,
+            fotoUrl: aluno.fotoUrl,
+            score: aluno.score,
+            classificacao: aluno.classificacao,
+            emoji: aluno.classificacao === 'ELITE' ? '👑' : aluno.classificacao === 'META' ? '🎯' : '💪'
+        }
+    }))
+
+    // Alunos que precisam de atenção
+    const alunosAtencao = identificarAlunosAtencao(alunos)
+
+    // Evolução (mock data simplificado)
+    const evolucao = {
+        scoreMedioPorMes: [
+            { mes: 'Set', valor: 70 },
+            { mes: 'Out', valor: 72 },
+            { mes: 'Nov', valor: 73 },
+            { mes: 'Dez', valor: 74 },
+            { mes: 'Jan', valor: 75 },
+            { mes: 'Fev', valor: scoreMedio }
+        ],
+        totalAlunosPorMes: [
+            { mes: 'Set', valor: 6 },
+            { mes: 'Out', valor: 7 },
+            { mes: 'Nov', valor: 7 },
+            { mes: 'Dez', valor: 8 },
+            { mes: 'Jan', valor: 8 },
+            { mes: 'Fev', valor: alunos.length }
+        ],
+        avaliacoesPorMes: [
+            { mes: 'Set', valor: 10 },
+            { mes: 'Out', valor: 12 },
+            { mes: 'Nov', valor: 11 },
+            { mes: 'Dez', valor: 13 },
+            { mes: 'Jan', valor: 14 },
+            { mes: 'Fev', valor: kpis.avaliacoes.esteMes }
+        ]
+    }
+
+    // Distribuição
+    const distribuicao = calcularDistribuicaoClassificacao(alunos)
+
+    return {
+        personal,
+        kpis,
+        ranking,
+        alunos,
+        topAlunos,
+        alunosAtencao,
+        evolucao,
+        distribuicao
+    }
+}
