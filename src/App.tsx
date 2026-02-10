@@ -43,6 +43,8 @@ import { PersonalAthlete, MeasurementHistory } from '@/mocks/personal';
 type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details' | 'terms' | 'privacy' | 'my-record' | 'gamification';
 
 const App: React.FC = () => {
+  console.log('🎯 App component rendering...');
+
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userProfile, setUserProfile] = useState<ProfileType>('atleta');
   const [isAssessmentOpen, setIsAssessmentOpen] = useState(false);
@@ -51,7 +53,11 @@ const App: React.FC = () => {
   const [isPersonalInviteModalOpen, setIsPersonalInviteModalOpen] = useState(false);
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
   const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(null);
+
+  console.log('📊 Initializing stores...');
   const { settings, profile, initializeProfile } = useAthleteStore();
+
+  console.log('✅ Store initialized:', { settings, profile });
 
   // State for assessment flow
   const [assessmentData, setAssessmentData] = useState<{ studentName?: string; gender?: 'male' | 'female', assessment?: MeasurementHistory }>({});

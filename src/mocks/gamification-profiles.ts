@@ -4,7 +4,7 @@
  */
 
 import type { GamificationProfile, Badge } from '../types/gamification'
-import { criarBadgesIniciais } from '../services/gamification'
+import { criarBadgesIniciais } from '../services/gamification/index'
 
 // João Silva - Jogador experiente (Nível 5)
 export const mockGamificationJoaoSilva: GamificationProfile = {

@@ -315,3 +315,43 @@ export function calcularScoreDia(dados: ResumoDiario): number {
 
     return Math.max(0, Math.min(100, Math.round(score)))
 }
+
+/*  * Calcula informações do sistema de XP (compatibilidade com código antigo)
+ */
+export function calcularXPSystem(totalXP: number): XPSystem {
+    return {
+        totalXP,
+        nivel: calcularNivel(totalXP),
+        xpAtual: 0, // Simplified - pode ser calculado se necessário
+        xpProximoNivel: 0,
+        percentualNivel: 0,
+    }
+}
+
+/**
+ * Cria badges iniciais para um perfil (para compatibilidade)
+ */
+export function criarBadgesIniciais(): Badge[] {
+    return BADGES.map(badge => ({
+        ...badge,
+        desbloqueado: false,
+    }))
+}
+
+/**
+ * Retorna a cor baseada na raridade
+ */
+export function getCorRaridade(raridade: string): string {
+    switch (raridade) {
+        case 'comum':
+            return '#9CA3AF'
+        case 'raro':
+            return '#3B82F6'
+        case 'epico':
+            return '#A855F7'
+        case 'lendario':
+            return '#F59E0B'
+        default:
+            return '#6B7280'
+    }
+}

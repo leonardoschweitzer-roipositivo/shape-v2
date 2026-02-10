@@ -5,6 +5,7 @@
  */
 
 import React from 'react'
+import { Flame } from 'lucide-react'
 
 export interface StreakBadgeProps {
     streak: number
@@ -26,16 +27,16 @@ export const StreakBadge: React.FC<StreakBadgeProps> = ({
     return (
         <div
             className={`
-        inline-flex items-center gap-1 px-2 py-1
-        bg-gradient-to-r from-orange-500/20 to-red-500/20
-        border border-orange-500/30
+        inline-flex items-center gap-1.5 px-3 py-1.5
+        bg-orange-500/10 text-orange-400
+        border border-orange-500/20
         rounded-full
         ${className}
       `}
         >
-            <span className="text-lg animate-pulse">🔥</span>
-            <span className="text-sm font-bold text-orange-300">
-                {streak}
+            <Flame size={14} className="fill-orange-500/20" />
+            <span className="text-xs font-bold font-mono tracking-wider">
+                {streak} DIAS
             </span>
         </div>
     )

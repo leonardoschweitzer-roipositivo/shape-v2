@@ -5,6 +5,7 @@
  */
 
 import React from 'react'
+import { AlertTriangle, Lightbulb, ThumbsUp, Bell } from 'lucide-react'
 import type { Insight } from '../../../types/daily-tracking'
 
 export interface DailyInsightCardProps {
@@ -12,18 +13,31 @@ export interface DailyInsightCardProps {
     className?: string
 }
 
-const TIPO_COLORS = {
-    alerta: 'border-red-500/30 bg-red-500/10',
-    dica: 'border-blue-500/30 bg-blue-500/10',
-    elogio: 'border-green-500/30 bg-green-500/10',
-    lembrete: 'border-amber-500/30 bg-amber-500/10',
-}
-
-const TIPO_TEXT_COLORS = {
-    alerta: 'text-red-300',
-    dica: 'text-blue-300',
-    elogio: 'text-green-300',
-    lembrete: 'text-amber-300',
+const TIPO_STYLES = {
+    alerta: {
+        bg: 'bg-red-500/10',
+        border: 'border-red-500/20',
+        text: 'text-red-400',
+        icon: AlertTriangle
+    },
+    dica: {
+        bg: 'bg-blue-500/10',
+        border: 'border-blue-500/20',
+        text: 'text-blue-400',
+        icon: Lightbulb
+    },
+    elogio: {
+        bg: 'bg-emerald-500/10',
+        border: 'border-emerald-500/20',
+        text: 'text-emerald-400',
+        icon: ThumbsUp
+    },
+    lembrete: {
+        bg: 'bg-amber-500/10',
+        border: 'border-amber-500/20',
+        text: 'text-amber-400',
+        icon: Bell
+    },
 }
 
 /**
@@ -43,27 +57,31 @@ export const DailyInsightCard: React.FC<DailyInsightCardProps> = ({
     insight,
     className = '',
 }) => {
+    const style = TIPO_STYLES[insight.tipo]
+    const Icon = style.icon
+
     return (
         <div
             className={`
-        border-2 rounded-lg p-4
-        ${TIPO_COLORS[insight.tipo]}
+        border rounded-xl p-4
+        ${style.bg} ${style.border}
         ${className}
       `}
         >
             <div className="flex items-start gap-3">
-                <span className="text-2xl flex-shrink-0">{insight.icone}</span>
+                <div className={`p-2 rounded-lg bg-white/5 ${style.text}`}>
+                    <Icon size={18} />
+                </div>
 
-                <div className="flex-1">
-                    <p className={`text-sm font-medium ${TIPO_TEXT_COLORS[insight.tipo]}`}>
+                <div className="flex-1 pt-0.5">
+                    <p className={`text-sm font-medium ${style.text}`}>
                         {insight.mensagem}
                     </p>
 
                     {insight.acao && (
                         <button
                             onClick={insight.acao.callback}
-                            className="mt-2 text-xs font-bold text-white/80 hover:text-white
-                underline transition-colors"
+                            className={`mt-2 text-xs font-bold hover:underline transition-colors ${style.text}`}
                         >
                             {insight.acao.label} →
                         </button>

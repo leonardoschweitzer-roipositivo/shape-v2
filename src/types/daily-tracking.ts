@@ -3,6 +3,7 @@
  * 
  * Tipos para o sistema de acompanhamento diário do Coach IA
  */
+import React from 'react'
 
 // ==========================================
 // TRACKER TYPES
@@ -22,7 +23,7 @@ export type TrackerStatus = 'pendente' | 'parcial' | 'completo' | 'alerta'
 
 export interface TrackerButton {
     id: TrackerType
-    icon: string
+    icon: string | React.ReactNode
     label: string
     status: TrackerStatus
 

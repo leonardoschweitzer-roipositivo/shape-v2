@@ -3,6 +3,7 @@
  */
 
 import React from 'react'
+import { Medal, Trophy, Crown, Star } from 'lucide-react'
 import type { Nivel, XPSystem } from '../../../types/gamification'
 
 interface LevelBadgeProps {
@@ -18,6 +19,14 @@ export const LevelBadge: React.FC<LevelBadgeProps> = ({
     size = 'md',
     showProgress = true,
 }) => {
+    // Map level to Lucide icon
+    const getLevelIcon = (level: number) => {
+        if (level >= 10) return <Crown size={24} />
+        if (level >= 7) return <Trophy size={24} />
+        if (level >= 4) return <Medal size={24} />
+        return <Star size={24} />
+    }
+
     const sizeClasses = {
         sm: 'w-12 h-12 text-lg',
         md: 'w-16 h-16 text-2xl',
@@ -50,14 +59,14 @@ export const LevelBadge: React.FC<LevelBadgeProps> = ({
                         color: nivel.cor,
                     }}
                 >
-                    <span>{nivel.icone}</span>
+                    {getLevelIcon(nivel.nivel)}
 
                     {/* Número do nível */}
                     <div
                         className="
               absolute -bottom-1 -right-1
               w-6 h-6 rounded-full
-              bg-gray-900 border-2
+              bg-[#131B2C] border-2
               flex items-center justify-center
               text-xs font-bold text-white
             "

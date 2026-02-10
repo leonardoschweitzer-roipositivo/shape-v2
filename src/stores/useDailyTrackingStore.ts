@@ -17,7 +17,7 @@ import type {
     Badge
 } from '../types/daily-tracking'
 import { gerarInsightPrincipal } from '../services/insights/daily-insights'
-import { calcularStreak, calcularScoreDia, verificarNovosBadges } from '../services/gamification'
+import { calcularStreak, calcularScoreDia, verificarNovosBadges } from '../services/gamification/index'
 import { mockResumoDiario } from '../mocks/daily-tracking'
 
 interface DailyTrackingState {

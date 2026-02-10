@@ -3,7 +3,7 @@
  */
 
 import React, { useState } from 'react'
-import { X } from 'lucide-react'
+import { X, Dumbbell, Activity, Flame, AlertCircle, TrendingDown, Clock, MessageSquare, ClipboardCheck } from 'lucide-react'
 import { useDailyTrackingStore } from '../../../stores/useDailyTrackingStore'
 
 export const RegistrarTreinoModal: React.FC = () => {
@@ -15,11 +15,11 @@ export const RegistrarTreinoModal: React.FC = () => {
     const [temDor, setTemDor] = useState(false)
     const [observacoes, setObservacoes] = useState('')
 
-    const intensidadeEmojis = {
-        1: '😰',
-        2: '😓',
-        3: '💪',
-        4: '🔥',
+    const intensidadeIcons = {
+        1: <AlertCircle size={24} />,
+        2: <TrendingDown size={24} />,
+        3: <Activity size={24} />,
+        4: <Flame size={24} />,
     }
 
     const intensidadeLabels = {
@@ -42,47 +42,53 @@ export const RegistrarTreinoModal: React.FC = () => {
     }
 
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-900 rounded-2xl max-w-lg w-full border border-gray-700 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+            <div className="bg-[#131B2C] rounded-2xl max-w-lg w-full border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto animate-fade-in">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-700 sticky top-0 bg-gray-900 z-10">
+                <div className="flex items-center justify-between p-6 border-b border-white/5 sticky top-0 bg-[#131B2C] z-10">
                     <div>
-                        <h2 className="text-xl font-bold text-white">🏋️ Registrar Treino</h2>
-                        <p className="text-sm text-gray-400">{resumoDiario.treino.tipo}</p>
+                        <div className="flex items-center gap-2">
+                            <Dumbbell size={20} className="text-purple-400" />
+                            <h2 className="text-xl font-bold text-white uppercase tracking-tight">Registrar Treino</h2>
+                        </div>
+                        <p className="text-sm text-gray-500 font-light mt-1">{resumoDiario.treino.tipo}</p>
                     </div>
                     <button
                         onClick={fecharModal}
-                        className="text-gray-400 hover:text-white transition-colors"
+                        className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all"
                     >
                         <X size={24} />
                     </button>
                 </div>
 
                 {/* Body */}
-                <div className="p-6 space-y-6">
+                <div className="p-8 space-y-8">
                     {/* Treino Sugerido */}
                     {resumoDiario.treino.planejado && (
-                        <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-                            <div className="text-blue-300 font-semibold mb-1">Treino Planejado:</div>
-                            <div className="text-white">{resumoDiario.treino.tipo}</div>
+                        <div className="bg-purple-500/5 border border-purple-500/10 rounded-2xl p-6">
+                            <div className="text-purple-400 text-xs font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
+                                <ClipboardCheck size={14} />
+                                Treino Planejado
+                            </div>
+                            <div className="text-white font-bold text-lg">{resumoDiario.treino.tipo}</div>
                         </div>
                     )}
 
                     {/* Seguiu o plano? */}
                     <div>
-                        <div className="text-sm text-gray-400 mb-2">Seguiu o plano?</div>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="text-xs font-bold text-gray-500 mb-4 uppercase tracking-wider">Seguiu o plano?</div>
+                        <div className="grid grid-cols-3 gap-3">
                             {(['sim', 'parcial', 'nao'] as const).map((opcao) => (
                                 <button
                                     key={opcao}
                                     onClick={() => setSeguiuPlano(opcao)}
                                     className={`
-                    p-3 rounded-lg border-2 transition-all capitalize
-                    ${seguiuPlano === opcao
-                                            ? 'border-green-500 bg-green-500/20 text-green-300'
-                                            : 'border-gray-700 bg-gray-800 text-gray-300 hover:border-green-500/50'
+                                        p-4 rounded-xl border transition-all font-bold uppercase tracking-tight text-xs
+                                        ${seguiuPlano === opcao
+                                            ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400 font-bold'
+                                            : 'border-white/5 bg-[#0D121F] text-gray-500 hover:border-white/20'
                                         }
-                  `}
+                                    `}
                                 >
                                     {opcao === 'nao' ? 'Não' : opcao}
                                 </button>
@@ -92,22 +98,22 @@ export const RegistrarTreinoModal: React.FC = () => {
 
                     {/* Como foi? */}
                     <div>
-                        <div className="text-sm text-gray-400 mb-2">Como foi o treino?</div>
+                        <div className="text-xs font-bold text-gray-500 mb-4 uppercase tracking-wider">Como foi o treino?</div>
                         <div className="grid grid-cols-4 gap-2">
                             {([1, 2, 3, 4] as const).map((nivel) => (
                                 <button
                                     key={nivel}
                                     onClick={() => setIntensidade(nivel)}
                                     className={`
-                    p-4 rounded-lg border-2 transition-all
-                    ${intensidade === nivel
-                                            ? 'border-purple-500 bg-purple-500/20'
-                                            : 'border-gray-700 bg-gray-800 hover:border-purple-500/50'
+                                        flex flex-col items-center justify-center p-4 rounded-xl border transition-all
+                                        ${intensidade === nivel
+                                            ? 'border-purple-500 bg-purple-500/10 text-purple-400'
+                                            : 'border-white/5 bg-[#0D121F] text-gray-500 hover:border-white/20'
                                         }
-                  `}
+                                    `}
                                 >
-                                    <div className="text-3xl mb-1">{intensidadeEmojis[nivel]}</div>
-                                    <div className="text-[10px] text-gray-400">{intensidadeLabels[nivel]}</div>
+                                    <div className="mb-2">{intensidadeIcons[nivel]}</div>
+                                    <div className="text-[10px] font-bold uppercase whitespace-nowrap">{intensidadeLabels[nivel]}</div>
                                 </button>
                             ))}
                         </div>
@@ -115,34 +121,42 @@ export const RegistrarTreinoModal: React.FC = () => {
 
                     {/* Duração */}
                     <div>
-                        <label className="text-sm text-gray-400 block mb-2">
+                        <label className="text-xs font-bold text-gray-500 block mb-3 uppercase tracking-wider flex items-center gap-2">
+                            <Clock size={14} className="text-purple-400" />
                             Duração (minutos):
                         </label>
                         <input
                             type="number"
                             value={duracao}
                             onChange={(e) => setDuracao(Number(e.target.value))}
-                            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3
-                text-white focus:outline-none focus:border-purple-500"
+                            className="w-full bg-[#0D121F] border border-white/5 rounded-xl px-4 py-3
+                                text-white focus:outline-none focus:border-purple-500/50 transition-all font-medium"
                         />
                     </div>
 
                     {/* Dor/Desconforto */}
                     <div>
-                        <label className="flex items-center gap-3 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={temDor}
-                                onChange={(e) => setTemDor(e.target.checked)}
-                                className="w-5 h-5"
-                            />
-                            <span className="text-gray-300">Sentiu dor ou desconforto durante o treino</span>
+                        <label className="flex items-center gap-3 cursor-pointer group">
+                            <div className="relative">
+                                <input
+                                    type="checkbox"
+                                    checked={temDor}
+                                    onChange={(e) => setTemDor(e.target.checked)}
+                                    className="sr-only"
+                                />
+                                <div className={`w-6 h-6 rounded-lg border-2 transition-all flex items-center justify-center
+                                    ${temDor ? 'bg-red-600 border-red-600' : 'border-white/10 bg-[#0D121F] group-hover:border-white/20'}`}>
+                                    {temDor && <AlertCircle size={14} className="text-white" />}
+                                </div>
+                            </div>
+                            <span className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors uppercase tracking-tight font-bold">Sentiu dor ou desconforto</span>
                         </label>
                     </div>
 
                     {/* Observações */}
                     <div>
-                        <label className="text-sm text-gray-400 block mb-2">
+                        <label className="text-xs font-bold text-gray-500 block mb-3 uppercase tracking-wider flex items-center gap-2">
+                            <MessageSquare size={14} className="text-purple-400" />
                             Observações (opcional):
                         </label>
                         <textarea
@@ -150,25 +164,26 @@ export const RegistrarTreinoModal: React.FC = () => {
                             onChange={(e) => setObservacoes(e.target.value)}
                             placeholder="Ex: Aumentei carga no supino, senti bem..."
                             rows={3}
-                            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3
-                text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 resize-none"
+                            className="w-full bg-[#0D121F] border border-white/5 rounded-2xl px-5 py-4
+                                text-white placeholder-gray-600 focus:outline-none focus:border-purple-500/50 
+                                resize-none transition-all text-base leading-relaxed"
                         />
                     </div>
                 </div>
 
                 {/* Footer */}
-                <div className="flex gap-3 p-6 border-t border-gray-700 sticky bottom-0 bg-gray-900">
+                <div className="flex gap-4 p-6 border-t border-white/5 sticky bottom-0 bg-[#131B2C]">
                     <button
                         onClick={fecharModal}
-                        className="flex-1 px-4 py-3 rounded-lg border border-gray-700 text-gray-300
-              hover:bg-gray-800 transition-colors"
+                        className="flex-1 px-6 py-4 rounded-xl border border-white/5 text-gray-400
+                            hover:bg-white/5 transition-all font-medium"
                     >
                         Cancelar
                     </button>
                     <button
                         onClick={handleRegistrar}
-                        className="flex-1 px-4 py-3 rounded-lg bg-purple-500 text-white font-bold
-              hover:bg-purple-600 transition-colors"
+                        className="flex-1 px-6 py-4 rounded-xl bg-purple-600 text-white font-bold
+                            hover:bg-purple-500 transition-all shadow-lg shadow-purple-900/20"
                     >
                         Registrar Treino
                     </button>

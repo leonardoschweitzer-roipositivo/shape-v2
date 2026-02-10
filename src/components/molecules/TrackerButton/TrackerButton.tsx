@@ -44,17 +44,21 @@ export const TrackerButton: React.FC<TrackerButtonProps> = ({
     return (
         <button
             onClick={onClick}
-            className="flex flex-col items-center gap-2 p-3 rounded-lg
-        transition-all duration-200 hover:scale-105 hover:shadow-lg
-        min-w-[100px]"
-            style={{
-                borderWidth: '2px',
-                borderColor: styles.corBorda,
-                backgroundColor: styles.corFundo,
-            }}
+            className="group flex flex-col items-center gap-3 p-4 rounded-xl
+        transition-all duration-200 hover:bg-white/5
+        min-w-[100px] border border-white/10 hover:border-white/20"
         >
             {/* Ícone */}
-            <span className="text-3xl">{tracker.icon}</span>
+            <div
+                className={`p-2 rounded-lg transition-colors group-hover:bg-white/5`}
+                style={{ color: styles.corTexto }}
+            >
+                {typeof tracker.icon === 'string' ? (
+                    <span className="text-2xl">{tracker.icon}</span>
+                ) : (
+                    tracker.icon
+                )}
+            </div>
 
             {/* Label */}
             <span

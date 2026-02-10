@@ -24,6 +24,8 @@ import { calcularScoreDiario, classificarScore, getInsightPrincipal } from '../.
 import { calcularNivel, calcularXPSystem } from '../../../services/gamification'
 import { mockGamificationProfiles } from '../../../mocks/gamification-profiles'
 
+import { Utensils, Dumbbell, Droplet, Moon, Activity, Apple, ChevronRight, Target } from 'lucide-react'
+
 export interface DailyTrackingCardProps {
     nomeAtleta: string
     className?: string
@@ -52,7 +54,7 @@ export const DailyTrackingCard: React.FC<DailyTrackingCardProps> = ({
     const trackers: TrackerButtonType[] = [
         {
             id: 'refeicao',
-            icon: TRACKER_CONFIG.refeicao.icon!,
+            icon: <Utensils size={20} />,
             label: TRACKER_CONFIG.refeicao.label!,
             status: resumoDiario.nutricao.refeicoes >= 3 ? 'completo' :
                 resumoDiario.nutricao.refeicoes > 0 ? 'parcial' : 'pendente',
@@ -68,7 +70,7 @@ export const DailyTrackingCard: React.FC<DailyTrackingCardProps> = ({
         },
         {
             id: 'treino',
-            icon: TRACKER_CONFIG.treino.icon!,
+            icon: <Dumbbell size={20} />,
             label: TRACKER_CONFIG.treino.label!,
             status: resumoDiario.treino.realizado ? 'completo' :
                 resumoDiario.treino.planejado ? 'pendente' : 'pendente',
@@ -80,7 +82,7 @@ export const DailyTrackingCard: React.FC<DailyTrackingCardProps> = ({
         },
         {
             id: 'agua',
-            icon: TRACKER_CONFIG.agua.icon!,
+            icon: <Droplet size={20} />,
             label: TRACKER_CONFIG.agua.label!,
             status: resumoDiario.hidratacao.totalMl >= resumoDiario.hidratacao.metaMl ? 'completo' :
                 resumoDiario.hidratacao.totalMl >= resumoDiario.hidratacao.metaMl * 0.5 ? 'parcial' : 'pendente',
@@ -96,7 +98,7 @@ export const DailyTrackingCard: React.FC<DailyTrackingCardProps> = ({
         },
         {
             id: 'sono',
-            icon: TRACKER_CONFIG.sono.icon!,
+            icon: <Moon size={20} />,
             label: TRACKER_CONFIG.sono.label!,
             status: resumoDiario.sono.horas >= 7 ? 'completo' :
                 resumoDiario.sono.horas >= 6 ? 'parcial' : 'alerta',
@@ -112,7 +114,7 @@ export const DailyTrackingCard: React.FC<DailyTrackingCardProps> = ({
         },
         {
             id: 'dor',
-            icon: TRACKER_CONFIG.dor.icon!,
+            icon: <Activity size={20} />,
             label: TRACKER_CONFIG.dor.label!,
             status: resumoDiario.doresAtivas > 0 ? 'alerta' : 'completo',
             detalhe: resumoDiario.doresAtivas > 0 ? `${resumoDiario.doresAtivas}` : 'OK',
@@ -133,7 +135,7 @@ export const DailyTrackingCard: React.FC<DailyTrackingCardProps> = ({
     const insight = insightAtual || insightGerado || {
         tipo: 'dica' as const,
         prioridade: 5 as const,
-        icone: '💪',
+        icone: '', // Ignorado agora
         mensagem: 'Continue registrando suas atividades diárias!',
     }
 
@@ -153,37 +155,46 @@ export const DailyTrackingCard: React.FC<DailyTrackingCardProps> = ({
     }
 
     return (
-        <div
-            className={`
-        bg-gradient-to-br from-gray-900/50 to-gray-800/50
-        border border-gray-700/50
-        rounded-2xl shadow-2xl
-        p-6
-        ${className}
-      `}
-        >
-            {/* Header */}
-            <DailyTrackerHeader
-                nomeAtleta={nomeAtleta}
-                streak={resumoDiario.streakAtual}
-                nivel={nivelAtual}
-                xpSystem={xpSystem}
-                className="mb-6"
-            />
+        <div className={`w-full flex flex-col gap-10 ${className}`}>
+            {/* Top Section: Header & Score */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Header Card */}
+                <div className="bg-[#0D121F] border border-white/5 rounded-xl p-6 flex flex-col justify-center">
+                    <DailyTrackerHeader
+                        nomeAtleta={nomeAtleta}
+                        streak={resumoDiario.streakAtual}
+                        nivel={nivelAtual}
+                        xpSystem={xpSystem}
+                    />
+                </div>
 
-            {/* Score do Dia */}
-            <div className="mb-6">
+                {/* Score Card */}
                 <DailyScoreCard
                     score={score}
                     categoria={scoreInfo.categoria}
                     cor={scoreInfo.cor}
-                    emoji={scoreInfo.emoji}
                     mensagem={scoreInfo.mensagem}
                 />
             </div>
 
+
+            {/* Section Header: Metas do Dia */}
+            <div className="flex items-center gap-4">
+                <div className="p-2.5 bg-[#131B2C] rounded-xl border border-white/5 text-blue-400 shadow-lg">
+                    <Target size={22} />
+                </div>
+                <div>
+                    <h3 className="text-lg font-bold text-white tracking-tight uppercase">
+                        Monitoramento Diário
+                    </h3>
+                    <p className="text-sm text-gray-500 font-light">
+                        Registre suas atividades para manter o foco
+                    </p>
+                </div>
+            </div>
+
             {/* Grid de Trackers */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 {trackers.map((tracker) => (
                     <TrackerButton
                         key={tracker.id}
@@ -193,11 +204,28 @@ export const DailyTrackingCard: React.FC<DailyTrackingCardProps> = ({
                 ))}
             </div>
 
-            {/* Resumo Nutricional */}
-            <div className="mb-6 p-4 bg-gray-800/50 rounded-lg border border-gray-700/30">
-                <h3 className="text-sm font-semibold text-gray-300 mb-4 uppercase tracking-wide">
-                    📊 Resumo Nutricional
-                </h3>
+            {/* Resumo Nutricional Section */}
+            <div className="p-6 bg-[#0D121F] rounded-2xl border border-white/5">
+                {/* Section Header */}
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-4">
+                        <div className="p-2.5 bg-[#131B2C] rounded-xl border border-white/5 text-emerald-400 shadow-lg">
+                            <Apple size={22} />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-white tracking-tight uppercase">
+                                Nutrição & Metabolismo
+                            </h3>
+                            <p className="text-sm text-gray-500 font-light">
+                                Resumo de macros e ingestão calórica
+                            </p>
+                        </div>
+                    </div>
+                    <button className="text-emerald-400 p-2 hover:bg-emerald-400/10 rounded-lg transition-colors">
+                        <ChevronRight size={20} />
+                    </button>
+                </div>
+
                 <NutritionalSummary
                     calorias={{
                         atual: resumoDiario.nutricao.totalCalorias,
@@ -222,7 +250,7 @@ export const DailyTrackingCard: React.FC<DailyTrackingCardProps> = ({
             <DailyInsightCard insight={insight} />
 
             {/* Conversational Input */}
-            <div className="mt-6">
+            <div>
                 <ConversationalInput />
             </div>
 

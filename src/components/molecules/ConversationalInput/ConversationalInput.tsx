@@ -3,7 +3,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react'
-import { Send, Sparkles } from 'lucide-react'
+import { Send, Sparkles, Bot, MessageSquare } from 'lucide-react'
 import { processarInput } from '../../../services/nlp/conversational-input'
 import { useDailyTrackingStore } from '../../../stores/useDailyTrackingStore'
 
@@ -160,76 +160,94 @@ export const ConversationalInput: React.FC = () => {
     }
 
     return (
-        <div className="bg-gray-800/30 rounded-lg border border-gray-700/30 overflow-hidden">
-            {/* Histórico de Mensagens */}
-            {messages.length > 0 && (
-                <div className="max-h-48 overflow-y-auto p-4 space-y-2 border-b border-gray-700/30">
-                    {messages.map((msg) => (
-                        <div
-                            key={msg.id}
-                            className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                        >
+        <div className="flex flex-col gap-6">
+            {/* Coach IA Header */}
+            <div className="flex items-center gap-4">
+                <div className="p-2.5 bg-[#0D121F] rounded-xl border border-white/5 text-blue-400 shadow-lg">
+                    <Bot size={22} className="animate-pulse" />
+                </div>
+                <div>
+                    <h3 className="text-lg font-bold text-white tracking-tight uppercase">
+                        Coach IA — Registro Inteligente
+                    </h3>
+                    <p className="text-sm text-gray-500 font-light">
+                        Registre refeições, água ou treinos via texto livre
+                    </p>
+                </div>
+            </div>
+
+            <div className="bg-[#0D121F] rounded-2xl border border-white/5 overflow-hidden shadow-2xl">
+                {/* Histórico de Mensagens */}
+                {messages.length > 0 && (
+                    <div className="max-h-64 overflow-y-auto p-6 space-y-4 border-b border-white/5 bg-[#131B2C]/30 custom-scrollbar">
+                        {messages.map((msg) => (
                             <div
-                                className={`
-                  max-w-[80%] rounded-lg px-3 py-2 text-sm
-                  ${msg.type === 'user'
-                                        ? 'bg-blue-500/20 text-blue-200 border border-blue-500/30'
-                                        : 'bg-gray-700/50 text-gray-300 border border-gray-600/30'
-                                    }
-                `}
+                                key={msg.id}
+                                className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}
                             >
-                                {msg.text}
+                                <div
+                                    className={`
+                                        max-w-[85%] rounded-2xl px-5 py-3 text-sm leading-relaxed
+                                        ${msg.type === 'user'
+                                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20'
+                                            : 'bg-[#131B2C] text-gray-300 border border-white/5 shadow-inner'
+                                        }
+                                    `}
+                                >
+                                    {msg.text}
+                                </div>
                             </div>
-                        </div>
-                    ))}
-                    <div ref={messagesEndRef} />
-                </div>
-            )}
+                        ))}
+                        <div ref={messagesEndRef} />
+                    </div>
+                )}
 
-            {/* Input Form */}
-            <form onSubmit={handleSubmit} className="p-3 flex gap-2 items-center">
-                <div className="flex-1 flex items-center gap-2 bg-gray-800/50 rounded-lg px-4 py-2 border border-gray-700/50 focus-within:border-blue-500/50 transition-colors">
-                    <Sparkles size={16} className="text-blue-400" />
-                    <input
-                        ref={inputRef}
-                        type="text"
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="💬 Ex: 'comi 200g de frango' ou 'bebi 500ml de água'..."
-                        disabled={isProcessing}
-                        className="flex-1 bg-transparent text-white placeholder-gray-500 outline-none text-sm"
-                    />
-                </div>
+                {/* Input Form */}
+                <form onSubmit={handleSubmit} className="p-4 flex gap-4 items-center">
+                    <div className="flex-1 flex items-center gap-4 bg-[#131B2C] rounded-xl px-6 py-5 border border-white/5 focus-within:border-blue-500/50 transition-all shadow-inner group">
+                        <Sparkles size={20} className="text-blue-400 group-focus-within:scale-110 transition-transform" />
+                        <input
+                            ref={inputRef}
+                            type="text"
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            placeholder="Descreva sua atividade (ex: 'comi 2 ovos e 1 pão')..."
+                            disabled={isProcessing}
+                            className="flex-1 bg-transparent text-white placeholder-gray-600 outline-none text-base font-medium"
+                        />
+                    </div>
 
-                <button
-                    type="submit"
-                    disabled={!input.trim() || isProcessing}
-                    className="p-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 
-            transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    {isProcessing ? (
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                        <Send size={20} />
-                    )}
-                </button>
-            </form>
+                    <button
+                        type="submit"
+                        disabled={!input.trim() || isProcessing}
+                        className="p-5 rounded-xl bg-blue-600 text-white hover:bg-blue-500 
+                            transition-all shadow-lg shadow-blue-900/20 disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed
+                            active:scale-95"
+                    >
+                        {isProcessing ? (
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                            <Send size={24} />
+                        )}
+                    </button>
+                </form>
 
-            {/* Sugestões rápidas */}
-            {messages.length === 0 && (
-                <div className="px-4 pb-3 flex gap-2 flex-wrap">
-                    {['bebi 500ml', 'comi frango', 'ajuda'].map((suggestion) => (
-                        <button
-                            key={suggestion}
-                            onClick={() => setInput(suggestion)}
-                            className="text-xs px-3 py-1 rounded-full bg-gray-700/50 text-gray-400 
-                hover:bg-gray-600/50 hover:text-gray-300 transition-colors"
-                        >
-                            {suggestion}
-                        </button>
-                    ))}
-                </div>
-            )}
+                {/* Sugestões rápidas */}
+                {messages.length === 0 && (
+                    <div className="px-6 pb-6 flex gap-2 flex-wrap">
+                        {['bebi 500ml de água', 'comi 200g de frango', 'treino de hoje rendeu', 'ajuda'].map((suggestion) => (
+                            <button
+                                key={suggestion}
+                                onClick={() => setInput(suggestion)}
+                                className="text-[10px] uppercase tracking-widest font-bold px-4 py-2 rounded-lg bg-[#131B2C] text-gray-500 
+                                    border border-white/5 hover:border-blue-500/30 hover:text-blue-400 transition-all"
+                            >
+                                {suggestion}
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
         </div>
     )
 }

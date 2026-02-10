@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test</title>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="module">
+        console.log('🔥 TEST SCRIPT LOADED');
+        
+        try {
+            const rootEl = document.getElementById('root');
+            console.log('✅ Root element found:', rootEl);
+            
+            rootEl.innerHTML = '<h1 style="color: white; background: #0A0F1C; padding: 20px;">Test Success!</h1>';
+            
+            console.log('✅ Content added to root');
+        } catch (error) {
+            console.error('❌ Error:', error);
+        }
+    </script>
+</body>
+</html>

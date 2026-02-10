@@ -9,7 +9,7 @@ interface DailyScoreCardProps {
     score: number
     categoria: 'excelente' | 'bom' | 'regular' | 'ruim'
     cor: string
-    emoji: string
+    emoji?: string
     mensagem: string
     variacao?: number  // Comparado com ontem (ex: +5, -3)
 }
@@ -18,7 +18,6 @@ export const DailyScoreCard: React.FC<DailyScoreCardProps> = ({
     score,
     categoria,
     cor,
-    emoji,
     mensagem,
     variacao,
 }) => {
@@ -29,10 +28,9 @@ export const DailyScoreCard: React.FC<DailyScoreCardProps> = ({
     }
 
     return (
-        <div className="bg-gradient-to-br from-gray-900/90 to-gray-800/90 rounded-xl p-6 border border-gray-700/50">
+        <div className="bg-[#131B2C] rounded-xl p-6 border border-white/5">
             <div className="flex items-center justify-between mb-4">
-                <h3 className="text-white font-semibold">Score do Dia</h3>
-                <div className="text-2xl">{emoji}</div>
+                <h3 className="text-white font-bold uppercase tracking-wider text-sm">Score do Dia</h3>
             </div>
 
             <div className="flex items-center gap-6">

@@ -3,7 +3,7 @@
  */
 
 import React, { useState } from 'react'
-import { X } from 'lucide-react'
+import { X, Moon, Frown, Cloud, Meh, Smile, Zap, Timer, BedDouble, Sun } from 'lucide-react'
 import { useDailyTrackingStore } from '../../../stores/useDailyTrackingStore'
 
 export const RegistrarSonoModal: React.FC = () => {
@@ -31,12 +31,12 @@ export const RegistrarSonoModal: React.FC = () => {
     const horasTotal = Math.floor(duracaoTotal / 60)
     const minutosTotal = duracaoTotal % 60
 
-    const qualidadeEmojis = {
-        1: '😫',
-        2: '😴',
-        3: '😊',
-        4: '😃',
-        5: '🤩',
+    const qualidadeIcons = {
+        1: <Frown size={24} />,
+        2: <Cloud size={24} />,
+        3: <Meh size={24} />,
+        4: <Smile size={24} />,
+        5: <Zap size={24} />,
     }
 
     const qualidadeLabels = {
@@ -75,135 +75,157 @@ export const RegistrarSonoModal: React.FC = () => {
     }
 
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-900 rounded-2xl max-w-lg w-full border border-gray-700 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+            <div className="bg-[#131B2C] rounded-2xl max-w-lg w-full border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto animate-fade-in">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-700 sticky top-0 bg-gray-900 z-10">
+                <div className="flex items-center justify-between p-6 border-b border-white/5 sticky top-0 bg-[#131B2C] z-10">
                     <div>
-                        <h2 className="text-xl font-bold text-white">😴 Registrar Sono</h2>
-                        <p className="text-sm text-gray-400">Como foi sua noite de sono?</p>
+                        <div className="flex items-center gap-2">
+                            <Moon size={20} className="text-indigo-400" />
+                            <h2 className="text-xl font-bold text-white uppercase tracking-tight">Registrar Sono</h2>
+                        </div>
+                        <p className="text-sm text-gray-500 font-light mt-1">Como foi sua noite de sono?</p>
                     </div>
                     <button
                         onClick={fecharModal}
-                        className="text-gray-400 hover:text-white transition-colors"
+                        className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all"
                     >
                         <X size={24} />
                     </button>
                 </div>
 
                 {/* Body */}
-                <div className="p-6 space-y-6">
+                <div className="p-8 space-y-8">
                     {/* Horários */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="text-sm text-gray-400 block mb-2">
-                                Que horas dormiu?
+                    <div className="grid grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                                <BedDouble size={14} className="text-indigo-400" />
+                                Dormiu às
                             </label>
                             <input
                                 type="time"
                                 value={horarioDormiu}
                                 onChange={(e) => setHorarioDormiu(e.target.value)}
-                                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3
-                  text-white focus:outline-none focus:border-blue-500"
+                                className="w-full bg-[#0D121F] border border-white/5 rounded-xl px-4 py-3
+                                    text-white focus:outline-none focus:border-indigo-500/50 transition-all font-medium"
                             />
                         </div>
-                        <div>
-                            <label className="text-sm text-gray-400 block mb-2">
-                                Que horas acordou?
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                                <Sun size={14} className="text-amber-400" />
+                                Acordou às
                             </label>
                             <input
                                 type="time"
                                 value={horarioAcordou}
                                 onChange={(e) => setHorarioAcordou(e.target.value)}
-                                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3
-                  text-white focus:outline-none focus:border-blue-500"
+                                className="w-full bg-[#0D121F] border border-white/5 rounded-xl px-4 py-3
+                                    text-white focus:outline-none focus:border-indigo-500/50 transition-all font-medium"
                             />
                         </div>
                     </div>
 
                     {/* Duração Calculada */}
-                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-center">
-                        <div className="text-blue-300 text-sm mb-1">Total de Sono</div>
-                        <div className="text-3xl font-bold text-white">
+                    <div className="bg-indigo-500/5 border border-indigo-500/10 rounded-2xl p-6 text-center">
+                        <div className="text-indigo-400 text-xs font-bold uppercase tracking-widest mb-2 flex items-center justify-center gap-2">
+                            <Timer size={14} />
+                            Tempo total de sono
+                        </div>
+                        <div className="text-4xl font-bold text-white tracking-tight">
                             {horasTotal}h {minutosTotal > 0 && `${minutosTotal}min`}
                         </div>
-                        <div className="text-xs text-gray-400 mt-1">
-                            {duracaoTotal < 420 && '⚠️ Menos de 7 horas'}
-                            {duracaoTotal >= 420 && duracaoTotal < 540 && '✓ Bom'}
-                            {duracaoTotal >= 540 && '✓ Ótimo'}
+                        <div className="text-[10px] text-gray-500 mt-2 uppercase tracking-wide font-medium">
+                            {duracaoTotal < 420 && <span className="text-amber-400">⚠️ Atenção: Menos de 7 horas</span>}
+                            {duracaoTotal >= 420 && duracaoTotal < 540 && <span className="text-indigo-400">✓ Meta atingida</span>}
+                            {duracaoTotal >= 540 && <span className="text-emerald-400">✓ Recuperação excelente</span>}
                         </div>
                     </div>
 
                     {/* Qualidade do Sono */}
                     <div>
-                        <div className="text-sm text-gray-400 mb-3">Qualidade do sono:</div>
+                        <div className="text-xs font-bold text-gray-500 mb-4 uppercase tracking-wider">Qualidade do sono:</div>
                         <div className="grid grid-cols-5 gap-2">
                             {([1, 2, 3, 4, 5] as const).map((nivel) => (
                                 <button
                                     key={nivel}
                                     onClick={() => setQualidade(nivel)}
                                     className={`
-                    p-3 rounded-lg border-2 transition-all
-                    ${qualidade === nivel
-                                            ? 'border-blue-500 bg-blue-500/20'
-                                            : 'border-gray-700 bg-gray-800 hover:border-blue-500/50'
+                                        flex flex-col items-center justify-center p-4 rounded-xl border transition-all
+                                        ${qualidade === nivel
+                                            ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
+                                            : 'border-white/5 bg-[#0D121F] text-gray-500 hover:border-white/20'
                                         }
-                  `}
+                                    `}
                                 >
-                                    <div className="text-2xl mb-1">{qualidadeEmojis[nivel]}</div>
-                                    <div className="text-[10px] text-gray-400">{qualidadeLabels[nivel]}</div>
+                                    <div className="mb-2">{qualidadeIcons[nivel]}</div>
+                                    <div className="text-[10px] font-bold uppercase whitespace-nowrap">{qualidadeLabels[nivel]}</div>
                                 </button>
                             ))}
                         </div>
                     </div>
 
                     {/* Acordou durante a noite */}
-                    <div>
-                        <label className="flex items-center gap-3 cursor-pointer mb-3">
-                            <input
-                                type="checkbox"
-                                checked={acordouNoite}
-                                onChange={(e) => setAcordouNoite(e.target.checked)}
-                                className="w-5 h-5"
-                            />
-                            <span className="text-gray-300">Acordou durante a noite</span>
+                    <div className="space-y-4">
+                        <label className="flex items-center gap-3 cursor-pointer group">
+                            <div className="relative">
+                                <input
+                                    type="checkbox"
+                                    checked={acordouNoite}
+                                    onChange={(e) => setAcordouNoite(e.target.checked)}
+                                    className="sr-only"
+                                />
+                                <div className={`w-6 h-6 rounded-lg border-2 transition-all flex items-center justify-center
+                                    ${acordouNoite ? 'bg-indigo-600 border-indigo-600' : 'border-white/10 bg-[#0D121F] group-hover:border-white/20'}`}>
+                                    {acordouNoite && <BedDouble size={14} className="text-white" />}
+                                </div>
+                            </div>
+                            <span className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors uppercase tracking-tight font-bold">Acordou durante a noite</span>
                         </label>
 
                         {acordouNoite && (
-                            <div>
-                                <label className="text-sm text-gray-400 block mb-2">
+                            <div className="animate-fade-in pl-9">
+                                <label className="text-[10px] font-bold text-gray-500 block mb-2 uppercase tracking-widest">
                                     Quantas vezes?
                                 </label>
-                                <input
-                                    type="number"
-                                    value={vezesAcordou}
-                                    onChange={(e) => setVezesAcordou(Number(e.target.value))}
-                                    min={1}
-                                    max={10}
-                                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3
-                    text-white focus:outline-none focus:border-blue-500"
-                                />
+                                <div className="flex gap-2">
+                                    {[1, 2, 3, 4, 10].map((v) => (
+                                        <button
+                                            key={v}
+                                            onClick={() => setVezesAcordou(v)}
+                                            className={`p-2 w-10 h-10 rounded-xl border transition-all text-xs font-bold
+                                                ${vezesAcordou === v
+                                                    ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
+                                                    : 'border-white/5 bg-[#0D121F] text-gray-500 hover:border-white/20'
+                                                }`}
+                                        >
+                                            {v === 10 ? '5+' : v}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         )}
                     </div>
 
                     {/* Energia ao acordar */}
                     <div>
-                        <label className="text-sm text-gray-400 block mb-2">
-                            Energia ao acordar: <span className="text-white font-bold">{energiaAoAcordar}/10</span>
-                        </label>
+                        <div className="flex items-center justify-between mb-4">
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                                <Zap size={14} className="text-amber-400" />
+                                Energia ao acordar
+                            </label>
+                            <span className="text-xl font-bold text-white tracking-tighter">{energiaAoAcordar}/10</span>
+                        </div>
                         <input
                             type="range"
                             min={1}
                             max={10}
                             value={energiaAoAcordar}
                             onChange={(e) => setEnergiaAoAcordar(Number(e.target.value))}
-                            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer 
-                [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 
-                [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full 
-                [&::-webkit-slider-thumb]:bg-blue-500"
+                            className="w-full h-2 bg-[#0D121F] rounded-full appearance-none cursor-pointer accent-indigo-500
+                                border border-white/5"
                         />
-                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                        <div className="flex justify-between text-[10px] font-bold text-gray-600 mt-3 uppercase tracking-widest">
                             <span>Péssima</span>
                             <span>Excelente</span>
                         </div>
@@ -211,18 +233,18 @@ export const RegistrarSonoModal: React.FC = () => {
                 </div>
 
                 {/* Footer */}
-                <div className="flex gap-3 p-6 border-t border-gray-700 sticky bottom-0 bg-gray-900">
+                <div className="flex gap-4 p-6 border-t border-white/5 sticky bottom-0 bg-[#131B2C]">
                     <button
                         onClick={fecharModal}
-                        className="flex-1 px-4 py-3 rounded-lg border border-gray-700 text-gray-300
-              hover:bg-gray-800 transition-colors"
+                        className="flex-1 px-6 py-4 rounded-xl border border-white/5 text-gray-400
+                            hover:bg-white/5 transition-all font-medium"
                     >
                         Cancelar
                     </button>
                     <button
                         onClick={handleRegistrar}
-                        className="flex-1 px-4 py-3 rounded-lg bg-blue-500 text-white font-bold
-              hover:bg-blue-600 transition-colors"
+                        className="flex-1 px-6 py-4 rounded-xl bg-indigo-600 text-white font-bold
+                            hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-900/20"
                     >
                         Registrar Sono
                     </button>

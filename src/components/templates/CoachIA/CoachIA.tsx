@@ -12,9 +12,7 @@ import {
     ChevronRight
 } from 'lucide-react';
 import { CoachPillarCard } from '@/components/molecules';
-import { HeroCard } from '@/components/organisms';
 import { DailyTrackingCard } from '@/components/organisms/DailyTrackingCard';
-import { HeroContent } from '@/features/dashboard/types';
 
 interface CoachIAProps {
     onOpenChat?: () => void;
@@ -41,21 +39,6 @@ export const CoachIA: React.FC<CoachIAProps> = ({ onOpenChat, hideHeader = false
         setTimeout(() => setIsGenerating(null), 2000);
     };
 
-    const heroContent: HeroContent = {
-        badge: { label: isPersonalMode ? 'MODO CONSULTORIA PERSONAL' : 'VITRÚVIO COACH IA', variant: 'primary' },
-        date: new Date(),
-        title: isPersonalMode ? 'INTELIGÊNCIA PARA \n SEUS ALUNOS' : 'TRANSFORME SEUS \n DADOS EM ESTÉTICA',
-        description: isPersonalMode
-            ? 'Utilize o poder da IA para otimizar os resultados da sua consultoria. O Vitrúvio analisa os dados biométricos dos seus alunos e sugere as melhores estratégias de treino e nutrição.'
-            : 'Sua análise completa de proporções e simetria está pronta. O Vitrúvio utiliza a matemática clássica para gerar planos de ação personalizados para o seu físico ideal.',
-        cta: { label: 'Consultar o Coach', href: '#' },
-        image: {
-            src: '/images/robot-coach.png',
-            alt: 'Coach IA Banner',
-            position: 'background'
-        }
-    };
-
     return (
         <div className={`flex-1 flex flex-col ${hideHeader ? 'p-0' : 'p-4 md:p-8'}`}>
             <div className="max-w-7xl mx-auto flex flex-col gap-8 pb-10 flex-1 w-full">
@@ -76,11 +59,6 @@ export const CoachIA: React.FC<CoachIAProps> = ({ onOpenChat, hideHeader = false
                     </>
                 )}
 
-                {/* Hero Card Banner */}
-                <HeroCard content={heroContent} />
-
-                <div className="h-px w-full bg-white/10" />
-
                 {/* Daily Tracking Card */}
                 <DailyTrackingCard
                     nomeAtleta="João Silva"
@@ -88,64 +66,6 @@ export const CoachIA: React.FC<CoachIAProps> = ({ onOpenChat, hideHeader = false
                 />
 
                 <div className="h-px w-full bg-white/5" />
-
-                {/* Quick Stats & Context */}
-                <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                    <div className="lg:col-span-8 flex flex-col gap-6">
-                        <div className="flex items-center gap-4">
-                            <div className="p-2.5 bg-[#131B2C] rounded-xl border border-white/5 text-primary shadow-lg">
-                                <Bot size={22} />
-                            </div>
-                            <div>
-                                <h3 className="text-xl font-bold text-white tracking-tight uppercase">
-                                    Quem é o Vitrúvio?
-                                </h3>
-                                <p className="text-sm text-gray-500 font-light">
-                                    Seu guia na busca pela harmonia clássica das proporções
-                                </p>
-                            </div>
-                        </div>
-                        <p className="text-gray-300 leading-relaxed text-sm md:text-base bg-white/5 p-6 rounded-2xl border border-white/10">
-                            Olá! Sou o <span className="text-primary font-semibold">Vitrúvio</span>, seu coach virtual inteligente.
-                            Minha missão é <span className="text-white font-medium">cruzar seus dados</span> — histórico de avaliações,
-                            proporções atuais, assimetrias e objetivos — para gerar planos de ação personalizados que te ajudem a atingir o físico ideal.
-                            Tudo baseado nos princípios que inspiraram o Homem Vitruviano de Da Vinci.
-                        </p>
-                    </div>
-
-                    <div className="lg:col-span-4 grid grid-cols-1 gap-4 h-full">
-                        <div className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/5">
-                            <Target size={20} className="text-primary shrink-0" />
-                            <div>
-                                <p className="text-[10px] text-gray-500 uppercase tracking-wider">Análises</p>
-                                <p className="text-sm font-bold text-white">Proporções Atuais</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/5">
-                            <TrendingUp size={20} className="text-emerald-400 shrink-0" />
-                            <div>
-                                <p className="text-[10px] text-gray-500 uppercase tracking-wider">Evolução</p>
-                                <p className="text-sm font-bold text-white">Histórico de Dados</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/5">
-                            <AlertTriangle size={20} className="text-amber-400 shrink-0" />
-                            <div>
-                                <p className="text-[10px] text-gray-500 uppercase tracking-wider">Correção</p>
-                                <p className="text-sm font-bold text-white">Foco em Assimetrias</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/5">
-                            <Sparkles size={20} className="text-violet-400 shrink-0" />
-                            <div>
-                                <p className="text-[10px] text-gray-500 uppercase tracking-wider">Planos</p>
-                                <p className="text-sm font-bold text-white">Nutrição & Treino</p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <div className="h-px w-full bg-white/10" />
 
                 {/* Section Header */}
                 <div className="flex items-center gap-4">

@@ -7,7 +7,7 @@
 import React from 'react'
 import { StreakBadge } from '../../atoms/StreakBadge'
 import { LevelBadge } from '../LevelBadge'
-import { getSaudacao } from '../../../config/tracker-config'
+// import { getSaudacao } from '../../../config/tracker-config' // Removido para customização local
 import type { Nivel, XPSystem } from '../../../types/gamification'
 
 export interface DailyTrackerHeaderProps {
@@ -31,12 +31,20 @@ export const DailyTrackerHeader: React.FC<DailyTrackerHeaderProps> = ({
     xpSystem,
     className = '',
 }) => {
-    const saudacao = getSaudacao()
+    // Saudação sóbria sem emotions
+    const getSaudacaoSobria = () => {
+        const hora = new Date().getHours()
+        if (hora < 12) return 'Bom dia'
+        if (hora < 18) return 'Boa tarde'
+        return 'Boa noite'
+    }
+
+    const saudacao = getSaudacaoSobria()
     const hoje = new Date()
     const dataFormatada = hoje.toLocaleDateString('pt-BR', {
-        weekday: 'short',
+        weekday: 'long',
         day: '2-digit',
-        month: 'short'
+        month: 'long'
     })
 
     return (
