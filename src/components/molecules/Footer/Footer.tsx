@@ -5,9 +5,10 @@ interface FooterProps {
   onOpenDesignSystem: () => void;
   onOpenTerms: () => void;
   onOpenPrivacy: () => void;
+  onOpenAthletePortal?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onOpenDesignSystem, onOpenTerms, onOpenPrivacy }) => {
+export const Footer: React.FC<FooterProps> = ({ onOpenDesignSystem, onOpenTerms, onOpenPrivacy, onOpenAthletePortal }) => {
   return (
     <footer className="w-full border-t border-card-border bg-[#0A0F1C] py-6 px-8 mt-auto z-10">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
@@ -23,6 +24,15 @@ export const Footer: React.FC<FooterProps> = ({ onOpenDesignSystem, onOpenTerms,
             <Layers size={14} className="group-hover:text-primary transition-colors" />
             Design System
           </button>
+
+          {onOpenAthletePortal && (
+            <button
+              onClick={onOpenAthletePortal}
+              className="text-xs font-bold text-teal-500 hover:text-teal-400 transition-colors uppercase tracking-wider"
+            >
+              🏋️ Portal Atleta
+            </button>
+          )}
 
           <div className="flex gap-4">
             <button

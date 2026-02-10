@@ -1,0 +1,1 @@
+export { DicaCoach } from './DicaCoach'

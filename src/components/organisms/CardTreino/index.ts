@@ -1,0 +1,1 @@
+export { CardTreino } from './CardTreino'

@@ -1,0 +1,1 @@
+export { CardDadosBasicos } from './CardDadosBasicos'

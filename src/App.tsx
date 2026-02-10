@@ -36,11 +36,12 @@ import {
   type ProfileType
 } from '@/components';
 // import { GamificationPage } from './pages/GamificationPage'; // DISABLED - Feature para depois
+import { AthletePortal } from './pages/AthletePortal';
 import { useAthleteStore } from '@/stores/athleteStore';
 import { useDataStore } from '@/stores/dataStore';
 import { PersonalAthlete, MeasurementHistory } from '@/mocks/personal';
 
-type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details' | 'terms' | 'privacy' | 'my-record' | 'gamification';
+type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details' | 'terms' | 'privacy' | 'my-record' | 'gamification' | 'athlete-portal';
 
 const App: React.FC = () => {
   console.log('🎯 App component rendering...');
@@ -471,6 +472,8 @@ const App: React.FC = () => {
         );
       // case 'gamification': // DISABLED - Feature para depois
       //   return <GamificationPage />;
+      case 'athlete-portal':
+        return <AthletePortal />;
       case 'dashboard':
       default:
         return <DashboardView userProfile={userProfile} />;
@@ -528,6 +531,7 @@ const App: React.FC = () => {
       case 'profile': return 'MEU PERFIL';
       case 'settings': return 'CONFIGURAÇÕES';
       case 'my-record': return 'MINHA FICHA';
+      case 'athlete-portal': return 'PORTAL DO ATLETA';
       default: return currentView.toUpperCase();
     }
   }
@@ -571,6 +575,7 @@ const App: React.FC = () => {
             onOpenDesignSystem={() => setCurrentView('design-system')}
             onOpenTerms={() => setCurrentView('terms')}
             onOpenPrivacy={() => setCurrentView('privacy')}
+            onOpenAthletePortal={() => setCurrentView('athlete-portal')}
           />
         </div>
       </main>
