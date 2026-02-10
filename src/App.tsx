@@ -35,7 +35,7 @@ import {
   PrivacyPolicy,
   type ProfileType
 } from '@/components';
-import { GamificationPage } from './pages/GamificationPage';
+// import { GamificationPage } from './pages/GamificationPage'; // DISABLED - Feature para depois
 import { useAthleteStore } from '@/stores/athleteStore';
 import { useDataStore } from '@/stores/dataStore';
 import { PersonalAthlete, MeasurementHistory } from '@/mocks/personal';
@@ -469,8 +469,8 @@ const App: React.FC = () => {
             hideStatusControl={true}
           />
         );
-      case 'gamification':
-        return <GamificationPage />;
+      // case 'gamification': // DISABLED - Feature para depois
+      //   return <GamificationPage />;
       case 'dashboard':
       default:
         return <DashboardView userProfile={userProfile} />;

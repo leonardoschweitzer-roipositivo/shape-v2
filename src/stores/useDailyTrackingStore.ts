@@ -17,7 +17,7 @@ import type {
     Badge
 } from '../types/daily-tracking'
 import { gerarInsightPrincipal } from '../services/insights/daily-insights'
-import { calcularStreak, calcularScoreDia, verificarNovosBadges } from '../services/gamification/index'
+// import { calcularStreak, calcularScoreDia, verificarNovosBadges } from '../services/gamification/index' // DISABLED - Feature para depois
 import { mockResumoDiario } from '../mocks/daily-tracking'
 
 interface DailyTrackingState {
@@ -89,12 +89,13 @@ export const useDailyTrackingStore = create<DailyTrackingState>()(
                     ((resumoAtualizado.nutricao.totalCalorias / resumoAtualizado.nutricao.metaCalorias) * 100)
                 )
 
-                // Recalcular score
-                resumoAtualizado.scoreDia = calcularScoreDia(resumoAtualizado)
+                // Recalcular score - DISABLED gamification
+                // resumoAtualizado.scoreDia = calcularScoreDia(resumoAtualizado)
+                resumoAtualizado.scoreDia = 50 // Mock simples
 
                 set({ resumoDiario: resumoAtualizado, modalAberto: null })
                 get().atualizarInsight()
-                get().verificarBadges()
+                // get().verificarBadges() // DISABLED - gamification
             },
 
             // Registrar treino
@@ -112,11 +113,12 @@ export const useDailyTrackingStore = create<DailyTrackingState>()(
                     updatedAt: new Date(),
                 }
 
-                resumoAtualizado.scoreDia = calcularScoreDia(resumoAtualizado)
+                // resumoAtualizado.scoreDia = calcularScoreDia(resumoAtualizado) // DISABLED
+                resumoAtualizado.scoreDia = 50
 
                 set({ resumoDiario: resumoAtualizado, modalAberto: null })
                 get().atualizarInsight()
-                get().verificarBadges()
+                // get().verificarBadges() // DISABLED
             },
 
             // Registrar água
@@ -136,7 +138,8 @@ export const useDailyTrackingStore = create<DailyTrackingState>()(
                     (resumoAtualizado.hidratacao.totalMl / resumoAtualizado.hidratacao.metaMl) * 100
                 )
 
-                resumoAtualizado.scoreDia = calcularScoreDia(resumoAtualizado)
+                // resumoAtualizado.scoreDia = calcularScoreDia(resumoAtualizado) // DISABLED
+                resumoAtualizado.scoreDia = 50
 
                 set({ resumoDiario: resumoAtualizado })
                 get().atualizarInsight()
@@ -156,7 +159,8 @@ export const useDailyTrackingStore = create<DailyTrackingState>()(
                     updatedAt: new Date(),
                 }
 
-                resumoAtualizado.scoreDia = calcularScoreDia(resumoAtualizado)
+                // resumoAtualizado.scoreDia = calcularScoreDia(resumoAtualizado) // DISABLED
+                resumoAtualizado.scoreDia = 50
 
                 set({ resumoDiario: resumoAtualizado, modalAberto: null })
                 get().atualizarInsight()
@@ -172,7 +176,8 @@ export const useDailyTrackingStore = create<DailyTrackingState>()(
                     updatedAt: new Date(),
                 }
 
-                resumoAtualizado.scoreDia = calcularScoreDia(resumoAtualizado)
+                // resumoAtualizado.scoreDia = calcularScoreDia(resumoAtualizado) // DISABLED
+                resumoAtualizado.scoreDia = 50
 
                 set({ resumoDiario: resumoAtualizado, modalAberto: null })
                 get().atualizarInsight()
@@ -185,22 +190,22 @@ export const useDailyTrackingStore = create<DailyTrackingState>()(
                 set({ insightAtual: insight })
             },
 
-            // Verificar badges
+            // Verificar badges - DISABLED gamification
             verificarBadges: () => {
-                const state = get()
-                const novosBadges = verificarNovosBadges(
-                    state.resumoDiario,
-                    state.historico,
-                    state.badgesConquistados
-                )
-
-                if (novosBadges.length > 0) {
-                    const novosIds = novosBadges.map(b => b.id)
-                    set({ badgesConquistados: [...state.badgesConquistados, ...novosIds] })
-
-                    // TODO: Mostrar notificação de badge conquistado
-                    console.log('🏆 Novos badges conquistados:', novosBadges)
-                }
+                // const state = get()
+                // const novosBadges = verificarNovosBadges(
+                //     state.resumoDiario,
+                //     state.historico,
+                //     state.badgesConquistados
+                // )
+                //
+                // if (novosBadges.length > 0) {
+                //     const novosIds = novosBadges.map(b => b.id)
+                //     set({ badgesConquistados: [...state.badgesConquistados, ...novosIds] })
+                //
+                //     // TODO: Mostrar notificação de badge conquistado
+                //     console.log('🏆 Novos badges conquistados:', novosBadges)
+                // }
             },
         }),
         {

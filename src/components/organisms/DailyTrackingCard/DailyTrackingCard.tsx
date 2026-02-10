@@ -21,8 +21,8 @@ import type { TrackerButton as TrackerButtonType, TrackerType } from '../../../t
 import { TRACKER_CONFIG, STATUS_STYLES } from '../../../config/tracker-config'
 import { useDailyTrackingStore } from '../../../stores/useDailyTrackingStore'
 import { calcularScoreDiario, classificarScore, getInsightPrincipal } from '../../../services/daily-score'
-import { calcularNivel, calcularXPSystem } from '../../../services/gamification'
-import { mockGamificationProfiles } from '../../../mocks/gamification-profiles'
+// import { calcularNivel, calcularXPSystem } from '../../../services/gamification' // DISABLED - Feature para depois
+// import { mockGamificationProfiles } from '../../../mocks/gamification-profiles' // DISABLED - Feature para depois
 
 import { Utensils, Dumbbell, Droplet, Moon, Activity, Apple, ChevronRight, Target } from 'lucide-react'
 
@@ -45,10 +45,12 @@ export const DailyTrackingCard: React.FC<DailyTrackingCardProps> = ({
     // Conectar ao store
     const { resumoDiario, insightAtual, modalAberto, abrirModal } = useDailyTrackingStore()
 
-    // Gamificação (mock - em produção virá do backend)
-    const gamificationProfile = mockGamificationProfiles['1'] // João Silva
-    const nivelAtual = calcularNivel(gamificationProfile.xp.totalXP)
-    const xpSystem = calcularXPSystem(gamificationProfile.xp.totalXP)
+    // Gamificação DISABLED - Feature para depois
+    // const gamificationProfile = mockGamificationProfiles['1'] // João Silva
+    // const nivelAtual = calcularNivel(gamificationProfile.xp.totalXP)
+    // const xpSystem = calcularXPSystem(gamificationProfile.xp.totalXP)
+    const nivelAtual = 1 // Mock simples
+    const xpSystem = { totalXP: 0, nivel: 1, percentualNivel: 0, xpAtual: 0, xpProximoNivel: 100 }
 
     // Gerar trackers baseado nos dados do store
     const trackers: TrackerButtonType[] = [
