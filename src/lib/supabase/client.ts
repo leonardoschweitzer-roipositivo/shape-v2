@@ -1,28 +1,29 @@
-import { createBrowserClient } from '@supabase/ssr'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '../database.types'
 
 /**
- * Cliente Supabase para uso no browser (Client Components)
+ * Cliente Supabase para aplicação Vite + React
  * 
  * @example
  * ```tsx
- * 'use client'
+ * import { supabase } from '@/lib/supabase/client'
  * 
- * import { createClient } from '@/lib/supabase/client'
- * 
- * export function MyComponent() {
- *   const supabase = createClient()
- *   
- *   async function loadData() {
+ * function MyComponent() {
+ *   const loadData = async () => {
  *     const { data } = await supabase.from('atletas').select('*')
  *     return data
  *   }
  * }
  * ```
  */
+export const supabase = createSupabaseClient<Database>(
+    import.meta.env.VITE_SUPABASE_URL!,
+    import.meta.env.VITE_SUPABASE_ANON_KEY!
+)
+
+/**
+ * @deprecated Use 'supabase' directly instead
+ */
 export function createClient() {
-    return createBrowserClient<Database>(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    return supabase
 }

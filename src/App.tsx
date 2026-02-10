@@ -40,6 +40,7 @@ import {
 } from '@/components';
 // import { GamificationPage } from './pages/GamificationPage'; // DISABLED - Feature para depois
 import { AthletePortal } from './pages/AthletePortal';
+import { TestSupabaseConnection } from '@/components/TestSupabaseConnection';
 import { useAthleteStore } from '@/stores/athleteStore';
 import { useDataStore } from '@/stores/dataStore';
 import { useAuthStore } from '@/stores/authStore';
