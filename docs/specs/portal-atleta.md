@@ -1,11 +1,11 @@
 # SPEC: Portal do Atleta
 
-## Documento de Especificação Técnica v1.0
+## Documento de Especificação Técnica v2.0
 
-**Versão:** 1.0  
+**Versão:** 2.0  
 **Data:** Fevereiro 2026  
 **Projeto:** VITRU IA - Portal do Atleta  
-**Princípio:** Simplicidade e Foco no Essencial
+**Princípio:** Mínima Fricção, Máximo Valor
 
 ---
 
@@ -13,20 +13,33 @@
 
 ### 1.1 Objetivo
 
-Criar um portal **simples e direto** para o atleta, focado nas ações do dia-a-dia. O atleta não quer complexidade - ele quer:
-1. Saber o que fazer HOJE
-2. Registrar o que fez
-3. Ver seu progresso
-4. Falar com o Coach IA
+Portal **ultra-simplificado** para o atleta cadastrado pelo Personal (direto ou via academia). O atleta acessa apenas:
+1. Suas **últimas medidas**
+2. Sua **última avaliação** (proporções e score)
+3. **Acompanhamento diário** (registros rápidos)
+4. **Chat com Coach IA**
 
-### 1.2 Tipos de Atleta
+### 1.2 Quem Acessa Este Portal
 
-| Tipo | Descrição | Vínculo |
-|------|-----------|---------|
-| **Atleta Direto** | Contratou Personal diretamente | Personal → Atleta |
-| **Atleta de Academia** | Cadastrado via academia | Academia → Personal → Atleta |
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│  PERSONAL (usuário direto)                                      │
+│       │                                                         │
+│       └── cadastra → ATLETA → acessa PORTAL                     │
+│                                                                 │
+│  ─────────────────────────────────────────────────────────────  │
+│                                                                 │
+│  ACADEMIA                                                       │
+│       │                                                         │
+│       └── PERSONAL (vinculado)                                  │
+│                │                                                │
+│                └── cadastra → ATLETA → acessa PORTAL            │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 
-**Para o atleta, a experiência é IDÊNTICA.** Ele não precisa saber se veio da academia ou não.
+⚠️ O ATLETA NÃO SE CADASTRA SOZINHO - sempre vem do Personal!
+```
 
 ### 1.3 Princípios de Design
 
