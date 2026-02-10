@@ -435,10 +435,10 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 text-center">
-                                                    <span className="text-primary font-bold">{idx === 0 ? athlete.score : athlete.score - 5}</span>
+                                                    <span className="text-primary font-bold">{ass.score || athlete.score}</span>
                                                 </td>
                                                 <td className="px-6 py-4 text-center">
-                                                    <span className="text-white font-mono text-xs">{athlete.ratio}</span>
+                                                    <span className="text-white font-mono text-xs">{ass.ratio || athlete.ratio}</span>
                                                 </td>
                                                 <td className="px-6 py-4 text-center text-gray-300">
                                                     {ass.measurements.weight}kg

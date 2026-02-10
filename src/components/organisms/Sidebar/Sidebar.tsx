@@ -11,7 +11,8 @@ import {
   Users,
   Trophy,
   Dumbbell,
-  Building2
+  Building2,
+  Award
 } from 'lucide-react';
 import { type ProfileType } from '../../../components';
 
@@ -91,6 +92,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           { icon: Activity, label: 'Avaliação', id: 'assessment' },
           { icon: TrendingUp, label: 'Evolução', id: 'evolution' },
           { icon: Bot, label: 'Coach IA', id: 'coach', isPro: true },
+          { icon: Award, label: 'Gamificação', id: 'gamification' },
           { icon: Dumbbell, label: 'Hall dos Deuses', id: 'hall' },
           { icon: Trophy, label: 'Ranking Personais', id: 'trainers-ranking' },
         ];

@@ -53,11 +53,11 @@ export const SymmetryWidget: React.FC<SymmetryWidgetProps> = ({ data }) => {
                 {items.map((item, index) => (
                     <div key={index} className="grid grid-cols-[1fr_50px_50px_60px] text-xs items-center px-2 py-1.5 rounded hover:bg-white/5 transition-colors">
                         <span className="text-gray-300 font-medium">{item.muscle}</span>
-                        <span className="text-center text-gray-400 font-mono">{item.left}</span>
-                        <span className="text-center text-gray-400 font-mono">{item.right}</span>
+                        <span className="text-center text-gray-400 font-mono">{Number(item.left).toFixed(1)}</span>
+                        <span className="text-center text-gray-400 font-mono">{Number(item.right).toFixed(1)}</span>
                         <div className="flex justify-end items-center gap-1.5">
                             <span className={`font-mono font-bold ${statusText(item.status)}`}>
-                                +{item.diff}
+                                {item.diff >= 0 ? '+' : ''}{Number(item.diff).toFixed(1)}
                             </span>
                             <div className={`w-1.5 h-1.5 rounded-full ${getStatusColor(item.status)}`}></div>
                         </div>

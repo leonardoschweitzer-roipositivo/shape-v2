@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { CoachPillarCard } from '@/components/molecules';
 import { HeroCard } from '@/components/organisms';
+import { DailyTrackingCard } from '@/components/organisms/DailyTrackingCard';
 import { HeroContent } from '@/features/dashboard/types';
 
 interface CoachIAProps {
@@ -77,6 +78,14 @@ export const CoachIA: React.FC<CoachIAProps> = ({ onOpenChat, hideHeader = false
 
                 {/* Hero Card Banner */}
                 <HeroCard content={heroContent} />
+
+                <div className="h-px w-full bg-white/10" />
+
+                {/* Daily Tracking Card */}
+                <DailyTrackingCard
+                    nomeAtleta="João Silva"
+                    className="animate-fade-in-up"
+                />
 
                 <div className="h-px w-full bg-white/5" />
 

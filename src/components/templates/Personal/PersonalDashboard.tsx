@@ -3,8 +3,8 @@ import { Users, Activity, TrendingUp, AlertCircle, Trophy, Clock, Calendar } fro
 import { PersonalStatsCard } from './PersonalStatsCard';
 import { HeroCard } from '@/components/organisms/HeroCard';
 import { HeroContent } from '@/features/dashboard/types';
+import { useDataStore } from '@/stores/dataStore';
 import {
-    mockPersonalStats,
     mockAthletesNeedingAttention,
     mockTopPerformers,
     mockRecentActivity,
@@ -19,9 +19,50 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
     onNavigateToAthlete,
     onNavigateToAthletes,
 }) => {
-    const stats = mockPersonalStats;
-    const athletesNeedingAttention = mockAthletesNeedingAttention;
-    const topPerformers = mockTopPerformers;
+    const { personalAthletes } = useDataStore();
+
+    // Calculate stats from store
+    const totalAthletes = personalAthletes.length;
+    const maxAthletes = 50; // Mock limit
+    const averageScore = Math.round(personalAthletes.reduce((acc, a) => acc + (a.score || 0), 0) / totalAthletes * 10) / 10;
+    const measuredThisWeek = personalAthletes.filter(a => {
+        const lastDate = new Date(a.lastMeasurement);
+        const diff = Date.now() - lastDate.getTime();
+        return diff < 7 * 24 * 60 * 60 * 1000;
+    }).length;
+
+    const stats = {
+        totalAthletes,
+        maxAthletes,
+        measuredThisWeek,
+        averageScore,
+        scoreVariation: 1.2, // Mock variation
+        needsAttention: personalAthletes.filter(a => (a.score || 0) < 60).length
+    };
+
+    const athletesNeedingAttention = personalAthletes
+        .filter(a => (a.score || 0) < 60)
+        .slice(0, 3)
+        .map(a => ({
+            id: a.id,
+            name: a.name,
+            score: a.score,
+            scoreVariation: a.scoreVariation,
+            lastMeasurement: a.lastMeasurement,
+            reason: a.score < 50 ? 'Score crítico, agendar reavaliação' : 'Score abaixo da média'
+        }));
+
+    const topPerformers = [...personalAthletes]
+        .sort((a, b) => (b.score || 0) - (a.score || 0))
+        .slice(0, 5)
+        .map((a, idx) => ({
+            id: a.id,
+            name: a.name,
+            score: a.score,
+            ratio: a.ratio,
+            position: idx + 1
+        }));
+
     const recentActivity = mockRecentActivity;
 
     const heroContent: HeroContent = {

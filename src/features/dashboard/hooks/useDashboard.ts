@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { DashboardResponse, ScoreClassification, MetricCardData } from '../types';
 import { mockDashboardData } from '../services/mockDashboardData';
 import { useAthleteStore } from '@/stores/athleteStore';
-import { mockPersonalAthletes, PersonalAthlete } from '@/mocks/personal';
+import { useDataStore } from '@/stores/dataStore';
+import { PersonalAthlete } from '@/mocks/personal';
 import {
     mapMeasurementToInput,
     calcularAvaliacaoGeral,
@@ -249,6 +250,7 @@ export function useDashboard() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
     const { profile } = useAthleteStore();
+    const { personalAthletes } = useDataStore();
 
     useEffect(() => {
         const fetchDashboard = async () => {
@@ -257,7 +259,7 @@ export function useDashboard() {
                 await new Promise(resolve => setTimeout(resolve, 600));
 
                 const userEmail = profile?.email?.toLowerCase();
-                const foundAthlete = mockPersonalAthletes.find(a =>
+                const foundAthlete = personalAthletes.find(a =>
                     (profile && a.id === profile.id) ||
                     (userEmail && a.email.toLowerCase() === userEmail) ||
                     a.id === 'athlete-leonardo'
@@ -278,7 +280,7 @@ export function useDashboard() {
         };
 
         fetchDashboard();
-    }, [profile]);
+    }, [profile, personalAthletes]);
 
     return { data, isLoading, error };
 }

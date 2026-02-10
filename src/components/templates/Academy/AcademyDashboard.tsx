@@ -3,9 +3,8 @@ import { Users, Activity, TrendingUp, Building2, UserCheck, Calendar, Clock, Arr
 import { PersonalStatsCard } from '../Personal/PersonalStatsCard';
 import { HeroCard } from '@/components/organisms/HeroCard';
 import { HeroContent } from '@/features/dashboard/types';
+import { useDataStore } from '@/stores/dataStore';
 import {
-    mockAcademyStats,
-    mockPersonalsSummary,
     mockRecentAcademyActivity,
 } from '@/mocks/academy';
 
@@ -18,8 +17,7 @@ export const AcademyDashboard: React.FC<AcademyDashboardProps> = ({
     onNavigateToPersonals,
     onNavigateToAthletes,
 }) => {
-    const stats = mockAcademyStats;
-    const personals = mockPersonalsSummary;
+    const { personals, academyStats: stats } = useDataStore();
     const activities = mockRecentAcademyActivity;
 
     const heroContent: HeroContent = {

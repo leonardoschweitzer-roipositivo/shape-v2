@@ -39,6 +39,8 @@ export interface RecentActivity {
 export interface MeasurementHistory {
     id: string;
     date: string;
+    score?: number;
+    ratio?: number;
     measurements: {
         weight: number;
         height: number;

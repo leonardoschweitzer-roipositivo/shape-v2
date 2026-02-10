@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Sparkles, ArrowRight, Scale, Ruler, GitCommit, Layers, Activity } from 'lucide-react';
 import { InputField } from '@/components/atoms';
+import { useAthleteStore } from '@/stores/athleteStore';
+import { useDataStore } from '@/stores/dataStore';
 
 interface Measurements {
     weight: number;
@@ -96,6 +98,87 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onConfirm, isMod
 
     const handleSkinfoldChange = (field: keyof Skinfolds, value: string) => {
         setSkinfolds(prev => ({ ...prev, [field]: parseFloat(value) || 0 }));
+    };
+
+    const handleDevFillAndSubmit = () => {
+        const { profile } = useAthleteStore.getState();
+        const { personalAthletes } = useDataStore.getState();
+
+        // Try to find the athlete in the data store if we're in personal/academy view
+        // In the athlete's own view, profile will have the gender.
+        const currentAthlete = personalAthletes.find(a => profile && a.id === profile.id);
+        const gender = profile?.gender || currentAthlete?.gender || 'MALE';
+
+        const isFemale = gender === 'FEMALE';
+
+        const testMeasurements: Measurements = isFemale ? {
+            weight: 62.0,
+            height: 165,
+            neck: 32,
+            shoulders: 108,
+            chest: 92,
+            waist: 64,
+            hips: 102,
+            pelvis: 90,
+            armRight: 31.0,
+            armLeft: 30.5,
+            forearmRight: 24.5,
+            forearmLeft: 24.0,
+            thighRight: 58.5,
+            thighLeft: 58.0,
+            calfRight: 36.5,
+            calfLeft: 36.0,
+            wristRight: 15.0,
+            wristLeft: 14.5,
+            kneeRight: 36.5,
+            kneeLeft: 36.0,
+            ankleRight: 20.5,
+            ankleLeft: 20.0,
+        } : {
+            weight: 88.5,
+            height: 178,
+            neck: 41,
+            shoulders: 130,
+            chest: 115,
+            waist: 82,
+            hips: 100,
+            pelvis: 100,
+            armRight: 44.5,
+            armLeft: 44.2,
+            forearmRight: 32.5,
+            forearmLeft: 32.3,
+            thighRight: 63.5,
+            thighLeft: 63.2,
+            calfRight: 42.1,
+            calfLeft: 41.9,
+            wristRight: 17.5,
+            wristLeft: 17.5,
+            kneeRight: 36.5,
+            kneeLeft: 36.5,
+            ankleRight: 22.0,
+            ankleLeft: 22.0,
+        };
+
+        const testSkinfolds: Skinfolds = isFemale ? {
+            tricep: 12,
+            subscapular: 14,
+            chest: 8,
+            axillary: 10,
+            suprailiac: 14,
+            abdominal: 16,
+            thigh: 18,
+        } : {
+            tricep: 8,
+            subscapular: 12,
+            chest: 6,
+            axillary: 9,
+            suprailiac: 8,
+            abdominal: 10,
+            thigh: 12,
+        };
+
+        setMeasurements(testMeasurements);
+        setSkinfolds(testSkinfolds);
     };
 
     const handleSubmit = () => {
@@ -329,7 +412,16 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onConfirm, isMod
             </div>
 
             {/* Footer Actions */}
-            <div className={`border-t border-white/5 flex justify-end ${isModal ? 'p-6 bg-[#131B2C]' : 'mt-10 pt-6'}`}>
+            <div className={`border-t border-white/5 flex items-center justify-end gap-4 ${isModal ? 'p-6 bg-[#131B2C]' : 'mt-10 pt-6'}`}>
+                {/* DEV BUTTON */}
+                <button
+                    onClick={handleDevFillAndSubmit}
+                    className="flex items-center gap-2 px-6 py-4 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/10 rounded-xl font-bold text-xs transition-all uppercase tracking-widest"
+                >
+                    <Activity size={16} />
+                    <span>DEV: Preencher Dados</span>
+                </button>
+
                 <button
                     onClick={handleSubmit}
                     className="flex items-center gap-2 px-8 py-4 bg-primary hover:bg-primary/90 text-[#0A0F1C] rounded-xl font-bold text-sm transition-all shadow-[0_0_20px_rgba(0,201,167,0.2)] hover:shadow-[0_0_30px_rgba(0,201,167,0.4)] transform hover:scale-[1.02] active:scale-[0.98]"

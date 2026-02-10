@@ -17,6 +17,7 @@ import {
   AthleteSettingsPage,
   RankingPersonaisPage,
   PersonalDashboard,
+  PersonalCoachDashboard,
   PersonalAthletesList,
   PersonalAssessmentView,
   PersonalEvolutionView,
@@ -34,10 +35,12 @@ import {
   PrivacyPolicy,
   type ProfileType
 } from '@/components';
+import { GamificationPage } from './pages/GamificationPage';
 import { useAthleteStore } from '@/stores/athleteStore';
-import { mockPersonalAthletes, PersonalAthlete, MeasurementHistory } from '@/mocks/personal';
+import { useDataStore } from '@/stores/dataStore';
+import { PersonalAthlete, MeasurementHistory } from '@/mocks/personal';
 
-type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details' | 'terms' | 'privacy' | 'my-record';
+type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details' | 'terms' | 'privacy' | 'my-record' | 'gamification';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -54,8 +57,8 @@ const App: React.FC = () => {
   const [assessmentData, setAssessmentData] = useState<{ studentName?: string; gender?: 'male' | 'female', assessment?: MeasurementHistory }>({});
   const [athleteForEvaluation, setAthleteForEvaluation] = useState<PersonalAthlete | null>(null);
 
-  // State for Personal Athletes (to allow updates during session)
-  const [personalAthletes, setPersonalAthletes] = useState<PersonalAthlete[]>(mockPersonalAthletes);
+  // Hook for persistent Data Store
+  const { personalAthletes, addAssessment } = useDataStore();
 
   const handleAssessmentSubmit = (data?: {
     studentId?: string;
@@ -69,45 +72,51 @@ const App: React.FC = () => {
     if (!data) return;
 
     if (data.studentId && data.measurements && data.skinfolds) {
-      // Create new assessment
-      const newAssessment: MeasurementHistory = {
-        id: `assessment-${Date.now()}`,
-        date: new Date().toISOString(),
+      // Use Store to add assessment (persisted)
+      const { assessment, result } = addAssessment({
+        athleteId: data.studentId,
         measurements: data.measurements,
-        skinfolds: data.skinfolds
-      };
-
-      // Update state
-      setPersonalAthletes(prev => prev.map(athlete => {
-        if (athlete.id === data.studentId) {
-          return {
-            ...athlete,
-            assessments: [newAssessment, ...athlete.assessments],
-            lastMeasurement: new Date().toISOString(),
-          };
-        }
-        return athlete;
-      }));
+        skinfolds: data.skinfolds,
+        gender: data.gender === 'female' ? 'FEMALE' : 'MALE'
+      });
 
       // Update assessment data for results view
       setAssessmentData({
         studentName: data.studentName,
         gender: data.gender,
-        assessment: newAssessment
+        assessment: assessment
       });
     } else if (data.measurements && data.skinfolds) {
       // Self/Atleta assessment
-      const newAssessment: MeasurementHistory = {
-        id: `assessment-${Date.now()}`,
-        date: new Date().toISOString(),
+      // Try to find the athlete in the list or use Leonardo as fallback for this demo
+      const targetEmail = profile?.email?.toLowerCase();
+      const existingAthlete = personalAthletes.find(a =>
+        (targetEmail && a.email.toLowerCase() === targetEmail) ||
+        (profile && a.id === profile.id)
+      );
+
+      const athleteId = existingAthlete?.id || profile?.id || 'athlete-leonardo';
+
+      const { assessment, result } = addAssessment({
+        athleteId,
         measurements: data.measurements,
-        skinfolds: data.skinfolds
-      };
+        skinfolds: data.skinfolds,
+        gender: (profile?.gender === 'FEMALE' || existingAthlete?.gender === 'FEMALE') ? 'FEMALE' : 'MALE'
+      });
+
+      // Update athleteStore latest score if it matches the current athlete
+      if (profile && athleteId === profile.id) {
+        useAthleteStore.getState().updateLatestScore({
+          overall: result.avaliacaoGeral,
+          ratio: result.scores.proporcoes.valor,
+          classification: result.classificacao.nivel
+        });
+      }
 
       setAssessmentData({
         studentName: profile?.name || 'Atleta',
         gender: profile?.gender === 'FEMALE' ? 'female' : 'male',
-        assessment: newAssessment
+        assessment: assessment
       });
     } else if (data.studentName && data.gender) {
       // Legacy/Fallback or just simple pass-through
@@ -325,7 +334,10 @@ const App: React.FC = () => {
         case 'evolution':
           return <PersonalEvolutionView initialAthleteId={selectedAthleteId} />;
         case 'coach':
-          return <PersonalCoachView />;
+          return <PersonalCoachDashboard onAtletaClick={(id) => {
+            setSelectedAthleteId(id);
+            setCurrentView('athlete-details');
+          }} />;
         case 'hall':
           return <HallDosDeuses />;
         case 'results':
@@ -451,6 +463,8 @@ const App: React.FC = () => {
             hideStatusControl={true}
           />
         );
+      case 'gamification':
+        return <GamificationPage />;
       case 'dashboard':
       default:
         return <DashboardView userProfile={userProfile} />;
