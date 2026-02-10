@@ -1,45 +1,72 @@
 
 import React, { useState } from 'react';
 import {
-    Building2,
-    User,
-    Dumbbell,
     Mail,
     Lock,
     Eye,
     EyeOff,
     ArrowRight,
-    Hexagon,
     Sparkles,
-    FlaskConical
+    FlaskConical,
+    User as UserIcon
 } from 'lucide-react';
-import { InputField } from '@/components/atoms';
 import { ProfileSelector, ProfileType } from '@/components/organisms';
+import { useAuthStore } from '@/stores/authStore';
 
 interface LoginProps {
     onLogin: (profile: ProfileType) => void;
 }
 
-
-
 export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     const [isNewUser, setIsNewUser] = useState(false);
-    const [profile, setProfile] = useState<ProfileType>('atleta');
+    const [profile, setProfile] = useState<ProfileType>('atleta'); // Default
     const [showPassword, setShowPassword] = useState(false);
-    const [email, setEmail] = useState('dev@shape.v');
-    const [password, setPassword] = useState('123456');
 
-    const handleSubmit = (e: React.FormEvent) => {
+    // Form States
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [fullName, setFullName] = useState('');
+    const [error, setError] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const { signIn, signUp } = useAuthStore();
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Permitir login para todos os perfis
-        onLogin(profile);
-    };
+        setError(null);
+        setIsLoading(true);
 
-    const handleNewUserFlow = (type: ProfileType) => {
-        // According to instructions: 
-        // Atleta -> Onboarding (direct to platform for now)
-        // Academia/Personal -> Registration (direct to platform for now)
-        onLogin(type);
+        try {
+            if (isNewUser) {
+                // Sign Up Flow
+                const { error: signUpError } = await signUp(email, password, {
+                    fullName,
+                    role: profile.toUpperCase() as any
+                });
+
+                if (signUpError) {
+                    throw new Error(signUpError.message);
+                }
+
+                alert('Cadastro realizado! Verifique seu email para confirmar.');
+                setIsNewUser(false); // Switch back to login
+            } else {
+                // Sign In Flow
+                const { error: signInError } = await signIn(email, password);
+
+                if (signInError) {
+                    throw new Error('Email ou senha inválidos.');
+                }
+
+                // Login successful - The hook will update state, parent component will re-render or we call onLogin
+                // For now, let's keep the onLogin prop for callback compatibility
+                onLogin(profile);
+            }
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -51,15 +78,17 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     <img
                         src="/images/login-bg-v2.jpg"
                         alt="Background"
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover opacity-60"
                     />
                 </div>
 
                 {/* Content Container */}
                 <div className="relative z-10 p-12 flex flex-col items-start max-w-xl">
-                    {/* Logo */}
+                    {/* Logo (Placeholder if image missing) */}
                     <div className="absolute top-12 left-12">
-                        <img src="/logo-vitru.png" alt="VITRU IA Logo" className="h-[2.8rem] w-auto" />
+                        <h1 className="text-2xl font-bold tracking-tighter flex items-center gap-2">
+                            <span className="bg-primary text-black px-2 py-1 rounded">V</span> VITRU IA
+                        </h1>
                     </div>
 
                     <div className="mt-24 space-y-6">
@@ -98,136 +127,127 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-[#0B101D]">
                 <div className="max-w-md w-full flex flex-col gap-8">
 
-                    {!isNewUser ? (
-                        <>
-                            <div className="space-y-2">
-                                <h2 className="text-3xl font-bold tracking-tight">Acesse o Painel</h2>
-                                <p className="text-gray-400">Entre com suas credenciais para continuar sua evolução.</p>
-                            </div>
+                    <div className="space-y-2">
+                        <h2 className="text-3xl font-bold tracking-tight">
+                            {isNewUser ? 'Crie sua Conta' : 'Acesse o Painel'}
+                        </h2>
+                        <p className="text-gray-400">
+                            {isNewUser
+                                ? 'Preencha os dados abaixo para começar.'
+                                : 'Entre com suas credenciais para continuar sua evolução.'}
+                        </p>
+                    </div>
 
-                            <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-                                {/* Profile Selector */}
-                                <ProfileSelector
-                                    selected={profile}
-                                    onSelect={setProfile}
-                                />
-
-                                {/* Inputs */}
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="text-xs text-gray-400 font-medium ml-1 mb-1.5 block">E-mail</label>
-                                        <div className="relative group">
-                                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-white transition-colors" size={18} />
-                                            <input
-                                                type="email"
-                                                value={email}
-                                                onChange={(e) => setEmail(e.target.value)}
-                                                placeholder="seu@email.com"
-                                                className="w-full bg-[#0E1424] border border-white/10 rounded-lg pl-11 pr-4 py-3.5 text-white placeholder-gray-600 focus:outline-none focus:border-primary/50 transition-all text-sm"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="text-xs text-gray-400 font-medium ml-1 mb-1.5 block">Senha</label>
-                                        <div className="relative group">
-                                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-white transition-colors" size={18} />
-                                            <input
-                                                type={showPassword ? "text" : "password"}
-                                                value={password}
-                                                onChange={(e) => setPassword(e.target.value)}
-                                                placeholder="••••••••"
-                                                className="w-full bg-[#0E1424] border border-white/10 rounded-lg pl-11 pr-12 py-3.5 text-white placeholder-gray-600 focus:outline-none focus:border-primary/50 transition-all text-sm"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowPassword(!showPassword)}
-                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
-                                            >
-                                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="flex justify-end">
-                                    <button type="button" className="text-xs text-primary hover:text-primary/80 transition-colors font-medium">
-                                        Esqueci minha senha
-                                    </button>
-                                </div>
-
-                                <button
-                                    type="submit"
-                                    className="w-full bg-primary hover:bg-primary/90 text-[#0A0F1C] font-bold py-3.5 rounded-lg transition-all shadow-[0_0_20px_rgba(0,201,167,0.2)] flex items-center justify-center gap-2 group"
-                                >
-                                    ENTRAR
-                                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                                </button>
-
-                                <div className="relative flex items-center justify-center py-2">
-                                    <div className="absolute w-full h-px bg-white/5"></div>
-                                    <span className="relative bg-[#0B101D] px-2 text-xs text-gray-500">ou</span>
-                                </div>
-
-                                <button
-                                    type="button"
-                                    onClick={() => setIsNewUser(true)}
-                                    className="w-full bg-transparent border border-white/10 hover:bg-white/5 text-white font-medium py-3.5 rounded-lg transition-all text-sm"
-                                >
-                                    Criar conta gratuitamente
-                                </button>
-                            </form>
-                        </>
-                    ) : (
-                        <>
-                            <div className="space-y-2">
-                                <h2 className="text-3xl font-bold tracking-tight">Criar sua Conta</h2>
-                                <p className="text-gray-400">Escolha o seu perfil para começar.</p>
-                            </div>
-
-                            <div className="flex flex-col gap-6">
-                                <ProfileSelector
-                                    selected={profile}
-                                    onSelect={setProfile}
-                                />
-
-                                <div className="space-y-4">
-                                    {profile === 'atleta' ? (
-                                        <button
-                                            onClick={() => handleNewUserFlow('atleta')}
-                                            className="w-full bg-primary hover:bg-primary/90 text-[#0A0F1C] font-bold py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(0,201,167,0.2)] flex flex-col items-center justify-center gap-1 group"
-                                        >
-                                            <span className="flex items-center gap-2">
-                                                INICIAR AVALIAÇÃO & ONBOARDING
-                                                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                                            </span>
-                                            <span className="text-[10px] opacity-70 font-medium">RESULTADO INSTANTÂNEO COM IA</span>
-                                        </button>
-                                    ) : (
-                                        <button
-                                            onClick={() => handleNewUserFlow(profile)}
-                                            className="w-full bg-white/5 border border-white/10 hover:border-primary/50 text-white font-bold py-4 rounded-xl transition-all flex flex-col items-center justify-center gap-1 group"
-                                        >
-                                            <span className="flex items-center gap-2">
-                                                CADASTRAR COMO {profile.toUpperCase()}
-                                                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                                            </span>
-                                            <span className="text-[10px] text-gray-500 font-medium">CRIE SEU AMBIENTE PROFISSIONAL</span>
-                                        </button>
-                                    )}
-                                </div>
-
-                                <div className="text-center">
-                                    <button
-                                        onClick={() => setIsNewUser(false)}
-                                        className="text-sm text-gray-400 hover:text-white transition-colors"
-                                    >
-                                        Já possui uma conta? <span className="text-primary font-medium">Entre aqui</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </>
+                    {error && (
+                        <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg text-sm">
+                            {error}
+                        </div>
                     )}
+
+                    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+
+                        {/* Profile Selector (Only for Sign Up to choose role) */}
+                        {isNewUser && (
+                            <div className="space-y-4">
+                                <label className="text-xs text-gray-400 font-medium ml-1 mb-1.5 block">Selecione seu Perfil</label>
+                                <ProfileSelector
+                                    selected={profile}
+                                    onSelect={setProfile}
+                                />
+                            </div>
+                        )}
+
+                        {/* Inputs */}
+                        <div className="space-y-4">
+                            {isNewUser && (
+                                <div>
+                                    <label className="text-xs text-gray-400 font-medium ml-1 mb-1.5 block">Nome Completo</label>
+                                    <div className="relative group">
+                                        <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-white transition-colors" size={18} />
+                                        <input
+                                            type="text"
+                                            value={fullName}
+                                            onChange={(e) => setFullName(e.target.value)}
+                                            placeholder="Seu nome completo"
+                                            className="w-full bg-[#0E1424] border border-white/10 rounded-lg pl-11 pr-4 py-3.5 text-white placeholder-gray-600 focus:outline-none focus:border-primary/50 transition-all text-sm"
+                                            required={isNewUser}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            <div>
+                                <label className="text-xs text-gray-400 font-medium ml-1 mb-1.5 block">E-mail</label>
+                                <div className="relative group">
+                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-white transition-colors" size={18} />
+                                    <input
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        placeholder="seu@email.com"
+                                        className="w-full bg-[#0E1424] border border-white/10 rounded-lg pl-11 pr-4 py-3.5 text-white placeholder-gray-600 focus:outline-none focus:border-primary/50 transition-all text-sm"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="text-xs text-gray-400 font-medium ml-1 mb-1.5 block">Senha</label>
+                                <div className="relative group">
+                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-white transition-colors" size={18} />
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        placeholder="••••••••"
+                                        className="w-full bg-[#0E1424] border border-white/10 rounded-lg pl-11 pr-12 py-3.5 text-white placeholder-gray-600 focus:outline-none focus:border-primary/50 transition-all text-sm"
+                                        required
+                                        minLength={6}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                                    >
+                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {!isNewUser && (
+                            <div className="flex justify-end">
+                                <button type="button" className="text-xs text-primary hover:text-primary/80 transition-colors font-medium">
+                                    Esqueci minha senha
+                                </button>
+                            </div>
+                        )}
+
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="w-full bg-primary hover:bg-primary/90 text-[#0A0F1C] font-bold py-3.5 rounded-lg transition-all shadow-[0_0_20px_rgba(0,201,167,0.2)] flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isLoading ? 'CARREGANDO...' : (isNewUser ? 'CRIAR CONTA' : 'ENTRAR')}
+                            {!isLoading && <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />}
+                        </button>
+
+                        <div className="relative flex items-center justify-center py-2">
+                            <div className="absolute w-full h-px bg-white/5"></div>
+                            <span className="relative bg-[#0B101D] px-2 text-xs text-gray-500">ou</span>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setIsNewUser(!isNewUser);
+                                setError(null);
+                            }}
+                            className="w-full bg-transparent border border-white/10 hover:bg-white/5 text-white font-medium py-3.5 rounded-lg transition-all text-sm"
+                        >
+                            {isNewUser ? 'Já tenho uma conta' : 'Criar conta gratuitamente'}
+                        </button>
+                    </form>
 
                     <div className="flex items-center justify-center gap-6 mt-8">
                         <a href="#" className="text-[10px] text-gray-600 hover:text-gray-400 transition-colors">Termos de Uso</a>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Sidebar,
   Header,
@@ -42,6 +42,7 @@ import {
 import { AthletePortal } from './pages/AthletePortal';
 import { useAthleteStore } from '@/stores/athleteStore';
 import { useDataStore } from '@/stores/dataStore';
+import { useAuthStore } from '@/stores/authStore';
 import { PersonalAthlete, MeasurementHistory } from '@/mocks/personal';
 
 type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details' | 'terms' | 'privacy' | 'my-record' | 'gamification' | 'athlete-portal' | 'personal-details' | 'student-details';
@@ -49,8 +50,10 @@ type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall
 const App: React.FC = () => {
   console.log('🎯 App component rendering...');
 
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userProfile, setUserProfile] = useState<ProfileType>('atleta');
+  // Auth Store
+  const { isAuthenticated, profile: authProfile, signOut, checkSession, isLoading: isAuthLoading } = useAuthStore();
+
+  // Local UI State
   const [isAssessmentOpen, setIsAssessmentOpen] = useState(false);
   const [isCoachModalOpen, setIsCoachModalOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
@@ -58,10 +61,18 @@ const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
   const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(null);
 
+  // Derived user profile from Auth Store
+  const userProfile: ProfileType = (authProfile?.role?.toLowerCase() as ProfileType) || 'atleta';
+
   console.log('📊 Initializing stores...');
   const { settings, profile, initializeProfile } = useAthleteStore();
 
   console.log('✅ Store initialized:', { settings, profile });
+
+  // Check Session on Mount
+  useEffect(() => {
+    checkSession();
+  }, []);
 
   // State for assessment flow
   const [assessmentData, setAssessmentData] = useState<{ studentName?: string; gender?: 'male' | 'female', assessment?: MeasurementHistory }>({});
@@ -199,31 +210,17 @@ const App: React.FC = () => {
     }
   }, [settings.preferences.primaryColor]);
 
-  const handleLogin = (profile: ProfileType) => {
-    setUserProfile(profile);
-    setIsAuthenticated(true);
-  };
 
   const handleLogout = () => {
-    setIsAuthenticated(false);
+    signOut();
     setCurrentView('dashboard');
   };
 
   const handleQuickLogin = (user: any) => {
-    setUserProfile(user.role);
-    setIsAuthenticated(true);
-    setCurrentView('dashboard');
-
-    if (user.role === 'atleta') {
-      const birthDate = user.name === 'Leonardo Schiwetzer' ? new Date(1978, 5, 15) : new Date(1995, 5, 15);
-      initializeProfile({
-        name: user.name,
-        email: user.email,
-        gender: user.gender,
-        birthDate: birthDate,
-        goal: 'aesthetics'
-      });
-    }
+    // Legacy mock login support for DebugAccess
+    // In a real scenario, this would likely bypass AuthStore or mock it
+    // For now we just don't use it or implement a mockSignIn in AuthStore
+    console.warn("Quick login not supported with Supabase yet");
   };
 
 
@@ -577,8 +574,19 @@ const App: React.FC = () => {
     }
   }
 
+  if (isAuthLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background-dark text-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-sm text-gray-400">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
-    return <Login onLogin={handleLogin} />;
+    return <Login onLogin={() => { }} />;
   }
 
   return (
