@@ -3,10 +3,10 @@
 -- =============================================
 -- Este script insere dados de teste vinculados ao
 -- primeiro Personal encontrado no banco.
--- Execute DEPOIS do auto-provisioning.sql
+-- NOTA: O trigger create_ficha_after_atleta_insert
+-- auto-cria fichas, então usamos UPDATE ao invés de INSERT.
 -- =============================================
 
--- Usar o primeiro personal existente
 DO $$
 DECLARE
     v_personal_id UUID;
@@ -36,8 +36,11 @@ BEGIN
     VALUES (v_personal_id, v_academia_id, 'Ricardo Souza', 'ricardo@teste.com', 'ATIVO')
     RETURNING id INTO v_atleta1_id;
 
-    INSERT INTO fichas (atleta_id, sexo, altura, punho, tornozelo, joelho, pelve, objetivo)
-    VALUES (v_atleta1_id, 'M', 182, 18, 24, 42, 98, 'HIPERTROFIA');
+    -- Atualizar ficha auto-criada pelo trigger
+    UPDATE fichas SET
+        sexo = 'M', altura = 182, punho = 18, tornozelo = 24, 
+        joelho = 42, pelve = 98, objetivo = 'HIPERTROFIA'
+    WHERE atleta_id = v_atleta1_id;
 
     INSERT INTO medidas (atleta_id, data, peso, pescoco, ombros, peitoral, cintura, quadril, braco_direito, braco_esquerdo, antebraco_direito, antebraco_esquerdo, coxa_direita, coxa_esquerda, panturrilha_direita, panturrilha_esquerda, registrado_por, personal_id)
     VALUES (v_atleta1_id, '2026-02-08', 95.5, 44, 142, 125, 82, 102, 46.5, 46.5, 36, 36, 68, 68, 42, 42, 'PERSONAL', v_personal_id)
@@ -47,7 +50,7 @@ BEGIN
     VALUES (v_atleta1_id, v_medida1_id, '2026-02-08', 95.5, 92, 'ELITE',
         '{"ombros_cintura": {"valor": 1.73, "ideal": 1.618, "score": 95}}'::JSONB);
 
-    -- Medida antiga
+    -- Medida antiga para histórico
     INSERT INTO medidas (atleta_id, data, peso, pescoco, ombros, peitoral, cintura, quadril, braco_direito, braco_esquerdo, antebraco_direito, antebraco_esquerdo, coxa_direita, coxa_esquerda, panturrilha_direita, panturrilha_esquerda, registrado_por, personal_id)
     VALUES (v_atleta1_id, '2025-08-08', 92.0, 43, 138, 120, 86, 103, 45, 44, 35, 34.5, 66, 66, 41, 41, 'PERSONAL', v_personal_id);
 
@@ -56,8 +59,10 @@ BEGIN
     VALUES (v_personal_id, v_academia_id, 'Fernanda Lima', 'fernanda@teste.com', 'ATIVO')
     RETURNING id INTO v_atleta2_id;
 
-    INSERT INTO fichas (atleta_id, sexo, altura, punho, tornozelo, joelho, pelve, objetivo)
-    VALUES (v_atleta2_id, 'F', 165, 15, 21, 36, 92, 'DEFINICAO');
+    UPDATE fichas SET
+        sexo = 'F', altura = 165, punho = 15, tornozelo = 21, 
+        joelho = 36, pelve = 92, objetivo = 'DEFINICAO'
+    WHERE atleta_id = v_atleta2_id;
 
     INSERT INTO medidas (atleta_id, data, peso, pescoco, ombros, peitoral, cintura, quadril, braco_direito, braco_esquerdo, antebraco_direito, antebraco_esquerdo, coxa_direita, coxa_esquerda, panturrilha_direita, panturrilha_esquerda, registrado_por, personal_id)
     VALUES (v_atleta2_id, '2026-02-08', 68.0, 32, 108, 92, 64, 105, 31, 31, 25, 25, 64, 64, 38, 38, 'PERSONAL', v_personal_id)
@@ -72,8 +77,10 @@ BEGIN
     VALUES (v_personal_id, v_academia_id, 'Bruno Silva', 'bruno@teste.com', 'ATIVO')
     RETURNING id INTO v_atleta3_id;
 
-    INSERT INTO fichas (atleta_id, sexo, altura, punho, tornozelo, joelho, pelve, objetivo)
-    VALUES (v_atleta3_id, 'M', 175, 17, 22, 38, 104, 'EMAGRECIMENTO');
+    UPDATE fichas SET
+        sexo = 'M', altura = 175, punho = 17, tornozelo = 22, 
+        joelho = 38, pelve = 104, objetivo = 'EMAGRECIMENTO'
+    WHERE atleta_id = v_atleta3_id;
 
     INSERT INTO medidas (atleta_id, data, peso, pescoco, ombros, peitoral, cintura, quadril, braco_direito, braco_esquerdo, antebraco_direito, antebraco_esquerdo, coxa_direita, coxa_esquerda, panturrilha_direita, panturrilha_esquerda, registrado_por, personal_id)
     VALUES (v_atleta3_id, '2026-02-05', 92.0, 39, 118, 105, 96, 108, 35, 35, 29, 29, 62, 62, 38, 38, 'PERSONAL', v_personal_id)

@@ -46,32 +46,41 @@ async function fetchEntityData(userId: string, role: UserRole): Promise<EntityDa
     const entity: EntityData = {};
 
     try {
+        console.info('[AuthStore] Buscando entidade para role:', role, 'userId:', userId);
+
         if (role === 'PERSONAL') {
-            const { data } = await supabase
+            const { data, error } = await supabase
                 .from('personais')
                 .select('*')
                 .eq('auth_user_id', userId)
                 .single();
+            if (error) console.warn('[AuthStore] Erro ao buscar personal:', error.message);
+            else console.info('[AuthStore] ✅ Personal encontrado:', data?.nome, 'id:', data?.id);
             entity.personal = data || null;
         } else if (role === 'ATLETA') {
-            const { data } = await supabase
+            const { data, error } = await supabase
                 .from('atletas')
                 .select('*')
                 .eq('auth_user_id', userId)
                 .single();
+            if (error) console.warn('[AuthStore] Erro ao buscar atleta:', error.message);
+            else console.info('[AuthStore] ✅ Atleta encontrado:', data?.nome);
             entity.atleta = data || null;
         } else if (role === 'ACADEMIA') {
-            const { data } = await supabase
+            const { data, error } = await supabase
                 .from('academias')
                 .select('*')
                 .eq('auth_user_id', userId)
                 .single();
+            if (error) console.warn('[AuthStore] Erro ao buscar academia:', error.message);
+            else console.info('[AuthStore] ✅ Academia encontrada:', data?.nome);
             entity.academia = data || null;
         }
     } catch (err) {
-        console.warn('[AuthStore] Entidade não encontrada para o role:', role);
+        console.error('[AuthStore] Exceção ao buscar entidade:', err);
     }
 
+    console.info('[AuthStore] Entity final:', JSON.stringify(entity, null, 2));
     return entity;
 }
 

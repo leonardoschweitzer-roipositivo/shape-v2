@@ -40,6 +40,7 @@ import {
 } from '@/components';
 // import { GamificationPage } from './pages/GamificationPage'; // DISABLED - Feature para depois
 import { AthletePortal } from './pages/AthletePortal';
+import { PortalLanding } from './pages/athlete/PortalLanding';
 import { TestSupabaseConnection } from '@/components/TestSupabaseConnection';
 import { useAthleteStore } from '@/stores/athleteStore';
 import { useDataStore } from '@/stores/dataStore';
@@ -62,6 +63,7 @@ const App: React.FC = () => {
   const [isPersonalInviteModalOpen, setIsPersonalInviteModalOpen] = useState(false);
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
   const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(null);
+  const [portalToken, setPortalToken] = useState<string | null>(null);
 
   // Derived user profile from Auth Store
   const userProfile: ProfileType = (authProfile?.role?.toLowerCase() as ProfileType) || 'atleta';
@@ -74,6 +76,16 @@ const App: React.FC = () => {
   // Check Session on Mount
   useEffect(() => {
     checkSession();
+  }, []);
+
+  // Detect portal token in URL (?token=XXX)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    if (token) {
+      console.info('[App] 🔗 Portal token detectado na URL:', token.substring(0, 8) + '...');
+      setPortalToken(token);
+    }
   }, []);
 
   // State for assessment flow
@@ -577,6 +589,22 @@ const App: React.FC = () => {
       case 'athlete-portal': return 'PORTAL DO ATLETA';
       default: return currentView.toUpperCase();
     }
+  }
+
+  // Portal do Atleta via token (bypass auth — atleta acessa via link de convite)
+  if (portalToken) {
+    return (
+      <PortalLanding
+        token={portalToken}
+        onClose={() => {
+          setPortalToken(null);
+          // Remove token from URL
+          const url = new URL(window.location.href);
+          url.searchParams.delete('token');
+          window.history.replaceState({}, '', url.pathname);
+        }}
+      />
+    );
   }
 
   if (isAuthLoading) {

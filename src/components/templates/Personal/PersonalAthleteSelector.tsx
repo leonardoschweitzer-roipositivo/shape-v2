@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, ChevronRight, User } from 'lucide-react';
-import { mockPersonalAthletes, PersonalAthlete } from '@/mocks/personal';
+import { PersonalAthlete } from '@/mocks/personal';
+import { useDataStore } from '@/stores/dataStore';
 
 interface PersonalAthleteSelectorProps {
     onSelect: (athlete: PersonalAthlete) => void;
@@ -8,7 +9,7 @@ interface PersonalAthleteSelectorProps {
 
 export const PersonalAthleteSelector: React.FC<PersonalAthleteSelectorProps> = ({ onSelect }) => {
     const [searchQuery, setSearchQuery] = useState('');
-    const athletes = mockPersonalAthletes;
+    const athletes = useDataStore((s) => s.personalAthletes);
 
     const filteredAthletes = athletes.filter(
         (a) =>

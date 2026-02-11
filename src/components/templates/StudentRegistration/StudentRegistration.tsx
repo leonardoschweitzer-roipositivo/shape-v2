@@ -2,6 +2,10 @@ import React, { useState, useMemo } from 'react';
 import { ArrowLeft, ChevronRight, Check, User, Ruler, Activity, Mail, Scale, Layers, GitCommit, Sparkles } from 'lucide-react';
 import { Button } from '@/components/atoms/Button/Button';
 import { InputField } from '@/components/atoms';
+import { supabase } from '@/services/supabase';
+import { portalService } from '@/services/portalService';
+import { useAuthStore } from '@/stores/authStore';
+import { useDataStore } from '@/stores/dataStore';
 
 interface StudentRegistrationProps {
     onBack: () => void;
@@ -123,6 +127,12 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
     const [step, setStep] = useState<RegistrationStep>(1);
     const [formData, setFormData] = useState<RegistrationData>(initialData);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
+    const [portalLink, setPortalLink] = useState<string | null>(null);
+    const [linkCopied, setLinkCopied] = useState(false);
+
+    const { entity } = useAuthStore();
+    const { loadFromSupabase } = useDataStore();
 
     const handleInputChange = (field: keyof RegistrationData, value: any) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
@@ -139,10 +149,113 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
 
     const handleSubmit = async () => {
         setIsSubmitting(true);
-        console.log('Submitting registration:', formData);
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        setIsSubmitting(false);
-        onComplete();
+        setSubmitError(null);
+
+        const personalId = entity.personal?.id;
+        if (!personalId) {
+            setSubmitError('Personal não identificado. Relogue e tente novamente.');
+            setIsSubmitting(false);
+            return;
+        }
+
+        try {
+            console.info('[Cadastro] Criando atleta no Supabase...');
+
+            // 1. Inserir atleta (trigger auto-cria ficha)
+            const { data: atleta, error: atletaError } = await supabase
+                .from('atletas')
+                .insert({
+                    personal_id: personalId,
+                    academia_id: entity.personal?.academia_id || null,
+                    nome: formData.name,
+                    email: formData.email || null,
+                    telefone: formData.phone || null,
+                    status: 'ATIVO',
+                } as any)
+                .select()
+                .single();
+
+            if (atletaError) throw new Error(`Erro ao criar atleta: ${atletaError.message}`);
+            console.info('[Cadastro] ✅ Atleta criado:', atleta.id);
+
+            // 2. Atualizar ficha (auto-criada pelo trigger)
+            const sexo = formData.gender === 'MALE' ? 'M' : 'F';
+            const { error: fichaError } = await supabase
+                .from('fichas')
+                .update({
+                    sexo,
+                    data_nascimento: formData.birthDate || null,
+                    altura: parseFloat(formData.height) || null,
+                    punho: parseFloat(formData.leftWrist) || null,
+                    tornozelo: parseFloat(formData.leftAnkle) || null,
+                    joelho: parseFloat(formData.leftKnee) || null,
+                    pelve: parseFloat(formData.hips) || null,
+                    objetivo: 'HIPERTROFIA',
+                } as any)
+                .eq('atleta_id', atleta.id);
+
+            if (fichaError) console.warn('[Cadastro] Aviso ficha:', fichaError.message);
+            else console.info('[Cadastro] ✅ Ficha atualizada');
+
+            // 3. Inserir medidas (se preenchidas)
+            const hasMeasurements = formData.weight || formData.shoulders || formData.chest;
+            if (hasMeasurements) {
+                const { error: medidaError } = await supabase
+                    .from('medidas')
+                    .insert({
+                        atleta_id: atleta.id,
+                        data: new Date().toISOString().split('T')[0],
+                        peso: parseFloat(formData.weight) || null,
+                        pescoco: parseFloat(formData.neck) || null,
+                        ombros: parseFloat(formData.shoulders) || null,
+                        peitoral: parseFloat(formData.chest) || null,
+                        cintura: parseFloat(formData.waist) || null,
+                        quadril: parseFloat(formData.hips) || null,
+                        braco_direito: parseFloat(formData.rightArm) || null,
+                        braco_esquerdo: parseFloat(formData.leftArm) || null,
+                        antebraco_direito: parseFloat(formData.rightForearm) || null,
+                        antebraco_esquerdo: parseFloat(formData.leftForearm) || null,
+                        coxa_direita: parseFloat(formData.rightThigh) || null,
+                        coxa_esquerda: parseFloat(formData.leftThigh) || null,
+                        panturrilha_direita: parseFloat(formData.rightCalf) || null,
+                        panturrilha_esquerda: parseFloat(formData.leftCalf) || null,
+                        registrado_por: 'PERSONAL',
+                        personal_id: personalId,
+                    } as any);
+
+                if (medidaError) console.warn('[Cadastro] Aviso medidas:', medidaError.message);
+                else console.info('[Cadastro] ✅ Medidas inseridas');
+            }
+
+            // 4. Gerar portal token se enviar convite
+            if (formData.sendInviteEmail) {
+                try {
+                    const { url } = await portalService.generateToken(atleta.id);
+                    console.info('[Cadastro] ✅ Portal token gerado:', url);
+                    setPortalLink(url);
+                } catch (tokenErr) {
+                    console.warn('[Cadastro] Aviso token:', tokenErr);
+                }
+            }
+
+            // 5. Recarregar dados no store
+            await loadFromSupabase(personalId);
+            console.info('[Cadastro] ✅ Store atualizado — novo atleta visível!');
+
+            setIsSubmitting(false);
+
+            // Se gerou link de convite, mostra tela de sucesso
+            // Senão, volta pra lista
+            if (!formData.sendInviteEmail) {
+                onComplete();
+            } else {
+                setStep(3); // Ficamos no step 3 mas mostramos a tela de sucesso via portalLink
+            }
+        } catch (err: any) {
+            console.error('[Cadastro] ❌ Erro:', err);
+            setSubmitError(err.message || 'Erro ao cadastrar aluno.');
+            setIsSubmitting(false);
+        }
     };
 
     // Derived age logic
@@ -472,8 +585,8 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                                             <button
                                                 key={cat.id}
                                                 className={`p-4 rounded-xl border text-left transition-all ${formData.category === cat.id
-                                                        ? 'bg-primary/20 border-primary shadow-[0_0_20px_rgba(99,102,241,0.1)]'
-                                                        : 'bg-[#0A0F1C] border-white/10 text-gray-500 hover:bg-white/5'
+                                                    ? 'bg-primary/20 border-primary shadow-[0_0_20px_rgba(99,102,241,0.1)]'
+                                                    : 'bg-[#0A0F1C] border-white/10 text-gray-500 hover:bg-white/5'
                                                     }`}
                                                 onClick={() => handleInputChange('category', cat.id)}
                                             >
@@ -491,78 +604,169 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                             </div>
                         )}
 
-                        {/* Step 3: Access */}
+                        {/* Step 3: Access or Success */}
                         {step === 3 && (
-                            <div className="space-y-10 animate-fade-in w-full">
-                                <div className="flex items-center gap-3 mb-2 pb-4 border-b border-white/5">
-                                    <Mail className="text-primary" size={20} />
-                                    <h2 className="text-xl font-bold text-white uppercase tracking-wide">ACESSO DO ALUNO</h2>
-                                </div>
+                            portalLink ? (
+                                /* ===== SUCCESS SCREEN WITH INVITE LINK ===== */
+                                <div className="space-y-8 animate-fade-in w-full">
+                                    <div className="text-center space-y-4">
+                                        <div className="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto">
+                                            <Check className="text-emerald-400" size={36} strokeWidth={3} />
+                                        </div>
+                                        <h2 className="text-2xl font-black text-white uppercase tracking-wide">
+                                            CADASTRO REALIZADO!
+                                        </h2>
+                                        <p className="text-gray-400 text-sm max-w-md mx-auto">
+                                            <span className="text-white font-bold">{formData.name}</span> foi cadastrado(a) com sucesso.
+                                            Envie o link abaixo para que o aluno acesse o portal e registre suas próprias medidas.
+                                        </p>
+                                    </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <label className={`flex items-start gap-4 p-6 rounded-2xl border cursor-pointer transition-all ${formData.sendInviteEmail ? 'bg-primary/10 border-primary shadow-[0_0_20px_rgba(99,102,241,0.1)]' : 'bg-[#0A0F1C] border-white/10 hover:bg-white/5'}`}
-                                        onClick={() => {
-                                            handleInputChange('sendInviteEmail', true);
-                                            handleInputChange('generateTempCredentials', false);
-                                        }}>
-                                        <div className={`mt-1 w-6 h-6 rounded-full border-2 flex items-center justify-center ${formData.sendInviteEmail ? 'border-primary bg-primary text-[#0A0F1C]' : 'border-gray-700'}`}>
-                                            {formData.sendInviteEmail && <Check size={14} strokeWidth={3} />}
+                                    {/* Link Box */}
+                                    <div className="p-6 bg-[#0A0F1C] border border-primary/30 rounded-2xl space-y-4">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <Mail className="text-primary" size={16} />
+                                            <span className="text-xs font-bold text-primary uppercase tracking-wider">Link de Convite</span>
                                         </div>
-                                        <div className="space-y-1">
-                                            <span className="text-white font-bold block text-sm uppercase tracking-wider">Enviar Convite por Email</span>
-                                            <span className="text-gray-500 text-xs leading-relaxed">O aluno receberá um link automático para criação de senha e ativação do perfil.</span>
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="text"
+                                                readOnly
+                                                value={portalLink}
+                                                className="flex-1 bg-[#060B18] border border-white/10 rounded-lg px-4 py-3 text-white text-xs font-mono truncate"
+                                            />
+                                            <button
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(portalLink);
+                                                    setLinkCopied(true);
+                                                    setTimeout(() => setLinkCopied(false), 2000);
+                                                }}
+                                                className={`px-5 py-3 rounded-lg font-bold text-xs uppercase tracking-wider transition-all ${linkCopied
+                                                    ? 'bg-emerald-500 text-white'
+                                                    : 'bg-primary hover:bg-primary/80 text-[#0A0F1C]'
+                                                    }`}
+                                            >
+                                                {linkCopied ? '✓ Copiado!' : 'Copiar'}
+                                            </button>
                                         </div>
-                                    </label>
 
-                                    <label className={`flex items-start gap-4 p-6 rounded-2xl border cursor-pointer transition-all ${formData.generateTempCredentials ? 'bg-primary/10 border-primary shadow-[0_0_20px_rgba(99,102,241,0.1)]' : 'bg-[#0A0F1C] border-white/10 hover:bg-white/5'}`}
-                                        onClick={() => {
-                                            handleInputChange('sendInviteEmail', false);
-                                            handleInputChange('generateTempCredentials', true);
-                                        }}>
-                                        <div className={`mt-1 w-6 h-6 rounded-full border-2 flex items-center justify-center ${formData.generateTempCredentials ? 'border-primary bg-primary text-[#0A0F1C]' : 'border-gray-700'}`}>
-                                            {formData.generateTempCredentials && <Check size={14} strokeWidth={3} />}
+                                        {/* Share buttons */}
+                                        <div className="flex items-center gap-3 pt-2">
+                                            <a
+                                                href={`https://wa.me/?text=${encodeURIComponent(`Olá ${formData.name}! 🏋️\n\nSeu cadastro na VITRU IA foi realizado.\nAcesse o link abaixo para registrar suas medidas:\n\n${portalLink}`)}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-2 px-4 py-2 bg-emerald-600/20 border border-emerald-600/30 rounded-lg text-emerald-400 hover:bg-emerald-600/30 transition-all text-xs font-bold"
+                                            >
+                                                📱 WhatsApp
+                                            </a>
+                                            {formData.email && (
+                                                <a
+                                                    href={`mailto:${formData.email}?subject=Acesso VITRU IA&body=${encodeURIComponent(`Olá ${formData.name}!\n\nSeu cadastro na VITRU IA foi realizado.\nAcesse o link abaixo para registrar suas medidas:\n\n${portalLink}`)}`}
+                                                    className="flex items-center gap-2 px-4 py-2 bg-blue-500/20 border border-blue-500/30 rounded-lg text-blue-400 hover:bg-blue-500/30 transition-all text-xs font-bold"
+                                                >
+                                                    ✉️ Email
+                                                </a>
+                                            )}
                                         </div>
-                                        <div className="space-y-1">
-                                            <span className="text-white font-bold block text-sm uppercase tracking-wider">Gerar Credenciais Temporárias</span>
-                                            <span className="text-gray-500 text-xs leading-relaxed">Gera login e senha provisórios. Recomendado se o aluno não tiver acesso imediato ao email.</span>
-                                        </div>
-                                    </label>
-                                </div>
+                                    </div>
 
-                                <div className="p-6 bg-primary/5 border border-primary/20 rounded-xl flex items-start gap-4">
-                                    <Sparkles className="text-primary mt-1" size={20} />
-                                    <p className="text-sm text-gray-400 leading-relaxed">
-                                        Ao finalizar o cadastro, os dados da <span className="text-white font-bold">Ficha Atlética</span> serão processados pela <span className="text-primary font-bold tracking-widest italic">VITRU IA</span> para gerar o Score inicial do atleta.
-                                    </p>
+                                    <div className="p-4 bg-primary/5 border border-primary/20 rounded-xl flex items-start gap-3">
+                                        <Sparkles className="text-primary mt-0.5" size={16} />
+                                        <p className="text-xs text-gray-400 leading-relaxed">
+                                            O link é válido por <span className="text-white font-bold">30 dias</span>. O aluno poderá registrar medidas e acompanhar seu progresso pelo portal.
+                                        </p>
+                                    </div>
+
+                                    <button
+                                        onClick={onComplete}
+                                        className="w-full flex items-center justify-center gap-3 px-10 py-4 rounded-xl font-bold text-sm uppercase tracking-widest bg-primary hover:bg-primary/90 text-[#0A0F1C] transition-all shadow-[0_0_20px_rgba(99,102,241,0.3)]"
+                                    >
+                                        Voltar para Meus Alunos
+                                    </button>
                                 </div>
+                            ) : (
+                                /* ===== NORMAL STEP 3: ACCESS OPTIONS ===== */
+                                <div className="space-y-10 animate-fade-in w-full">
+                                    <div className="flex items-center gap-3 mb-2 pb-4 border-b border-white/5">
+                                        <Mail className="text-primary" size={20} />
+                                        <h2 className="text-xl font-bold text-white uppercase tracking-wide">ACESSO DO ALUNO</h2>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <label className={`flex items-start gap-4 p-6 rounded-2xl border cursor-pointer transition-all ${formData.sendInviteEmail ? 'bg-primary/10 border-primary shadow-[0_0_20px_rgba(99,102,241,0.1)]' : 'bg-[#0A0F1C] border-white/10 hover:bg-white/5'}`}
+                                            onClick={() => {
+                                                handleInputChange('sendInviteEmail', true);
+                                                handleInputChange('generateTempCredentials', false);
+                                            }}>
+                                            <div className={`mt-1 w-6 h-6 rounded-full border-2 flex items-center justify-center ${formData.sendInviteEmail ? 'border-primary bg-primary text-[#0A0F1C]' : 'border-gray-700'}`}>
+                                                {formData.sendInviteEmail && <Check size={14} strokeWidth={3} />}
+                                            </div>
+                                            <div className="space-y-1">
+                                                <span className="text-white font-bold block text-sm uppercase tracking-wider">Gerar Link de Convite</span>
+                                                <span className="text-gray-500 text-xs leading-relaxed">O aluno receberá um link para acessar o portal e registrar suas medidas.</span>
+                                            </div>
+                                        </label>
+
+                                        <label className={`flex items-start gap-4 p-6 rounded-2xl border cursor-pointer transition-all ${formData.generateTempCredentials ? 'bg-primary/10 border-primary shadow-[0_0_20px_rgba(99,102,241,0.1)]' : 'bg-[#0A0F1C] border-white/10 hover:bg-white/5'}`}
+                                            onClick={() => {
+                                                handleInputChange('sendInviteEmail', false);
+                                                handleInputChange('generateTempCredentials', true);
+                                            }}>
+                                            <div className={`mt-1 w-6 h-6 rounded-full border-2 flex items-center justify-center ${formData.generateTempCredentials ? 'border-primary bg-primary text-[#0A0F1C]' : 'border-gray-700'}`}>
+                                                {formData.generateTempCredentials && <Check size={14} strokeWidth={3} />}
+                                            </div>
+                                            <div className="space-y-1">
+                                                <span className="text-white font-bold block text-sm uppercase tracking-wider">Cadastro Sem Convite</span>
+                                                <span className="text-gray-500 text-xs leading-relaxed">Cadastra o aluno sem gerar link. As medidas deverão ser inseridas pelo personal.</span>
+                                            </div>
+                                        </label>
+                                    </div>
+
+                                    <div className="p-6 bg-primary/5 border border-primary/20 rounded-xl flex items-start gap-4">
+                                        <Sparkles className="text-primary mt-1" size={20} />
+                                        <p className="text-sm text-gray-400 leading-relaxed">
+                                            Ao finalizar o cadastro, os dados da <span className="text-white font-bold">Ficha Atlética</span> serão processados pela <span className="text-primary font-bold tracking-widest italic">VITRU IA</span> para gerar o Score inicial do atleta.
+                                        </p>
+                                    </div>
+                                </div>
+                            )
+                        )}
+
+                        {/* Error Display */}
+                        {submitError && (
+                            <div className="mt-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
+                                ❌ {submitError}
                             </div>
                         )}
 
-                        {/* Actions */}
-                        <div className="mt-12 flex items-center justify-between pt-8 border-t border-white/10">
-                            {step > 1 ? (
-                                <button
-                                    onClick={handlePrev}
-                                    className="px-8 py-3 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-all border border-white/5"
-                                >
-                                    Voltar
-                                </button>
-                            ) : (
-                                <div></div>
-                            )}
+                        {/* Actions (hidden on success screen) */}
+                        {!portalLink && (
+                            <div className="mt-12 flex items-center justify-between pt-8 border-t border-white/10">
+                                {step > 1 ? (
+                                    <button
+                                        onClick={handlePrev}
+                                        className="px-8 py-3 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-all border border-white/5"
+                                    >
+                                        Voltar
+                                    </button>
+                                ) : (
+                                    <div></div>
+                                )}
 
-                            <button
-                                onClick={step === 3 ? handleSubmit : handleNext}
-                                disabled={isSubmitting}
-                                className={`flex items-center gap-3 px-10 py-4 rounded-xl font-bold text-sm uppercase tracking-widest transition-all transform active:scale-[0.98] ${isSubmitting
+                                <button
+                                    onClick={step === 3 ? handleSubmit : handleNext}
+                                    disabled={isSubmitting}
+                                    className={`flex items-center gap-3 px-10 py-4 rounded-xl font-bold text-sm uppercase tracking-widest transition-all transform active:scale-[0.98] ${isSubmitting
                                         ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
                                         : 'bg-primary hover:bg-primary/90 text-[#0A0F1C] shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:shadow-[0_0_30px_rgba(99,102,241,0.5)] hover:scale-[1.02]'
-                                    }`}
-                            >
-                                {isSubmitting ? 'Salvando...' : step === 3 ? 'Finalizar Cadastro' : 'Próximo Passo'}
-                                {!isSubmitting && step < 3 && <ChevronRight size={18} strokeWidth={3} />}
-                            </button>
-                        </div>
+                                        }`}
+                                >
+                                    {isSubmitting ? 'Salvando...' : step === 3 ? 'Finalizar Cadastro' : 'Próximo Passo'}
+                                    {!isSubmitting && step < 3 && <ChevronRight size={18} strokeWidth={3} />}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

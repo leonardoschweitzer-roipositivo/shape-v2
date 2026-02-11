@@ -4,6 +4,7 @@ import { PersonalStatsCard } from './PersonalStatsCard';
 import { HeroCard } from '@/components/organisms/HeroCard';
 import { HeroContent } from '@/features/dashboard/types';
 import { useDataStore } from '@/stores/dataStore';
+import { useAuthStore } from '@/stores/authStore';
 import {
     mockAthletesNeedingAttention,
     mockTopPerformers,
@@ -19,7 +20,11 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
     onNavigateToAthlete,
     onNavigateToAthletes,
 }) => {
-    const { personalAthletes } = useDataStore();
+    const { personalAthletes, dataSource } = useDataStore();
+    const { profile: authProfile, entity } = useAuthStore();
+
+    // Nome do personal: vem do entity (Supabase) ou profile (Auth)
+    const personalName = entity.personal?.nome || authProfile?.full_name || 'Personal';
 
     // Calculate stats from store
     const totalAthletes = personalAthletes.length;
@@ -133,10 +138,11 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
                 {/* Header de Boas-Vindas */}
                 <div className="flex flex-col animate-fade-in-up">
                     <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight uppercase">
-                        👋 OLÁ, PROFESSOR CARLOS!
+                        👋 OLÁ, {personalName.split(' ')[0].toUpperCase()}!
                     </h1>
                     <p className="text-gray-400 mt-2 font-light">
                         Você tem <span className="text-primary font-semibold">{stats.totalAthletes} alunos ativos</span> de {stats.maxAthletes} no seu plano.
+                        {dataSource === 'SUPABASE' && <span className="text-xs text-green-500 ml-2">● Dados reais</span>}
                     </p>
                 </div>
 
