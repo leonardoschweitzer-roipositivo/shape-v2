@@ -8,7 +8,7 @@
  * 1. Usuário faz login → authStore carrega profile e entity
  * 2. useSupabaseSync detecta o entity.personal
  * 3. Chama dataStore.loadFromSupabase(personalId)
- * 4. Dados reais carregam (ou mantém mocks se banco vazio)
+ * 4. Dados reais carregam (ou lista vazia se banco vazio — NUNCA usa mocks)
  */
 import { useEffect, useRef } from 'react';
 import { useAuthStore } from '@/stores/authStore';
@@ -17,28 +17,25 @@ import { useDataStore } from '@/stores/dataStore';
 export function useSupabaseSync() {
     const { isAuthenticated, profile, entity } = useAuthStore();
     const { loadFromSupabase, dataSource } = useDataStore();
-    const hasLoaded = useRef(false);
+    const loadedPersonalId = useRef<string | null>(null);
 
     useEffect(() => {
-        // Só carrega uma vez por sessão
-        if (!isAuthenticated || hasLoaded.current) return;
+        if (!isAuthenticated) return;
 
         const sync = async () => {
             try {
                 if (profile?.role === 'PERSONAL' && entity.personal) {
+                    // Recarrega se o personal mudou (nova sessão ou troca de conta)
+                    if (loadedPersonalId.current === entity.personal.id) return;
                     console.info('[Sync] Carregando dados do personal:', entity.personal.nome);
                     await loadFromSupabase(entity.personal.id);
-                    hasLoaded.current = true;
+                    loadedPersonalId.current = entity.personal.id;
                 } else if (profile?.role === 'ACADEMIA' && entity.academia) {
-                    // Futuramente: carregar dados da academia
                     console.info('[Sync] Academia logada:', entity.academia.nome);
-                    hasLoaded.current = true;
                 } else if (profile?.role === 'ATLETA' && entity.atleta) {
-                    // Futuramente: carregar dados do atleta
                     console.info('[Sync] Atleta logado:', entity.atleta.nome);
-                    hasLoaded.current = true;
                 } else {
-                    console.info('[Sync] Entidade não encontrada, usando mocks');
+                    console.info('[Sync] Entidade não encontrada (usuário novo ou sem dados no banco).');
                 }
             } catch (err) {
                 console.error('[Sync] Erro na sincronização:', err);
@@ -46,12 +43,12 @@ export function useSupabaseSync() {
         };
 
         sync();
-    }, [isAuthenticated, profile?.role, entity.personal, entity.academia, entity.atleta]);
+    }, [isAuthenticated, profile?.role, entity.personal?.id, entity.academia?.id, entity.atleta?.id]);
 
     // Reset quando deslogar
     useEffect(() => {
         if (!isAuthenticated) {
-            hasLoaded.current = false;
+            loadedPersonalId.current = null;
         }
     }, [isAuthenticated]);
 

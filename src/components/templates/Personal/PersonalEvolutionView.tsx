@@ -2,23 +2,25 @@ import React, { useState } from 'react';
 import { TrendingUp, User, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { Evolution } from '../Evolution';
 import { PersonalAthleteSelector } from './PersonalAthleteSelector';
-import { mockPersonalAthletes, PersonalAthlete } from '@/mocks/personal';
+import { PersonalAthlete } from '@/mocks/personal';
+import { useDataStore } from '@/stores/dataStore';
 
 interface PersonalEvolutionViewProps {
     initialAthleteId?: string | null;
 }
 
 export const PersonalEvolutionView: React.FC<PersonalEvolutionViewProps> = ({ initialAthleteId }) => {
+    const { personalAthletes } = useDataStore();
     const [selectedAthlete, setSelectedAthlete] = useState<PersonalAthlete | null>(() => {
         if (initialAthleteId) {
-            return mockPersonalAthletes.find(a => a.id === initialAthleteId) || null;
+            return personalAthletes.find(a => a.id === initialAthleteId) || null;
         }
         return null;
     });
 
     React.useEffect(() => {
         if (initialAthleteId) {
-            const athlete = mockPersonalAthletes.find(a => a.id === initialAthleteId);
+            const athlete = personalAthletes.find(a => a.id === initialAthleteId);
             if (athlete) setSelectedAthlete(athlete);
         } else {
             // Optional: If initialAthleteId becomes null, do we want to reset? 
@@ -27,7 +29,7 @@ export const PersonalEvolutionView: React.FC<PersonalEvolutionViewProps> = ({ in
             // But for the use case "Click Sidebar -> Show Selector", we might want to pass null.
             setSelectedAthlete(null);
         }
-    }, [initialAthleteId]);
+    }, [initialAthleteId, personalAthletes]);
 
     return (
         <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth custom-scrollbar flex flex-col">

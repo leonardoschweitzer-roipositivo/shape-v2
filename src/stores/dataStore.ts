@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { MeasurementHistory, PersonalAthlete, mockPersonalAthletes } from '@/mocks/personal';
-import { PersonalSummary, mockPersonalsSummary, AcademyStats, mockAcademyStats } from '@/mocks/academy';
+import { MeasurementHistory, PersonalAthlete } from '@/mocks/personal';
+import { PersonalSummary, AcademyStats } from '@/mocks/academy';
 import { mapMeasurementToInput } from '@/services/calculations/evolutionProcessor';
 import { calcularAvaliacaoGeral } from '@/services/calculations/assessment';
 import { supabase } from '@/services/supabase';
@@ -41,10 +41,10 @@ interface DataState {
 export const useDataStore = create<DataState>()(
     persist(
         (set, get) => ({
-            personalAthletes: mockPersonalAthletes,
-            personals: mockPersonalsSummary,
-            academyStats: mockAcademyStats,
-            dataSource: 'MOCK' as DataSource,
+            personalAthletes: [],
+            personals: [],
+            academyStats: { totalAthletes: 0, totalPersonals: 0, averageScore: 0, measuredThisWeek: 0 } as AcademyStats,
+            dataSource: 'SUPABASE' as DataSource,
             isLoadingFromDB: false,
 
             /**
@@ -63,9 +63,16 @@ export const useDataStore = create<DataState>()(
                         .eq('personal_id', personalId)
                         .order('nome', { ascending: true });
 
-                    if (atletasError || !atletas || atletas.length === 0) {
-                        console.info('[DataStore] Nenhum atleta no Supabase, usando mocks.');
-                        set({ isLoadingFromDB: false, dataSource: 'MOCK' });
+                    if (atletasError) {
+                        console.error('[DataStore] Erro ao buscar atletas do Supabase:', atletasError.message);
+                        set({ isLoadingFromDB: false, dataSource: 'SUPABASE', personalAthletes: [] });
+                        return;
+                    }
+
+                    // Banco pode estar vazio — isso é válido!
+                    if (!atletas || atletas.length === 0) {
+                        console.info('[DataStore] ✅ Banco vazio — nenhum atleta cadastrado ainda.');
+                        set({ isLoadingFromDB: false, dataSource: 'SUPABASE', personalAthletes: [] });
                         return;
                     }
 
@@ -108,7 +115,7 @@ export const useDataStore = create<DataState>()(
 
                 } catch (err) {
                     console.error('[DataStore] Erro ao carregar do Supabase:', err);
-                    set({ isLoadingFromDB: false, dataSource: 'MOCK' });
+                    set({ isLoadingFromDB: false, dataSource: 'SUPABASE', personalAthletes: [] });
                 }
             },
 
@@ -259,11 +266,12 @@ export const useDataStore = create<DataState>()(
             },
 
             resetToMocks: () => {
+                // Mantido por compatibilidade, mas agora reseta para vazio (sem mocks)
                 set({
-                    personalAthletes: mockPersonalAthletes,
-                    personals: mockPersonalsSummary,
-                    academyStats: mockAcademyStats,
-                    dataSource: 'MOCK' as DataSource
+                    personalAthletes: [],
+                    personals: [],
+                    academyStats: { totalAthletes: 0, totalPersonals: 0, averageScore: 0, measuredThisWeek: 0 } as AcademyStats,
+                    dataSource: 'SUPABASE' as DataSource
                 });
             }
         }),

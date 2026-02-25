@@ -5,11 +5,6 @@ import { HeroCard } from '@/components/organisms/HeroCard';
 import { HeroContent } from '@/features/dashboard/types';
 import { useDataStore } from '@/stores/dataStore';
 import { useAuthStore } from '@/stores/authStore';
-import {
-    mockAthletesNeedingAttention,
-    mockTopPerformers,
-    mockRecentActivity,
-} from '@/mocks/personal';
 
 interface PersonalDashboardProps {
     onNavigateToAthlete: (athleteId: string) => void;
@@ -68,7 +63,17 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
             position: idx + 1
         }));
 
-    const recentActivity = mockRecentActivity;
+    const recentActivity = personalAthletes
+        .filter(a => a.lastMeasurement)
+        .sort((a, b) => new Date(b.lastMeasurement).getTime() - new Date(a.lastMeasurement).getTime())
+        .slice(0, 5)
+        .map((a, idx) => ({
+            id: `activity-${idx}`,
+            type: 'measurement',
+            athleteName: a.name,
+            action: 'registrou nova medição',
+            timestamp: a.lastMeasurement,
+        }));
 
     const heroContent: HeroContent = {
         badge: { label: 'GESTÃO E PERFORMANCE', variant: 'primary' },

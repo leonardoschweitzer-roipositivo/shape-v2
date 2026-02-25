@@ -347,12 +347,12 @@ function getAchievementDescription(id: string): string {
 // ============================================
 
 export const usePersonalRankingStore = create<PersonalRankingStore>((set, get) => ({
-    // Initial state
-    personals: MOCK_PERSONALS,
-    filteredPersonals: MOCK_PERSONALS,
+    // Initial state — dados virão do Supabase futuramente
+    personals: [],
+    filteredPersonals: [],
     selectedPersonal: null,
     filters: DEFAULT_FILTERS,
-    stats: MOCK_STATS,
+    stats: { totalPersonals: 0, avgScore: 0, avgEvolution: 0, topSpecialty: 'geral' as const, topRegion: '-' },
     isLoading: false,
     page: 1,
     hasMore: false,
