@@ -78,21 +78,21 @@ const App: React.FC = () => {
     checkSession();
   }, []);
 
-  // Limpa cache de dados mockados do Zustand persist
-  // Necessário para garantir que dados reais do Supabase sejam usados
+  // FORÇA limpeza de caches antigos para todos os usuários com a nova atualização
   useEffect(() => {
-    const cachedData = localStorage.getItem('vitru-data-storage');
-    if (cachedData) {
-      try {
-        const parsed = JSON.parse(cachedData);
-        // Se o cache tinha dataSource MOCK, limpa para forçar reload do Supabase
-        if (parsed?.state?.dataSource === 'MOCK') {
-          console.info('[App] 🧹 Limpando cache de mocks do localStorage...');
-          localStorage.removeItem('vitru-data-storage');
-        }
-      } catch {
-        localStorage.removeItem('vitru-data-storage');
+    // Estas chaves armazenavam 'MOCK' em versões anteriores. Vamos limpar.
+    const keysToPurge = ['vitru-data-storage', 'daily-tracking-storage'];
+    let purged = false;
+
+    keysToPurge.forEach(key => {
+      if (localStorage.getItem(key)) {
+        localStorage.removeItem(key);
+        purged = true;
       }
+    });
+
+    if (purged) {
+      console.info('[App] 🧹 Caches de dados antigos/mocks limpos automaticamente com a nova versão.');
     }
   }, []);
 
