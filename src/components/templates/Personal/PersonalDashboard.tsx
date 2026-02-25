@@ -23,9 +23,15 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
 
     // Calculate stats from store
     const totalAthletes = personalAthletes.length;
-    const maxAthletes = 50; // Mock limit
-    const averageScore = Math.round(personalAthletes.reduce((acc, a) => acc + (a.score || 0), 0) / totalAthletes * 10) / 10;
+
+    // Calcula o score médio baseado nos scores que não são zero
+    const athletesWithScore = personalAthletes.filter(a => (a.score || 0) > 0);
+    const averageScore = athletesWithScore.length > 0
+        ? Math.round(athletesWithScore.reduce((acc, a) => acc + (a.score || 0), 0) / athletesWithScore.length * 10) / 10
+        : 0;
+
     const measuredThisWeek = personalAthletes.filter(a => {
+        if (!a.lastMeasurement) return false;
         const lastDate = new Date(a.lastMeasurement);
         const diff = Date.now() - lastDate.getTime();
         return diff < 7 * 24 * 60 * 60 * 1000;
@@ -33,15 +39,15 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
 
     const stats = {
         totalAthletes,
-        maxAthletes,
+        maxAthletes: 50, // Limite do plano (pode vir do perfil no futuro)
         measuredThisWeek,
         averageScore,
-        scoreVariation: 1.2, // Mock variation
-        needsAttention: personalAthletes.filter(a => (a.score || 0) < 60).length
+        scoreVariation: 0, // Variação média global será calculada a partir do histórico no futuro
+        needsAttention: personalAthletes.filter(a => (a.score || 0) > 0 && (a.score || 0) < 60).length
     };
 
     const athletesNeedingAttention = personalAthletes
-        .filter(a => (a.score || 0) < 60)
+        .filter(a => (a.score || 0) < 60 && a.assessments?.length > 0)
         .slice(0, 3)
         .map(a => ({
             id: a.id,
