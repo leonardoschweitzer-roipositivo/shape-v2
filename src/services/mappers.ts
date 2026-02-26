@@ -43,13 +43,13 @@ export function mapMedidaToHistory(medida: Medida, avaliacao?: Avaliacao | null)
             ankleLeft: 0,   // Vem da ficha
         },
         skinfolds: {
-            tricep: 0,
-            subscapular: 0,
-            chest: 0,
-            axillary: 0,
-            suprailiac: 0,
-            abdominal: 0,
-            thigh: 0,
+            tricep: Number(medida.dobra_tricipital) || 0,
+            subscapular: Number(medida.dobra_subescapular) || 0,
+            chest: Number(medida.dobra_peitoral) || 0,
+            axillary: Number(medida.dobra_axilar_media) || 0,
+            suprailiac: Number(medida.dobra_suprailiaca) || 0,
+            abdominal: Number(medida.dobra_abdominal) || 0,
+            thigh: Number(medida.dobra_coxa) || 0,
         },
     };
 }

@@ -210,6 +210,13 @@ export const useDataStore = create<DataState>()(
                                 coxa_esquerda: measurements.thighLeft,
                                 panturrilha_direita: measurements.calfRight,
                                 panturrilha_esquerda: measurements.calfLeft,
+                                dobra_tricipital: skinfolds.tricep,
+                                dobra_subescapular: skinfolds.subscapular,
+                                dobra_peitoral: skinfolds.chest,
+                                dobra_axilar_media: skinfolds.axillary,
+                                dobra_suprailiaca: skinfolds.suprailiac,
+                                dobra_abdominal: skinfolds.abdominal,
+                                dobra_coxa: skinfolds.thigh,
                             };
 
                             const { data: medida } = await supabase

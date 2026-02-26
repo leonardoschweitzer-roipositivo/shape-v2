@@ -272,6 +272,13 @@ export type Database = {
                     panturrilha_esquerda: number | null
                     panturrilha_direita: number | null
                     pescoco: number | null
+                    dobra_tricipital: number | null
+                    dobra_subescapular: number | null
+                    dobra_peitoral: number | null
+                    dobra_axilar_media: number | null
+                    dobra_suprailiaca: number | null
+                    dobra_abdominal: number | null
+                    dobra_coxa: number | null
                     registrado_por: 'PORTAL' | 'COACH_IA' | 'PERSONAL' | 'APP'
                     personal_id: string | null
                     created_at: string
@@ -296,6 +303,13 @@ export type Database = {
                     panturrilha_esquerda?: number | null
                     panturrilha_direita?: number | null
                     pescoco?: number | null
+                    dobra_tricipital?: number | null
+                    dobra_subescapular?: number | null
+                    dobra_peitoral?: number | null
+                    dobra_axilar_media?: number | null
+                    dobra_suprailiaca?: number | null
+                    dobra_abdominal?: number | null
+                    dobra_coxa?: number | null
                     registrado_por?: 'PORTAL' | 'COACH_IA' | 'PERSONAL' | 'APP'
                     personal_id?: string | null
                     created_at?: string
@@ -320,6 +334,13 @@ export type Database = {
                     panturrilha_esquerda?: number | null
                     panturrilha_direita?: number | null
                     pescoco?: number | null
+                    dobra_tricipital?: number | null
+                    dobra_subescapular?: number | null
+                    dobra_peitoral?: number | null
+                    dobra_axilar_media?: number | null
+                    dobra_suprailiaca?: number | null
+                    dobra_abdominal?: number | null
+                    dobra_coxa?: number | null
                     registrado_por?: 'PORTAL' | 'COACH_IA' | 'PERSONAL' | 'APP'
                     personal_id?: string | null
                     created_at?: string

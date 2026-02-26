@@ -30,6 +30,13 @@ export interface CriarMedidaInput {
     panturrilha_esquerda?: number;
     panturrilha_direita?: number;
     pescoco?: number;
+    dobra_tricipital?: number;
+    dobra_subescapular?: number;
+    dobra_peitoral?: number;
+    dobra_axilar_media?: number;
+    dobra_suprailiaca?: number;
+    dobra_abdominal?: number;
+    dobra_coxa?: number;
     registrado_por?: 'PORTAL' | 'COACH_IA' | 'PERSONAL' | 'APP';
     personal_id?: string;
 }

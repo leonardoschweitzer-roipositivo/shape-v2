@@ -219,6 +219,13 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                         coxa_esquerda: parseFloat(formData.leftThigh) || null,
                         panturrilha_direita: parseFloat(formData.rightCalf) || null,
                         panturrilha_esquerda: parseFloat(formData.leftCalf) || null,
+                        dobra_tricipital: parseFloat(formData.tricipital) || null,
+                        dobra_subescapular: parseFloat(formData.subscapular) || null,
+                        dobra_peitoral: parseFloat(formData.chestSkinfold) || null,
+                        dobra_axilar_media: parseFloat(formData.axillary) || null,
+                        dobra_suprailiaca: parseFloat(formData.suprailiac) || null,
+                        dobra_abdominal: parseFloat(formData.abdominal) || null,
+                        dobra_coxa: parseFloat(formData.thighSkinfold) || null,
                         registrado_por: 'PERSONAL',
                         personal_id: personalId,
                     } as any);
