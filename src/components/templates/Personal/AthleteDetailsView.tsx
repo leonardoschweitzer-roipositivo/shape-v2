@@ -18,12 +18,16 @@ import {
     Check,
     X,
     Archive,
-    Trash2
+    Trash2,
+    Phone
 } from 'lucide-react';
 import { PersonalAthlete } from '@/mocks/personal';
 import { Button } from '@/components/atoms/Button/Button';
 import { HeroCard } from '@/components/organisms/HeroCard';
 import { HeroContent } from '@/features/dashboard/types';
+import { useDataStore } from '@/stores/dataStore';
+import { atletaService } from '@/services/atleta.service';
+import { medidasService } from '@/services/medidas.service';
 
 interface AthleteDetailsViewProps {
     athlete: PersonalAthlete;
@@ -60,12 +64,24 @@ const InfoCard = ({ icon: Icon, label, value }: { icon: any, label: string, valu
     </div>
 );
 
-const MeasurementItem = ({ label, value, unit }: { label: string, value: number, unit: string }) => (
+const MeasurementItem = ({ label, value, unit, isEditing, onChange }: { label: string, value: number, unit: string, isEditing?: boolean, onChange?: (val: number) => void }) => (
     <div className="bg-[#0A0F1C]/50 p-3 rounded-lg border border-white/5 flex justify-between items-center group hover:bg-[#0A0F1C] transition-all">
         <span className="text-gray-400 text-xs font-bold uppercase tracking-wider">{label}</span>
-        <span className="text-white font-mono font-bold">
-            {value} <span className="text-[10px] text-gray-500 font-normal">{unit}</span>
-        </span>
+        {isEditing ? (
+            <div className="flex items-center gap-1">
+                <input
+                    type="number"
+                    value={value || ''}
+                    onChange={(e) => onChange?.(parseFloat(e.target.value) || 0)}
+                    className="w-16 bg-transparent text-right text-white font-mono font-bold outline-none border-b border-primary/50 focus:border-primary px-1"
+                />
+                <span className="text-[10px] text-gray-500 font-normal">{unit}</span>
+            </div>
+        ) : (
+            <span className="text-white font-mono font-bold">
+                {value} <span className="text-[10px] text-gray-500 font-normal">{unit}</span>
+            </span>
+        )}
     </div>
 );
 
@@ -111,12 +127,60 @@ const StatusSelector = ({ status, onChange }: { status: string, onChange: (s: st
     </div>
 );
 
+const calculateAge = (birthDateStr?: string): number | null => {
+    if (!birthDateStr) return null;
+    const birth = new Date(birthDateStr);
+    if (isNaN(birth.getTime())) return null;
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+        age--;
+    }
+    return age;
+};
+
 export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete, onBack, onNewAssessment, onConsultAssessment, hideStatusControl = false }) => {
+    const { updateAthlete } = useDataStore();
     const [openAccordion, setOpenAccordion] = useState<string | null>('basics');
     const [isEditing, setIsEditing] = useState(false);
-    const [athleteStatus, setAthleteStatus] = useState(athlete.status);
+    const [isSaving, setIsSaving] = useState(false);
 
-    const latestAssessment = athlete.assessments?.[0];
+    // Initial draft from the athlete
+    const [draftAthlete, setDraftAthlete] = useState<PersonalAthlete>(athlete);
+
+    // Sync if athlete changes externally
+    React.useEffect(() => {
+        setDraftAthlete(athlete);
+    }, [athlete]);
+
+    if (!draftAthlete) return null;
+
+    const latestAssessment = draftAthlete.assessments?.[0];
+
+    const updateMeasurement = (field: any, value: number) => {
+        if (!latestAssessment) return;
+        setDraftAthlete(prev => {
+            const newAssessments = [...prev.assessments];
+            newAssessments[0] = {
+                ...newAssessments[0],
+                measurements: { ...newAssessments[0].measurements, [field]: value }
+            };
+            return { ...prev, assessments: newAssessments };
+        });
+    };
+
+    const updateSkinfold = (field: any, value: number) => {
+        if (!latestAssessment) return;
+        setDraftAthlete(prev => {
+            const newAssessments = [...prev.assessments];
+            newAssessments[0] = {
+                ...newAssessments[0],
+                skinfolds: { ...newAssessments[0].skinfolds, [field]: value }
+            };
+            return { ...prev, assessments: newAssessments };
+        });
+    };
 
     const heroContent: HeroContent = {
         badge: { label: 'FICHA TÉCNICA', variant: 'primary' },
@@ -139,7 +203,66 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
         setOpenAccordion(openAccordion === id ? null : id);
     };
 
-    if (!athlete) return null;
+    const handleSave = async () => {
+        setIsSaving(true);
+        // Atualiza localmente o zustand store para reatividade imediata
+        updateAthlete(draftAthlete);
+
+        try {
+            // 1. Informações Básicas do Atleta
+            await atletaService.atualizar(draftAthlete.id, {
+                nome: draftAthlete.name,
+                email: draftAthlete.email,
+                telefone: draftAthlete.phone || null,
+                status: draftAthlete.status === 'inactive' ? 'INATIVO' : 'ATIVO',
+            });
+
+            // 2. Ficha do Atleta (Gênero e medidas fixas)
+            await atletaService.atualizarFicha(draftAthlete.id, {
+                sexo: draftAthlete.gender === 'FEMALE' ? 'F' : 'M',
+                data_nascimento: draftAthlete.birthDate || null,
+                ...(latestAssessment ? {
+                    altura: latestAssessment.measurements.height,
+                    pelve: latestAssessment.measurements.pelvis,
+                    punho: latestAssessment.measurements.wristRight,
+                    tornozelo: latestAssessment.measurements.ankleRight,
+                    joelho: latestAssessment.measurements.kneeRight,
+                } : {})
+            });
+
+            // 3. Atualizar as Medidas Correntes e Dobras Cutâneas
+            if (latestAssessment) {
+                await medidasService.atualizar(latestAssessment.id, {
+                    peso: latestAssessment.measurements.weight,
+                    pescoco: latestAssessment.measurements.neck,
+                    ombros: latestAssessment.measurements.shoulders,
+                    peitoral: latestAssessment.measurements.chest,
+                    cintura: latestAssessment.measurements.waist,
+                    quadril: latestAssessment.measurements.hips,
+                    braco_direito: latestAssessment.measurements.armRight,
+                    braco_esquerdo: latestAssessment.measurements.armLeft,
+                    antebraco_direito: latestAssessment.measurements.forearmRight,
+                    antebraco_esquerdo: latestAssessment.measurements.forearmLeft,
+                    coxa_direita: latestAssessment.measurements.thighRight,
+                    coxa_esquerda: latestAssessment.measurements.thighLeft,
+                    panturrilha_direita: latestAssessment.measurements.calfRight,
+                    panturrilha_esquerda: latestAssessment.measurements.calfLeft,
+                    dobra_tricipital: latestAssessment.skinfolds.tricep,
+                    dobra_subescapular: latestAssessment.skinfolds.subscapular,
+                    dobra_peitoral: latestAssessment.skinfolds.chest,
+                    dobra_axilar_media: latestAssessment.skinfolds.axillary,
+                    dobra_suprailiaca: latestAssessment.skinfolds.suprailiac,
+                    dobra_abdominal: latestAssessment.skinfolds.abdominal,
+                    dobra_coxa: latestAssessment.skinfolds.thigh,
+                });
+            }
+        } catch (error) {
+            console.error('Falha ao atualizar dados do atleta no banco:', error);
+        } finally {
+            setIsSaving(false);
+            setIsEditing(false);
+        }
+    };
 
     return (
         <div className="flex-1 p-4 md:p-8 flex flex-col w-full h-full overflow-y-auto custom-scrollbar animate-fade-in bg-background-dark">
@@ -157,14 +280,14 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                         <div>
                             <div className="flex items-center gap-3">
                                 <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight uppercase">
-                                    {athlete.name}
+                                    {draftAthlete.name}
                                 </h1>
-                                <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-widest ${athleteStatus === 'active' ? 'bg-green-500/10 text-green-500 border border-green-500/20 shadow-[0_0_15px_rgba(34,197,94,0.1)]' :
-                                    athleteStatus === 'attention' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.1)]' :
-                                        athleteStatus === 'archived' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.1)]' :
+                                <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-widest ${draftAthlete.status === 'active' ? 'bg-green-500/10 text-green-500 border border-green-500/20 shadow-[0_0_15px_rgba(34,197,94,0.1)]' :
+                                    draftAthlete.status === 'attention' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.1)]' :
+                                        draftAthlete.status === 'archived' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.1)]' :
                                             'bg-gray-500/10 text-gray-500 border border-gray-500/20'
                                     }`}>
-                                    {athleteStatus === 'active' ? 'ATIVO' : athleteStatus === 'attention' ? 'ATENÇÃO' : athleteStatus === 'archived' ? 'ARQUIVADO' : 'INATIVO'}
+                                    {draftAthlete.status === 'active' ? 'ATIVO' : draftAthlete.status === 'attention' ? 'ATENÇÃO' : draftAthlete.status === 'archived' ? 'ARQUIVADO' : 'INATIVO'}
                                 </span>
                             </div>
                             <p className="text-gray-400 mt-2 font-light flex items-center gap-2">
@@ -175,7 +298,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                     </div>
 
                     <div className="flex items-center gap-3">
-                        {athleteStatus === 'archived' && (
+                        {draftAthlete.status === 'archived' && (
                             <div className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-500 text-xs font-bold uppercase tracking-widest animate-pulse">
                                 <Archive size={16} />
                                 Perfil Arquivado
@@ -185,12 +308,17 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                             variant="outline"
                             className="flex items-center gap-2 border-white/10 hover:border-white/20 px-6"
                             onClick={() => {
-                                setIsEditing(!isEditing);
+                                if (isEditing) {
+                                    handleSave();
+                                } else {
+                                    setIsEditing(true);
+                                }
                             }}
+                            disabled={isSaving}
                         >
                             <Edit3 size={18} />
                             <span className="font-bold uppercase tracking-wider text-xs">
-                                {isEditing ? 'SALVAR ATLETA' : 'EDITAR ATLETA'}
+                                {isEditing ? (isSaving ? 'SALVANDO...' : 'SALVAR ATLETA') : 'EDITAR ATLETA'}
                             </span>
                         </Button>
                         <Button
@@ -229,64 +357,105 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                 <div className="flex items-center gap-3">
                                     {!hideStatusControl && (
                                         <StatusSelector
-                                            status={athleteStatus}
-                                            onChange={(s) => setAthleteStatus(s as any)}
+                                            status={draftAthlete.status}
+                                            onChange={(s) => setDraftAthlete({ ...draftAthlete, status: s as any })}
                                         />
                                     )}
                                     <button
-                                        onClick={() => setIsEditing(!isEditing)}
+                                        onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+                                        disabled={isSaving}
                                         className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all font-bold text-xs uppercase tracking-wider ${isEditing
                                             ? 'bg-primary text-background-dark border-primary shadow-[0_0_15px_rgba(0,201,167,0.3)]'
                                             : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:border-white/30'
-                                            }`}
+                                            } ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         {isEditing ? <Check size={16} /> : <Edit3 size={16} />}
-                                        {isEditing ? 'Salvar' : 'Editar'}
+                                        {isEditing ? (isSaving ? 'Salvando...' : 'Salvar') : 'Editar'}
                                     </button>
                                 </div>
                             }
                         />
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="space-y-4">
                             {isEditing ? (
                                 <>
-                                    <div className="bg-[#0A0F1C] p-4 rounded-xl border border-primary/30 flex flex-col gap-1">
-                                        <label className="text-[10px] font-bold text-primary uppercase tracking-widest">Nome Completo</label>
-                                        <input
-                                            defaultValue={athlete.name}
-                                            className="bg-transparent text-white font-semibold outline-none border-b border-white/10 focus:border-primary transition-colors py-1"
-                                        />
-                                    </div>
-                                    <div className="bg-[#0A0F1C] p-4 rounded-xl border border-primary/30 flex flex-col gap-1">
-                                        <label className="text-[10px] font-bold text-primary uppercase tracking-widest">Email para Contato</label>
-                                        <input
-                                            defaultValue={athlete.email}
-                                            className="bg-transparent text-white font-semibold outline-none border-b border-white/10 focus:border-primary transition-colors py-1"
-                                        />
-                                    </div>
-                                    <div className="bg-[#0A0F1C] p-4 rounded-xl border border-primary/30 flex flex-col gap-1">
-                                        <label className="text-[10px] font-bold text-primary uppercase tracking-widest">Gênero</label>
-                                        <select className="bg-transparent text-white font-semibold outline-none cursor-pointer py-1">
-                                            <option value="MALE" className="bg-[#131B2C]">Masculino</option>
-                                            <option value="FEMALE" className="bg-[#131B2C]">Feminino</option>
-                                            <option value="OTHER" className="bg-[#131B2C]">Outro</option>
-                                        </select>
-                                    </div>
-                                    <div className="bg-[#0A0F1C] p-4 rounded-xl border border-white/5 opacity-50 flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-gray-500">
-                                            <Calendar size={20} />
+                                    {/* Linha 1: Nome, Email, Telefone */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div className="bg-[#0A0F1C] p-4 rounded-xl border border-primary/30 flex flex-col gap-1">
+                                            <label className="text-[10px] font-bold text-primary uppercase tracking-widest">Nome Completo</label>
+                                            <input
+                                                value={draftAthlete.name}
+                                                onChange={e => setDraftAthlete({ ...draftAthlete, name: e.target.value })}
+                                                className="bg-transparent text-white font-semibold outline-none border-b border-white/10 focus:border-primary transition-colors py-1"
+                                            />
                                         </div>
-                                        <div>
-                                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Vinculado desde</p>
-                                            <p className="text-white/60 font-semibold">{new Date(athlete.linkedSince).toLocaleDateString('pt-BR')}</p>
+                                        <div className="bg-[#0A0F1C] p-4 rounded-xl border border-primary/30 flex flex-col gap-1">
+                                            <label className="text-[10px] font-bold text-primary uppercase tracking-widest">Email para Contato</label>
+                                            <input
+                                                type="email"
+                                                value={draftAthlete.email}
+                                                onChange={e => setDraftAthlete({ ...draftAthlete, email: e.target.value })}
+                                                className="bg-transparent text-white font-semibold outline-none border-b border-white/10 focus:border-primary transition-colors py-1"
+                                            />
+                                        </div>
+                                        <div className="bg-[#0A0F1C] p-4 rounded-xl border border-primary/30 flex flex-col gap-1">
+                                            <label className="text-[10px] font-bold text-primary uppercase tracking-widest">Telefone</label>
+                                            <input
+                                                type="tel"
+                                                value={draftAthlete.phone || ''}
+                                                onChange={e => setDraftAthlete({ ...draftAthlete, phone: e.target.value })}
+                                                placeholder="(00) 00000-0000"
+                                                className="bg-transparent text-white font-semibold outline-none border-b border-white/10 focus:border-primary transition-colors py-1 placeholder-gray-600"
+                                            />
+                                        </div>
+                                    </div>
+                                    {/* Linha 2: Gênero, Data de Nascimento, Vinculado desde */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div className="bg-[#0A0F1C] p-4 rounded-xl border border-primary/30 flex flex-col gap-1">
+                                            <label className="text-[10px] font-bold text-primary uppercase tracking-widest">Gênero</label>
+                                            <select
+                                                className="bg-transparent text-white font-semibold outline-none cursor-pointer py-1"
+                                                value={draftAthlete.gender}
+                                                onChange={e => setDraftAthlete({ ...draftAthlete, gender: e.target.value as any })}
+                                            >
+                                                <option value="MALE" className="bg-[#131B2C]">Masculino</option>
+                                                <option value="FEMALE" className="bg-[#131B2C]">Feminino</option>
+                                                <option value="OTHER" className="bg-[#131B2C]">Outro</option>
+                                            </select>
+                                        </div>
+                                        <div className="bg-[#0A0F1C] p-4 rounded-xl border border-primary/30 flex flex-col gap-1">
+                                            <label className="text-[10px] font-bold text-primary uppercase tracking-widest">Data de Nascimento</label>
+                                            <input
+                                                type="date"
+                                                value={draftAthlete.birthDate || ''}
+                                                onChange={e => setDraftAthlete({ ...draftAthlete, birthDate: e.target.value })}
+                                                className="bg-transparent text-white font-semibold outline-none border-b border-white/10 focus:border-primary transition-colors py-1 [color-scheme:dark]"
+                                            />
+                                        </div>
+                                        <div className="bg-[#0A0F1C] p-4 rounded-xl border border-white/5 opacity-50 flex items-center gap-4">
+                                            <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-gray-500">
+                                                <Calendar size={20} />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Vinculado desde</p>
+                                                <p className="text-white/60 font-semibold">{new Date(athlete.linkedSince).toLocaleDateString('pt-BR')}</p>
+                                            </div>
                                         </div>
                                     </div>
                                 </>
                             ) : (
                                 <>
-                                    <InfoCard icon={User} label="Nome Completo" value={athlete.name} />
-                                    <InfoCard icon={Mail} label="Email para Contato" value={athlete.email} />
-                                    <InfoCard icon={User} label="Gênero" value={athlete.gender === 'MALE' ? 'Masculino' : athlete.gender === 'FEMALE' ? 'Feminino' : 'Outro'} />
-                                    <InfoCard icon={Calendar} label="Vinculado desde" value={new Date(athlete.linkedSince).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })} />
+                                    {/* Linha 1: Nome, Email, Telefone */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <InfoCard icon={User} label="Nome Completo" value={draftAthlete.name} />
+                                        <InfoCard icon={Mail} label="Email para Contato" value={draftAthlete.email} />
+                                        <InfoCard icon={Phone} label="Telefone" value={draftAthlete.phone || 'Não informado'} />
+                                    </div>
+                                    {/* Linha 2: Gênero, Data de Nascimento, Vinculado desde */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <InfoCard icon={User} label="Gênero" value={draftAthlete.gender === 'MALE' ? 'Masculino' : draftAthlete.gender === 'FEMALE' ? 'Feminino' : 'Outro'} />
+                                        <InfoCard icon={Calendar} label="Data de Nascimento" value={draftAthlete.birthDate ? new Date(draftAthlete.birthDate + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) : 'Não informada'} />
+                                        <InfoCard icon={Calendar} label="Vinculado desde" value={new Date(draftAthlete.linkedSince).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })} />
+                                    </div>
                                 </>
                             )}
                         </div>
@@ -309,15 +478,14 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                 onToggle={() => toggleAccordion('basics')}
                             >
                                 {latestAssessment ? (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                        <MeasurementItem label="Peso" value={latestAssessment.measurements.weight} unit="kg" />
-                                        <MeasurementItem label="Altura" value={latestAssessment.measurements.height} unit="cm" />
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <MeasurementItem label="Peso" value={latestAssessment.measurements.weight} unit="kg" isEditing={isEditing} onChange={(v) => updateMeasurement('weight', v)} />
+                                        <MeasurementItem label="Altura" value={latestAssessment.measurements.height} unit="cm" isEditing={isEditing} onChange={(v) => updateMeasurement('height', v)} />
                                         <MeasurementItem
                                             label="Idade"
-                                            value={athlete.name === 'Leonardo Schiwetzer' ? 48 : 25}
+                                            value={calculateAge(draftAthlete.birthDate) ?? 0}
                                             unit="anos"
                                         />
-                                        <MeasurementItem label="Score Atual" value={athlete.score} unit="pts" />
                                     </div>
                                 ) : (
                                     <p className="text-gray-500 text-sm italic">Nenhuma avaliação realizada ainda.</p>
@@ -340,12 +508,12 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                                     <Layers size={12} /> Tronco
                                                 </h4>
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                    <MeasurementItem label="Pescoço" value={latestAssessment.measurements.neck} unit="cm" />
-                                                    <MeasurementItem label="Ombros" value={latestAssessment.measurements.shoulders} unit="cm" />
-                                                    <MeasurementItem label="Peitoral" value={latestAssessment.measurements.chest} unit="cm" />
-                                                    <MeasurementItem label="Pelve" value={latestAssessment.measurements.pelvis} unit="cm" />
-                                                    <MeasurementItem label="Cintura" value={latestAssessment.measurements.waist} unit="cm" />
-                                                    <MeasurementItem label="Quadril" value={latestAssessment.measurements.hips} unit="cm" />
+                                                    <MeasurementItem label="Pescoço" value={latestAssessment.measurements.neck} unit="cm" isEditing={isEditing} onChange={(v) => updateMeasurement('neck', v)} />
+                                                    <MeasurementItem label="Ombros" value={latestAssessment.measurements.shoulders} unit="cm" isEditing={isEditing} onChange={(v) => updateMeasurement('shoulders', v)} />
+                                                    <MeasurementItem label="Peitoral" value={latestAssessment.measurements.chest} unit="cm" isEditing={isEditing} onChange={(v) => updateMeasurement('chest', v)} />
+                                                    <MeasurementItem label="Pelve" value={latestAssessment.measurements.pelvis} unit="cm" isEditing={isEditing} onChange={(v) => updateMeasurement('pelvis', v)} />
+                                                    <MeasurementItem label="Cintura" value={latestAssessment.measurements.waist} unit="cm" isEditing={isEditing} onChange={(v) => updateMeasurement('waist', v)} />
+                                                    <MeasurementItem label="Quadril" value={latestAssessment.measurements.hips} unit="cm" isEditing={isEditing} onChange={(v) => updateMeasurement('hips', v)} />
                                                 </div>
                                             </div>
 
@@ -361,18 +529,26 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                                         <span className="text-[8px] font-bold text-primary uppercase text-left">Dir (cm)</span>
                                                     </div>
                                                     {[
-                                                        { label: 'Braço', left: latestAssessment.measurements.armLeft, right: latestAssessment.measurements.armRight },
-                                                        { label: 'Antebraço', left: latestAssessment.measurements.forearmLeft, right: latestAssessment.measurements.forearmRight },
-                                                        { label: 'Pulso', left: latestAssessment.measurements.wristLeft, right: latestAssessment.measurements.wristRight },
-                                                        { label: 'Coxa', left: latestAssessment.measurements.thighLeft, right: latestAssessment.measurements.thighRight },
-                                                        { label: 'Joelho', left: latestAssessment.measurements.kneeLeft, right: latestAssessment.measurements.kneeRight },
-                                                        { label: 'Panturrilha', left: latestAssessment.measurements.calfLeft, right: latestAssessment.measurements.calfRight },
-                                                        { label: 'Tornozelo', left: latestAssessment.measurements.ankleLeft, right: latestAssessment.measurements.ankleRight },
+                                                        { label: 'Braço', left: latestAssessment.measurements.armLeft, right: latestAssessment.measurements.armRight, kLeft: 'armLeft', kRight: 'armRight' },
+                                                        { label: 'Antebraço', left: latestAssessment.measurements.forearmLeft, right: latestAssessment.measurements.forearmRight, kLeft: 'forearmLeft', kRight: 'forearmRight' },
+                                                        { label: 'Pulso', left: latestAssessment.measurements.wristLeft, right: latestAssessment.measurements.wristRight, kLeft: 'wristLeft', kRight: 'wristRight' },
+                                                        { label: 'Coxa', left: latestAssessment.measurements.thighLeft, right: latestAssessment.measurements.thighRight, kLeft: 'thighLeft', kRight: 'thighRight' },
+                                                        { label: 'Joelho', left: latestAssessment.measurements.kneeLeft, right: latestAssessment.measurements.kneeRight, kLeft: 'kneeLeft', kRight: 'kneeRight' },
+                                                        { label: 'Panturrilha', left: latestAssessment.measurements.calfLeft, right: latestAssessment.measurements.calfRight, kLeft: 'calfLeft', kRight: 'calfRight' },
+                                                        { label: 'Tornozelo', left: latestAssessment.measurements.ankleLeft, right: latestAssessment.measurements.ankleRight, kLeft: 'ankleLeft', kRight: 'ankleRight' },
                                                     ].map((item, idx) => (
                                                         <div key={idx} className="grid grid-cols-[1fr_auto_1fr] gap-4 items-center">
-                                                            <div className="bg-white/5 px-2 py-1 rounded text-right text-white font-mono text-sm">{item.left}</div>
+                                                            <div className="bg-white/5 px-2 py-1 rounded text-right text-white font-mono text-sm">
+                                                                {isEditing ? (
+                                                                    <input type="number" value={item.left || ''} onChange={(e) => updateMeasurement(item.kLeft as any, parseFloat(e.target.value) || 0)} className="w-16 bg-transparent text-right outline-none border-b border-primary/50 focus:border-primary px-1" />
+                                                                ) : item.left}
+                                                            </div>
                                                             <div className="text-[10px] font-medium text-gray-400 w-24 text-center">{item.label}</div>
-                                                            <div className="bg-white/5 px-2 py-1 rounded text-left text-white font-mono text-sm">{item.right}</div>
+                                                            <div className="bg-white/5 px-2 py-1 rounded text-left text-white font-mono text-sm">
+                                                                {isEditing ? (
+                                                                    <input type="number" value={item.right || ''} onChange={(e) => updateMeasurement(item.kRight as any, parseFloat(e.target.value) || 0)} className="w-16 bg-transparent text-left outline-none border-b border-primary/50 focus:border-primary px-1" />
+                                                                ) : item.right}
+                                                            </div>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -393,13 +569,13 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                             >
                                 {latestAssessment ? (
                                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-                                        <MeasurementItem label="Tríceps" value={latestAssessment.skinfolds.tricep} unit="mm" />
-                                        <MeasurementItem label="Subscap." value={latestAssessment.skinfolds.subscapular} unit="mm" />
-                                        <MeasurementItem label="Peitoral" value={latestAssessment.skinfolds.chest} unit="mm" />
-                                        <MeasurementItem label="Axilar M." value={latestAssessment.skinfolds.axillary} unit="mm" />
-                                        <MeasurementItem label="Supra-il." value={latestAssessment.skinfolds.suprailiac} unit="mm" />
-                                        <MeasurementItem label="Abdom." value={latestAssessment.skinfolds.abdominal} unit="mm" />
-                                        <MeasurementItem label="Coxa" value={latestAssessment.skinfolds.thigh} unit="mm" />
+                                        <MeasurementItem label="Tríceps" value={latestAssessment.skinfolds.tricep} unit="mm" isEditing={isEditing} onChange={(v) => updateSkinfold('tricep', v)} />
+                                        <MeasurementItem label="Subscap." value={latestAssessment.skinfolds.subscapular} unit="mm" isEditing={isEditing} onChange={(v) => updateSkinfold('subscapular', v)} />
+                                        <MeasurementItem label="Peitoral" value={latestAssessment.skinfolds.chest} unit="mm" isEditing={isEditing} onChange={(v) => updateSkinfold('chest', v)} />
+                                        <MeasurementItem label="Axilar M." value={latestAssessment.skinfolds.axillary} unit="mm" isEditing={isEditing} onChange={(v) => updateSkinfold('axillary', v)} />
+                                        <MeasurementItem label="Supra-il." value={latestAssessment.skinfolds.suprailiac} unit="mm" isEditing={isEditing} onChange={(v) => updateSkinfold('suprailiac', v)} />
+                                        <MeasurementItem label="Abdom." value={latestAssessment.skinfolds.abdominal} unit="mm" isEditing={isEditing} onChange={(v) => updateSkinfold('abdominal', v)} />
+                                        <MeasurementItem label="Coxa" value={latestAssessment.skinfolds.thigh} unit="mm" isEditing={isEditing} onChange={(v) => updateSkinfold('thigh', v)} />
                                     </div>
                                 ) : (
                                     <p className="text-gray-500 text-sm italic">Nenhuma avaliação realizada ainda.</p>

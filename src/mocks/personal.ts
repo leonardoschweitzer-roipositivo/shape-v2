@@ -92,6 +92,8 @@ export interface PersonalAthlete {
     status: 'active' | 'inactive' | 'attention';
     linkedSince: string;
     assessments: MeasurementHistory[];
+    birthDate?: string; // ISO date string from ficha.data_nascimento
+    phone?: string; // telefone from atletas table
 }
 
 export interface PersonalProfile {

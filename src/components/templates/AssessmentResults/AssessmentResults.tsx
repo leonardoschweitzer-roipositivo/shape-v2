@@ -19,6 +19,7 @@ interface AssessmentResultsProps {
     studentName?: string;
     gender?: 'male' | 'female';
     assessment?: MeasurementHistory;
+    birthDate?: string;
 }
 
 // Token styles for main component
@@ -94,7 +95,8 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
     onBack,
     studentName,
     gender,
-    assessment
+    assessment,
+    birthDate
 }) => {
     const [activeTab, setActiveTab] = useState<'diagnostic' | 'golden' | 'asymmetry'>('diagnostic');
 
@@ -216,7 +218,7 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
 
                 {/* Main Content - Render active tab */}
                 <div className="flex flex-col gap-6">
-                    {activeTab === 'diagnostic' && <DiagnosticTab assessment={assessment} gender={gender} />}
+                    {activeTab === 'diagnostic' && <DiagnosticTab assessment={assessment} gender={gender} birthDate={birthDate} />}
                     {activeTab === 'golden' && <ProportionsTab gender={gender} userMeasurements={userMeasurements} />}
                     {activeTab === 'asymmetry' && <AsymmetryTab assessment={assessment} />}
                 </div>

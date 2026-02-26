@@ -10,17 +10,20 @@ export function mapMeasurementToInput(
     gender: 'MALE' | 'FEMALE' = 'MALE'
 ): AvaliacaoGeralInput {
     const m = assessment.measurements;
-    const { weight, height, waist, neck, hips } = m;
+    const { weight, waist, neck, hips } = m;
+    // Safeguard: se altura veio em metros (< 3), converter para cm
+    const height = m.height > 0 && m.height < 3 ? Math.round(m.height * 100) : m.height;
 
-    // Calculate BF using Navy Method (Standard in Vitru IA)
+    // U.S. Navy Method — Hodgdon & Beckett (Metric/cm)
+    // Uses body density equation, NOT the linear approximation (which is for inches)
     let bf = 0;
     if (gender === 'MALE') {
-        bf = 86.010 * Math.log10(waist - neck) - 70.041 * Math.log10(height) + 30.30;
+        bf = 495 / (1.0324 - 0.19077 * Math.log10(waist - neck) + 0.15456 * Math.log10(height)) - 450;
     } else {
-        bf = 163.205 * Math.log10(waist + (hips || waist) - neck) - 97.684 * Math.log10(height) - 104.912;
+        bf = 495 / (1.29579 - 0.35004 * Math.log10(waist + (hips || waist) - neck) + 0.22100 * Math.log10(height)) - 450;
     }
 
-    bf = Math.max(2, bf);
+    bf = Math.max(2, Math.min(60, bf)); // Clamp entre 2% e 60%
     const fatMass = weight * (bf / 100);
     const leanMass = weight - fatMass;
 

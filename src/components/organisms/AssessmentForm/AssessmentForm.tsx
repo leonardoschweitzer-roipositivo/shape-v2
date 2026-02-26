@@ -42,6 +42,7 @@ interface Skinfolds {
 interface AssessmentFormProps {
     onConfirm: (data: { measurements: Measurements; skinfolds: Skinfolds }) => void;
     isModal?: boolean;
+    initialData?: { measurements?: Partial<Measurements>; skinfolds?: Partial<Skinfolds> };
 }
 
 interface SymmetryRowProps {
@@ -86,11 +87,20 @@ const UserIcon = () => (
     </svg>
 );
 
-export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onConfirm, isModal = false }) => {
+export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onConfirm, isModal = false, initialData }) => {
     // Initialize state with default or empty values
     // Using simple flat state for easier binding, will allow partial entry but validation might be needed later
-    const [measurements, setMeasurements] = useState<Partial<Measurements>>({});
-    const [skinfolds, setSkinfolds] = useState<Partial<Skinfolds>>({});
+    const [measurements, setMeasurements] = useState<Partial<Measurements>>(initialData?.measurements || {});
+    const [skinfolds, setSkinfolds] = useState<Partial<Skinfolds>>(initialData?.skinfolds || {});
+
+    React.useEffect(() => {
+        if (initialData?.measurements) {
+            setMeasurements(initialData.measurements);
+        }
+        if (initialData?.skinfolds) {
+            setSkinfolds(initialData.skinfolds);
+        }
+    }, [initialData]);
 
     const handleMeasurementChange = (field: keyof Measurements, value: string) => {
         setMeasurements(prev => ({ ...prev, [field]: parseFloat(value) || 0 }));

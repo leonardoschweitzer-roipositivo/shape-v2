@@ -107,7 +107,7 @@ const App: React.FC = () => {
   }, []);
 
   // State for assessment flow
-  const [assessmentData, setAssessmentData] = useState<{ studentName?: string; gender?: 'male' | 'female', assessment?: MeasurementHistory }>({});
+  const [assessmentData, setAssessmentData] = useState<{ studentName?: string; gender?: 'male' | 'female', assessment?: MeasurementHistory, birthDate?: string }>({});
   const [athleteForEvaluation, setAthleteForEvaluation] = useState<PersonalAthlete | null>(null);
 
   // Hook for persistent Data Store
@@ -137,10 +137,12 @@ const App: React.FC = () => {
       });
 
       // Update assessment data for results view
+      const athlete = personalAthletes.find(a => a.id === data.studentId);
       setAssessmentData({
         studentName: data.studentName,
         gender: data.gender,
-        assessment: assessment
+        assessment: assessment,
+        birthDate: athlete?.birthDate
       });
     } else if (data.measurements && data.skinfolds) {
       // Self/Atleta assessment
@@ -209,7 +211,8 @@ const App: React.FC = () => {
         setAssessmentData({
           studentName: selectedAthlete.name,
           gender: selectedAthlete.gender === 'FEMALE' ? 'female' : 'male',
-          assessment: assessment
+          assessment: assessment,
+          birthDate: selectedAthlete.birthDate
         });
         setCurrentView('results');
       }
@@ -223,7 +226,8 @@ const App: React.FC = () => {
       setAssessmentData({
         studentName: athlete.name,
         gender: athlete.gender === 'FEMALE' ? 'female' : 'male',
-        assessment: latestAssessment
+        assessment: latestAssessment,
+        birthDate: athlete.birthDate
       });
       setSelectedAthleteId(athleteId);
       setCurrentView('results');
@@ -425,6 +429,7 @@ const App: React.FC = () => {
               studentName={assessmentData.studentName}
               gender={assessmentData.gender}
               assessment={assessmentData.assessment}
+              birthDate={assessmentData.birthDate}
             />
           );
         case 'design-system':
@@ -463,10 +468,23 @@ const App: React.FC = () => {
             studentName={assessmentData.studentName}
             gender={assessmentData.gender}
             assessment={assessmentData.assessment}
+            birthDate={assessmentData.birthDate}
           />
         );
-      case 'assessment':
-        return <AssessmentPage onConfirm={(data: any) => handleAssessmentSubmit(data)} />;
+      case 'assessment': {
+        const currentAthleteEmail = profile?.email?.toLowerCase();
+        const currentAthleteName = profile?.name?.toLowerCase();
+        const currentAthleteObj = personalAthletes.find(a =>
+          a.id === profile?.id ||
+          (currentAthleteEmail && a.email.toLowerCase() === currentAthleteEmail) ||
+          (currentAthleteName && a.name.toLowerCase().includes(currentAthleteName))
+        ) || personalAthletes.find(a => a.id === 'athlete-leonardo');
+
+        const latestAssessment = currentAthleteObj?.assessments?.[0];
+        const initialData = latestAssessment ? { measurements: latestAssessment.measurements, skinfolds: latestAssessment.skinfolds } : undefined;
+
+        return <AssessmentPage onConfirm={(data: any) => handleAssessmentSubmit(data)} initialData={initialData} />;
+      }
       case 'design-system':
         return <DesignSystem />;
       case 'evolution':

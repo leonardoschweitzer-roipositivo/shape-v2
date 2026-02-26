@@ -1,19 +1,20 @@
 import React from 'react';
-import { Bot, Sparkles } from 'lucide-react';
+import { Bot, Sparkles, Target } from 'lucide-react';
 import { GlassPanel } from '@/components/atoms';
 import { colors, typography, spacing, borders } from '@/tokens';
 
 export interface ProportionAiAnalysisCardProps {
-    strength?: string;
-    weakness?: string;
-    suggestion?: string;
+    analysis: string;
+    suggestion: string;
+    goal12m: string;
 }
 
-export const ProportionAiAnalysisCard: React.FC<ProportionAiAnalysisCardProps> = ({ strength, weakness, suggestion }) => {
+export const ProportionAiAnalysisCard: React.FC<ProportionAiAnalysisCardProps> = ({ analysis, suggestion, goal12m }) => {
     return (
-        <GlassPanel className="h-full p-6 rounded-2xl border border-white/10 bg-gradient-to-b from-[#131B2C] to-[#0A0F1C] relative overflow-hidden flex flex-col" hoverEffect={false}>
+        <GlassPanel className="h-full p-5 rounded-2xl border border-white/10 bg-gradient-to-b from-[#131B2C] to-[#0A0F1C] relative overflow-hidden flex flex-col" hoverEffect={false}>
             <div className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2" style={{ background: `${colors.brand.primary}0D` }}></div>
 
+            {/* Header */}
             <div className="flex items-center gap-2 mb-4">
                 <div style={{
                     width: '24px',
@@ -28,37 +29,41 @@ export const ProportionAiAnalysisCard: React.FC<ProportionAiAnalysisCardProps> =
                 }}>
                     <Sparkles size={12} color={colors.brand.primary} />
                 </div>
-                <h4 style={{ color: colors.text.primary, fontWeight: typography.fontWeight.bold, fontSize: typography.fontSize.xs, letterSpacing: '0.05em' }}>ANÁLISE DE PROPORÇÃO</h4>
+                <h4 style={{ color: colors.text.primary, fontWeight: typography.fontWeight.bold, fontSize: typography.fontSize.xs, letterSpacing: '0.05em' }}>ASSISTENTE IA</h4>
             </div>
 
-            <div className="flex-1 space-y-4">
-                {strength && (
-                    <div className="relative pl-3">
-                        <div className="absolute left-0 top-0 bottom-0 w-0.5" style={{ background: `linear-gradient(to bottom, ${colors.brand.primary}80, transparent)` }}></div>
-                        <p style={{ fontSize: '9px', color: colors.text.muted, fontWeight: typography.fontWeight.bold, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: spacing[1] }}>Ponto Forte</p>
-                        <p style={{ fontSize: typography.fontSize.xs, color: colors.text.primary, lineHeight: typography.lineHeight.relaxed }} dangerouslySetInnerHTML={{ __html: strength }}></p>
-                    </div>
-                )}
-                {weakness && (
-                    <div className="relative pl-3">
-                        <div className="absolute left-0 top-0 bottom-0 w-0.5" style={{ background: `linear-gradient(to bottom, ${colors.semantic.orange}80, transparent)` }}></div>
-                        <p style={{ fontSize: '9px', color: colors.text.muted, fontWeight: typography.fontWeight.bold, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: spacing[1] }}>Atenção</p>
-                        <p style={{ fontSize: typography.fontSize.xs, color: colors.text.secondary, lineHeight: typography.lineHeight.relaxed }} dangerouslySetInnerHTML={{ __html: weakness }}></p>
-                    </div>
-                )}
-            </div>
+            <div className="flex-1 flex flex-col gap-3">
+                {/* Análise Atual */}
+                <div className="relative pl-3">
+                    <div className="absolute left-0 top-0 bottom-0 w-0.5" style={{ background: `linear-gradient(to bottom, ${colors.brand.primary}80, transparent)` }}></div>
+                    <p style={{ fontSize: '9px', color: colors.text.muted, fontWeight: typography.fontWeight.bold, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: spacing[1] }}>Análise Atual</p>
+                    <p style={{ fontSize: typography.fontSize.xs, color: colors.text.primary, lineHeight: typography.lineHeight.relaxed }} dangerouslySetInnerHTML={{ __html: analysis }}></p>
+                </div>
 
-            {suggestion && (
-                <div style={{ marginTop: spacing[4], paddingTop: spacing[4], borderTop: `1px solid rgba(255, 255, 255, 0.05)` }}>
-                    <div className="flex items-center gap-1.5 mb-2">
-                        <Bot size={12} color={colors.semantic.info} />
-                        <span style={{ fontSize: '9px', fontWeight: typography.fontWeight.bold, color: colors.semantic.info, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Coach IA</span>
+                {/* O que Fazer */}
+                <div className="relative pl-3">
+                    <div className="absolute left-0 top-0 bottom-0 w-0.5" style={{ background: `linear-gradient(to bottom, ${colors.semantic.info}80, transparent)` }}></div>
+                    <div className="flex items-center gap-1.5 mb-1">
+                        <Bot size={10} color={colors.semantic.info} />
+                        <p style={{ fontSize: '9px', color: colors.semantic.info, fontWeight: typography.fontWeight.bold, textTransform: 'uppercase', letterSpacing: '0.1em' }}>O que Fazer</p>
                     </div>
-                    <p style={{ fontSize: '10px', color: colors.text.muted, fontStyle: 'italic', lineHeight: typography.lineHeight.relaxed }}>
+                    <p style={{ fontSize: '10px', color: colors.text.secondary, fontStyle: 'italic', lineHeight: typography.lineHeight.relaxed }}>
                         "{suggestion}"
                     </p>
                 </div>
-            )}
+
+                {/* Meta 12 Meses */}
+                <div style={{ paddingTop: spacing[2], borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                    <div className="relative pl-3">
+                        <div className="absolute left-0 top-0 bottom-0 w-0.5" style={{ background: 'linear-gradient(to bottom, #F59E0B80, transparent)' }}></div>
+                        <div className="flex items-center gap-1.5 mb-1">
+                            <Target size={10} color="#F59E0B" />
+                            <p style={{ fontSize: '9px', color: '#F59E0B', fontWeight: typography.fontWeight.bold, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Meta 12 Meses</p>
+                        </div>
+                        <p style={{ fontSize: '10px', color: colors.text.muted, lineHeight: typography.lineHeight.relaxed }} dangerouslySetInnerHTML={{ __html: goal12m }}></p>
+                    </div>
+                </div>
+            </div>
         </GlassPanel>
     );
 };

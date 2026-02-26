@@ -63,9 +63,10 @@ const tokenStyles = {
 interface DiagnosticTabProps {
     assessment?: MeasurementHistory;
     gender?: 'male' | 'female';
+    birthDate?: string;
 }
 
-export const DiagnosticTab: React.FC<DiagnosticTabProps> = ({ assessment, gender = 'male' }) => {
+export const DiagnosticTab: React.FC<DiagnosticTabProps> = ({ assessment, gender = 'male', birthDate }) => {
     const [filter, setFilter] = useState<'todos' | 'comp' | 'metrics'>('todos');
     const [bfMethod, setBfMethod] = useState<'navy' | 'pollock'>('navy');
 
@@ -80,13 +81,25 @@ export const DiagnosticTab: React.FC<DiagnosticTabProps> = ({ assessment, gender
         };
 
         const m = assessment.measurements;
-        const { weight, height, waist, neck, hips } = m;
+        const { weight, waist, neck, hips } = m;
+        // Safeguard: se altura veio em metros (< 3), converter para cm
+        const height = m.height > 0 && m.height < 3 ? Math.round(m.height * 100) : m.height;
         let bf = 0;
 
         if (bfMethod === 'pollock') {
             const s = assessment.skinfolds;
             const sumSkinfolds = s.tricep + s.subscapular + s.chest + s.axillary + s.suprailiac + s.abdominal + s.thigh;
-            const age = 30; // Default age as we don't have it in props yet
+            // Calcular idade real a partir do birthDate, fallback para 30
+            let age = 30;
+            if (birthDate) {
+                const birth = new Date(birthDate);
+                const now = new Date();
+                age = now.getFullYear() - birth.getFullYear();
+                const m = now.getMonth() - birth.getMonth();
+                if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) {
+                    age--;
+                }
+            }
 
             // Pollock 7-site formula
             let bodyDensity;
@@ -97,26 +110,36 @@ export const DiagnosticTab: React.FC<DiagnosticTabProps> = ({ assessment, gender
             }
             bf = Math.max(0, (495 / bodyDensity) - 450);
         } else {
-            // Navy Method
-            // Formula from PRD: BF% = 86.010 × log10(cintura - pescoço) - 70.041 × log10(altura) + 36.76
-            // Note: This is the metric version coefficients
+            // U.S. Navy Method — Hodgdon & Beckett (Metric/cm)
+            // Uses body density equation, NOT the linear approximation (which is for inches)
+            // Reference: Hodgdon, J.A. & Beckett, M.B. (1984)
             if (gender === 'male') {
-                bf = 86.010 * Math.log10(waist - neck) - 70.041 * Math.log10(height) + 30.30;
+                bf = 495 / (1.0324 - 0.19077 * Math.log10(waist - neck) + 0.15456 * Math.log10(height)) - 450;
             } else {
-                // Female Navy (Metric): 163.205 × log10(waist + hip - neck) - 97.684 × log10(height) - 104.912
-                bf = 163.205 * Math.log10(waist + (hips || waist) - neck) - 97.684 * Math.log10(height) - 104.912;
+                bf = 495 / (1.29579 - 0.35004 * Math.log10(waist + (hips || waist) - neck) + 0.22100 * Math.log10(height)) - 450;
             }
         }
 
-        bf = Math.max(2, bf); // Minimum 2%
+        bf = Math.max(2, Math.min(60, bf)); // Clamp entre 2% e 60%
         const fatMass = weight * (bf / 100);
         const leanMass = weight - fatMass;
 
-        // Helper to calculate ratio percentage for General Assessment Input
-        const getRatioPercent = (current: number, target: number, inverse = false) => {
+        /**
+         * Calibrated ratio percentage using realistic baselines.
+         * % = (current - baseline) / (target - baseline) * 100
+         * Prevents inflated scores (e.g., Shape-V 1.30/1.618 was 80% → now ~49%)
+         */
+        const getCalibratedPercent = (current: number, target: number, baseline: number, inverse = false) => {
             if (!target || !current) return 0;
-            if (inverse) return current <= target ? 100 : Math.round(Math.max(0, (target / current) * 100) * 10) / 10;
-            return Math.round(Math.min(100, (current / target) * 100) * 10) / 10;
+            if (inverse) {
+                if (current <= target) return Math.min(110, 100 + ((target - current) / target) * 50);
+                const excessoPercent = ((current - target) / target) * 100;
+                return Math.max(0, 100 - (excessoPercent * 1.5));
+            }
+            const range = target - baseline;
+            if (range <= 0) return 100;
+            const progress = current - baseline;
+            return Math.round(Math.max(0, Math.min(115, (progress / range) * 100)) * 10) / 10;
         };
 
         const punho = (m.wristLeft + m.wristRight) / 2 || 17;
@@ -128,23 +151,40 @@ export const DiagnosticTab: React.FC<DiagnosticTabProps> = ({ assessment, gender
 
         const vTaperAtual = m.shoulders / m.waist;
         const vTaperMeta = 1.618;
-        const vTaperScore = getRatioPercent(vTaperAtual, vTaperMeta);
+        const vTaperScore = getCalibratedPercent(vTaperAtual, vTaperMeta, 1.0);
 
         const peitoRatio = m.chest / punho;
         const peitoMeta = 6.5;
-        const peitoScore = getRatioPercent(peitoRatio, peitoMeta);
+        const peitoScore = getCalibratedPercent(peitoRatio, peitoMeta, 5.0);
 
         const bracoRatio = bracoMedio / punho;
         const bracoMeta = 2.5;
-        const bracoScore = getRatioPercent(bracoRatio, bracoMeta);
+        const bracoScore = getCalibratedPercent(bracoRatio, bracoMeta, 1.7);
 
         const cinturaRatio = m.waist / height;
         const cinturaMeta = 0.45;
-        const cinturaScore = getRatioPercent(cinturaRatio, cinturaMeta, true);
+        const cinturaScore = getCalibratedPercent(cinturaRatio, cinturaMeta, 0, true);
+
+        const antebracoMedio = (m.forearmLeft + m.forearmRight) / 2;
+        const antebracoRatio = antebracoMedio / bracoMedio;
+        const antebracoMeta = 0.8;
+        const antebracoScore = getCalibratedPercent(antebracoRatio, antebracoMeta, 0.55);
 
         const triadeMedia = (bracoMedio + pantMedio + neck) / 3;
         const triadeDesvio = (Math.abs(bracoMedio - triadeMedia) + Math.abs(pantMedio - triadeMedia) + Math.abs(neck - triadeMedia)) / triadeMedia / 3;
         const triadeScore = Math.max(0, Math.round((1 - triadeDesvio) * 100 * 10) / 10);
+
+        const coxaJoelhoRatio = coxaMedia / joelho;
+        const coxaJoelhoMeta = 1.75;
+        const coxaScore = getCalibratedPercent(coxaJoelhoRatio, coxaJoelhoMeta, 1.2);
+
+        const coxaPantRatio = coxaMedia / pantMedio;
+        const coxaPantMeta = 1.5;
+        const coxaPantScore = getCalibratedPercent(coxaPantRatio, coxaPantMeta, 1.1);
+
+        const pantTornRatio = pantMedio / tornozelo;
+        const pantTornMeta = 1.9;
+        const pantTornScore = getCalibratedPercent(pantTornRatio, pantTornMeta, 1.3);
 
         // Map data to AvaliacaoGeralInput
         const assessmentInput: AvaliacaoGeralInput = {
@@ -153,12 +193,12 @@ export const DiagnosticTab: React.FC<DiagnosticTabProps> = ({ assessment, gender
                 vTaper: { indiceAtual: vTaperAtual, indiceMeta: vTaperMeta, percentualDoIdeal: vTaperScore, classificacao: 'NORMAL' },
                 peitoral: { indiceAtual: peitoRatio, indiceMeta: peitoMeta, percentualDoIdeal: peitoScore, classificacao: 'NORMAL' },
                 braco: { indiceAtual: bracoRatio, indiceMeta: bracoMeta, percentualDoIdeal: bracoScore, classificacao: 'NORMAL' },
-                antebraco: { indiceAtual: (m.forearmLeft + m.forearmRight) / 2 / bracoMedio, indiceMeta: 0.8, percentualDoIdeal: getRatioPercent((m.forearmLeft + m.forearmRight) / 2 / bracoMedio, 0.8), classificacao: 'NORMAL' },
+                antebraco: { indiceAtual: antebracoRatio, indiceMeta: antebracoMeta, percentualDoIdeal: antebracoScore, classificacao: 'NORMAL' },
                 triade: { harmoniaPercentual: triadeScore, pescoco: neck, braco: bracoMedio, panturrilha: pantMedio },
                 cintura: { indiceAtual: cinturaRatio, indiceMeta: cinturaMeta, percentualDoIdeal: cinturaScore, classificacao: 'NORMAL' },
-                coxa: { indiceAtual: coxaMedia / joelho, indiceMeta: 1.75, percentualDoIdeal: getRatioPercent(coxaMedia / joelho, 1.75), classificacao: 'NORMAL' },
-                coxaPanturrilha: { indiceAtual: coxaMedia / pantMedio, indiceMeta: 1.5, percentualDoIdeal: getRatioPercent(coxaMedia / pantMedio, 1.5), classificacao: 'NORMAL' },
-                panturrilha: { indiceAtual: pantMedio / tornozelo, indiceMeta: 1.9, percentualDoIdeal: getRatioPercent(pantMedio / tornozelo, 1.9), classificacao: 'NORMAL' },
+                coxa: { indiceAtual: coxaJoelhoRatio, indiceMeta: coxaJoelhoMeta, percentualDoIdeal: coxaScore, classificacao: 'NORMAL' },
+                coxaPanturrilha: { indiceAtual: coxaPantRatio, indiceMeta: coxaPantMeta, percentualDoIdeal: coxaPantScore, classificacao: 'NORMAL' },
+                panturrilha: { indiceAtual: pantTornRatio, indiceMeta: pantTornMeta, percentualDoIdeal: pantTornScore, classificacao: 'NORMAL' },
             },
             composicao: {
                 peso: weight,

@@ -232,9 +232,9 @@ export const ProportionsTab: React.FC<ProportionsTabProps> = ({
                             {/* Right: AI Analysis Card (Matched Height) */}
                             <div className="w-full lg:w-80 flex-shrink-0">
                                 <ProportionAiAnalysisCard
-                                    strength={item.ai.strength}
-                                    weakness={item.ai.weakness}
+                                    analysis={item.ai.analysis}
                                     suggestion={item.ai.suggestion}
+                                    goal12m={item.ai.goal12m}
                                 />
                             </div>
                         </div>

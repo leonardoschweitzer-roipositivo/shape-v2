@@ -100,7 +100,14 @@ export const PersonalAssessmentView: React.FC<PersonalAssessmentViewProps> = ({ 
                             </div>
                         </div>
 
-                        <AssessmentForm onConfirm={handleConfirm} isModal={false} />
+                        <AssessmentForm
+                            onConfirm={handleConfirm}
+                            isModal={false}
+                            initialData={selectedAthlete.assessments?.[0] ? {
+                                measurements: selectedAthlete.assessments[0].measurements,
+                                skinfolds: selectedAthlete.assessments[0].skinfolds
+                            } : undefined}
+                        />
                     </div>
                 )}
             </div>

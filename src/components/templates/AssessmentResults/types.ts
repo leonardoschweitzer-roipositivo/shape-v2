@@ -75,13 +75,13 @@ export interface ProportionCardData {
     image: string;
     overlayStyle?: 'v-taper' | 'chest' | 'arm' | 'triad' | 'waist' | 'legs';
     rawImage?: boolean;
-    measurementsUsed?: string[];
+    measurementsUsed?: { label: string; value: string }[];
 }
 
 export interface ProportionAIAnalysis {
-    strength?: string;
-    weakness?: string;
-    suggestion?: string;
+    analysis: string;
+    suggestion: string;
+    goal12m: string;
 }
 
 export interface ProportionItem {

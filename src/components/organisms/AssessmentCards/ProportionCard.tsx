@@ -20,7 +20,7 @@ export interface ProportionCardProps {
     image: string;
     overlayStyle?: 'v-taper' | 'chest' | 'arm' | 'triad' | 'waist' | 'legs';
     rawImage?: boolean;
-    measurementsUsed?: string[];
+    measurementsUsed?: { label: string; value: string }[];
 }
 
 export const ProportionCard: React.FC<ProportionCardProps> = ({
@@ -84,10 +84,23 @@ export const ProportionCard: React.FC<ProportionCardProps> = ({
                                 </span>
                             ))}
                         </div>
-                        {measurementsUsed && (
-                            <div className="flex items-center gap-1.5 text-[10px] text-gray-500 font-medium opacity-80">
-                                <span className="uppercase tracking-wide font-bold">Base:</span>
-                                {measurementsUsed.join(' • ')}
+                        {measurementsUsed && measurementsUsed.length > 0 && (
+                            <div className="flex items-center gap-1.5 text-[10px] text-gray-500 font-medium opacity-80 flex-wrap">
+                                <span className="uppercase tracking-wide font-bold">Medidas:</span>
+                                {measurementsUsed.map((m, idx) => (
+                                    <span key={idx} style={{
+                                        background: 'rgba(255,255,255,0.04)',
+                                        padding: '1px 6px',
+                                        borderRadius: '4px',
+                                        border: '1px solid rgba(255,255,255,0.06)',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '3px'
+                                    }}>
+                                        <span style={{ color: colors.text.muted }}>{m.label}:</span>
+                                        <strong style={{ color: colors.text.secondary }}>{m.value}</strong>
+                                    </span>
+                                ))}
                             </div>
                         )}
                     </div>

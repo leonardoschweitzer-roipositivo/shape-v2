@@ -60,11 +60,18 @@ export function mapMedidaToHistory(medida: Medida, avaliacao?: Avaliacao | null)
 export function enriquecerComFicha(history: MeasurementHistory, ficha: Ficha | null): MeasurementHistory {
     if (!ficha) return history;
 
+    // Auto-converter altura de metros para cm se necessário
+    // Se o valor for < 3, está em metros (ex: 1.79) e precisa virar cm (179)
+    let alturaCm = Number(ficha.altura) || 0;
+    if (alturaCm > 0 && alturaCm < 3) {
+        alturaCm = Math.round(alturaCm * 100);
+    }
+
     return {
         ...history,
         measurements: {
             ...history.measurements,
-            height: Number(ficha.altura) || 0,
+            height: alturaCm,
             pelvis: Number(ficha.pelve) || 0,
             wristRight: Number(ficha.punho) || 0,
             wristLeft: Number(ficha.punho) || 0,
@@ -119,6 +126,8 @@ export function mapAtletaToPersonalAthlete(
         status,
         linkedSince: atleta.created_at,
         assessments,
+        birthDate: ficha?.data_nascimento || undefined,
+        phone: atleta.telefone || undefined,
     };
 }
 
