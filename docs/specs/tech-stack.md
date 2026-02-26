@@ -1,8 +1,10 @@
 # VITRU IA — Technical Specifications (SPEC)
 
-**Versão:** 1.0  
-**Data:** 06/02/2026  
-**Referência:** VITRU IA PRD v1.0  
+**Versão:** 2.0  
+**Data:** Fevereiro 2026  
+**Referência:** VITRU IA PRD v2.0  
+
+> **Nota v2.0:** Atualizado para refletir a implementação real do frontend SPA (Vite + React), autenticação via Supabase Auth, e estrutura Atomic Design.
 
 ---
 
@@ -14,28 +16,31 @@
 ├─────────────────────────────────────────────────────────────┤
 │  CLAUDE  ·  GOOGLE AI STUDIO        AI Dev & Design         │
 ├─────────────────────────────────────────────────────────────┤
-│  GEMINI  ·  MCP  ·  NEXT.JS         IA Brain & Backend      │
+│  GEMINI  ·  MCP                     IA Brain & Protocol     │
 ├─────────────────────────────────────────────────────────────┤
-│  REACT  ·  TAILWIND  ·  SHADCN/UI  ·  SUPABASE  Frontend & DB │
+│  VITE  ·  REACT  ·  ZUSTAND  ·  SUPABASE  Frontend & DB    │
 ├─────────────────────────────────────────────────────────────┤
 │  VERCEL  ·  TYPESCRIPT  ·  POSTGRESQL  ·  NODE.JS  Infra    │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-| Camada | Tecnologia | Papel no VITRU IA |
-|--------|-----------|-----------------|
-| **IDE** | Antigravity | Editor principal, agent-first development, geração de código |
-| **AI Design** | Google AI Studio + Stitch | Geração de UI/frontend, prototipação |
-| **AI Dev** | Claude (Anthropic) | Lógica de negócio complexa, prompts de sistema, Coach IA |
-| **AI Backend** | Gemini API (Google) | Coach IA runtime — diagnóstico, treino, dieta |
-| **Protocol** | MCP (Model Context Protocol) | Conexão entre Antigravity ↔ ferramentas externas |
-| **Framework** | Next.js 14+ (App Router) | Fullstack framework, SSR, API Routes, middleware |
-| **Runtime** | Node.js + TypeScript | Linguagem e runtime principal |
-| **UI Library** | React 18+ | Renderização de componentes |
-| **Styling** | Tailwind CSS 3+ | Utility-first CSS, dark theme |
-| **Components** | shadcn/ui | Component library (Radix primitives + Tailwind) |
-| **Database** | Supabase (PostgreSQL) | BaaS — DB, Auth, Storage, Realtime, Edge Functions |
-| **Deploy** | Vercel | Hosting, CI/CD, Edge Network, Preview Deploys |
+| Camada | Tecnologia | Versão | Papel no VITRU IA |
+|--------|-----------|--------|------------------|
+| **IDE** | Antigravity | — | Editor principal, agent-first development, geração de código |
+| **AI Design** | Google AI Studio + Stitch | — | Geração de UI/frontend, prototipação |
+| **AI Dev** | Claude (Anthropic) | — | Lógica de negócio complexa, prompts de sistema, Coach IA |
+| **AI Backend** | Gemini API (Google) | — | Coach IA runtime — diagnóstico, treino, dieta |
+| **Protocol** | MCP (Model Context Protocol) | — | Conexão entre Antigravity ↔ ferramentas externas |
+| **Bundler** | Vite | 6.2+ | Build tool, dev server com HMR, SPA |
+| **Runtime** | Node.js + TypeScript | 5.8+ | Linguagem e runtime principal |
+| **UI Library** | React | 19.2+ | Renderização de componentes (SPA client-side) |
+| **Estado** | Zustand | 5.0+ | Gerenciamento de estado global |
+| **Estilização** | Tailwind CSS (via classes inline) | — | Utility-first CSS, dark theme |
+| **Gráficos** | Recharts | 3.7+ | Gráficos de evolução, radar, gauges |
+| **Ícones** | Lucide React | 0.563+ | Biblioteca de ícones |
+| **Datas** | date-fns | 4.1+ | Manipulação e formatação de datas |
+| **Database** | Supabase (PostgreSQL) | — | BaaS — DB, Auth, Storage, Realtime |
+| **Deploy** | Vercel | — | Hosting, CI/CD, Edge Network, Preview Deploys |
 
 ---
 
@@ -45,20 +50,20 @@
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│                         VERCEL (Edge Network)                     │
+│                         VERCEL (Static Hosting)                   │
 │  ┌────────────────────────────────────────────────────────────┐   │
-│  │                   NEXT.JS APP (App Router)                  │   │
+│  │                   VITE + REACT SPA                          │   │
 │  │                                                             │   │
 │  │  ┌─────────────┐  ┌──────────────┐  ┌──────────────────┐  │   │
-│  │  │   Pages /    │  │  Server      │  │  API Routes      │  │   │
-│  │  │   Layouts    │  │  Components  │  │  /api/*          │  │   │
-│  │  │  (RSC +      │  │  (Data       │  │                  │  │   │
-│  │  │   Client)    │  │   Fetching)  │  │  - /assessments  │  │   │
-│  │  └─────────────┘  └──────────────┘  │  - /coach-ia     │  │   │
-│  │                                      │  - /webhooks     │  │   │
-│  │  ┌─────────────────────────────────┐ └──────────────────┘  │   │
-│  │  │  MIDDLEWARE (auth, rbac, i18n)  │                        │   │
-│  │  └─────────────────────────────────┘                        │   │
+│  │  │   App.tsx    │  │  Zustand     │  │  Services        │  │   │
+│  │  │   (Router    │  │  Stores      │  │  (Supabase       │  │   │
+│  │  │    + Views)  │  │  (Estado)    │  │   client-side)   │  │   │
+│  │  └─────────────┘  └──────────────┘  └──────────────────┘  │   │
+│  │                                                             │   │
+│  │  ┌─────────────────────────────────────────────────────┐   │   │
+│  │  │  Components (Atomic Design)                          │   │   │
+│  │  │  atoms → molecules → organisms → templates           │   │   │
+│  │  └─────────────────────────────────────────────────────┘   │   │
 │  └────────────────────────────────────────────────────────────┘   │
 └──────────────────────────┬──────────────────┬────────────────────┘
                            │                  │
@@ -66,11 +71,11 @@
               │   SUPABASE        │  │   GEMINI API     │
               │                   │  │   (Google AI)    │
               │  ◆ PostgreSQL     │  │                  │
-              │  ◆ Auth (GoTrue) │  │  ◆ Coach IA      │
-              │  ◆ Storage       │  │  ◆ Diagnóstico   │
-              │  ◆ Realtime      │  │  ◆ Treino        │
-              │  ◆ Edge Funcs    │  │  ◆ Dieta         │
-              └───────────────────┘  └──────────────────┘
+              │  ◆ Auth (GoTrue)  │  │  ◆ Coach IA      │
+              │  ◆ Storage        │  │  ◆ Diagnóstico   │
+              │  ◆ Realtime       │  │  ◆ Treino        │
+              └───────────────────┘  │  ◆ Dieta         │
+                                     └──────────────────┘
 ```
 
 ### 2.2 Fluxo de Dados
@@ -79,204 +84,187 @@
 Usuário (Browser)
     │
     ▼
-Next.js (Vercel) ──── SSR/RSC ────► Supabase Client (dados)
-    │                                     │
-    ├── Client Components ◄───────────────┘ (realtime subscriptions)
+Vite React SPA (Vercel Static) ──── Client-side ────► Supabase JS (dados)
+    │                                                      │
+    ├── Zustand Stores ◄───────────────────────────────────┘
+    │   ├── authStore (autenticação via Supabase Auth)
+    │   ├── dataStore (avaliações, medidas)
+    │   ├── athleteStore (dados do atleta)
+    │   ├── personalRankingStore (rankings)
+    │   ├── useDailyTrackingStore (tracking diário)
+    │   └── usePersonalDashboardStore (dashboard personal)
     │
-    ├── API Route /api/assessments/calculate
-    │       └── Calcula proporções, assimetrias, scores (server-side)
-    │       └── Salva em Supabase via service_role key
+    ├── Services (client-side)
+    │   ├── calculations/ (cálculos puros de proporções, scores)
+    │   ├── *.service.ts (CRUD via Supabase client)
+    │   └── gamification/, insights/, nlp/ (serviços especializados)
     │
-    ├── API Route /api/coach-ia/generate
-    │       └── Monta prompt com dados da avaliação
-    │       └── Chama Gemini API (streaming)
-    │       └── Salva resultado em Supabase
-    │       └── Retorna stream para o frontend
-    │
-    └── Server Actions (forms, mutations)
-            └── Supabase operations via server client
+    └── Gemini API (via env var client-side)
+            └── Coach IA direto do browser
 ```
 
 ---
 
-## 3. Estrutura de Diretórios
+## 3. Estrutura de Diretórios (Implementada)
 
 ```
-vitru-ia/
-├── .env.local                          # Variáveis de ambiente
+shape-v2/
+├── .env.local                          # Variáveis de ambiente (Supabase + Gemini)
 ├── .env.example                        # Template de env vars
-├── next.config.ts                      # Config Next.js
-├── tailwind.config.ts                  # Config Tailwind (dark theme)
-├── tsconfig.json                       # TypeScript config
-├── package.json
+├── vite.config.ts                      # Config Vite (HMR, alias @/)
+├── tsconfig.json                       # TypeScript config (ESNext, bundler)
+├── vercel.json                         # Vercel deploy config (SPA rewrites)
+├── package.json                        # Deps: react, zustand, supabase, recharts
+├── index.html                          # Entry point HTML (SPA)
 │
-├── public/
-│   ├── images/
-│   │   ├── logo.svg                    # Logo VITRU IA
-│   │   ├── silhouettes/               # Silhuetas anatômicas SVG
-│   │   └── hero/                      # Imagens do hero banner
-│   └── fonts/                         # Custom fonts se necessário
+├── public/                             # Assets estáticos
 │
 ├── src/
-│   ├── app/                           # Next.js App Router
-│   │   ├── layout.tsx                 # Root layout (providers, sidebar)
-│   │   ├── page.tsx                   # Redirect → /momento
-│   │   ├── globals.css                # Tailwind imports + custom vars
-│   │   │
-│   │   ├── (auth)/                    # Grupo: rotas de autenticação
-│   │   │   ├── login/page.tsx
-│   │   │   ├── register/page.tsx
-│   │   │   └── forgot-password/page.tsx
-│   │   │
-│   │   ├── (dashboard)/               # Grupo: rotas autenticadas (com sidebar)
-│   │   │   ├── layout.tsx             # Dashboard layout com sidebar + header
-│   │   │   ├── momento/page.tsx       # Dashboard principal
-│   │   │   ├── evolucao/page.tsx      # Histórico + gráficos
-│   │   │   ├── coach-ia/page.tsx      # Coach IA
-│   │   │   ├── avaliacao/
-│   │   │   │   ├── nova/page.tsx      # Formulário de nova avaliação
-│   │   │   │   └── [id]/
-│   │   │   │       └── resultados/page.tsx  # Resultados (3 abas)
-│   │   │   ├── alunos/                # Gestão de alunos (personal)
-│   │   │   │   ├── page.tsx           # Lista de alunos
-│   │   │   │   ├── novo/page.tsx      # Cadastro de aluno
-│   │   │   │   └── [id]/page.tsx      # Perfil do aluno
-│   │   │   ├── academia/              # Módulo academia
-│   │   │   │   ├── dashboard/page.tsx
-│   │   │   │   ├── personais/page.tsx
-│   │   │   │   └── relatorios/page.tsx
-│   │   │   └── perfil/page.tsx        # Perfil + configurações
-│   │   │
-│   │   └── api/                       # API Routes
-│   │       ├── assessments/
-│   │       │   ├── route.ts           # CRUD avaliações
-│   │       │   └── calculate/route.ts # Cálculos server-side
-│   │       ├── coach-ia/
-│   │       │   └── generate/route.ts  # Geração via Gemini
-│   │       └── webhooks/
-│   │           └── stripe/route.ts    # Webhook de billing
+│   ├── index.tsx                       # ReactDOM.createRoot (SPA entry)
+│   ├── App.tsx                         # Router central + layout (721 linhas)
+│   ├── types.ts                        # Types globais auxiliares
+│   ├── vite-env.d.ts                   # Vite env type declarations
 │   │
-│   ├── components/
-│   │   ├── ui/                        # shadcn/ui components (auto-gerados)
-│   │   │   ├── button.tsx
-│   │   │   ├── card.tsx
-│   │   │   ├── input.tsx
-│   │   │   ├── table.tsx
-│   │   │   ├── tabs.tsx
-│   │   │   ├── badge.tsx
-│   │   │   ├── dialog.tsx
-│   │   │   ├── dropdown-menu.tsx
-│   │   │   ├── progress.tsx
-│   │   │   ├── select.tsx
-│   │   │   ├── toggle-group.tsx
-│   │   │   └── tooltip.tsx
-│   │   │
-│   │   ├── layout/
-│   │   │   ├── sidebar.tsx            # Sidebar navigation
-│   │   │   ├── header.tsx             # Top header com breadcrumb
-│   │   │   ├── footer.tsx             # Footer
-│   │   │   └── mobile-nav.tsx         # Hamburger menu mobile
-│   │   │
-│   │   ├── assessment/
-│   │   │   ├── measurement-form.tsx   # Form de medidas corporais
-│   │   │   ├── basic-fields.tsx       # Campos básicos (idade, altura, peso)
-│   │   │   ├── trunk-fields.tsx       # Campos tronco
-│   │   │   ├── core-fields.tsx        # Campos core
-│   │   │   ├── limb-fields.tsx        # Campos bilaterais
-│   │   │   ├── skinfold-fields.tsx    # Campos 7 dobras
-│   │   │   └── comparison-mode-selector.tsx
-│   │   │
-│   │   ├── results/
-│   │   │   ├── aesthetic-diagnosis.tsx    # Aba 1: Diagnóstico
-│   │   │   ├── golden-proportions.tsx     # Aba 2: Proporções
-│   │   │   ├── asymmetry-analysis.tsx     # Aba 3: Assimetrias
-│   │   │   ├── proportion-card.tsx        # Card individual de proporção
-│   │   │   ├── asymmetry-card.tsx         # Card individual de assimetria
-│   │   │   ├── body-silhouette.tsx        # SVG interativo do corpo
-│   │   │   └── score-gauge.tsx            # Gauge de score geral
-│   │   │
-│   │   ├── charts/
-│   │   │   ├── symmetry-radar.tsx         # Radar de simetria (Recharts)
-│   │   │   ├── evolution-line.tsx         # Gráfico evolução áurea
-│   │   │   ├── weight-evolution.tsx       # Gráfico peso (magro/gordo/total)
-│   │   │   ├── body-fat-chart.tsx         # Gráfico gordura corporal
-│   │   │   ├── asymmetry-scanner.tsx      # Scanner de assimetrias
-│   │   │   ├── progress-bar-scale.tsx     # Barra BLOCO→FREAK
-│   │   │   └── imbalance-radar.tsx        # Radar de desequilíbrio bilateral
-│   │   │
-│   │   ├── coach/
-│   │   │   ├── diagnosis-card.tsx
-│   │   │   ├── training-card.tsx
-│   │   │   ├── nutrition-card.tsx
-│   │   │   └── ai-response-stream.tsx     # Componente de streaming IA
-│   │   │
-│   │   └── shared/
-│   │       ├── loading-skeleton.tsx
-│   │       ├── empty-state.tsx
-│   │       └── error-boundary.tsx
+│   ├── components/                     # ATOMIC DESIGN (237 componentes)
+│   │   ├── atoms/                      # 13 componentes base
+│   │   │   (GlassPanel, Button, Badge, InputField, etc.)
+│   │   ├── molecules/                  # 73 componentes compostos
+│   │   │   (Header, Footer, Tabs, MetricCard, etc.)
+│   │   ├── organisms/                  # 35+ organismos complexos
+│   │   │   ├── AssessmentCards/
+│   │   │   ├── AssessmentCharts/
+│   │   │   ├── AssessmentForm/
+│   │   │   ├── BodyHeatmap/
+│   │   │   ├── EvolutionCharts/
+│   │   │   ├── Sidebar/
+│   │   │   ├── PersonalDashboard/
+│   │   │   ├── GamificationPanel/
+│   │   │   ├── DailyTrackingCard/
+│   │   │   ├── CoachModal/
+│   │   │   ├── ChatMessages/
+│   │   │   ├── ProfileSelector/
+│   │   │   ├── ProgressiveProfilingModal/
+│   │   │   └── (mais 20+ organismos)
+│   │   ├── templates/                  # 59 templates de página
+│   │   │   (DashboardView, AssessmentResults, Evolution,
+│   │   │    CoachIA, Login, Settings, AthletesList, etc.)
+│   │   ├── DebugAccess.tsx
+│   │   ├── TestSupabaseConnection.tsx
+│   │   └── index.ts                    # Re-export centralizado
 │   │
-│   ├── lib/
-│   │   ├── supabase/
-│   │   │   ├── client.ts              # createBrowserClient (client-side)
-│   │   │   ├── server.ts              # createServerClient (server-side)
-│   │   │   ├── admin.ts               # createServiceRoleClient (API routes)
-│   │   │   └── middleware.ts          # Supabase auth middleware helper
-│   │   │
-│   │   ├── gemini/
-│   │   │   ├── client.ts              # GoogleGenerativeAI client
-│   │   │   ├── prompts/
-│   │   │   │   ├── system-prompt.ts   # System prompt base do Coach IA
-│   │   │   │   ├── diagnosis.ts       # Prompt para diagnóstico
-│   │   │   │   ├── training.ts        # Prompt para treino
-│   │   │   │   └── nutrition.ts       # Prompt para dieta
-│   │   │   └── schemas/
-│   │   │       └── coach-output.ts    # Zod schema do output estruturado
-│   │   │
-│   │   ├── calculations/
-│   │   │   ├── body-composition.ts    # BF%, peso magro/gordo
-│   │   │   ├── golden-proportions.ts  # Proporções áureas
-│   │   │   ├── asymmetry.ts           # Análise de assimetrias
-│   │   │   ├── overall-score.ts       # Score geral 0-100
-│   │   │   ├── comparison-modes.ts    # Golden Ratio / CBum / MP targets
-│   │   │   └── steve-reeves.ts        # Metas Steve Reeves
-│   │   │
-│   │   ├── utils/
-│   │   │   ├── cn.ts                  # clsx + tailwind-merge
-│   │   │   ├── format.ts             # Formatadores (números, datas, etc)
-│   │   │   └── constants.ts          # Constantes globais
-│   │   │
-│   │   └── validations/
-│   │       ├── assessment.ts          # Zod schemas para avaliação
-│   │       ├── student.ts             # Zod schemas para aluno
-│   │       └── auth.ts               # Zod schemas para auth
+│   ├── features/                       # Features por domínio
+│   │   ├── comparison/
+│   │   ├── dashboard/                  # 4 componentes
+│   │   ├── history/
+│   │   ├── measurements/
+│   │   └── proportions/
 │   │
-│   ├── hooks/
-│   │   ├── use-assessment.ts          # Hook para operações de avaliação
-│   │   ├── use-student.ts             # Hook para operações de aluno
-│   │   ├── use-evolution.ts           # Hook para dados de evolução
-│   │   ├── use-coach-ia.ts            # Hook para streaming do Coach IA
-│   │   └── use-user.ts               # Hook para dados do usuário logado
+│   ├── hooks/                          # Custom hooks
+│   │   ├── queries/                    # Hooks de dados (placeholder)
+│   │   ├── mutations/                  # Hooks de mutação (placeholder)
+│   │   ├── usePersonalDetails.ts       # Detalhes do personal logado
+│   │   ├── useSupabaseConnection.ts    # Status da conexão Supabase
+│   │   ├── useSupabaseSync.ts          # Sync de dados com Supabase
+│   │   └── useTokens.ts               # Acesso a design tokens
 │   │
-│   ├── types/
-│   │   ├── database.ts                # Types gerados pelo Supabase CLI
-│   │   ├── assessment.ts              # Types de avaliação
-│   │   ├── proportions.ts             # Types de proporções
-│   │   ├── coach.ts                   # Types do Coach IA
-│   │   └── enums.ts                   # Enums compartilhados
+│   ├── services/                       # Lógica de negócio + API
+│   │   ├── supabase.ts                 # createClient (browser-only)
+│   │   ├── calculations/               # 11 arquivos de cálculos puros
+│   │   │   ├── constants.ts            # Constantes (GOLDEN, CLASSIC, MENS, OPEN BB)
+│   │   │   ├── goldenRatio.ts
+│   │   │   ├── classicPhysique.ts
+│   │   │   ├── mensPhysique.ts
+│   │   │   ├── openBodybuilding.ts     # NOVO: Open Bodybuilding
+│   │   │   ├── femaleProportions.ts    # NOVO: Proporções femininas
+│   │   │   ├── assessment.ts           # Cálculos gerais de avaliação
+│   │   │   ├── evolutionProcessor.ts   # Processamento de evolução
+│   │   │   ├── personal-calculations.ts
+│   │   │   ├── utils.ts
+│   │   │   └── index.ts
+│   │   ├── academia.service.ts         # CRUD academias (Supabase)
+│   │   ├── atleta.service.ts           # CRUD atletas (Supabase)
+│   │   ├── avaliacao.service.ts        # CRUD avaliações (Supabase)
+│   │   ├── medidas.service.ts          # CRUD medidas (Supabase)
+│   │   ├── personal.service.ts         # CRUD personais (Supabase)
+│   │   ├── profile.service.ts          # CRUD perfil (Supabase)
+│   │   ├── portalService.ts            # Serviço do portal do atleta
+│   │   ├── registration.ts             # Registro de usuários
+│   │   ├── invites.ts                  # Sistema de convites
+│   │   ├── daily-score.ts              # Score diário
+│   │   ├── mappers.ts                  # Mapeamento de dados
+│   │   ├── gamification/               # Serviço de gamificação
+│   │   ├── insights/                   # Serviço de insights IA
+│   │   ├── nlp/                        # Processamento linguagem natural
+│   │   └── index.ts
 │   │
-│   └── middleware.ts                  # Next.js middleware (auth guard)
+│   ├── stores/                         # Estado global (Zustand 5)
+│   │   ├── authStore.ts                # Auth via Supabase (signIn/Up/Out)
+│   │   ├── dataStore.ts                # Dados gerais da aplicação
+│   │   ├── athleteStore.ts             # Dados do atleta
+│   │   ├── personalRankingStore.ts     # Rankings de personais
+│   │   ├── useDailyTrackingStore.ts    # Tracking diário
+│   │   └── usePersonalDashboardStore.ts # Dashboard do personal
+│   │
+│   ├── tokens/                         # Design Tokens
+│   │   ├── colors.ts
+│   │   ├── typography.ts
+│   │   ├── spacing.ts
+│   │   ├── borders.ts
+│   │   ├── shadows.ts
+│   │   ├── animations.ts
+│   │   └── index.ts
+│   │
+│   ├── types/                          # TypeScript types (12 arquivos)
+│   │   ├── auth.ts                     # UserRole, AuthState
+│   │   ├── assessment.ts               # Avaliação, medidas
+│   │   ├── athlete.ts                  # Dados do atleta
+│   │   ├── athlete-portal.ts           # Portal do atleta
+│   │   ├── academy.ts                  # Dados da academia
+│   │   ├── personal-academy.ts         # Relação personal-academia
+│   │   ├── personalRanking.ts          # Rankings
+│   │   ├── proportions.ts              # Tipos de proporções
+│   │   ├── settings.ts                 # Configurações
+│   │   ├── daily-tracking.ts           # Tracking diário
+│   │   ├── gamification.ts             # Gamificação
+│   │   └── invites.ts                  # Convites
+│   │
+│   ├── mocks/                          # Dados simulados (12 arquivos)
+│   │   ├── personal.ts                 # Mock principal (23KB)
+│   │   ├── academy.ts
+│   │   ├── academyAthletes.ts
+│   │   ├── athletePortalMockData.ts
+│   │   ├── chatMockData.ts
+│   │   ├── daily-summary.ts
+│   │   ├── daily-tracking.ts
+│   │   ├── daily-tracking-history.ts
+│   │   ├── gamification-profiles.ts
+│   │   ├── personal-dashboard.ts
+│   │   ├── profileMockData.ts
+│   │   └── progressMockData.ts
+│   │
+│   ├── pages/                          # Pages (componentes de rota)
+│   │   ├── AthletePortal.tsx
+│   │   ├── GamificationPage.tsx
+│   │   └── athlete/                    # Telas do atleta
+│   │       ├── PortalLanding.tsx
+│   │       ├── CoachScreen.tsx
+│   │       ├── ProfileScreen.tsx
+│   │       ├── ProgressScreen.tsx
+│   │       ├── SelfMeasurements.tsx
+│   │       ├── TodayScreen.tsx
+│   │       └── index.ts
+│   │
+│   ├── lib/                            # Utilitários
+│   │   ├── database.types.ts           # Types gerados do Supabase
+│   │   └── supabase/                   # Supabase helpers
+│   │
+│   ├── config/                         # Configurações
+│   │
+│   └── utils/                          # Funções utilitárias
 │
-├── supabase/
-│   ├── config.toml                    # Supabase local config
-│   ├── migrations/
-│   │   ├── 001_initial_schema.sql
-│   │   ├── 002_rls_policies.sql
-│   │   ├── 003_functions.sql
-│   │   └── 004_seed_plans.sql
-│   └── seed.sql                       # Dados de seed (planos, demo user)
+├── supabase/                           # Supabase local config
 │
-└── scripts/
-    └── generate-types.sh              # npx supabase gen types
+└── scripts/                            # Scripts auxiliares
 ```
 
 ---
@@ -679,93 +667,59 @@ INSERT INTO plans (name, tier, max_students, price_monthly_cents) VALUES
 
 ---
 
-## 5. Autenticação — Supabase Auth
+## 5. Autenticação — Supabase Auth (Implementada)
 
 ### 5.1 Configuração
 
 ```typescript
-// src/lib/supabase/client.ts
-import { createBrowserClient } from '@supabase/ssr'
+// src/services/supabase.ts
+import { createClient } from '@supabase/supabase-js';
 
-export function createClient() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-}
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 ```
+
+> **Nota:** Como a aplicação é uma SPA (Vite), não há middleware server-side nem server components. A autenticação é gerenciada inteiramente via `@supabase/supabase-js` no client, com o estado armazenado no `authStore` (Zustand).
+
+### 5.2 Auth Store (Zustand)
 
 ```typescript
-// src/lib/supabase/server.ts
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+// src/stores/authStore.ts
+import { create } from 'zustand';
+import { supabase } from '@/services/supabase';
 
-export async function createServerSupabase() {
-  const cookieStore = await cookies()
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll() },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
+interface AuthState {
+  user: User | null;
+  profile: Profile | null;
+  entity: EntityData;  // personal?, atleta?, academia?
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  signIn: (email, password) => Promise;
+  signUp: (email, password, additionalData?) => Promise;
+  signOut: () => Promise;
+  checkSession: () => Promise;
+  loadEntityData: (userId, role) => Promise;
 }
 ```
 
-```typescript
-// src/middleware.ts
-import { createServerClient } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
+**Fluxo de autenticação:**
+1. `signIn` → `supabase.auth.signInWithPassword` → fetch profile → `fetchEntityData`
+2. `checkSession` → `supabase.auth.getSession` → rehidrata profile + entity
+3. `signOut` → `supabase.auth.signOut` → limpa stores
 
-export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({ request })
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return request.cookies.getAll() },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          )
-          response = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
+### 5.3 Entidades por Role
 
-  const { data: { user } } = await supabase.auth.getUser()
+O `authStore` carrega a entidade específica baseado no role do perfil:
 
-  // Protege rotas do dashboard
-  if (!user && request.nextUrl.pathname.startsWith('/(dashboard)')) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
+| Role | Tabela Supabase | Campo no Entity |
+|------|----------------|------------------|
+| `PERSONAL` | `personais` | `entity.personal` |
+| `ATLETA` | `atletas` | `entity.atleta` |
+| `ACADEMIA` | `academias` | `entity.academia` |
 
-  // Redirect se já logado tentando acessar auth pages
-  if (user && request.nextUrl.pathname.startsWith('/(auth)')) {
-    return NextResponse.redirect(new URL('/momento', request.url))
-  }
-
-  return response
-}
-
-export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api).*)'],
-}
-```
-
-### 5.2 Fluxo de Registro
+### 5.4 Fluxo de Registro
 
 ```typescript
 // Signup com metadata de role
@@ -774,11 +728,12 @@ const { data, error } = await supabase.auth.signUp({
   password,
   options: {
     data: {
-      full_name: name,
-      role: selectedRole, // 'professional' | 'academy_owner' | 'student'
+      full_name: fullName,
+      role: role, // 'PERSONAL' | 'ATLETA' | 'ACADEMIA'
     }
   }
 })
+// Profile criado automaticamente via trigger handle_new_user()
 ```
 
 ---
@@ -1195,25 +1150,17 @@ export async function POST(request: NextRequest) {
 ## 8. Environment Variables
 
 ```bash
-# .env.local
+# .env.local (prefixo VITE_ para variáveis client-side)
 
 # === SUPABASE ===
-NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIs...
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIs...
+VITE_SUPABASE_URL=https://xxxxx.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIs...
 
 # === GEMINI (Google AI) ===
 GEMINI_API_KEY=AIzaSy...
-
-# === APP ===
-NEXT_PUBLIC_APP_URL=https://shapev.com.br
-NEXT_PUBLIC_APP_NAME=VITRU IA
-
-# === STRIPE (billing) ===
-STRIPE_SECRET_KEY=sk_live_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
 ```
+
+> **Nota:** Como a aplicação é uma SPA, todas as variáveis de ambiente acessíveis no browser devem ter o prefixo `VITE_`. A API key do Gemini é injetada via `vite.config.ts` no `define`.
 
 ---
 
@@ -1222,66 +1169,40 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
 ```json
 // vercel.json
 {
-  "framework": "nextjs",
-  "regions": ["gru1"],
-  "env": {
-    "NEXT_PUBLIC_SUPABASE_URL": "@supabase-url",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@supabase-anon-key",
-    "SUPABASE_SERVICE_ROLE_KEY": "@supabase-service-role-key",
-    "GEMINI_API_KEY": "@gemini-api-key",
-    "STRIPE_SECRET_KEY": "@stripe-secret-key",
-    "STRIPE_WEBHOOK_SECRET": "@stripe-webhook-secret"
-  },
-  "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "no-store" }
-      ]
-    }
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
 ```
 
 **Vercel Settings:**
-- **Region:** São Paulo (gru1) — menor latência para Brasil
-- **Build Command:** `next build`
-- **Output Directory:** `.next`
+- **Region:** São Paulo — menor latência para Brasil
+- **Build Command:** `vite build`
+- **Output Directory:** `dist`
 - **Node.js Version:** 20.x
-- **Framework Preset:** Next.js
+- **Framework Preset:** Vite
 
 ---
 
-## 10. Pacotes NPM
+## 10. Pacotes NPM (Implementados)
 
 ```json
 {
   "dependencies": {
-    "next": "^14.2",
-    "react": "^18.3",
-    "react-dom": "^18.3",
-    "@supabase/supabase-js": "^2.45",
-    "@supabase/ssr": "^0.5",
-    "@google/generative-ai": "^0.21",
-    "recharts": "^2.12",
-    "zod": "^3.23",
-    "lucide-react": "^0.400",
-    "class-variance-authority": "^0.7",
-    "clsx": "^2.1",
-    "tailwind-merge": "^2.5",
-    "date-fns": "^3.6",
-    "stripe": "^16"
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "@supabase/supabase-js": "^2.95.3",
+    "@supabase/ssr": "^0.8.0",
+    "zustand": "^5.0.11",
+    "recharts": "^3.7.0",
+    "lucide-react": "^0.563.0",
+    "date-fns": "^4.1.0"
   },
   "devDependencies": {
-    "typescript": "^5.5",
-    "@types/react": "^18",
-    "@types/node": "^20",
-    "tailwindcss": "^3.4",
-    "postcss": "^8",
-    "autoprefixer": "^10",
-    "supabase": "^1.200",
-    "eslint": "^8",
-    "eslint-config-next": "^14"
+    "typescript": "~5.8.2",
+    "@types/node": "^22.14.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "vite": "^6.2.0"
   }
 }
 ```
@@ -1291,26 +1212,16 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
 ## 11. Comandos de Setup
 
 ```bash
-# 1. Criar projeto Next.js via Antigravity ou manualmente
-npx create-next-app@latest vitru-ia --typescript --tailwind --eslint --app --src-dir
+# 1. Dev server (Vite)
+npm run dev       # Inicia em http://localhost:3000
 
-# Entrar no diretório
-cd vitru-ia
-npm install @supabase/supabase-js @supabase/ssr @google/generative-ai recharts zod lucide-react class-variance-authority clsx tailwind-merge date-fns stripe
+# 2. Build de produção
+npm run build     # Gera dist/
 
-# 3. Setup shadcn/ui
-npx shadcn@latest init
-npx shadcn@latest add button card input table tabs badge dialog dropdown-menu progress select toggle-group tooltip form label textarea separator avatar sheet
+# 3. Preview do build
+npm run preview
 
-# 4. Setup Supabase CLI
-npx supabase init
-npx supabase link --project-ref YOUR_PROJECT_REF
-npx supabase db push  # aplica migrations
-
-# 5. Gerar types do Supabase
-npx supabase gen types typescript --linked > src/types/database.ts
-
-# 6. Deploy Vercel
+# 4. Deploy Vercel
 vercel --prod
 ```
 
