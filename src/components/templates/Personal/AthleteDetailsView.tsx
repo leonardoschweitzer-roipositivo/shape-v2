@@ -184,6 +184,18 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                         <Button
                             variant="outline"
                             className="flex items-center gap-2 border-white/10 hover:border-white/20 px-6"
+                            onClick={() => {
+                                setIsEditing(!isEditing);
+                            }}
+                        >
+                            <Edit3 size={18} />
+                            <span className="font-bold uppercase tracking-wider text-xs">
+                                {isEditing ? 'SALVAR ATLETA' : 'EDITAR ATLETA'}
+                            </span>
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className="flex items-center gap-2 border-white/10 hover:border-white/20 px-6"
                             onClick={() => { }}
                         >
                             <Clock size={18} />
