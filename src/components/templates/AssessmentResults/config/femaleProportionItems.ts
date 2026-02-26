@@ -201,7 +201,7 @@ export const getFemaleProportionItems = (
                 statusLabel: getStatus(whrPercentual),
                 userPosition: Math.round(whrPercentual),
                 goalPosition: 100,
-                image: "/images/widgets/Cintura_x_Quadril.jpg",
+                image: "/images/widgets/feminino_Cintura_x_Quadril.jpg",
                 rawImage: true
             },
             ai: {
@@ -229,7 +229,7 @@ export const getFemaleProportionItems = (
                 statusLabel: getStatus(hgScore),
                 userPosition: Math.round(hgScore),
                 goalPosition: 100,
-                image: "/images/widgets/Busto_vs_Cintura_vs_Quadril.jpg",
+                image: "/images/widgets/feminino_Busto_vs_Cintura_vs_Quadril.jpg",
                 rawImage: true
             },
             ai: {
@@ -253,7 +253,7 @@ export const getFemaleProportionItems = (
                 statusLabel: getStatus(shrPercentual),
                 userPosition: Math.round(shrPercentual),
                 goalPosition: 100,
-                image: "/images/widgets/Ombros_vs_Quadril.jpg",
+                image: "/images/widgets/feminino_Ombros_vs_Quadril.jpg",
                 rawImage: true
             },
             ai: {
@@ -277,7 +277,7 @@ export const getFemaleProportionItems = (
                 statusLabel: getStatus(brRatioPercentual),
                 userPosition: Math.round(brRatioPercentual),
                 goalPosition: 100,
-                image: "/images/widgets/Braco_vs_Antebraco.jpg",
+                image: "/images/widgets/feminino_Braco_vs_Antebraco.jpg",
                 rawImage: true
             },
             ai: {
@@ -301,7 +301,7 @@ export const getFemaleProportionItems = (
                 statusLabel: getStatus(htrPercentual),
                 userPosition: Math.round(htrPercentual),
                 goalPosition: 100,
-                image: "/images/widgets/Quadril_vs_Coxa.jpg",
+                image: "/images/widgets/feminino_Quadril_vs_Coxa.jpg",
                 rawImage: true
             },
             ai: {
@@ -325,7 +325,7 @@ export const getFemaleProportionItems = (
                 statusLabel: getStatus(cjPercentual),
                 userPosition: Math.round(cjPercentual),
                 goalPosition: 100,
-                image: "/images/widgets/Coxa_vs_Joelho.jpg",
+                image: "/images/widgets/feminino_Coxa_vs_Joelho.jpg",
                 rawImage: true
             },
             ai: {
@@ -349,7 +349,7 @@ export const getFemaleProportionItems = (
                 statusLabel: getStatus(cpPercentual),
                 userPosition: Math.round(cpPercentual),
                 goalPosition: 100,
-                image: "/images/widgets/Coxa_vs_Panturrilha.jpg",
+                image: "/images/widgets/feminino_Coxa_vs_Panturrilha.jpg",
                 rawImage: true
             },
             ai: {
@@ -373,7 +373,7 @@ export const getFemaleProportionItems = (
                 statusLabel: getStatus(ptPercentual),
                 userPosition: Math.round(ptPercentual),
                 goalPosition: 100,
-                image: "/images/widgets/Panturrilha_vs_Tornozelo.jpg",
+                image: "/images/widgets/feminino_Panturrilha_vs_Tornozelo.jpg",
                 rawImage: true
             },
             ai: {

@@ -266,7 +266,7 @@ export const getProportionItems = (
                 statusLabel: getStatus(shapeVPercentual),
                 userPosition: Math.round(shapeVPercentual),
                 goalPosition: 100,
-                image: "/images/widgets/shape-v.png",
+                image: "/images/widgets/masculino_shape-v.png",
                 rawImage: true
             },
             ai: {
@@ -290,7 +290,7 @@ export const getProportionItems = (
                 statusLabel: getStatus(peitoralPercentual),
                 userPosition: Math.round(peitoralPercentual),
                 goalPosition: 100,
-                image: "/images/widgets/peitoral.png",
+                image: "/images/widgets/masculino_peitoral.png",
                 rawImage: true
             },
             ai: {
@@ -314,7 +314,7 @@ export const getProportionItems = (
                 statusLabel: getStatus(bracoPercentual),
                 userPosition: Math.round(bracoPercentual),
                 goalPosition: 100,
-                image: "/images/widgets/braco.png",
+                image: "/images/widgets/masculino_braco.png",
                 rawImage: true
             },
             ai: {
@@ -338,7 +338,7 @@ export const getProportionItems = (
                 statusLabel: getStatus(antebracoPercentual),
                 userPosition: Math.round(antebracoPercentual),
                 goalPosition: 100,
-                image: "/images/widgets/braco.png",
+                image: "/images/widgets/masculino_antebraco.png",
                 rawImage: true
             },
             ai: {
@@ -365,7 +365,7 @@ export const getProportionItems = (
                 statusLabel: comparisonMode === 'mens' ? "N/A" : getStatus(triadeScore),
                 userPosition: comparisonMode === 'mens' ? 0 : Math.round(triadeScore),
                 goalPosition: 100,
-                image: "/images/widgets/peitoral.png",
+                image: "/images/widgets/masculino_triade.png",
                 rawImage: true
             },
             ai: {
@@ -398,7 +398,7 @@ export const getProportionItems = (
                 statusLabel: getStatus(cinturaPercentual),
                 userPosition: Math.round(cinturaPercentual),
                 goalPosition: 100,
-                image: "/images/widgets/cintura.png",
+                image: "/images/widgets/masculino_cintura.png",
                 rawImage: true
             },
             ai: {
@@ -424,7 +424,7 @@ export const getProportionItems = (
                 statusLabel: (comparisonMode === 'mens' || !ideais.coxa) ? "NÃO JULGADO" : getStatus(coxaPercentual),
                 userPosition: (comparisonMode === 'mens' || !ideais.coxa) ? 0 : Math.round(coxaPercentual),
                 goalPosition: 100,
-                image: "/images/widgets/coxa.png",
+                image: "/images/widgets/masculino_coxa.png",
                 rawImage: true
             },
             ai: {
@@ -452,7 +452,7 @@ export const getProportionItems = (
                 statusLabel: (comparisonMode === 'mens' || !ideais.coxa) ? "NÃO JULGADO" : getStatus(legPercentual),
                 userPosition: Math.round(legPercentual),
                 goalPosition: 100,
-                image: "/images/widgets/leg-ratio.png",
+                image: "/images/widgets/masculino_leg-ratio.png",
                 rawImage: true
             },
             ai: {
@@ -485,7 +485,7 @@ export const getProportionItems = (
                 statusLabel: getStatus(pantPercentual),
                 userPosition: Math.round(pantPercentual),
                 goalPosition: 100,
-                image: "/images/widgets/leg-ratio.png",
+                image: "/images/widgets/masculino_panturrilha.png",
                 rawImage: true
             },
             ai: {
@@ -509,7 +509,7 @@ export const getProportionItems = (
                 statusLabel: getStatus(costasPercentual),
                 userPosition: Math.round(costasPercentual),
                 goalPosition: 100,
-                image: "/images/widgets/shape-v.png",
+                image: "/images/widgets/masculino_costas.png",
                 rawImage: true
             },
             ai: {
