@@ -30,7 +30,7 @@ export function calcularIdeaisGoldenRatio(medidas: UserMeasurements): Proportion
         coxa: joelho * GOLDEN_RATIO.COXA_JOELHO,
         panturrilha: panturrilhaIdeal,
         pescoco: bracoIdeal, // Em Golden Ratio, pescoço = braço
-        costas: undefined, // N/A em Golden Ratio clássico
+        costas: cintura * GOLDEN_RATIO.PHI, // Adicionado meta de costas baseada no V-Taper clássico
         triade: {
             valor_ideal: bracoIdeal,
             regra: 'Pescoço = Braço = Panturrilha',
