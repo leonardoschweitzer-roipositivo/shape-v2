@@ -13,15 +13,14 @@ import {
 import { calculateAge } from '@/utils/dateUtils';
 
 // Helper to map athlete data to dashboard structure
-const mapAthleteToDashboard = (athlete: PersonalAthlete, profileBirthDate?: string | Date): DashboardResponse => {
+const mapAthleteToDashboard = (athlete: PersonalAthlete): DashboardResponse => {
     const current = athlete.assessments[0];
     const previous = athlete.assessments[1];
 
     if (!current) return mockDashboardData;
 
     // Use shared service to map and calculate scores
-    const fallbackDate = athlete.birthDate || profileBirthDate;
-    const age = fallbackDate ? calculateAge(fallbackDate) : 30;
+    const age = athlete.birthDate ? calculateAge(athlete.birthDate) : 30;
 
     const currentInput = mapMeasurementToInput(current, athlete.gender === 'FEMALE' ? 'FEMALE' : 'MALE', age);
     const currentResults = calcularAvaliacaoGeral(currentInput);
@@ -271,7 +270,7 @@ export function useDashboard() {
                 );
 
                 if (foundAthlete) {
-                    setData(mapAthleteToDashboard(foundAthlete, profile?.birthDate));
+                    setData(mapAthleteToDashboard(foundAthlete));
                 } else {
                     setData(mockDashboardData);
                 }

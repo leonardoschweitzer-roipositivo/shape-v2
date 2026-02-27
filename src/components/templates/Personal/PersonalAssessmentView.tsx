@@ -12,6 +12,7 @@ interface PersonalAssessmentViewProps {
         studentName: string;
         measurements: any;
         skinfolds: any;
+        age?: number;
     }) => void;
     initialAthlete?: PersonalAthlete | null;
 }
@@ -19,7 +20,7 @@ interface PersonalAssessmentViewProps {
 export const PersonalAssessmentView: React.FC<PersonalAssessmentViewProps> = ({ onConfirm, initialAthlete }) => {
     const [selectedAthlete, setSelectedAthlete] = useState<PersonalAthlete | null>(initialAthlete || null);
 
-    const handleConfirm = (formData: { measurements: any; skinfolds: any }) => {
+    const handleConfirm = (formData: { measurements: any; skinfolds: any; age?: number }) => {
         if (!selectedAthlete) return;
 
         const gender: 'male' | 'female' = selectedAthlete.gender === 'FEMALE' ? 'female' : 'male';
@@ -29,7 +30,8 @@ export const PersonalAssessmentView: React.FC<PersonalAssessmentViewProps> = ({ 
             studentName: selectedAthlete.name,
             gender: gender,
             measurements: formData.measurements,
-            skinfolds: formData.skinfolds
+            skinfolds: formData.skinfolds,
+            age: formData.age || athleteAge
         });
     };
 

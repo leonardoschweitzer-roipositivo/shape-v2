@@ -25,6 +25,7 @@ interface AssessmentResultsProps {
     assessment?: MeasurementHistory;
     birthDate?: string;
     athleteId?: string;
+    age?: number;
 }
 
 // Token styles for main component
@@ -102,7 +103,8 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
     gender,
     assessment,
     birthDate,
-    athleteId
+    athleteId,
+    age
 }) => {
     const [activeTab, setActiveTab] = useState<'diagnostic' | 'golden' | 'asymmetry'>('diagnostic');
     const [isSaving, setIsSaving] = useState(false);
@@ -136,7 +138,17 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
         cabeca: 56 // Default
     } : undefined;
 
-    const { getAthleteById } = useDataStore();
+    const { getAthleteById, personalAthletes } = useDataStore();
+
+    // Resolve birthDate: use prop first, fallback to athlete in store
+    const resolvedBirthDate = React.useMemo(() => {
+        if (birthDate) return birthDate;
+        if (athleteId) {
+            const athlete = personalAthletes.find(a => a.id === athleteId);
+            if (athlete?.birthDate) return athlete.birthDate;
+        }
+        return undefined;
+    }, [birthDate, athleteId, personalAthletes]);
 
     const handleSaveAssessment = async () => {
         setIsSaving(true);
@@ -210,7 +222,7 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
 
                 {/* Main Content - Render active tab */}
                 <div className="flex flex-col gap-6">
-                    {activeTab === 'diagnostic' && <DiagnosticTab assessment={assessment} gender={gender} birthDate={birthDate} />}
+                    {activeTab === 'diagnostic' && <DiagnosticTab assessment={assessment} gender={gender} birthDate={resolvedBirthDate} age={age} />}
                     {activeTab === 'golden' && <ProportionsTab gender={gender} userMeasurements={userMeasurements} />}
                     {activeTab === 'asymmetry' && <AsymmetryTab assessment={assessment} />}
                 </div>

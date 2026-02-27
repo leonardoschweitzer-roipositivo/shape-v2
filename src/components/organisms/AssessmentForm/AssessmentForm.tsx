@@ -40,7 +40,7 @@ interface Skinfolds {
 }
 
 interface AssessmentFormProps {
-    onConfirm: (data: { measurements: Measurements; skinfolds: Skinfolds }) => void;
+    onConfirm: (data: { measurements: Measurements; skinfolds: Skinfolds; age?: number }) => void;
     isModal?: boolean;
     initialData?: { measurements?: Partial<Measurements>; skinfolds?: Partial<Skinfolds> };
     initialAge?: number;
@@ -233,7 +233,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onConfirm, isMod
             thigh: skinfolds.thigh || 0,
         };
 
-        onConfirm({ measurements: finalMeasurements, skinfolds: finalSkinfolds });
+        onConfirm({ measurements: finalMeasurements, skinfolds: finalSkinfolds, age: typeof age === 'number' ? age : parseInt(String(age)) || undefined });
     };
 
     return (

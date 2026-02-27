@@ -108,7 +108,7 @@ const App: React.FC = () => {
   }, []);
 
   // State for assessment flow
-  const [assessmentData, setAssessmentData] = useState<{ studentName?: string; gender?: 'male' | 'female', assessment?: MeasurementHistory, birthDate?: string, athleteId?: string }>({});
+  const [assessmentData, setAssessmentData] = useState<{ studentName?: string; gender?: 'male' | 'female', assessment?: MeasurementHistory, birthDate?: string, athleteId?: string, age?: number }>({});
   const [athleteForEvaluation, setAthleteForEvaluation] = useState<PersonalAthlete | null>(null);
 
   // Hook for persistent Data Store
@@ -123,6 +123,7 @@ const App: React.FC = () => {
     gender?: 'male' | 'female';
     measurements?: any;
     skinfolds?: any;
+    age?: number;
   }) => {
     setIsAssessmentOpen(false);
 
@@ -144,7 +145,8 @@ const App: React.FC = () => {
         gender: data.gender,
         assessment: assessment,
         birthDate: athlete?.birthDate,
-        athleteId: data.studentId
+        athleteId: data.studentId,
+        age: data.age
       });
     } else if (data.measurements && data.skinfolds) {
       // Self/Atleta assessment
@@ -216,7 +218,9 @@ const App: React.FC = () => {
           studentName: selectedAthlete.name,
           gender: selectedAthlete.gender === 'FEMALE' ? 'female' : 'male',
           assessment: assessment,
-          birthDate: selectedAthlete.birthDate
+          birthDate: selectedAthlete.birthDate,
+          athleteId: selectedAthlete.id,
+          age: selectedAthlete.birthDate ? calculateAge(selectedAthlete.birthDate) : undefined
         });
         setCurrentView('results');
       }
@@ -231,7 +235,9 @@ const App: React.FC = () => {
         studentName: athlete.name,
         gender: athlete.gender === 'FEMALE' ? 'female' : 'male',
         assessment: latestAssessment,
-        birthDate: athlete.birthDate
+        birthDate: athlete.birthDate,
+        athleteId: athleteId,
+        age: athlete.birthDate ? calculateAge(athlete.birthDate) : undefined
       });
       setSelectedAthleteId(athleteId);
       setCurrentView('results');
@@ -435,6 +441,7 @@ const App: React.FC = () => {
               assessment={assessmentData.assessment}
               birthDate={assessmentData.birthDate}
               athleteId={assessmentData.athleteId}
+              age={assessmentData.age}
             />
           );
         case 'design-system':
@@ -475,6 +482,7 @@ const App: React.FC = () => {
             assessment={assessmentData.assessment}
             birthDate={assessmentData.birthDate}
             athleteId={assessmentData.athleteId}
+            age={assessmentData.age}
           />
         );
       case 'assessment': {

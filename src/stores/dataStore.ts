@@ -4,8 +4,10 @@ import { MeasurementHistory, PersonalAthlete } from '@/mocks/personal';
 import { PersonalSummary, AcademyStats } from '@/mocks/academy';
 import { mapMeasurementToInput } from '@/services/calculations/evolutionProcessor';
 import { calcularAvaliacaoGeral } from '@/services/calculations/assessment';
-import { supabase } from '@/services/supabase';
 import { mapAtletaToPersonalAthlete } from '@/services/mappers';
+import { supabase } from '@/services/supabase';
+import { useAthleteStore } from '@/stores/athleteStore';
+import { calculateAge } from '@/utils/dateUtils';
 import type { Atleta, Ficha, Medida } from '@/lib/database.types';
 
 type DataSource = 'MOCK' | 'SUPABASE';
@@ -126,16 +128,14 @@ export const useDataStore = create<DataState>()(
             },
 
             addAssessment: ({ athleteId, measurements, skinfolds, gender }) => {
-                // Pre-buscar o atleta para pegar a birthDate
                 const athlete = get().personalAthletes.find(a => a.id === athleteId);
-                let realAge = 30;
-                if (athlete?.birthDate) {
-                    const birth = new Date(athlete.birthDate);
-                    const now = new Date();
-                    realAge = now.getFullYear() - birth.getFullYear();
-                    const m = now.getMonth() - birth.getMonth();
-                    if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) realAge--;
-                }
+
+                // Tratar de pegar a data de nascimento seja do atleta, ou do próprio profile ativo
+                const store = useAthleteStore.getState();
+                const profile = store.profile;
+
+                const birthDate = athlete?.birthDate || (profile?.id === athleteId ? profile?.birthDate : undefined);
+                const realAge = calculateAge(birthDate) || 30;
 
                 // Calculate score
                 const calculationInput = mapMeasurementToInput(

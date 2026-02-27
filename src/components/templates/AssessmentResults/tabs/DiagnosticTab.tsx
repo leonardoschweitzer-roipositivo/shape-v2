@@ -11,8 +11,9 @@ import {
 import { colors as designColors, typography as designTypography, spacing as designSpacing } from '@/tokens';
 import { MeasurementHistory } from '@/mocks/personal';
 import { calcularAvaliacaoGeral } from '@/services/calculations';
-import { AvaliacaoGeralInput } from '@/types/assessment.ts';
+import { mapMeasurementToInput } from '@/services/calculations/evolutionProcessor';
 import { calculateAge } from '@/utils/dateUtils';
+import { useDataStore } from '@/stores/dataStore';
 
 // Token styles (shared with parent)
 const tokenStyles = {
@@ -65,10 +66,24 @@ interface DiagnosticTabProps {
     assessment?: MeasurementHistory;
     gender?: 'male' | 'female';
     birthDate?: string;
+    age?: number;
 }
 
-export const DiagnosticTab: React.FC<DiagnosticTabProps> = ({ assessment, gender = 'male', birthDate }) => {
+export const DiagnosticTab: React.FC<DiagnosticTabProps> = ({ assessment, gender = 'male', birthDate, age: ageProp }) => {
     const [filter, setFilter] = useState<'todos' | 'comp' | 'metrics'>('todos');
+
+    // Resolve birthDate: prop first, then search in store for the athlete owning this assessment
+    const { personalAthletes } = useDataStore();
+    const resolvedBirthDate = useMemo(() => {
+        if (birthDate) return birthDate;
+        if (assessment?.id) {
+            const owner = personalAthletes.find(a =>
+                a.assessments.some(ass => ass.id === assessment.id)
+            );
+            if (owner?.birthDate) return owner.birthDate;
+        }
+        return undefined;
+    }, [birthDate, assessment?.id, personalAthletes]);
 
     // Auto-select method based on skinfold availability
     const hasSkinfolds = useMemo(() => {
@@ -83,7 +98,7 @@ export const DiagnosticTab: React.FC<DiagnosticTabProps> = ({ assessment, gender
         setBfMethod(hasSkinfolds ? 'pollock' : 'navy');
     }, [hasSkinfolds]);
 
-    // Calculate metrics
+    // Calculate metrics using the SAME shared mapper used by dashboard/store
     const metrics = useMemo(() => {
         if (!assessment) return {
             weight: 88.5,
@@ -95,143 +110,58 @@ export const DiagnosticTab: React.FC<DiagnosticTabProps> = ({ assessment, gender
 
         const m = assessment.measurements;
         const { weight, waist, neck, hips } = m;
-        // Safeguard: se altura veio em metros (< 3), converter para cm
         const height = m.height > 0 && m.height < 3 ? Math.round(m.height * 100) : m.height;
-        let bf = 0;
 
-        const age = calculateAge(birthDate) || 30;
+        // Priority: 1) age prop from form, 2) calculated from birthDate, 3) from store, 4) fallback 30
+        const age = ageProp || calculateAge(resolvedBirthDate) || 30;
 
-        if (bfMethod === 'pollock') {
-            const s = assessment.skinfolds;
-            const sumSkinfolds = s.tricep + s.subscapular + s.chest + s.axillary + s.suprailiac + s.abdominal + s.thigh;
+        const genderUpper = (gender === 'female' ? 'FEMALE' : 'MALE') as 'MALE' | 'FEMALE';
 
-            // Pollock 7-site formula
-            let bodyDensity;
-            if (gender === 'male') {
-                bodyDensity = 1.112 - 0.00043499 * sumSkinfolds + 0.00000055 * sumSkinfolds * sumSkinfolds - 0.00028826 * age;
+        // Use the SAME shared mapper that dashboard uses
+        const sharedInput = mapMeasurementToInput(assessment, genderUpper, age);
+
+        // The shared mapper auto-detects BF method. If user explicitly chose a different method,
+        // we need to recalculate BF and override it.
+        const sharedHasSkinfolds = assessment.skinfolds && Object.values(assessment.skinfolds).some(v => Number(v) > 0);
+        const sharedDetectedMethod = sharedHasSkinfolds ? 'pollock' : 'navy';
+
+        let bf = sharedInput.composicao.bf;
+
+        if (bfMethod !== sharedDetectedMethod) {
+            // User manually switched method, recalculate BF
+            if (bfMethod === 'pollock' && assessment.skinfolds) {
+                const s = assessment.skinfolds;
+                const sumSkinfolds = s.tricep + s.subscapular + s.chest + s.axillary + s.suprailiac + s.abdominal + s.thigh;
+                let bodyDensity;
+                if (gender === 'male') {
+                    bodyDensity = 1.112 - 0.00043499 * sumSkinfolds + 0.00000055 * sumSkinfolds * sumSkinfolds - 0.00028826 * age;
+                } else {
+                    bodyDensity = 1.097 - 0.00046971 * sumSkinfolds + 0.00000056 * sumSkinfolds * sumSkinfolds - 0.00012828 * age;
+                }
+                bf = Math.max(2, Math.min(60, (495 / bodyDensity) - 450));
             } else {
-                bodyDensity = 1.097 - 0.00046971 * sumSkinfolds + 0.00000056 * sumSkinfolds * sumSkinfolds - 0.00012828 * age;
+                // Navy method
+                if (gender === 'male') {
+                    bf = 495 / (1.0324 - 0.19077 * Math.log10(waist - neck) + 0.15456 * Math.log10(height)) - 450;
+                } else {
+                    bf = 495 / (1.29579 - 0.35004 * Math.log10(waist + (hips || waist) - neck) + 0.22100 * Math.log10(height)) - 450;
+                }
+                bf = Math.max(2, Math.min(60, bf));
             }
-            bf = Math.max(0, (495 / bodyDensity) - 450);
-        } else {
-            // U.S. Navy Method — Hodgdon & Beckett (Metric/cm)
-            // Uses body density equation, NOT the linear approximation (which is for inches)
-            // Reference: Hodgdon, J.A. & Beckett, M.B. (1984)
-            if (gender === 'male') {
-                bf = 495 / (1.0324 - 0.19077 * Math.log10(waist - neck) + 0.15456 * Math.log10(height)) - 450;
-            } else {
-                bf = 495 / (1.29579 - 0.35004 * Math.log10(waist + (hips || waist) - neck) + 0.22100 * Math.log10(height)) - 450;
-            }
+
+            // Update composition in input with overridden BF
+            const overrideFatMass = weight * (bf / 100);
+            const overrideLeanMass = weight - overrideFatMass;
+            sharedInput.composicao.bf = bf;
+            sharedInput.composicao.metodo_bf = bfMethod === 'pollock' ? 'POLLOCK_7' : 'NAVY';
+            sharedInput.composicao.pesoMagro = overrideLeanMass;
+            sharedInput.composicao.pesoGordo = overrideFatMass;
         }
 
-        bf = Math.max(2, Math.min(60, bf)); // Clamp entre 2% e 60%
         const fatMass = weight * (bf / 100);
         const leanMass = weight - fatMass;
 
-        /**
-         * Calibrated ratio percentage using realistic baselines.
-         * % = (current - baseline) / (target - baseline) * 100
-         * Prevents inflated scores (e.g., Shape-V 1.30/1.618 was 80% → now ~49%)
-         */
-        const getCalibratedPercent = (current: number, target: number, baseline: number, inverse = false) => {
-            if (!target || !current) return 0;
-            if (inverse) {
-                if (current <= target) return Math.min(110, 100 + ((target - current) / target) * 50);
-                const excessoPercent = ((current - target) / target) * 100;
-                return Math.max(0, 100 - (excessoPercent * 1.5));
-            }
-            const range = target - baseline;
-            if (range <= 0) return 100;
-            const progress = current - baseline;
-            return Math.round(Math.max(0, Math.min(115, (progress / range) * 100)) * 10) / 10;
-        };
-
-        const punho = (m.wristLeft + m.wristRight) / 2 || 17;
-        const joelho = (m.kneeLeft + m.kneeRight) / 2 || 40;
-        const tornozelo = (m.ankleLeft + m.ankleRight) / 2 || 22;
-        const bracoMedio = (m.armLeft + m.armRight) / 2;
-        const pantMedio = (m.calfLeft + m.calfRight) / 2;
-        const coxaMedia = (m.thighLeft + m.thighRight) / 2;
-
-        const vTaperAtual = m.shoulders / m.waist;
-        const vTaperMeta = 1.618;
-        const vTaperScore = getCalibratedPercent(vTaperAtual, vTaperMeta, 1.0);
-
-        const peitoRatio = m.chest / punho;
-        const peitoMeta = 6.5;
-        const peitoScore = getCalibratedPercent(peitoRatio, peitoMeta, 5.0);
-
-        const bracoRatio = bracoMedio / punho;
-        const bracoMeta = 2.5;
-        const bracoScore = getCalibratedPercent(bracoRatio, bracoMeta, 1.7);
-
-        const cinturaRatio = m.waist / height;
-        const cinturaMeta = 0.45;
-        const cinturaScore = getCalibratedPercent(cinturaRatio, cinturaMeta, 0, true);
-
-        const antebracoMedio = (m.forearmLeft + m.forearmRight) / 2;
-        const antebracoRatio = antebracoMedio / bracoMedio;
-        const antebracoMeta = 0.8;
-        const antebracoScore = getCalibratedPercent(antebracoRatio, antebracoMeta, 0.55);
-
-        const triadeMedia = (bracoMedio + pantMedio + neck) / 3;
-        const triadeDesvio = (Math.abs(bracoMedio - triadeMedia) + Math.abs(pantMedio - triadeMedia) + Math.abs(neck - triadeMedia)) / triadeMedia / 3;
-        const triadeScore = Math.max(0, Math.round((1 - triadeDesvio) * 100 * 10) / 10);
-
-        const coxaJoelhoRatio = coxaMedia / joelho;
-        const coxaJoelhoMeta = 1.75;
-        const coxaScore = getCalibratedPercent(coxaJoelhoRatio, coxaJoelhoMeta, 1.2);
-
-        const coxaPantRatio = coxaMedia / pantMedio;
-        const coxaPantMeta = 1.5;
-        const coxaPantScore = getCalibratedPercent(coxaPantRatio, coxaPantMeta, 1.1);
-
-        const pantTornRatio = pantMedio / tornozelo;
-        const pantTornMeta = 1.9;
-        const pantTornScore = getCalibratedPercent(pantTornRatio, pantTornMeta, 1.3);
-
-        // Upper vs Lower ratio (inverse: lower is better)
-        const upperVol = bracoMedio + antebracoMedio;
-        const lowerVol = coxaMedia + pantMedio;
-        const upperLowerRatio = lowerVol > 0 ? upperVol / lowerVol : 0;
-        const upperLowerMeta = 0.75;
-        const upperLowerScore = getCalibratedPercent(upperLowerRatio, upperLowerMeta, 0, true);
-
-        // Map data to AvaliacaoGeralInput
-        const assessmentInput: AvaliacaoGeralInput = {
-            proporcoes: {
-                metodo: 'golden',
-                vTaper: { indiceAtual: vTaperAtual, indiceMeta: vTaperMeta, percentualDoIdeal: vTaperScore, classificacao: 'NORMAL' },
-                peitoral: { indiceAtual: peitoRatio, indiceMeta: peitoMeta, percentualDoIdeal: peitoScore, classificacao: 'NORMAL' },
-                braco: { indiceAtual: bracoRatio, indiceMeta: bracoMeta, percentualDoIdeal: bracoScore, classificacao: 'NORMAL' },
-                antebraco: { indiceAtual: antebracoRatio, indiceMeta: antebracoMeta, percentualDoIdeal: antebracoScore, classificacao: 'NORMAL' },
-                triade: { harmoniaPercentual: triadeScore, pescoco: neck, braco: bracoMedio, panturrilha: pantMedio },
-                cintura: { indiceAtual: cinturaRatio, indiceMeta: cinturaMeta, percentualDoIdeal: cinturaScore, classificacao: 'NORMAL' },
-                coxa: { indiceAtual: coxaJoelhoRatio, indiceMeta: coxaJoelhoMeta, percentualDoIdeal: coxaScore, classificacao: 'NORMAL' },
-                coxaPanturrilha: { indiceAtual: coxaPantRatio, indiceMeta: coxaPantMeta, percentualDoIdeal: coxaPantScore, classificacao: 'NORMAL' },
-                panturrilha: { indiceAtual: pantTornRatio, indiceMeta: pantTornMeta, percentualDoIdeal: pantTornScore, classificacao: 'NORMAL' },
-                upperLower: { indiceAtual: upperLowerRatio, indiceMeta: upperLowerMeta, percentualDoIdeal: upperLowerScore, classificacao: 'NORMAL' },
-            },
-            composicao: {
-                peso: weight,
-                altura: height,
-                idade: age,
-                genero: gender === 'female' ? 'FEMALE' : 'MALE',
-                bf,
-                metodo_bf: bfMethod === 'pollock' ? 'POLLOCK_7' : 'NAVY',
-                pesoMagro: leanMass,
-                pesoGordo: fatMass,
-                cintura: waist,
-            },
-            assimetrias: {
-                braco: { esquerdo: m.armLeft, direito: m.armRight, diferenca: Math.abs(m.armLeft - m.armRight), diferencaPercentual: (Math.abs(m.armLeft - m.armRight) / ((m.armLeft + m.armRight) / 2)) * 100, status: 'SIMETRICO' },
-                antebraco: { esquerdo: m.forearmLeft, direito: m.forearmRight, diferenca: Math.abs(m.forearmLeft - m.forearmRight), diferencaPercentual: (Math.abs(m.forearmLeft - m.forearmRight) / ((m.forearmLeft + m.forearmRight) / 2)) * 100, status: 'SIMETRICO' },
-                coxa: { esquerdo: m.thighLeft, direito: m.thighRight, diferenca: Math.abs(m.thighLeft - m.thighRight), diferencaPercentual: (Math.abs(m.thighLeft - m.thighRight) / ((m.thighLeft + m.thighRight) / 2)) * 100, status: 'SIMETRICO' },
-                panturrilha: { esquerdo: m.calfLeft, direito: m.calfRight, diferenca: Math.abs(m.calfLeft - m.calfRight), diferencaPercentual: (Math.abs(m.calfLeft - m.calfRight) / ((m.calfLeft + m.calfRight) / 2)) * 100, status: 'SIMETRICO' },
-            }
-        };
-
-        const result = calcularAvaliacaoGeral(assessmentInput);
+        const result = calcularAvaliacaoGeral(sharedInput);
 
         return {
             weight,
@@ -241,7 +171,7 @@ export const DiagnosticTab: React.FC<DiagnosticTabProps> = ({ assessment, gender
             score: result.avaliacaoGeral,
             classificacao: result.classificacao
         };
-    }, [assessment, gender, bfMethod]);
+    }, [assessment, gender, bfMethod, resolvedBirthDate, ageProp]);
 
     return (
         <div className="flex flex-col gap-8 animate-fade-in-up">
