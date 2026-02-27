@@ -177,6 +177,7 @@ const App: React.FC = () => {
         studentName: profile?.name || 'Atleta',
         gender: profile?.gender === 'FEMALE' ? 'female' : 'male',
         assessment: assessment,
+        birthDate: profile?.birthDate || existingAthlete?.birthDate,
         athleteId: athleteId
       });
     } else if (data.studentName && data.gender) {

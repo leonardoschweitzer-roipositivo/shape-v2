@@ -73,7 +73,7 @@ export const DiagnosticTab: React.FC<DiagnosticTabProps> = ({ assessment, gender
     // Auto-select method based on skinfold availability
     const hasSkinfolds = useMemo(() => {
         if (!assessment?.skinfolds) return false;
-        return Object.values(assessment.skinfolds).some(v => v > 0);
+        return Object.values(assessment.skinfolds).some((v) => Number(v) > 0);
     }, [assessment]);
 
     const [bfMethod, setBfMethod] = useState<'navy' | 'pollock'>(hasSkinfolds ? 'pollock' : 'navy');
