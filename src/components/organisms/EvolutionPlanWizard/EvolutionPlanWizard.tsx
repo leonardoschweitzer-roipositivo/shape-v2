@@ -13,7 +13,7 @@
  * />
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
     X,
     ArrowLeft,
@@ -28,6 +28,7 @@ import {
     AlertTriangle,
     TrendingUp,
 } from 'lucide-react';
+import { useDataStore } from '@/stores/dataStore';
 
 // ===== TYPES =====
 
@@ -87,61 +88,86 @@ const STEPS: StepConfig[] = [
     },
 ];
 
-// Mock results for each step
-const MOCK_RESULTS: Record<WizardStep, string> = {
-    diagnostico: `## 🔍 Diagnóstico do Atleta
+/** Classifica score em nível */
+const getClassificacao = (score: number): string => {
+    if (score >= 85) return 'Avançado';
+    if (score >= 70) return 'Intermediário';
+    if (score >= 55) return 'Iniciante';
+    return 'Iniciante';
+};
 
-**Score Geral:** 58.8 • **Classificação:** Iniciante
+interface MockAtletaData {
+    nome: string;
+    score: number;
+    ratio: number;
+    peso?: number;
+}
+
+/** Gera resultados mock com dados reais do atleta */
+const getMockResults = (data: MockAtletaData): Record<WizardStep, string> => {
+    const { nome, score, ratio } = data;
+    const classificacao = getClassificacao(score);
+    const peso = data.peso || 80;
+    const proteina = Math.round(peso * 2.2);
+    const calorias = classificacao === 'Avançado' ? 2800 : classificacao === 'Intermediário' ? 2500 : 2200;
+    const fase = score >= 75 ? 'lean bulk (superávit leve)' : 'recomposição corporal';
+
+    return {
+        diagnostico: `## Diagnóstico de ${nome}
+
+**Score Geral:** ${score} • **Classificação:** ${classificacao} • **Ratio:** ${ratio.toFixed(2)}
 
 ### Pontos Fortes
 • Ombros proporcionais à estrutura óssea
 • Boa simetria bilateral nos braços
 
 ### Pontos Fracos (Prioridade)
-1. **Panturrilhas** — 3.2cm abaixo do ideal (gap de 12%)
-2. **Cintura** — 8cm acima do ideal (excesso de gordura abdominal)
-3. **Coxas** — assimetria de 1.5cm entre L/R
+1. **Panturrilhas** — abaixo do ideal para o ratio atual
+2. **Cintura** — acima do ideal (impacta proporções)
+3. **Coxas** — possível assimetria bilateral
 
 ### Recomendação Geral
-Fase de **recomposição corporal**: reduzir cintura enquanto desenvolve panturrilhas e corrige assimetria das coxas. Periodização com foco em hipertrofia corretiva.`,
+Fase de **${fase}** para **${nome}**: ${score >= 75 ? 'manter proporções fortes enquanto trabalha gaps menores. Periodização com foco em refinamento.' : 'reduzir cintura enquanto desenvolve panturrilhas e corrige assimetria das coxas. Periodização com foco em hipertrofia corretiva.'}`,
 
-    treino: `## 🏋️ Plano de Treino — Trimestre 1
+        treino: `## Plano de Treino de ${nome} — Trimestre 1
 
-**Divisão:** ABCDE (5x/semana)
+**Divisão:** ${score >= 75 ? 'ABCDE (5x/semana)' : 'ABCD (4x/semana)'}
 **Periodização:** Ondulada
-**Foco:** Hipertrofia Corretiva
+**Foco:** ${score >= 75 ? 'Refinamento Proporcional' : 'Hipertrofia Corretiva'}
 
 ### Divisão Semanal
-• **A** → Peito + Tríceps (manutenção)
-• **B** → Costas + Bíceps (manutenção)
-• **C** → Ombros + Trapézio (manutenção)
-• **D** → Quadríceps + Panturrilha ⚡ (prioridade)
-• **E** → Posterior + Panturrilha ⚡ (prioridade)
+• **A** → Peito + Tríceps
+• **B** → Costas + Bíceps
+• **C** → Ombros + Trapézio
+• **D** → Quadríceps + Panturrilha (prioridade)
+${score >= 75 ? '• **E** → Posterior + Panturrilha (prioridade)' : ''}
 
 ### Destaques
 • Panturrilhas treinadas 2x por semana (prioridade)
 • Coxas com exercícios unilaterais para corrigir assimetria
-• Volume alto nos grupos fracos, moderado nos fortes`,
+• Volume ${score >= 75 ? 'moderado em todos os grupos' : 'alto nos grupos fracos, moderado nos fortes'}`,
 
-    dieta: `## 🍽️ Plano de Dieta — Mês 1
+        dieta: `## Plano de Dieta de ${nome} — Mês 1
 
-**Fase:** Recomposição Corporal
-**Calorias:** 2.200 kcal/dia (déficit moderado de -300kcal)
+**Fase:** ${fase.charAt(0).toUpperCase() + fase.slice(1)}
+**Calorias:** ${calorias} kcal/dia
+**Peso atual:** ${peso}kg
 
 ### Macros
-• **Proteína:** 180g (2.2g/kg) — 33%
-• **Carboidrato:** 220g — 40%
-• **Gordura:** 67g — 27%
+• **Proteína:** ${proteina}g (2.2g/kg) — ${Math.round(proteina * 4 / calorias * 100)}%
+• **Carboidrato:** ${Math.round(calorias * 0.4 / 4)}g — 40%
+• **Gordura:** ${Math.round(calorias * 0.27 / 9)}g — 27%
 
 ### Estrutura (5 refeições)
-1. ☀️ Café: ovos + aveia + frutas (450kcal)
-2. 🥤 Lanche: whey + banana (250kcal)
-3. 🍽️ Almoço: arroz + frango + salada (550kcal)
-4. 🥜 Lanche: iogurte + granola (300kcal)
-5. 🌙 Jantar: batata doce + carne + legumes (500kcal)
+1. Café: ovos + aveia + frutas
+2. Lanche: whey + banana
+3. Almoço: arroz + frango + salada
+4. Lanche: iogurte + granola
+5. Jantar: batata doce + carne + legumes
 
 ### Refeição Livre
 • 1x por semana, sem exageros`,
+    };
 };
 
 // ===== SUBCOMPONENTS =====
@@ -164,10 +190,10 @@ const WizardStepper: React.FC<{ currentStep: WizardStep; results: Record<WizardS
                             <div className={`w-12 h-px transition-all ${isPast || isCompleted ? 'bg-primary' : 'bg-white/10'}`} />
                         )}
                         <div className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all ${isActive
-                                ? 'bg-primary/10 border border-primary/30 text-primary'
-                                : isCompleted
-                                    ? 'bg-primary/5 border border-primary/20 text-primary/70'
-                                    : 'bg-white/5 border border-white/5 text-gray-500'
+                            ? 'bg-primary/10 border border-primary/30 text-primary'
+                            : isCompleted
+                                ? 'bg-primary/5 border border-primary/20 text-primary/70'
+                                : 'bg-white/5 border border-white/5 text-gray-500'
                             }`}>
                             {isCompleted ? (
                                 <Check size={14} />
@@ -215,8 +241,8 @@ const StepPrompt: React.FC<{
                 onClick={onGenerate}
                 disabled={isGenerating}
                 className={`flex items-center gap-3 px-8 py-4 rounded-xl font-bold text-sm uppercase tracking-wider transition-all ${isGenerating
-                        ? 'bg-white/5 text-gray-500 cursor-not-allowed'
-                        : 'bg-primary text-[#0A0F1C] shadow-[0_0_20px_rgba(0,201,167,0.3)] hover:shadow-[0_0_30px_rgba(0,201,167,0.5)] hover:scale-105 active:scale-95'
+                    ? 'bg-white/5 text-gray-500 cursor-not-allowed'
+                    : 'bg-primary text-[#0A0F1C] shadow-[0_0_20px_rgba(0,201,167,0.3)] hover:shadow-[0_0_30px_rgba(0,201,167,0.5)] hover:scale-105 active:scale-95'
                     }`}
             >
                 {isGenerating ? (
@@ -335,6 +361,18 @@ export const EvolutionPlanWizard: React.FC<EvolutionPlanWizardProps> = ({
         dieta: { generated: false, content: '' },
     });
 
+    // Buscar dados reais do atleta no store
+    const { personalAthletes } = useDataStore();
+    const atletaData = useMemo((): MockAtletaData => {
+        const atleta = personalAthletes.find(a => a.id === atletaId);
+        return {
+            nome: atletaNome,
+            score: atleta?.score ?? 0,
+            ratio: atleta?.ratio ?? 0,
+            peso: atleta?.assessments?.[0]?.measurements?.weight,
+        };
+    }, [atletaId, atletaNome, personalAthletes]);
+
     const currentStepConfig = STEPS.find(s => s.id === currentStep)!;
     const currentIndex = STEPS.findIndex(s => s.id === currentStep);
     const isFirst = currentIndex === 0;
@@ -351,12 +389,12 @@ export const EvolutionPlanWizard: React.FC<EvolutionPlanWizardProps> = ({
             ...prev,
             [currentStep]: {
                 generated: true,
-                content: MOCK_RESULTS[currentStep],
+                content: getMockResults(atletaData)[currentStep],
             },
         }));
 
         setIsGenerating(false);
-    }, [currentStep]);
+    }, [currentStep, atletaData]);
 
     const handleNext = useCallback(() => {
         if (isLast) {
