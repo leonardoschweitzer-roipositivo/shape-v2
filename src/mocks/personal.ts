@@ -41,6 +41,9 @@ export interface MeasurementHistory {
     date: string;
     score?: number;
     ratio?: number;
+    bf?: number;
+    ffmi?: number;
+    proporcoes?: any; // Blob JSON da AvaliaçãoGeralOutput
     measurements: {
         weight: number;
         height: number;
@@ -58,15 +61,12 @@ export interface MeasurementHistory {
         thighLeft: number;
         calfRight: number;
         calfLeft: number;
-        // New measurements for full analysis
         wristRight: number;
         wristLeft: number;
         kneeRight: number;
         kneeLeft: number;
         ankleRight: number;
         ankleLeft: number;
-        ankleRightProp?: number;
-        ankleLeftProp?: number;
     };
     skinfolds: {
         tricep: number;

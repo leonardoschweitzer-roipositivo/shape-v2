@@ -152,6 +152,67 @@ export const HallDosDeuses: React.FC = () => {
                     .sort((a, b) => (b.ratio || 0) - (a.ratio || 0))
                     .map(a => ({ id: a.id, nome: a.name, valor: a.ratio || 0, badge: (a.ratio || 0) >= 1.6 ? 'FREAK' : undefined }));
 
+            case 'gordura':
+                return atletasComAvaliacoes
+                    .filter(a => (a.assessments[0].bf || 0) > 0)
+                    .sort((a, b) => (a.assessments[0].bf || 0) - (b.assessments[0].bf || 0)) // Menor BF ganha
+                    .map(a => ({ id: a.id, nome: a.name, valor: a.assessments[0].bf || 0, badge: (a.assessments[0].bf || 0) <= 8 ? 'RIBBED' : undefined }));
+
+            case 'peso-proporcional':
+                return atletasComAvaliacoes
+                    .map(a => {
+                        const height = a.assessments[0].measurements.height / 100; // metros
+                        const weight = a.assessments[0].measurements.weight;
+                        const value = height > 0 ? weight / height : 0;
+                        return { id: a.id, nome: a.name, valor: Math.round(value * 10) / 10 };
+                    })
+                    .sort((a, b) => b.valor - a.valor);
+
+            case 'trindade-classica':
+                return atletasComAvaliacoes
+                    .map(a => {
+                        const assessment = a.assessments[0];
+                        let valor = 0;
+                        try {
+                            // assessment.proporcoes = result.scores (salvo no mapper)
+                            const json = assessment.proporcoes;
+                            if (json) {
+                                // json.proporcoes.detalhes.detalhes = ProporcaoDetalhe[]
+                                const detalhes = json?.proporcoes?.detalhes?.detalhes || json?.proporcoes?.detalhes;
+                                if (Array.isArray(detalhes)) {
+                                    const triade = detalhes.find((d: any) => d.proporcao === 'triade');
+                                    valor = triade?.percentualDoIdeal || triade?.valor || 0;
+                                }
+                            }
+                            // Fallback para o score geral se não achou detalhes
+                            if (valor === 0) valor = assessment.score || 0;
+                        } catch (e) { valor = assessment.score || 0; }
+                        return { id: a.id, nome: a.name, valor: Math.round(valor * 10) / 10 };
+                    })
+                    .sort((a, b) => b.valor - a.valor);
+
+            case 'mestre-simetria':
+                return atletasComAvaliacoes
+                    .map(a => {
+                        let valor = 0;
+                        try {
+                            // json = result.scores, portanto json.simetria.valor
+                            const json = a.assessments[0].proporcoes;
+                            if (json) {
+                                valor = json?.simetria?.valor || json?.simetria?.detalhes?.score || 0;
+                            }
+                            if (valor === 0) valor = a.score || 0;
+                        } catch (e) { valor = a.score || 0; }
+                        return { id: a.id, nome: a.name, valor: Math.round(valor * 10) / 10 };
+                    })
+                    .sort((a, b) => b.valor - a.valor);
+
+            case 'ffmi':
+                return atletasComAvaliacoes
+                    .filter(a => (a.assessments[0].ffmi || 0) > 0)
+                    .sort((a, b) => (b.assessments[0].ffmi || 0) - (a.assessments[0].ffmi || 0))
+                    .map(a => ({ id: a.id, nome: a.name, valor: a.assessments[0].ffmi || 0, badge: (a.assessments[0].ffmi || 0) >= 22 ? 'NATTY?' : undefined }));
+
             case 'the-architect':
                 return atletasComAvaliacoes
                     .filter(a => (a.scoreVariation || 0) > 0)

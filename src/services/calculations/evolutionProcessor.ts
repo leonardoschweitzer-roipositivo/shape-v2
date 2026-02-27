@@ -7,20 +7,40 @@ import { calcularAvaliacaoGeral } from './assessment';
  */
 export function mapMeasurementToInput(
     assessment: MeasurementHistory,
-    gender: 'MALE' | 'FEMALE' = 'MALE'
+    gender: 'MALE' | 'FEMALE' = 'MALE',
+    age?: number
 ): AvaliacaoGeralInput {
     const m = assessment.measurements;
     const { weight, waist, neck, hips } = m;
     // Safeguard: se altura veio em metros (< 3), converter para cm
     const height = m.height > 0 && m.height < 3 ? Math.round(m.height * 100) : m.height;
 
-    // U.S. Navy Method — Hodgdon & Beckett (Metric/cm)
-    // Uses body density equation, NOT the linear approximation (which is for inches)
+    // Detectar se há dobras cutâneas disponíveis
+    const s = assessment.skinfolds;
+    const hasSkinfolds = s && Object.values(s).some(v => v > 0);
+    const realAge = age || 30;
+
     let bf = 0;
-    if (gender === 'MALE') {
-        bf = 495 / (1.0324 - 0.19077 * Math.log10(waist - neck) + 0.15456 * Math.log10(height)) - 450;
+    let metodo_bf: 'NAVY' | 'POLLOCK_7' = 'NAVY';
+
+    if (hasSkinfolds) {
+        // Pollock 7-site formula
+        const sumSkinfolds = s.tricep + s.subscapular + s.chest + s.axillary + s.suprailiac + s.abdominal + s.thigh;
+        let bodyDensity: number;
+        if (gender === 'MALE') {
+            bodyDensity = 1.112 - 0.00043499 * sumSkinfolds + 0.00000055 * sumSkinfolds * sumSkinfolds - 0.00028826 * realAge;
+        } else {
+            bodyDensity = 1.097 - 0.00046971 * sumSkinfolds + 0.00000056 * sumSkinfolds * sumSkinfolds - 0.00012828 * realAge;
+        }
+        bf = Math.max(0, (495 / bodyDensity) - 450);
+        metodo_bf = 'POLLOCK_7';
     } else {
-        bf = 495 / (1.29579 - 0.35004 * Math.log10(waist + (hips || waist) - neck) + 0.22100 * Math.log10(height)) - 450;
+        // U.S. Navy Method — Hodgdon & Beckett (Metric/cm)
+        if (gender === 'MALE') {
+            bf = 495 / (1.0324 - 0.19077 * Math.log10(waist - neck) + 0.15456 * Math.log10(height)) - 450;
+        } else {
+            bf = 495 / (1.29579 - 0.35004 * Math.log10(waist + (hips || waist) - neck) + 0.22100 * Math.log10(height)) - 450;
+        }
     }
 
     bf = Math.max(2, Math.min(60, bf)); // Clamp entre 2% e 60%
@@ -72,14 +92,15 @@ export function mapMeasurementToInput(
             coxa: { indiceAtual: coxaMedia / joelho, indiceMeta: 1.75, percentualDoIdeal: getRatioPercent(coxaMedia / joelho, 1.75), classificacao: 'NORMAL' },
             coxaPanturrilha: { indiceAtual: coxaMedia / pantMedio, indiceMeta: 1.5, percentualDoIdeal: getRatioPercent(coxaMedia / pantMedio, 1.5), classificacao: 'NORMAL' },
             panturrilha: { indiceAtual: pantMedio / tornozelo, indiceMeta: 1.9, percentualDoIdeal: getRatioPercent(pantMedio / tornozelo, 1.9), classificacao: 'NORMAL' },
+            upperLower: { indiceAtual: (bracoMedio + (m.forearmLeft + m.forearmRight) / 2) / (coxaMedia + pantMedio), indiceMeta: 0.75, percentualDoIdeal: getRatioPercent((bracoMedio + (m.forearmLeft + m.forearmRight) / 2) / (coxaMedia + pantMedio), 0.75, true), classificacao: 'NORMAL' },
         },
         composicao: {
             peso: weight,
             altura: height,
-            idade: 30, // Mock age
+            idade: realAge,
             genero: gender,
             bf,
-            metodo_bf: 'NAVY',
+            metodo_bf,
             pesoMagro: leanMass,
             pesoGordo: fatMass,
             cintura: waist,

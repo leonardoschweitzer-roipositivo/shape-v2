@@ -72,6 +72,7 @@ const RATIO_BASELINES = {
     legRatio: 1.1,       // coxa/panturrilha destreinado
     panturrilha: 1.3,    // panturrilha/tornozelo destreinado
     costas: 1.0,         // costas ≈ cintura
+    upperLower: 1.0,     // destreinado: upper ≈ lower (sem desenvolvimento diferenciado)
 };
 
 /** Generate calibrated analysis text using realistic baseline range */
@@ -204,6 +205,13 @@ export const getProportionItems = (
     const costasTarget = (config as any).COSTAS_CINTURA || 1.6;
     const costasPercentual = getRatioPercent(costasRatio, costasTarget);
 
+    // 11. Upper vs Lower (Braço+Antebraço) / (Coxa+Panturrilha) — INVERSO
+    const upperVolume = userMeasurements.braco + userMeasurements.antebraco;
+    const lowerVolume = userMeasurements.coxa + userMeasurements.panturrilha;
+    const upperLowerRatio = lowerVolume > 0 ? upperVolume / lowerVolume : 0;
+    const upperLowerTarget = (config as any).UPPER_LOWER_RATIO || 0.75;
+    const upperLowerPercentual = getRatioPercent(upperLowerRatio, upperLowerTarget, true);
+
     // ─── 12-Month Realistic Targets ──────────────────────────
 
     const ombros12m = calc12m(userMeasurements.ombros, ideais.ombros, 'ombros');
@@ -248,6 +256,11 @@ export const getProportionItems = (
     const costas12m = ideais.costas ? calc12m(userMeasurements.costas, ideais.costas, 'costas') : userMeasurements.costas;
     const costas12mRatio = (costas12m / cintura12m).toFixed(2);
 
+    // Upper vs Lower
+    const upper12m = braco12m + antebraco12m;
+    const lower12m = coxa12m + pant12m;
+    const upperLower12mRatio = lower12m > 0 ? (upper12m / lower12m).toFixed(2) : 'N/A';
+
     // ─── Return Items ────────────────────────────────────────
 
     return [
@@ -275,7 +288,31 @@ export const getProportionItems = (
                 goal12m: `Ombros: <strong>${cm(userMeasurements.ombros)} → ${cm(ombros12m)}cm</strong> | Cintura: <strong>${cm(userMeasurements.cintura)} → ${cm(cintura12m)}cm</strong> — Ratio projetado: <strong>${shapeV12mRatio}</strong>`
             }
         },
-        // 2. Peitoral
+        // 2. Costas
+        {
+            card: {
+                title: "Costas",
+                badge: "AMPLITUDE V-TAPER",
+                metrics: [
+                    { label: 'Costas', value: `${userMeasurements.costas}cm` },
+                    { label: 'Cintura', value: `${userMeasurements.cintura}cm` }
+                ],
+                currentValue: costasRatio.toFixed(2),
+                valueLabel: "RATIO ATUAL",
+                description: `Largura das dorsais (lat spread). Meta em CM: ${ideais.costas?.toFixed(1)}cm (atual: ${userMeasurements.costas}cm).`,
+                statusLabel: getStatus(costasPercentual),
+                userPosition: Math.round(costasPercentual),
+                goalPosition: 100,
+                image: "/images/widgets/masculino_costas.png",
+                rawImage: true
+            },
+            ai: {
+                analysis: makeAnalysis(costasRatio, costasTarget, RATIO_BASELINES.costas),
+                suggestion: "Puxadas frontais e remadas curvadas para ganhar largura e densidade nas dorsais.",
+                goal12m: `Costas: <strong>${cm(userMeasurements.costas)} → ${cm(costas12m)}cm</strong> | Cintura: <strong>${cm(userMeasurements.cintura)} → ${cm(cintura12m)}cm</strong> — Ratio projetado: <strong>${costas12mRatio}</strong>`
+            }
+        },
+        // 3. Peitoral
         {
             card: {
                 title: "Peitoral",
@@ -299,7 +336,7 @@ export const getProportionItems = (
                 goal12m: `Peitoral: <strong>${cm(userMeasurements.peito)} → ${cm(peito12m)}cm</strong> — Ratio projetado: <strong>${peito12mRatio}</strong>`
             }
         },
-        // 3. Braço
+        // 4. Braço
         {
             card: {
                 title: "Braço",
@@ -323,11 +360,11 @@ export const getProportionItems = (
                 goal12m: `Braço: <strong>${cm(userMeasurements.braco)} → ${cm(braco12m)}cm</strong> — Ratio projetado: <strong>${braco12mRatio}</strong>`
             }
         },
-        // 4. Antebraço
+        // 5. Antebraço
         {
             card: {
                 title: "Antebraço",
-                badge: "PROPORÇÃO #4",
+                badge: "DENSIDADE DE BRAÇO",
                 metrics: [
                     { label: 'Antebraço', value: `${userMeasurements.antebraco}cm` },
                     { label: 'Braço', value: `${userMeasurements.braco}cm` }
@@ -347,7 +384,7 @@ export const getProportionItems = (
                 goal12m: `Antebraço: <strong>${cm(userMeasurements.antebraco)} → ${cm(antebraco12m)}cm</strong> — Ratio projetado: <strong>${antebraco12mRatio}</strong>`
             }
         },
-        // 5. Tríade
+        // 6. Tríade
         {
             card: {
                 title: "Tríade",
@@ -378,7 +415,7 @@ export const getProportionItems = (
                     : `Equilibrar ${triadeWeakest.name}: <strong>${cm(triadeWeakest.val)} → ${cm(triadeWeakest12m)}cm</strong>. Diferença atual: ${cm(triadeMax - triadeWeakest.val)}cm`
             }
         },
-        // 6. Cintura
+        // 7. Cintura
         {
             card: {
                 title: "Cintura",
@@ -409,7 +446,7 @@ export const getProportionItems = (
                 goal12m: `Cintura: <strong>${cm(userMeasurements.cintura)} → ${cm(cintura12m)}cm</strong> — Ratio projetado: <strong>${cintura12mRatio}</strong>`
             }
         },
-        // 7. Coxa
+        // 8. Coxa
         {
             card: {
                 title: "Coxa",
@@ -437,7 +474,7 @@ export const getProportionItems = (
                     : `Coxa: <strong>${cm(userMeasurements.coxa)} → ${cm(coxa12m)}cm</strong> — Ratio projetado: <strong>${coxa12mRatio}</strong>`
             }
         },
-        // 8. Coxa vs Panturrilha
+        // 9. Coxa vs Panturrilha
         {
             card: {
                 title: "Coxa vs Panturrilha",
@@ -465,7 +502,7 @@ export const getProportionItems = (
                     : `Coxa: <strong>${cm(userMeasurements.coxa)} → ${cm(coxa12m)}cm</strong> | Pant: <strong>${cm(userMeasurements.panturrilha)} → ${cm(pant12m)}cm</strong> — Ratio projetado: <strong>${leg12mRatio}</strong>`
             }
         },
-        // 9. Panturrilha
+        // 10. Panturrilha
         {
             card: {
                 title: "Panturrilha",
@@ -494,29 +531,39 @@ export const getProportionItems = (
                 goal12m: `Panturrilha: <strong>${cm(userMeasurements.panturrilha)} → ${cm(pant12m)}cm</strong> — Ratio projetado: <strong>${pant12mRatio}</strong>`
             }
         },
-        // 10. Costas
+        // 11. Upper vs Lower
         {
             card: {
-                title: "Costas",
-                badge: "AMPLITUDE V-TAPER",
-                metrics: [
-                    { label: 'Costas', value: `${userMeasurements.costas}cm` },
-                    { label: 'Cintura', value: `${userMeasurements.cintura}cm` }
-                ],
-                currentValue: costasRatio.toFixed(2),
-                valueLabel: "RATIO ATUAL",
-                description: `Largura das dorsais (lat spread). Meta em CM: ${ideais.costas?.toFixed(1)}cm (atual: ${userMeasurements.costas}cm).`,
-                statusLabel: getStatus(costasPercentual),
-                userPosition: Math.round(costasPercentual),
+                title: "Upper vs Lower",
+                badge: "EQUILÍBRIO CORPORAL",
+                metrics: (comparisonMode !== 'mens' && ideais.coxa) ? [
+                    { label: 'Braço+Ante.', value: `${(userMeasurements.braco + userMeasurements.antebraco).toFixed(1)}cm` },
+                    { label: 'Coxa+Pant.', value: `${(userMeasurements.coxa + userMeasurements.panturrilha).toFixed(1)}cm` }
+                ] : [],
+                currentValue: (comparisonMode === 'mens' || !ideais.coxa) ? "N/A" : upperLowerRatio.toFixed(2),
+                valueLabel: (comparisonMode === 'mens' || !ideais.coxa) ? "" : "RATIO ATUAL",
+                description: comparisonMode === 'mens'
+                    ? "Proporção não avaliada — pernas não são julgadas nesta categoria."
+                    : `Volume dos membros superiores vs inferiores. Meta ${methodLabel}: ${upperLowerTarget}. Quanto menor, mais desenvolvidas as pernas.`,
+                statusLabel: (comparisonMode === 'mens' || !ideais.coxa) ? "NÃO JULGADO" : getStatus(upperLowerPercentual),
+                userPosition: (comparisonMode === 'mens' || !ideais.coxa) ? 0 : Math.round(upperLowerPercentual),
                 goalPosition: 100,
-                image: "/images/widgets/masculino_costas.png",
+                image: "/images/widgets/masculino_upper-lower.png",
                 rawImage: true
             },
             ai: {
-                analysis: makeAnalysis(costasRatio, costasTarget, RATIO_BASELINES.costas),
-                suggestion: "Puxadas frontais e remadas curvadas para ganhar largura e densidade nas dorsais.",
-                goal12m: `Costas: <strong>${cm(userMeasurements.costas)} → ${cm(costas12m)}cm</strong> | Cintura: <strong>${cm(userMeasurements.cintura)} → ${cm(cintura12m)}cm</strong> — Ratio projetado: <strong>${costas12mRatio}</strong>`
+                analysis: (comparisonMode === 'mens' || !ideais.coxa)
+                    ? "Proporção Upper vs Lower não é avaliada na categoria Men's Physique."
+                    : upperLowerRatio > upperLowerTarget * 1.10
+                        ? `Ratio <span class='text-primary font-bold'>${upperLowerRatio.toFixed(2)}</span> — membros superiores <strong>desproporcionalmente volumosos</strong> em relação aos inferiores. Meta: ${upperLowerTarget}. Priorize treino de pernas.`
+                        : upperLowerRatio <= upperLowerTarget
+                            ? `Ratio <span class='text-primary font-bold'>${upperLowerRatio.toFixed(2)}</span> — excelente equilíbrio entre membros superiores e inferiores. Meta: ${upperLowerTarget}.`
+                            : `Ratio <span class='text-primary font-bold'>${upperLowerRatio.toFixed(2)}</span> — ${Math.round(((upperLowerRatio / upperLowerTarget) - 1) * 100)}% acima da meta (${upperLowerTarget}). Desenvolva mais os membros inferiores.`,
+                suggestion: "Equilibre o volume com agachamentos, leg press e panturrilha em pé. Evite pular o dia de pernas!",
+                goal12m: (comparisonMode === 'mens' || !ideais.coxa)
+                    ? "Sem meta específica para esta categoria."
+                    : `Upper: <strong>${(userMeasurements.braco + userMeasurements.antebraco).toFixed(1)} → ${upper12m.toFixed(1)}cm</strong> | Lower: <strong>${(userMeasurements.coxa + userMeasurements.panturrilha).toFixed(1)} → ${lower12m.toFixed(1)}cm</strong> — Ratio projetado: <strong>${upperLower12mRatio}</strong>`
             }
-        }
+        },
     ];
 };

@@ -36,27 +36,29 @@ const CLASSIFICACOES_AVALIACAO = [
 
 const PESOS_PROPORCOES: Record<ComparisonMode, Record<string, number>> = {
     'golden': {
-        vTaper: 20,
-        peitoral: 15,
-        braco: 12,
+        vTaper: 19,
+        peitoral: 14,
+        braco: 11,
         antebraco: 5,
-        triade: 12,
-        cintura: 15,
-        coxa: 10,
-        coxaPanturrilha: 5,
+        triade: 11,
+        cintura: 14,
+        coxa: 9,
+        coxaPanturrilha: 4,
         panturrilha: 6,
+        upperLower: 7,
     },
     'classic': {
-        vTaper: 18,
-        peitoral: 14,
-        braco: 14,
+        vTaper: 17,
+        peitoral: 13,
+        braco: 13,
         antebraco: 4,
-        triade: 10,
-        cintura: 18,
-        coxa: 10,
-        coxaPanturrilha: 5,
+        triade: 9,
+        cintura: 17,
+        coxa: 9,
+        coxaPanturrilha: 4,
         panturrilha: 7,
-        costas: 0
+        costas: 0,
+        upperLower: 7,
     },
     'mens': {
         vTaper: 25,
@@ -68,19 +70,21 @@ const PESOS_PROPORCOES: Record<ComparisonMode, Record<string, number>> = {
         coxa: 0,
         coxaPanturrilha: 0,
         panturrilha: 5,
-        costas: 0
+        costas: 0,
+        upperLower: 0,
     },
     'open': {
-        vTaper: 16,
-        peitoral: 14,
-        braco: 14,
+        vTaper: 15,
+        peitoral: 13,
+        braco: 13,
         antebraco: 4,
-        triade: 8,
-        cintura: 12,
-        coxa: 14,
-        coxaPanturrilha: 8,
+        triade: 7,
+        cintura: 11,
+        coxa: 13,
+        coxaPanturrilha: 7,
         panturrilha: 6,
         costas: 4,
+        upperLower: 7,
     },
 };
 
@@ -243,8 +247,8 @@ function calcularScoreProporcoes(
 
         if (prop === 'triade') {
             percentual = (dados as TriadeData).harmoniaPercentual;
-        } else if (prop === 'cintura') {
-            // v1.1: Tratamento especial para proporções INVERSAS (cintura)
+        } else if (prop === 'cintura' || prop === 'upperLower') {
+            // v1.1: Tratamento especial para proporções INVERSAS (cintura, upperLower)
             percentual = calcularPercentualProporcaoInversa(
                 (dados as ProportionData).indiceAtual,
                 (dados as ProportionData).indiceMeta

@@ -25,8 +25,7 @@ export function useSupabaseSync() {
         const sync = async () => {
             try {
                 if (profile?.role === 'PERSONAL' && entity.personal) {
-                    // Recarrega se o personal mudou (nova sessão ou troca de conta)
-                    if (loadedPersonalId.current === entity.personal.id) return;
+                    // Sempre recarrega para garantir dados atualizados
                     console.info('[Sync] Carregando dados do personal:', entity.personal.nome);
                     await loadFromSupabase(entity.personal.id);
                     loadedPersonalId.current = entity.personal.id;

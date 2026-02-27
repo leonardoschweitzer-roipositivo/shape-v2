@@ -97,11 +97,169 @@ export const useDataStore = create<DataState>()(
                                     .order('data', { ascending: false }),
                             ]);
 
+                            // 🔍 DEBUG: O que vem do Supabase?
+                            let avaliacoes = (avaliacoesRes.data || []) as Avaliacao[];
+                            const medidas = (medidasRes.data || []) as Medida[];
+                            const ficha = fichaRes.data as Ficha | null;
+
+                            console.info(`[DataStore] 🔍 Atleta: ${atleta.nome}`);
+                            console.info(`[DataStore]   Medidas: ${medidas.length}`);
+                            console.info(`[DataStore]   Avaliações: ${avaliacoes.length}`);
+
+                            if (medidas.length > 0) {
+                                console.info(`[DataStore]   Última medida peso: ${medidas[0].peso}, ombros: ${medidas[0].ombros}, cintura: ${medidas[0].cintura}`);
+                            }
+
+                            // 🔄 AUTO-RECOVERY: Se existem medidas sem avaliações correspondentes,
+                            // recalcular e persistir automaticamente
+                            const medidasOrfas = medidas.filter(m =>
+                                !avaliacoes.some(a => a.medidas_id === m.id)
+                            );
+
+                            if (medidasOrfas.length > 0) {
+                                console.info(`[DataStore] 🔄 Encontradas ${medidasOrfas.length} medidas sem avaliação. Auto-recovery...`);
+
+                                const genero = ficha?.sexo === 'F' ? 'FEMALE' : 'MALE';
+                                let alturaCm = Number(ficha?.altura) || 175;
+                                if (alturaCm > 0 && alturaCm < 3) alturaCm = Math.round(alturaCm * 100);
+
+                                // Calcular idade real
+                                let idade = 30;
+                                if (ficha?.data_nascimento) {
+                                    const birth = new Date(ficha.data_nascimento);
+                                    const now = new Date();
+                                    idade = now.getFullYear() - birth.getFullYear();
+                                    const m = now.getMonth() - birth.getMonth();
+                                    if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) idade--;
+                                }
+
+                                for (const medida of medidasOrfas) {
+                                    try {
+                                        // Montar MeasurementHistory temporário para calcular
+                                        const tempHistory: MeasurementHistory = {
+                                            id: medida.id,
+                                            date: medida.data,
+                                            measurements: {
+                                                weight: Number(medida.peso) || 0,
+                                                height: alturaCm,
+                                                neck: Number(medida.pescoco) || 0,
+                                                shoulders: Number(medida.ombros) || 0,
+                                                chest: Number(medida.peitoral) || 0,
+                                                waist: Number(medida.cintura) || 0,
+                                                hips: Number(medida.quadril) || 0,
+                                                pelvis: Number(ficha?.pelve) || 0,
+                                                armRight: Number(medida.braco_direito) || 0,
+                                                armLeft: Number(medida.braco_esquerdo) || 0,
+                                                forearmRight: Number(medida.antebraco_direito) || 0,
+                                                forearmLeft: Number(medida.antebraco_esquerdo) || 0,
+                                                thighRight: Number(medida.coxa_direita) || 0,
+                                                thighLeft: Number(medida.coxa_esquerda) || 0,
+                                                calfRight: Number(medida.panturrilha_direita) || 0,
+                                                calfLeft: Number(medida.panturrilha_esquerda) || 0,
+                                                wristRight: Number(ficha?.punho) || 17,
+                                                wristLeft: Number(ficha?.punho) || 17,
+                                                kneeRight: Number(ficha?.joelho) || 40,
+                                                kneeLeft: Number(ficha?.joelho) || 40,
+                                                ankleRight: Number(ficha?.tornozelo) || 22,
+                                                ankleLeft: Number(ficha?.tornozelo) || 22,
+                                            },
+                                            skinfolds: {
+                                                tricep: Number(medida.dobra_tricipital) || 0,
+                                                subscapular: Number(medida.dobra_subescapular) || 0,
+                                                chest: Number(medida.dobra_peitoral) || 0,
+                                                axillary: Number(medida.dobra_axilar_media) || 0,
+                                                suprailiac: Number(medida.dobra_suprailiaca) || 0,
+                                                abdominal: Number(medida.dobra_abdominal) || 0,
+                                                thigh: Number(medida.dobra_coxa) || 0,
+                                            },
+                                        };
+
+                                        const calcInput = mapMeasurementToInput(tempHistory, genero as 'MALE' | 'FEMALE', idade);
+                                        const result = calcularAvaliacaoGeral(calcInput);
+                                        const composicao = result.scores.composicao.detalhes;
+
+                                        const safeNum = (v: any): number => {
+                                            const n = Number(v);
+                                            return (!isFinite(n) || isNaN(n)) ? 0 : Math.round(n * 100) / 100;
+                                        };
+
+                                        const scoreGeral = safeNum(result.avaliacaoGeral);
+                                        const bfVal = safeNum(composicao.detalhes.bf.valor);
+                                        const ffmiVal = safeNum(composicao.detalhes.ffmi.valor);
+                                        const peso = safeNum(medida.peso);
+
+                                        console.info(`[DataStore] ✅ Auto-recovery para medida ${medida.id.substring(0, 8)}: score=${scoreGeral}, bf=${bfVal}, ffmi=${ffmiVal}`);
+
+                                        // Sanitizar JSON 
+                                        const safeJson = JSON.parse(JSON.stringify(result.scores, (_, v) =>
+                                            typeof v === 'number' && !isFinite(v) ? 0 : v
+                                        ));
+
+                                        // Criar avaliação IN-MEMORY (garante dados na UI imediatamente)
+                                        const syntheticAvaliacao: Avaliacao = {
+                                            id: `auto-${medida.id}`,
+                                            atleta_id: atleta.id,
+                                            medidas_id: medida.id,
+                                            data: medida.data,
+                                            peso,
+                                            score_geral: scoreGeral,
+                                            gordura_corporal: bfVal,
+                                            massa_magra: safeNum(composicao.pesoMagro),
+                                            massa_gorda: safeNum(composicao.pesoGordo),
+                                            ffmi: ffmiVal,
+                                            imc: alturaCm > 0 ? safeNum(peso / Math.pow(alturaCm / 100, 2)) : 0,
+                                            classificacao_geral: getClassificacao(scoreGeral),
+                                            proporcoes: safeJson,
+                                            simetria: null,
+                                            comparacao_anterior: null,
+                                            created_at: new Date().toISOString(),
+                                        };
+
+                                        avaliacoes = [...avaliacoes, syntheticAvaliacao];
+                                        console.info(`[DataStore] ✅ Avaliação sintética criada in-memory`);
+
+                                        // Persistir no Supabase em background (não bloqueia a UI)
+                                        // PostgreSQL: score_geral e imc são INTEGER, demais são NUMERIC
+                                        (async () => {
+                                            try {
+                                                const { id: _, ...insertData } = syntheticAvaliacao;
+                                                const dbInsert = {
+                                                    ...insertData,
+                                                    score_geral: Math.round(scoreGeral),
+                                                    imc: Math.round(syntheticAvaliacao.imc || 0),
+                                                    gordura_corporal: Math.round(bfVal * 100) / 100,
+                                                    massa_magra: Math.round(safeNum(composicao.pesoMagro) * 100) / 100,
+                                                    massa_gorda: Math.round(safeNum(composicao.pesoGordo) * 100) / 100,
+                                                    ffmi: Math.round(ffmiVal * 100) / 100,
+                                                    peso: Math.round(peso * 100) / 100,
+                                                };
+                                                const { error } = await supabase
+                                                    .from('avaliacoes')
+                                                    .insert(dbInsert as any);
+                                                if (error) {
+                                                    console.warn(`[DataStore] ⚠️ Persistência Supabase falhou (dados ok na UI):`, error.message);
+                                                } else {
+                                                    console.info(`[DataStore] ✅ Avaliação persistida no Supabase com sucesso`);
+                                                }
+                                            } catch (e) {
+                                                console.warn(`[DataStore] ⚠️ Erro na persistência background:`, e);
+                                            }
+                                        })();
+
+                                    } catch (calcErr) {
+                                        console.error(`[DataStore] ❌ Erro no cálculo para medida ${medida.id}:`, calcErr);
+                                    }
+                                }
+
+                                // Re-ordenar avaliações por data DESC
+                                avaliacoes.sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
+                            }
+
                             return mapAtletaToPersonalAthlete(
                                 atleta,
-                                fichaRes.data as Ficha | null,
-                                (medidasRes.data || []) as Medida[],
-                                (avaliacoesRes.data || []) as Avaliacao[]
+                                ficha,
+                                medidas,
+                                avaliacoes
                             );
                         })
                     );
@@ -127,13 +285,21 @@ export const useDataStore = create<DataState>()(
                 );
                 const result = calcularAvaliacaoGeral(calculationInput);
 
+                // Encontrar o ratio físico (V-Taper) nos detalhes
+                const vTaperDetail = result.scores.proporcoes.detalhes.detalhes.find(
+                    (d: any) => d.proporcao === 'vTaper' || d.proporcao === 'shapeV'
+                );
+                const physicalRatio = vTaperDetail?.valor || 0;
+
                 const newAssessment: MeasurementHistory = {
                     id: `assessment-${Date.now()}`,
                     date: new Date().toISOString(),
                     measurements,
                     skinfolds,
                     score: result.avaliacaoGeral,
-                    ratio: result.scores.proporcoes.valor
+                    ratio: physicalRatio,
+                    bf: result.scores.composicao.detalhes.detalhes.bf.valor,
+                    ffmi: result.scores.composicao.detalhes.detalhes.ffmi.valor
                 };
 
                 // Update athletes list
@@ -145,7 +311,7 @@ export const useDataStore = create<DataState>()(
                                 ...athlete,
                                 assessments: updatedAssessments,
                                 score: result.avaliacaoGeral,
-                                ratio: result.scores.proporcoes.valor,
+                                ratio: physicalRatio,
                                 lastMeasurement: newAssessment.date,
                                 scoreVariation: updatedAssessments.length > 1
                                     ? result.avaliacaoGeral - (athlete.score || 0)
@@ -226,13 +392,22 @@ export const useDataStore = create<DataState>()(
                                 .single();
 
                             if (medida) {
+                                const composicao = result.scores.composicao.detalhes;
+                                const safeJson = JSON.parse(JSON.stringify(result.scores, (_, v) =>
+                                    typeof v === 'number' && !isFinite(v) ? 0 : v
+                                ));
                                 const avaliacaoInsert = {
                                     atleta_id: athleteId,
                                     medidas_id: (medida as any).id,
-                                    peso: measurements.weight,
-                                    score_geral: result.avaliacaoGeral,
+                                    peso: Math.round(measurements.weight * 100) / 100,
+                                    score_geral: Math.round(result.avaliacaoGeral),
+                                    gordura_corporal: Math.round(composicao.detalhes.bf.valor * 100) / 100,
+                                    massa_magra: Math.round(composicao.pesoMagro * 100) / 100,
+                                    massa_gorda: Math.round(composicao.pesoGordo * 100) / 100,
+                                    ffmi: Math.round(composicao.detalhes.ffmi.valor * 100) / 100,
+                                    imc: Math.round(measurements.weight / Math.pow(measurements.height / 100, 2)),
                                     classificacao_geral: getClassificacao(result.avaliacaoGeral),
-                                    proporcoes: result.scores,
+                                    proporcoes: safeJson,
                                 };
 
                                 await supabase

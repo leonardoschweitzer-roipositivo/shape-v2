@@ -13,11 +13,40 @@ import type { PersonalAthlete, MeasurementHistory, PersonalProfile, PersonalStat
 // ===== MEDIDA → MeasurementHistory =====
 
 export function mapMedidaToHistory(medida: Medida, avaliacao?: Avaliacao | null): MeasurementHistory {
+    const hasScore = avaliacao?.score_geral !== null && avaliacao?.score_geral !== undefined;
+    let scoreVal = hasScore ? Number(avaliacao!.score_geral) : undefined;
+
+    const hasBf = avaliacao?.gordura_corporal !== null && avaliacao?.gordura_corporal !== undefined;
+    let bfVal = hasBf ? Number(avaliacao!.gordura_corporal) : undefined;
+
+    const hasFfmi = avaliacao?.ffmi !== null && avaliacao?.ffmi !== undefined;
+    let ffmiVal = hasFfmi ? Number(avaliacao!.ffmi) : undefined;
+
+    // Fallback para o JSON se as colunas estiverem vazias (registros antigos)
+    // IMPORTANTE: avaliacao.proporcoes contém result.scores (não result inteiro!)
+    // Estrutura: { proporcoes: { valor, detalhes }, composicao: { valor, detalhes }, simetria: { valor, detalhes } }
+    if (avaliacao?.proporcoes && typeof avaliacao.proporcoes === 'object') {
+        const json = avaliacao.proporcoes as any;
+
+        // BF e FFMI — json É o result.scores
+        if (bfVal === undefined || bfVal === 0) {
+            bfVal = json.composicao?.detalhes?.detalhes?.bf?.valor
+                || json.composicao?.detalhes?.bf?.valor;
+        }
+        if (ffmiVal === undefined || ffmiVal === 0) {
+            ffmiVal = json.composicao?.detalhes?.detalhes?.ffmi?.valor
+                || json.composicao?.detalhes?.ffmi?.valor;
+        }
+    }
+
     return {
         id: medida.id,
         date: medida.data,
-        score: avaliacao?.score_geral ? Number(avaliacao.score_geral) : undefined,
-        ratio: undefined, // Calculado posteriormente
+        score: scoreVal,
+        bf: bfVal,
+        ffmi: ffmiVal,
+        ratio: undefined,
+        proporcoes: avaliacao?.proporcoes,
         measurements: {
             weight: Number(medida.peso) || 0,
             height: 0, // Vem da ficha, não da medida
@@ -55,20 +84,52 @@ export function mapMedidaToHistory(medida: Medida, avaliacao?: Avaliacao | null)
 }
 
 /**
- * Enriquecer MeasurementHistory com dados fixos da ficha
+ * Enriquecer MeasurementHistory com dados fixos da ficha e extrair ratio do JSON se disponível
  */
-export function enriquecerComFicha(history: MeasurementHistory, ficha: Ficha | null): MeasurementHistory {
+export function enriquecerComFicha(history: MeasurementHistory, ficha: Ficha | null, avaliacao?: Avaliacao | null): MeasurementHistory {
     if (!ficha) return history;
 
     // Auto-converter altura de metros para cm se necessário
-    // Se o valor for < 3, está em metros (ex: 1.79) e precisa virar cm (179)
     let alturaCm = Number(ficha.altura) || 0;
     if (alturaCm > 0 && alturaCm < 3) {
         alturaCm = Math.round(alturaCm * 100);
     }
 
+    // Extrair ratio do JSON da avaliação se houver
+    // IMPORTANTE: avaliacao.proporcoes = result.scores  
+    // Estrutura: json.proporcoes.detalhes = ProportionScoreDetails { detalhes: ProporcaoDetalhe[] }
+    let extractedRatio = history.ratio;
+    if (avaliacao?.proporcoes) {
+        try {
+            const json = avaliacao.proporcoes as any;
+
+            // json É result.scores, portanto:
+            // json.proporcoes.detalhes = ProportionScoreDetails (score, detalhes[], ...)
+            // json.proporcoes.detalhes.detalhes = ProporcaoDetalhe[]
+            const detalhes =
+                json?.proporcoes?.detalhes?.detalhes ||  // Correto: result.scores.proporcoes.detalhes(=ProportionScoreDetails).detalhes(=array)
+                json?.proporcoes?.detalhes ||             // Se detalhes já for o array
+                json?.detalhes;                           // Fallback legacy
+
+            if (Array.isArray(detalhes)) {
+                const vTaper = detalhes.find((d: any) =>
+                    d.proporcao === 'vTaper' ||
+                    d.proporcao === 'shapeV' ||
+                    d.proporcao === 'ombros_cintura' ||
+                    d.proporcao === 'ombros_cintura_ideal'
+                );
+                if (vTaper && typeof vTaper.valor === 'number') {
+                    extractedRatio = vTaper.valor;
+                }
+            }
+        } catch (e) {
+            console.warn('[Mappers] Erro ao extrair ratio no enriquecimento:', e);
+        }
+    }
+
     return {
         ...history,
+        ratio: extractedRatio,
         measurements: {
             ...history.measurements,
             height: alturaCm,
@@ -94,15 +155,69 @@ export function mapAtletaToPersonalAthlete(
     const ultimaAvaliacao = avaliacoes[0]; // Já vem ordenado DESC
     const penultimaAvaliacao = avaliacoes[1];
 
-    const score = ultimaAvaliacao?.score_geral ? Number(ultimaAvaliacao.score_geral) : 0;
-    const scoreAnterior = penultimaAvaliacao?.score_geral ? Number(penultimaAvaliacao.score_geral) : score;
-    const scoreVariation = score - scoreAnterior;
+    const score = (ultimaAvaliacao?.score_geral !== null && ultimaAvaliacao?.score_geral !== undefined)
+        ? Number(ultimaAvaliacao.score_geral)
+        : 0;
+
+    const penultimaScore = (penultimaAvaliacao?.score_geral !== null && penultimaAvaliacao?.score_geral !== undefined)
+        ? Number(penultimaAvaliacao.score_geral)
+        : score;
+
+    const scoreVariation = score - penultimaScore;
+
+    // Extrair ratio (V-Taper) dos detalhes salvos no JSON, se existirem
+    // IMPORTANTE: ultimaAvaliacao.proporcoes = result.scores
+    // json.proporcoes.detalhes.detalhes = ProporcaoDetalhe[]
+    let ratio = 0;
+    try {
+        const json = ultimaAvaliacao?.proporcoes as any;
+        const detalhes =
+            json?.proporcoes?.detalhes?.detalhes ||  // Correto: scores.proporcoes.detalhes(=ProportionScoreDetails).detalhes(=array)
+            json?.proporcoes?.detalhes ||             // Se detalhes já for o array
+            json?.detalhes;                           // Fallback legacy
+
+        if (Array.isArray(detalhes)) {
+            const vTaper = detalhes.find((d: any) =>
+                d.proporcao === 'vTaper' ||
+                d.proporcao === 'shapeV' ||
+                d.proporcao === 'ombros_cintura' ||
+                d.proporcao === 'ombros_cintura_ideal'
+            );
+            if (vTaper && typeof vTaper.valor === 'number') {
+                ratio = vTaper.valor;
+            }
+            console.info(`[Mappers] Ratio extraído para ${atleta.nome}: ${ratio}`);
+        } else {
+            console.warn(`[Mappers] Detalhes não é array para ${atleta.nome}:`, typeof detalhes, detalhes);
+        }
+    } catch (e) {
+        console.warn('[Mappers] Erro ao extrair ratio do JSON:', e);
+    }
 
     // Mapear medidas para MeasurementHistory
-    const assessments: MeasurementHistory[] = medidas.map(medida => {
-        const avaliacaoCorrespondente = avaliacoes.find(a => a.medidas_id === medida.id);
+    // Se houver mais avaliações que medidas ou vice-versa, precisamos de um fallback robusto
+    const assessments: MeasurementHistory[] = medidas.map((medida, idx) => {
+        // 1. Tentar via medidas_id (link direto)
+        let avaliacaoCorrespondente = avaliacoes.find(a => a.medidas_id === medida.id);
+
+        // 2. Fallback: mesma data
+        if (!avaliacaoCorrespondente) {
+            avaliacaoCorrespondente = avaliacoes.find(a => a.data === medida.data);
+        }
+
+        // 3. Fallback: mesmo índice (se 1ª medida = 1ª avaliação, etc)
+        if (!avaliacaoCorrespondente && idx < avaliacoes.length) {
+            avaliacaoCorrespondente = avaliacoes[idx];
+        }
+
+        if (avaliacaoCorrespondente) {
+            console.info(`[Mappers] ✅ Avaliação linkada para medida ${medida.id.substring(0, 8)}: score=${avaliacaoCorrespondente.score_geral}`);
+        } else {
+            console.warn(`[Mappers] ❌ Nenhuma avaliação encontrada para medida ${medida.id.substring(0, 8)}`);
+        }
+
         const history = mapMedidaToHistory(medida, avaliacaoCorrespondente);
-        return enriquecerComFicha(history, ficha);
+        return enriquecerComFicha(history, ficha, avaliacaoCorrespondente);
     });
 
     // Determinar status
@@ -121,7 +236,7 @@ export function mapAtletaToPersonalAthlete(
         avatarUrl: atleta.foto_url,
         score,
         scoreVariation: Math.round(scoreVariation * 10) / 10,
-        ratio: 0, // Calculado separadamente
+        ratio,
         lastMeasurement: medidas[0]?.data || atleta.created_at,
         status,
         linkedSince: atleta.created_at,

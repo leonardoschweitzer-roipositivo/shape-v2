@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Activity } from 'lucide-react';
 import { GlassPanel } from '@/components/atoms';
 import {
@@ -68,7 +68,19 @@ interface DiagnosticTabProps {
 
 export const DiagnosticTab: React.FC<DiagnosticTabProps> = ({ assessment, gender = 'male', birthDate }) => {
     const [filter, setFilter] = useState<'todos' | 'comp' | 'metrics'>('todos');
-    const [bfMethod, setBfMethod] = useState<'navy' | 'pollock'>('navy');
+
+    // Auto-select method based on skinfold availability
+    const hasSkinfolds = useMemo(() => {
+        if (!assessment?.skinfolds) return false;
+        return Object.values(assessment.skinfolds).some(v => v > 0);
+    }, [assessment]);
+
+    const [bfMethod, setBfMethod] = useState<'navy' | 'pollock'>(hasSkinfolds ? 'pollock' : 'navy');
+
+    // Sync method when assessment changes (e.g. switching between historical evaluations)
+    useEffect(() => {
+        setBfMethod(hasSkinfolds ? 'pollock' : 'navy');
+    }, [hasSkinfolds]);
 
     // Calculate metrics
     const metrics = useMemo(() => {
@@ -186,6 +198,13 @@ export const DiagnosticTab: React.FC<DiagnosticTabProps> = ({ assessment, gender
         const pantTornMeta = 1.9;
         const pantTornScore = getCalibratedPercent(pantTornRatio, pantTornMeta, 1.3);
 
+        // Upper vs Lower ratio (inverse: lower is better)
+        const upperVol = bracoMedio + antebracoMedio;
+        const lowerVol = coxaMedia + pantMedio;
+        const upperLowerRatio = lowerVol > 0 ? upperVol / lowerVol : 0;
+        const upperLowerMeta = 0.75;
+        const upperLowerScore = getCalibratedPercent(upperLowerRatio, upperLowerMeta, 0, true);
+
         // Map data to AvaliacaoGeralInput
         const assessmentInput: AvaliacaoGeralInput = {
             proporcoes: {
@@ -199,6 +218,7 @@ export const DiagnosticTab: React.FC<DiagnosticTabProps> = ({ assessment, gender
                 coxa: { indiceAtual: coxaJoelhoRatio, indiceMeta: coxaJoelhoMeta, percentualDoIdeal: coxaScore, classificacao: 'NORMAL' },
                 coxaPanturrilha: { indiceAtual: coxaPantRatio, indiceMeta: coxaPantMeta, percentualDoIdeal: coxaPantScore, classificacao: 'NORMAL' },
                 panturrilha: { indiceAtual: pantTornRatio, indiceMeta: pantTornMeta, percentualDoIdeal: pantTornScore, classificacao: 'NORMAL' },
+                upperLower: { indiceAtual: upperLowerRatio, indiceMeta: upperLowerMeta, percentualDoIdeal: upperLowerScore, classificacao: 'NORMAL' },
             },
             composicao: {
                 peso: weight,
