@@ -7,6 +7,9 @@ import {
 } from 'lucide-react';
 import { MeasurementHistory } from '@/mocks/personal';
 import { Measurements } from './types';
+import { supabase } from '@/services/supabase';
+import { mapMeasurementToInput } from '@/services/calculations/evolutionProcessor';
+import { calcularAvaliacaoGeral } from '@/services/calculations/assessment';
 
 // Import extracted tab components
 import { DiagnosticTab, ProportionsTab, AsymmetryTab } from './tabs';
@@ -20,6 +23,7 @@ interface AssessmentResultsProps {
     gender?: 'male' | 'female';
     assessment?: MeasurementHistory;
     birthDate?: string;
+    athleteId?: string;
 }
 
 // Token styles for main component
@@ -96,9 +100,12 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
     studentName,
     gender,
     assessment,
-    birthDate
+    birthDate,
+    athleteId
 }) => {
     const [activeTab, setActiveTab] = useState<'diagnostic' | 'golden' | 'asymmetry'>('diagnostic');
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
     const tabs = [
         { id: 'diagnostic', label: 'Diagnóstico Estético' },
@@ -128,45 +135,83 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
         cabeca: 56 // Default
     } : undefined;
 
-    const handleSaveAssessment = () => {
-        // Data to be saved (filtered as per requirements)
-        // SAVED: Linear measurements, Skinfolds
-        // EXCLUDED: Aesthetic diagnosis, Golden ratios, Asymmetry analysis (recalculated on read)
+    const handleSaveAssessment = async () => {
+        if (!assessment || !athleteId) {
+            alert('Dados insuficientes para salvar. Verifique se o atleta e a avaliação estão carregados.');
+            return;
+        }
 
-        const assessmentPayload = {
-            studentId: "student_123", // Context variable
-            date: new Date().toISOString(),
-            // 1. LINEAR MEASUREMENTS (Medidas Lineares)
-            measurements: {
-                height: 178, // cm
-                weight: 88.5, // kg
-                neck: 42,
-                shoulders: 133,
-                chest: 120,
-                waist: 85,
-                hips: 100,
-                arms: { left: 41.0, right: 44.5 },
-                forearms: { left: 32.0, right: 32.2 },
-                thighs: { left: 62.0, right: 60.5 },
-                knees: { left: 40.0, right: 40.0 },
-                calves: { left: 38.0, right: 38.0 },
-                ankles: { left: 22.0, right: 22.0 },
-                wrists: { left: 17.0, right: 17.0 }
-            },
-            // 2. SKINFOLDS (Dobras Cutâneas)
-            skinfolds: {
-                tricep: 12,
-                subscapular: 15,
-                chest: 8,
-                axillary: 10,
-                suprailiac: 14,
-                abdominal: 18,
-                thigh: 12
+        setIsSaving(true);
+        setSaveStatus('idle');
+
+        try {
+            // Calcular idade real
+            let age = 30;
+            if (birthDate) {
+                const birth = new Date(birthDate);
+                const now = new Date();
+                age = now.getFullYear() - birth.getFullYear();
+                const m = now.getMonth() - birth.getMonth();
+                if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--;
             }
-        };
 
-        console.log("Saving Assessment (Measurements Only):", assessmentPayload);
-        alert("Avaliação salva com sucesso na ficha do aluno!");
+            // Calcular resultados completos
+            const genderInput = gender === 'female' ? 'FEMALE' : 'MALE';
+            const calcInput = mapMeasurementToInput(assessment, genderInput as 'MALE' | 'FEMALE', age);
+            const result = calcularAvaliacaoGeral(calcInput);
+
+            // Sanitizar resultados
+            const safeResults = JSON.parse(JSON.stringify({
+                avaliacaoGeral: result.avaliacaoGeral,
+                classificacao: result.classificacao,
+                scores: result.scores,
+                penalizacoes: result.penalizacoes,
+                insights: result.insights,
+            }, (_, v) => typeof v === 'number' && !isFinite(v) ? 0 : v));
+
+            const heightCm = assessment.measurements.height > 0 && assessment.measurements.height < 3
+                ? Math.round(assessment.measurements.height * 100)
+                : assessment.measurements.height;
+
+            const hasSkinfolds = assessment.skinfolds && Object.values(assessment.skinfolds).some(v => v > 0);
+            const bfMethod = hasSkinfolds ? 'POLLOCK_7' : 'NAVY';
+
+            const assessmentInsert = {
+                athlete_id: athleteId,
+                date: assessment.date || new Date().toISOString(),
+                weight: Math.round(assessment.measurements.weight * 100) / 100,
+                height: heightCm,
+                age,
+                gender: genderInput,
+                body_fat: Math.round(result.scores.composicao.detalhes.detalhes.bf.valor * 100) / 100,
+                body_fat_method: bfMethod,
+                measurements: {
+                    linear: assessment.measurements,
+                    skinfolds: assessment.skinfolds,
+                },
+                results: safeResults,
+            };
+
+            const { error } = await supabase
+                .from('assessments')
+                .insert(assessmentInsert as any);
+
+            if (error) {
+                console.error('[AssessmentResults] ❌ Erro ao salvar:', error.message, error.details);
+                setSaveStatus('error');
+                alert(`Erro ao salvar avaliação: ${error.message}`);
+            } else {
+                console.info('[AssessmentResults] ✅ Avaliação salva com sucesso na tabela assessments');
+                setSaveStatus('success');
+                alert('Avaliação salva com sucesso na ficha do aluno!');
+            }
+        } catch (err) {
+            console.error('[AssessmentResults] ❌ Exceção:', err);
+            setSaveStatus('error');
+            alert('Erro ao salvar avaliação. Verifique o console para detalhes.');
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (
@@ -186,9 +231,14 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
                     <div className="flex gap-3 flex-wrap">
                         <button
                             onClick={handleSaveAssessment}
-                            style={tokenStyles.primaryButton}
+                            disabled={isSaving}
+                            style={{
+                                ...tokenStyles.primaryButton,
+                                opacity: isSaving ? 0.6 : 1,
+                                cursor: isSaving ? 'not-allowed' : 'pointer',
+                            }}
                         >
-                            <Save size={16} /> SALVAR AVALIAÇÃO IA
+                            <Save size={16} /> {isSaving ? 'SALVANDO...' : saveStatus === 'success' ? '✅ SALVO' : 'SALVAR AVALIAÇÃO IA'}
                         </button>
                         <button style={tokenStyles.secondaryButton}>
                             <Download size={16} /> Exportar PDF

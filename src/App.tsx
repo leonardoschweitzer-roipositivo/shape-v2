@@ -107,7 +107,7 @@ const App: React.FC = () => {
   }, []);
 
   // State for assessment flow
-  const [assessmentData, setAssessmentData] = useState<{ studentName?: string; gender?: 'male' | 'female', assessment?: MeasurementHistory, birthDate?: string }>({});
+  const [assessmentData, setAssessmentData] = useState<{ studentName?: string; gender?: 'male' | 'female', assessment?: MeasurementHistory, birthDate?: string, athleteId?: string }>({});
   const [athleteForEvaluation, setAthleteForEvaluation] = useState<PersonalAthlete | null>(null);
 
   // Hook for persistent Data Store
@@ -142,7 +142,8 @@ const App: React.FC = () => {
         studentName: data.studentName,
         gender: data.gender,
         assessment: assessment,
-        birthDate: athlete?.birthDate
+        birthDate: athlete?.birthDate,
+        athleteId: data.studentId
       });
     } else if (data.measurements && data.skinfolds) {
       // Self/Atleta assessment
@@ -174,7 +175,8 @@ const App: React.FC = () => {
       setAssessmentData({
         studentName: profile?.name || 'Atleta',
         gender: profile?.gender === 'FEMALE' ? 'female' : 'male',
-        assessment: assessment
+        assessment: assessment,
+        athleteId: athleteId
       });
     } else if (data.studentName && data.gender) {
       // Legacy/Fallback or just simple pass-through
@@ -430,6 +432,7 @@ const App: React.FC = () => {
               gender={assessmentData.gender}
               assessment={assessmentData.assessment}
               birthDate={assessmentData.birthDate}
+              athleteId={assessmentData.athleteId}
             />
           );
         case 'design-system':
@@ -469,6 +472,7 @@ const App: React.FC = () => {
             gender={assessmentData.gender}
             assessment={assessmentData.assessment}
             birthDate={assessmentData.birthDate}
+            athleteId={assessmentData.athleteId}
           />
         );
       case 'assessment': {
