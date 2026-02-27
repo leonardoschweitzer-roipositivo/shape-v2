@@ -200,17 +200,54 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
             // 3. Inserir medidas (se preenchidas)
             const hasMeasurements = formData.weight || formData.shoulders || formData.chest;
             if (hasMeasurements) {
+                // Calcular BF para gravar na tabela medidas
+                let bfVal: number | null = null;
+                const weight = parseFloat(formData.weight);
+                const height = parseFloat(formData.height);
+                const neck = parseFloat(formData.neck);
+                const waist = parseFloat(formData.waist);
+                const hips = parseFloat(formData.hips);
+                const age = parseInt(formData.age);
+
+                if (weight > 0 && height > 0) {
+                    const skinfoldsValue = [
+                        formData.tricipital, formData.subscapular, formData.chestSkinfold,
+                        formData.axillary, formData.suprailiac, formData.abdominal, formData.thighSkinfold
+                    ].map(v => parseFloat(v) || 0);
+
+                    const sumSkinfolds = skinfoldsValue.reduce((a, b) => a + b, 0);
+
+                    if (sumSkinfolds > 0) {
+                        // Pollock 7
+                        let density: number;
+                        if (formData.gender === 'MALE') {
+                            density = 1.112 - 0.00043499 * sumSkinfolds + 0.00000055 * sumSkinfolds * sumSkinfolds - 0.00028826 * age;
+                        } else {
+                            density = 1.097 - 0.00046971 * sumSkinfolds + 0.00000056 * sumSkinfolds * sumSkinfolds - 0.00012828 * age;
+                        }
+                        bfVal = Math.max(2, Math.min(60, (495 / density) - 450));
+                    } else if (waist > 0 && neck > 0) {
+                        // Navy
+                        if (formData.gender === 'MALE') {
+                            bfVal = 495 / (1.0324 - 0.19077 * Math.log10(waist - neck) + 0.15456 * Math.log10(height)) - 450;
+                        } else if (hips > 0) {
+                            bfVal = 495 / (1.29579 - 0.35004 * Math.log10(waist + hips - neck) + 0.22100 * Math.log10(height)) - 450;
+                        }
+                    }
+                }
+
                 const { error: medidaError } = await supabase
                     .from('medidas')
                     .insert({
                         atleta_id: atleta.id,
                         data: new Date().toISOString().split('T')[0],
-                        peso: parseFloat(formData.weight) || null,
-                        pescoco: parseFloat(formData.neck) || null,
+                        peso: weight || null,
+                        gordura_corporal: bfVal ? Math.round(bfVal * 100) / 100 : null,
+                        pescoco: neck || null,
                         ombros: parseFloat(formData.shoulders) || null,
                         peitoral: parseFloat(formData.chest) || null,
-                        cintura: parseFloat(formData.waist) || null,
-                        quadril: parseFloat(formData.hips) || null,
+                        cintura: waist || null,
+                        quadril: hips || null,
                         braco_direito: parseFloat(formData.rightArm) || null,
                         braco_esquerdo: parseFloat(formData.leftArm) || null,
                         antebraco_direito: parseFloat(formData.rightForearm) || null,

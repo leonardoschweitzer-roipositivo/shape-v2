@@ -163,20 +163,22 @@ interface EvolutionProps {
     hideHeader?: boolean;
     gender?: 'MALE' | 'FEMALE';
     assessments?: MeasurementHistory[];
+    age?: number;
 }
 
 export const Evolution: React.FC<EvolutionProps> = ({
     hideHeader = false,
     gender = 'MALE',
-    assessments
+    assessments,
+    age
 }) => {
     const isMale = gender === 'MALE';
 
     // --- DYNAMIC DATA PROCESSING ---
     const evolutionData = React.useMemo(() => {
         if (!assessments || assessments.length === 0) return null;
-        return processEvolutionHistory(assessments, (gender || 'MALE') as 'MALE' | 'FEMALE');
-    }, [assessments, gender]);
+        return processEvolutionHistory(assessments, (gender || 'MALE') as 'MALE' | 'FEMALE', age);
+    }, [assessments, gender, age]);
 
     // --- DYNAMIC METRICS CONFIG ---
     const AVAILABLE_METRICS = React.useMemo(() => {

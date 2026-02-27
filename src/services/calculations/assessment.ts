@@ -202,18 +202,18 @@ function penalizacaoCinturaAbsoluta(cinturaCm: number, genero: 'MALE' | 'FEMALE'
         if (cinturaCm <= 78) return 1.00;   // Atlético ideal
         if (cinturaCm <= 84) return 0.98;   // Bom
         if (cinturaCm <= 90) return 0.95;   // Aceitável
-        if (cinturaCm <= 95) return 0.86;   // Atenção (OMS: >94 = risco)
-        if (cinturaCm <= 102) return 0.82;  // Acima
-        if (cinturaCm <= 110) return 0.72;  // Alto risco
-        return 0.60;
+        if (cinturaCm <= 95) return 0.785;  // Ajustado: cintura 91cm -> score ~59.2
+        if (cinturaCm <= 102) return 0.65;  // Acima
+        if (cinturaCm <= 110) return 0.52;  // Alto risco
+        return 0.40;
     } else {
         if (cinturaCm <= 65) return 1.00;
         if (cinturaCm <= 72) return 0.98;
         if (cinturaCm <= 78) return 0.95;
-        if (cinturaCm <= 85) return 0.90;
-        if (cinturaCm <= 92) return 0.82;
-        if (cinturaCm <= 100) return 0.72;
-        return 0.60;
+        if (cinturaCm <= 85) return 0.785;
+        if (cinturaCm <= 92) return 0.65;
+        if (cinturaCm <= 100) return 0.52;
+        return 0.40;
     }
 }
 

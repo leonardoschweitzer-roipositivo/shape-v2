@@ -148,12 +148,12 @@ export const portalService = {
             .order('data', { ascending: false })
             .limit(5);
 
-        // 6. Buscar avaliações
-        const { data: avaliacoes } = await supabase
-            .from('avaliacoes')
+        // 6. Buscar avaliações (tabela consolidada)
+        const { data: assessments } = await supabase
+            .from('assessments')
             .select('*')
             .eq('atleta_id', (atleta as any).id)
-            .order('data', { ascending: false })
+            .order('date', { ascending: false })
             .limit(5);
 
         // 7. Buscar nome do personal
@@ -201,11 +201,11 @@ export const portalService = {
                 panturrilha_direita: m.panturrilha_direita,
                 panturrilha_esquerda: m.panturrilha_esquerda,
             })),
-            avaliacoes: (avaliacoes || []).map((a: any) => ({
+            avaliacoes: (assessments || []).map((a: any) => ({
                 id: a.id,
-                data: a.data,
-                score_geral: a.score_geral,
-                classificacao_geral: a.classificacao_geral,
+                data: a.date,
+                score_geral: a.score,
+                classificacao_geral: a.results?.classificacao?.nivel || '',
             })),
         };
     },

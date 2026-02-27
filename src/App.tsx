@@ -42,6 +42,7 @@ import {
 import { AthletePortal } from './pages/AthletePortal';
 import { PortalLanding } from './pages/athlete/PortalLanding';
 import { TestSupabaseConnection } from '@/components/TestSupabaseConnection';
+import { calculateAge } from '@/utils/dateUtils';
 import { useAthleteStore } from '@/stores/athleteStore';
 import { useDataStore } from '@/stores/dataStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -505,6 +506,7 @@ const App: React.FC = () => {
         return <Evolution
           gender={profile?.gender === 'FEMALE' ? 'FEMALE' : 'MALE'}
           assessments={currentAthleteForEvolution?.assessments || (assessmentData.assessment ? [assessmentData.assessment] : [])}
+          age={currentAthleteForEvolution?.birthDate ? calculateAge(currentAthleteForEvolution.birthDate) : undefined}
         />;
       case 'hall':
         return <HallDosDeuses />;

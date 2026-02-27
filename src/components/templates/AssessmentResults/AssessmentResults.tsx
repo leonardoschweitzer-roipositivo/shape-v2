@@ -10,6 +10,7 @@ import { Measurements } from './types';
 import { supabase } from '@/services/supabase';
 import { mapMeasurementToInput } from '@/services/calculations/evolutionProcessor';
 import { calcularAvaliacaoGeral } from '@/services/calculations/assessment';
+import { useDataStore } from '@/stores/dataStore';
 
 // Import extracted tab components
 import { DiagnosticTab, ProportionsTab, AsymmetryTab } from './tabs';
@@ -135,81 +136,22 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
         cabeca: 56 // Default
     } : undefined;
 
-    const handleSaveAssessment = async () => {
-        if (!assessment || !athleteId) {
-            alert('Dados insuficientes para salvar. Verifique se o atleta e a avaliação estão carregados.');
-            return;
-        }
+    const { getAthleteById } = useDataStore();
 
+    const handleSaveAssessment = async () => {
         setIsSaving(true);
         setSaveStatus('idle');
 
         try {
-            // Calcular idade real
-            let age = 30;
-            if (birthDate) {
-                const birth = new Date(birthDate);
-                const now = new Date();
-                age = now.getFullYear() - birth.getFullYear();
-                const m = now.getMonth() - birth.getMonth();
-                if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--;
-            }
-
-            // Calcular resultados completos
-            const genderInput = gender === 'female' ? 'FEMALE' : 'MALE';
-            const calcInput = mapMeasurementToInput(assessment, genderInput as 'MALE' | 'FEMALE', age);
-            const result = calcularAvaliacaoGeral(calcInput);
-
-            // Sanitizar resultados
-            const safeResults = JSON.parse(JSON.stringify({
-                avaliacaoGeral: result.avaliacaoGeral,
-                classificacao: result.classificacao,
-                scores: result.scores,
-                penalizacoes: result.penalizacoes,
-                insights: result.insights,
-            }, (_, v) => typeof v === 'number' && !isFinite(v) ? 0 : v));
-
-            const heightCm = assessment.measurements.height > 0 && assessment.measurements.height < 3
-                ? Math.round(assessment.measurements.height * 100)
-                : assessment.measurements.height;
-
-            const hasSkinfolds = assessment.skinfolds && Object.values(assessment.skinfolds).some(v => v > 0);
-            const bfMethod = hasSkinfolds ? 'POLLOCK_7' : 'NAVY';
-
-            const assessmentInsert = {
-                athlete_id: athleteId,
-                date: assessment.date || new Date().toISOString(),
-                weight: Math.round(assessment.measurements.weight * 100) / 100,
-                height: heightCm,
-                age,
-                gender: genderInput,
-                body_fat: Math.round(result.scores.composicao.detalhes.detalhes.bf.valor * 100) / 100,
-                body_fat_method: bfMethod,
-                measurements: {
-                    linear: assessment.measurements,
-                    skinfolds: assessment.skinfolds,
-                },
-                results: safeResults,
-            };
-
-            const { error } = await supabase
-                .from('assessments')
-                .insert(assessmentInsert as any);
-
-            if (error) {
-                console.error('[AssessmentResults] ❌ Erro ao salvar:', error.message, error.details);
-                setSaveStatus('error');
-                alert(`Erro ao salvar avaliação: ${error.message}`);
-            } else {
-                console.info('[AssessmentResults] ✅ Avaliação salva com sucesso na tabela assessments');
-                setSaveStatus('success');
-                alert('Avaliação salva com sucesso na ficha do aluno!');
-            }
+            // A avaliação já foi salva automaticamente pela Store via App.tsx/handleAssessmentSubmit
+            setSaveStatus('success');
+            setTimeout(() => {
+                setSaveStatus('idle');
+                setIsSaving(false);
+            }, 3000);
         } catch (err) {
             console.error('[AssessmentResults] ❌ Exceção:', err);
             setSaveStatus('error');
-            alert('Erro ao salvar avaliação. Verifique o console para detalhes.');
-        } finally {
             setIsSaving(false);
         }
     };

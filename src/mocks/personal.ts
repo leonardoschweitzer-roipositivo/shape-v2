@@ -81,6 +81,7 @@ export interface MeasurementHistory {
 
 export interface PersonalAthlete {
     id: string;
+    personalId?: string; // Add this
     name: string;
     email: string;
     gender: 'MALE' | 'FEMALE' | 'OTHER';

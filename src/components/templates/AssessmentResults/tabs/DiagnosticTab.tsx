@@ -12,6 +12,7 @@ import { colors as designColors, typography as designTypography, spacing as desi
 import { MeasurementHistory } from '@/mocks/personal';
 import { calcularAvaliacaoGeral } from '@/services/calculations';
 import { AvaliacaoGeralInput } from '@/types/assessment.ts';
+import { calculateAge } from '@/utils/dateUtils';
 
 // Token styles (shared with parent)
 const tokenStyles = {
@@ -98,20 +99,11 @@ export const DiagnosticTab: React.FC<DiagnosticTabProps> = ({ assessment, gender
         const height = m.height > 0 && m.height < 3 ? Math.round(m.height * 100) : m.height;
         let bf = 0;
 
+        const age = calculateAge(birthDate) || 30;
+
         if (bfMethod === 'pollock') {
             const s = assessment.skinfolds;
             const sumSkinfolds = s.tricep + s.subscapular + s.chest + s.axillary + s.suprailiac + s.abdominal + s.thigh;
-            // Calcular idade real a partir do birthDate, fallback para 30
-            let age = 30;
-            if (birthDate) {
-                const birth = new Date(birthDate);
-                const now = new Date();
-                age = now.getFullYear() - birth.getFullYear();
-                const m = now.getMonth() - birth.getMonth();
-                if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) {
-                    age--;
-                }
-            }
 
             // Pollock 7-site formula
             let bodyDensity;
@@ -223,7 +215,7 @@ export const DiagnosticTab: React.FC<DiagnosticTabProps> = ({ assessment, gender
             composicao: {
                 peso: weight,
                 altura: height,
-                idade: 30,
+                idade: age,
                 genero: gender === 'female' ? 'FEMALE' : 'MALE',
                 bf,
                 metodo_bf: bfMethod === 'pollock' ? 'POLLOCK_7' : 'NAVY',

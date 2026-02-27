@@ -4,6 +4,7 @@ import { Evolution } from '../Evolution';
 import { PersonalAthleteSelector } from './PersonalAthleteSelector';
 import { PersonalAthlete } from '@/mocks/personal';
 import { useDataStore } from '@/stores/dataStore';
+import { calculateAge } from '@/utils/dateUtils';
 
 interface PersonalEvolutionViewProps {
     initialAthleteId?: string | null;
@@ -93,6 +94,7 @@ export const PersonalEvolutionView: React.FC<PersonalEvolutionViewProps> = ({ in
                                 hideHeader={true}
                                 gender={selectedAthlete.gender === 'FEMALE' ? 'FEMALE' : 'MALE'}
                                 assessments={selectedAthlete.assessments}
+                                age={selectedAthlete.birthDate ? calculateAge(selectedAthlete.birthDate) : undefined}
                             />
                         </div>
                     </div>

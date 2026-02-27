@@ -119,7 +119,8 @@ export function mapMeasurementToInput(
  */
 export function processEvolutionHistory(
     history: MeasurementHistory[],
-    gender: 'MALE' | 'FEMALE' = 'MALE'
+    gender: 'MALE' | 'FEMALE' = 'MALE',
+    age?: number
 ) {
     if (!history || history.length === 0) return null;
 
@@ -127,7 +128,7 @@ export function processEvolutionHistory(
     const sortedHistory = [...history].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     const processedPoints = sortedHistory.map(h => {
-        const input = mapMeasurementToInput(h, gender);
+        const input = mapMeasurementToInput(h, gender, age);
         const output = calcularAvaliacaoGeral(input);
         return {
             date: h.date,

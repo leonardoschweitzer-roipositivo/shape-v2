@@ -3,6 +3,7 @@ import { Activity, User, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { AssessmentForm } from '@/components/organisms/AssessmentForm';
 import { PersonalAthleteSelector } from './PersonalAthleteSelector';
 import { PersonalAthlete } from '@/mocks/personal';
+import { calculateAge } from '@/utils/dateUtils';
 
 interface PersonalAssessmentViewProps {
     onConfirm: (data: {
@@ -31,6 +32,8 @@ export const PersonalAssessmentView: React.FC<PersonalAssessmentViewProps> = ({ 
             skinfolds: formData.skinfolds
         });
     };
+
+    const athleteAge = selectedAthlete ? calculateAge(selectedAthlete.birthDate) : undefined;
 
     return (
         <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth custom-scrollbar flex flex-col">
@@ -107,6 +110,7 @@ export const PersonalAssessmentView: React.FC<PersonalAssessmentViewProps> = ({ 
                                 measurements: selectedAthlete.assessments[0].measurements,
                                 skinfolds: selectedAthlete.assessments[0].skinfolds
                             } : undefined}
+                            initialAge={athleteAge}
                         />
                     </div>
                 )}
