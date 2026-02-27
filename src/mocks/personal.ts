@@ -1,4 +1,5 @@
 // Mock data para Personal Trainer
+import type { ContextoAtleta } from '@/components/templates/Personal/AthleteContextSection';
 
 export interface PersonalStats {
     totalAthletes: number;
@@ -95,6 +96,7 @@ export interface PersonalAthlete {
     assessments: MeasurementHistory[];
     birthDate?: string; // ISO date string from ficha.data_nascimento
     phone?: string; // telefone from atletas table
+    contexto?: ContextoAtleta | null; // Contexto geral do atleta (saúde, medicações, etc)
 }
 
 export interface PersonalProfile {

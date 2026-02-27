@@ -101,4 +101,24 @@ specs/
 
 ---
 
+### 2026-02-27 - Contexto do Atleta como JSONB na tabela fichas
+
+**Contexto**: Necessidade de armazenar informações qualitativas sobre o atleta (saúde, medicações, lesões, estilo de vida, profissão, histórico de treino e dietas) para uso pela IA e pelo personal.
+
+**Decisão**: Armazenar como campo JSONB (`contexto`) na tabela `fichas` existente, em vez de tabelas relacionais separadas ou arquivos `.md`.
+
+**Alternativas Consideradas**:
+- Tabelas relacionais (CondicaoSaude, Lesao, Medicamento) → Over-engineering para fase atual
+- Arquivos .md por atleta → Inseguro, complexo de sincronizar, sem RLS
+- Campo texto simples → Sem estrutura para IA processar
+
+**Consequências**:
+- Flexibilidade: campos podem ser adicionados sem migrations
+- Segurança: RLS do Supabase protege dados sensíveis de saúde
+- Performance: uma query retorna tudo, fácil de passar como contexto para IA
+
+**Status**: Ativa
+
+---
+
 <!-- Novas decisões serão adicionadas acima desta linha -->

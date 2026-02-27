@@ -213,6 +213,7 @@ export type Database = {
                     categoria_preferida: string | null
                     observacoes: string | null
                     restricoes: string[] | null
+                    contexto: Json | null
                     created_at: string
                     updated_at: string
                 }
@@ -230,6 +231,7 @@ export type Database = {
                     categoria_preferida?: string | null
                     observacoes?: string | null
                     restricoes?: string[] | null
+                    contexto?: Json | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -247,6 +249,7 @@ export type Database = {
                     categoria_preferida?: string | null
                     observacoes?: string | null
                     restricoes?: string[] | null
+                    contexto?: Json | null
                     created_at?: string
                     updated_at?: string
                 }

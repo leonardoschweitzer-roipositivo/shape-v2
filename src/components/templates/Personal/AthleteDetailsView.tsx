@@ -29,6 +29,8 @@ import { HeroContent } from '@/features/dashboard/types';
 import { useDataStore } from '@/stores/dataStore';
 import { atletaService } from '@/services/atleta.service';
 import { medidasService } from '@/services/medidas.service';
+import { AthleteContextSection } from './AthleteContextSection';
+import type { ContextoAtleta } from './AthleteContextSection';
 
 interface AthleteDetailsViewProps {
     athlete: PersonalAthlete;
@@ -456,6 +458,16 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                             )}
                         </div>
                     </div>
+
+                    {/* Section 1.5: Contexto do Atleta */}
+                    <AthleteContextSection
+                        athleteId={draftAthlete.id}
+                        contexto={draftAthlete.contexto || null}
+                        onContextoUpdated={(updatedContexto: ContextoAtleta) => {
+                            setDraftAthlete(prev => ({ ...prev, contexto: updatedContexto }));
+                            updateAthlete({ ...draftAthlete, contexto: updatedContexto });
+                        }}
+                    />
 
                     {/* Section 2: Últimas Medidas (Accordions) */}
                     <div className="pt-6">
