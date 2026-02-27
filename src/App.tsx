@@ -414,6 +414,28 @@ const App: React.FC = () => {
                 setAthleteForEvaluation(selectedAthlete);
                 setCurrentView('assessment');
               }}
+              onDeleteAthlete={async (athleteId) => {
+                try {
+                  // 1. Deletar medidas do atleta
+                  await supabase.from('medidas').delete().eq('atleta_id', athleteId);
+                  // 2. Deletar assessments do atleta
+                  await supabase.from('assessments').delete().eq('atleta_id', athleteId);
+                  // 3. Deletar ficha do atleta
+                  await supabase.from('fichas').delete().eq('atleta_id', athleteId);
+                  // 4. Deletar o atleta
+                  await supabase.from('atletas').delete().eq('id', athleteId);
+                  // 5. Recarregar dados
+                  const personalId = useAuthStore.getState().entity?.personal?.id;
+                  if (personalId) {
+                    await useDataStore.getState().loadFromSupabase(personalId);
+                  }
+                  console.info('[App] ✅ Atleta excluído com sucesso:', athleteId);
+                  setCurrentView('students');
+                } catch (error) {
+                  console.error('[App] ❌ Erro ao excluir atleta:', error);
+                  alert('Erro ao excluir aluno. Tente novamente.');
+                }
+              }}
             />
           );
         case 'assessment':
@@ -456,9 +478,17 @@ const App: React.FC = () => {
           return (
             <StudentRegistration
               onBack={() => setCurrentView('students')}
-              onComplete={() => {
-                alert('Aluno cadastrado com sucesso!');
-                setCurrentView('students');
+              onComplete={(atletaId?: string) => {
+                if (atletaId) {
+                  // Navigate to assessment with the newly created athlete pre-selected
+                  const newAthlete = personalAthletes.find(a => a.id === atletaId);
+                  if (newAthlete) {
+                    setAthleteForEvaluation(newAthlete);
+                  }
+                  setCurrentView('assessment');
+                } else {
+                  setCurrentView('students');
+                }
               }}
             />
           );

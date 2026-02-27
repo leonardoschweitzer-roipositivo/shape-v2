@@ -19,7 +19,8 @@ import {
     X,
     Archive,
     Trash2,
-    Phone
+    Phone,
+    Settings
 } from 'lucide-react';
 import { PersonalAthlete } from '@/mocks/personal';
 import { Button } from '@/components/atoms/Button/Button';
@@ -35,6 +36,7 @@ interface AthleteDetailsViewProps {
     onNewAssessment: () => void;
     onConsultAssessment: (assessmentId: string) => void;
     hideStatusControl?: boolean;
+    onDeleteAthlete?: (athleteId: string) => void;
 }
 
 const SectionHeader = ({ icon: Icon, title, subtitle, rightElement }: { icon: any, title: string, subtitle: string, rightElement?: React.ReactNode }) => (
@@ -140,7 +142,9 @@ const calculateAge = (birthDateStr?: string): number | null => {
     return age;
 };
 
-export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete, onBack, onNewAssessment, onConsultAssessment, hideStatusControl = false }) => {
+export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete, onBack, onNewAssessment, onConsultAssessment, hideStatusControl = false, onDeleteAthlete }) => {
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const { updateAthlete } = useDataStore();
     const [openAccordion, setOpenAccordion] = useState<string | null>('basics');
     const [isEditing, setIsEditing] = useState(false);
@@ -307,23 +311,6 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                         <Button
                             variant="outline"
                             className="flex items-center gap-2 border-white/10 hover:border-white/20 px-6"
-                            onClick={() => {
-                                if (isEditing) {
-                                    handleSave();
-                                } else {
-                                    setIsEditing(true);
-                                }
-                            }}
-                            disabled={isSaving}
-                        >
-                            <Edit3 size={18} />
-                            <span className="font-bold uppercase tracking-wider text-xs">
-                                {isEditing ? (isSaving ? 'SALVANDO...' : 'SALVAR ATLETA') : 'EDITAR ATLETA'}
-                            </span>
-                        </Button>
-                        <Button
-                            variant="outline"
-                            className="flex items-center gap-2 border-white/10 hover:border-white/20 px-6"
                             onClick={() => { }}
                         >
                             <Clock size={18} />
@@ -355,12 +342,6 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                             subtitle="Informações fundamentais de identificação do atleta"
                             rightElement={
                                 <div className="flex items-center gap-3">
-                                    {!hideStatusControl && (
-                                        <StatusSelector
-                                            status={draftAthlete.status}
-                                            onChange={(s) => setDraftAthlete({ ...draftAthlete, status: s as any })}
-                                        />
-                                    )}
                                     <button
                                         onClick={() => isEditing ? handleSave() : setIsEditing(true)}
                                         disabled={isSaving}
@@ -372,6 +353,21 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                         {isEditing ? <Check size={16} /> : <Edit3 size={16} />}
                                         {isEditing ? (isSaving ? 'Salvando...' : 'Salvar') : 'Editar'}
                                     </button>
+                                    {!hideStatusControl && (
+                                        <StatusSelector
+                                            status={draftAthlete.status}
+                                            onChange={(s) => setDraftAthlete({ ...draftAthlete, status: s as any })}
+                                        />
+                                    )}
+                                    {onDeleteAthlete && (
+                                        <button
+                                            onClick={() => setShowDeleteConfirm(true)}
+                                            className="flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all text-xs font-bold uppercase tracking-widest"
+                                        >
+                                            <Trash2 size={16} />
+                                            Excluir
+                                        </button>
+                                    )}
                                 </div>
                             }
                         />
@@ -648,8 +644,106 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                             </div>
                         </div>
                     </div>
+
+                    {/* Ações do Atleta */}
+                    <div className="pt-6">
+                        <SectionHeader
+                            icon={Settings}
+                            title="O que você quer fazer?"
+                            subtitle="Gerencie avaliações e configurações do perfil"
+                        />
+                        <div className="h-px w-full bg-white/10 mb-6" />
+                        <div className="flex flex-wrap items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={() => { }}
+                                    className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white hover:border-white/30 transition-all text-xs font-bold uppercase tracking-wider"
+                                >
+                                    <Clock size={16} />
+                                    Agendar Avaliação
+                                </button>
+                                <button
+                                    onClick={onNewAssessment}
+                                    className="flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/30 rounded-xl text-primary hover:bg-primary/20 hover:border-primary/50 transition-all text-xs font-bold uppercase tracking-wider"
+                                >
+                                    <Activity size={16} />
+                                    Nova Avaliação IA
+                                </button>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+                                    disabled={isSaving}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all font-bold text-xs uppercase tracking-wider ${isEditing
+                                        ? 'bg-primary text-background-dark border-primary shadow-[0_0_15px_rgba(0,201,167,0.3)]'
+                                        : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:border-white/30'
+                                        } ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                >
+                                    {isEditing ? <Check size={16} /> : <Edit3 size={16} />}
+                                    {isEditing ? (isSaving ? 'Salvando...' : 'Salvar') : 'Editar'}
+                                </button>
+                                {!hideStatusControl && (
+                                    <StatusSelector
+                                        status={draftAthlete.status}
+                                        onChange={(s) => setDraftAthlete({ ...draftAthlete, status: s as any })}
+                                    />
+                                )}
+                                {onDeleteAthlete && (
+                                    <button
+                                        onClick={() => setShowDeleteConfirm(true)}
+                                        className="flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all text-xs font-bold uppercase tracking-widest"
+                                    >
+                                        <Trash2 size={16} />
+                                        Excluir
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-[#131B2C] border border-white/10 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
+                        <div className="flex flex-col items-center text-center gap-4">
+                            <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center">
+                                <Trash2 className="text-red-400" size={28} />
+                            </div>
+                            <h3 className="text-xl font-bold text-white uppercase tracking-wide">Excluir Aluno</h3>
+                            <p className="text-gray-400 text-sm leading-relaxed">
+                                Tem certeza que deseja excluir <span className="text-white font-bold">{draftAthlete.name}</span>?
+                                <br />
+                                <span className="text-red-400 font-medium">Esta ação não pode ser desfeita.</span>
+                            </p>
+                            <div className="flex items-center gap-3 w-full mt-4">
+                                <button
+                                    onClick={() => setShowDeleteConfirm(false)}
+                                    className="flex-1 px-6 py-3 bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 rounded-xl font-bold text-xs uppercase tracking-widest transition-all"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        setIsDeleting(true);
+                                        try {
+                                            await onDeleteAthlete?.(draftAthlete.id);
+                                        } finally {
+                                            setIsDeleting(false);
+                                            setShowDeleteConfirm(false);
+                                        }
+                                    }}
+                                    disabled={isDeleting}
+                                    className="flex-1 px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(239,68,68,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isDeleting ? 'Excluindo...' : 'Sim, Excluir'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

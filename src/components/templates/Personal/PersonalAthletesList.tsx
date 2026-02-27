@@ -200,7 +200,7 @@ export const PersonalAthletesList: React.FC<PersonalAthletesListProps> = ({
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-center">
-                                            <span className="text-white font-mono">{athlete.ratio}</span>
+                                            <span className="text-white font-mono">{typeof athlete.ratio === 'number' ? athlete.ratio.toFixed(2) : athlete.ratio}</span>
                                         </td>
                                         <td className="px-6 py-4 text-center">
                                             <span className="text-gray-300">{formatRelativeDate(athlete.lastMeasurement)}</span>
@@ -209,36 +209,39 @@ export const PersonalAthletesList: React.FC<PersonalAthletesListProps> = ({
                                             <div className="flex justify-center">{getStatusBadge(athlete.status)}</div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="flex items-center justify-center gap-2">
+                                            <div className="flex items-center justify-center gap-3">
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         onSelectAthlete(athlete.id);
                                                     }}
-                                                    className="p-2 hover:bg-white/10 rounded-lg transition-colors group relative"
+                                                    className="flex flex-col items-center gap-0.5 p-1.5 hover:bg-white/10 rounded-lg transition-colors group"
                                                     title="Visualizar Ficha"
                                                 >
-                                                    <Eye size={18} className="text-gray-400 hover:text-primary" />
+                                                    <Eye size={16} className="text-gray-400 group-hover:text-primary transition-colors" />
+                                                    <span className="text-[9px] text-gray-500 group-hover:text-primary transition-colors font-medium">Ficha</span>
                                                 </button>
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         onViewEvolution(athlete.id);
                                                     }}
-                                                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                                                    className="flex flex-col items-center gap-0.5 p-1.5 hover:bg-white/10 rounded-lg transition-colors group"
                                                     title="Visualizar Evolução"
                                                 >
-                                                    <TrendingUp size={18} className="text-gray-400 hover:text-primary" />
+                                                    <TrendingUp size={16} className="text-gray-400 group-hover:text-primary transition-colors" />
+                                                    <span className="text-[9px] text-gray-500 group-hover:text-primary transition-colors font-medium">Evolução</span>
                                                 </button>
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         onRegisterMeasurement(athlete.id);
                                                     }}
-                                                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                                                    className="flex flex-col items-center gap-0.5 p-1.5 hover:bg-white/10 rounded-lg transition-colors group"
                                                     title="Fazer Avaliação"
                                                 >
-                                                    <ClipboardList size={18} className="text-gray-400 hover:text-primary" />
+                                                    <ClipboardList size={16} className="text-gray-400 group-hover:text-primary transition-colors" />
+                                                    <span className="text-[9px] text-gray-500 group-hover:text-primary transition-colors font-medium">Avaliar</span>
                                                 </button>
                                                 {athlete.assessments && athlete.assessments.length > 0 && (
                                                     <button
@@ -246,10 +249,11 @@ export const PersonalAthletesList: React.FC<PersonalAthletesListProps> = ({
                                                             e.stopPropagation();
                                                             onViewLatestAssessment(athlete.id);
                                                         }}
-                                                        className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                                                        className="flex flex-col items-center gap-0.5 p-1.5 hover:bg-white/10 rounded-lg transition-colors group"
                                                         title="Visualizar Última Avaliação"
                                                     >
-                                                        <Activity size={18} className="text-gray-400 hover:text-primary" />
+                                                        <Activity size={16} className="text-gray-400 group-hover:text-primary transition-colors" />
+                                                        <span className="text-[9px] text-gray-500 group-hover:text-primary transition-colors font-medium">Resultado</span>
                                                     </button>
                                                 )}
                                             </div>

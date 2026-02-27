@@ -44,4 +44,17 @@
 
 ---
 
+### 2026-02-27 - Correção Categorias de Gordura Corporal
+
+**Tipo**: Atualização
+**Mudança**:
+- `BodyFatGauge.tsx`: Corrigido limiar do Fitness masculino (`< 18` → `< 17`), 17,1% agora classifica como "Aceitável"
+- `BodyFatGauge.tsx`: Corrigido Essencial feminino (`< 12` → `< 14`) para alinhar com ACE
+- `BodyFatGauge.tsx`: Renomeado "Média" → "Aceitável" (terminologia ACE)
+- `BodyFatGauge.tsx`: Adicionadas marcações visuais (segmentos coloridos + ticks com %) no gauge
+- `calculo-proporcoes.md`: SPEC atualizada com categorias corrigidas (masc + fem)
+**Motivo**: 17,1% de gordura corporal estava classificado incorretamente como "Fitness" em vez de "Aceitável". Padrão ACE define Fitness masculino como 14-17% (exclusive). Gauge também precisava de marcações visuais para melhor orientação.
+
+---
+
 <!-- Novos registros serão adicionados acima desta linha -->

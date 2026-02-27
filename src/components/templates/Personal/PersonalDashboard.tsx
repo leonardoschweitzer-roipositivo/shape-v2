@@ -270,7 +270,7 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
                                         <span className="text-2xl">{getMedalEmoji(athlete.position)}</span>
                                         <div>
                                             <p className="text-white font-medium">{athlete.name}</p>
-                                            <p className="text-xs text-gray-400">Ratio: {athlete.ratio}</p>
+                                            <p className="text-xs text-gray-400">Ratio: {typeof athlete.ratio === 'number' ? athlete.ratio.toFixed(2) : athlete.ratio}</p>
                                         </div>
                                     </div>
                                     <div className="text-right">

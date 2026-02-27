@@ -294,12 +294,12 @@ export const getProportionItems = (
                 title: "Costas",
                 badge: "AMPLITUDE V-TAPER",
                 metrics: [
-                    { label: 'Costas', value: `${userMeasurements.costas}cm` },
+                    { label: 'Costas', value: `${Number(userMeasurements.costas).toFixed(1)}cm` },
                     { label: 'Cintura', value: `${userMeasurements.cintura}cm` }
                 ],
                 currentValue: costasRatio.toFixed(2),
                 valueLabel: "RATIO ATUAL",
-                description: `Largura das dorsais (lat spread). Meta em CM: ${ideais.costas?.toFixed(1)}cm (atual: ${userMeasurements.costas}cm).`,
+                description: `Largura das dorsais (lat spread). Meta em CM: ${ideais.costas?.toFixed(1)}cm (atual: ${Number(userMeasurements.costas).toFixed(1)}cm).`,
                 statusLabel: getStatus(costasPercentual),
                 userPosition: Math.round(costasPercentual),
                 goalPosition: 100,

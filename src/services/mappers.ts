@@ -89,6 +89,56 @@ export function mapAtletaToPersonalAthlete(
         };
     });
 
+    // Fallback: se não existem assessments mas existem medidas na tabela 'medidas',
+    // criar um assessment virtual a partir da medida mais recente para exibição na UI.
+    // Isso garante que alunos recém-cadastrados com medidas no formulário de registro
+    // tenham seus dados visíveis na tela de perfil, mesmo antes de uma avaliação IA.
+    if (mappedAssessments.length === 0 && medidas.length > 0) {
+        const m = medidas[0]; // Já vem ordenado DESC por data
+        mappedAssessments.push({
+            id: m.id,
+            date: m.data || m.created_at || new Date().toISOString(),
+            score: 0,
+            ratio: 0,
+            bf: Number(m.gordura_corporal) || 0,
+            ffmi: 0,
+            measurements: {
+                weight: Number(m.peso) || 0,
+                height: alturaCm || 0,
+                neck: Number(m.pescoco) || 0,
+                shoulders: Number(m.ombros) || 0,
+                chest: Number(m.peitoral) || 0,
+                waist: Number(m.cintura) || 0,
+                hips: Number(m.quadril) || 0,
+                pelvis: Number(ficha?.pelve) || 0,
+                armRight: Number(m.braco_direito) || 0,
+                armLeft: Number(m.braco_esquerdo) || 0,
+                forearmRight: Number(m.antebraco_direito) || 0,
+                forearmLeft: Number(m.antebraco_esquerdo) || 0,
+                thighRight: Number(m.coxa_direita) || 0,
+                thighLeft: Number(m.coxa_esquerda) || 0,
+                calfRight: Number(m.panturrilha_direita) || 0,
+                calfLeft: Number(m.panturrilha_esquerda) || 0,
+                wristRight: Number(ficha?.punho) || 17,
+                wristLeft: Number(ficha?.punho) || 17,
+                kneeRight: Number(ficha?.joelho) || 40,
+                kneeLeft: Number(ficha?.joelho) || 40,
+                ankleRight: Number(ficha?.tornozelo) || 22,
+                ankleLeft: Number(ficha?.tornozelo) || 22,
+            },
+            skinfolds: {
+                tricep: Number(m.dobra_tricipital) || 0,
+                subscapular: Number(m.dobra_subescapular) || 0,
+                chest: Number(m.dobra_peitoral) || 0,
+                axillary: Number(m.dobra_axilar_media) || 0,
+                suprailiac: Number(m.dobra_suprailiaca) || 0,
+                abdominal: Number(m.dobra_abdominal) || 0,
+                thigh: Number(m.dobra_coxa) || 0,
+            },
+        });
+        console.info(`[Mapper] ⚡ Criado assessment virtual a partir de medida para: ${atleta.nome}`);
+    }
+
     // Determinar status
     let status: 'active' | 'inactive' | 'attention' = 'active';
     if (atleta.status === 'INATIVO') {

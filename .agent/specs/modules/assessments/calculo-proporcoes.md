@@ -1116,22 +1116,33 @@ function calcularBFPollock7Masculino(dobras, idade) {
 ### 10.3 Classificação de BF% Masculino
 
 ```javascript
+// Categorias baseadas no padrão ACE (American Council on Exercise)
+// Atualizado em 2026-02-27 para corrigir limiar do Fitness (era <18, agora <17)
 const CLASSIFICACAO_BF_MASCULINO = {
-  competicao: { min: 2, max: 6, descricao: 'Nível de competição' },
-  atletico: { min: 6, max: 13, descricao: 'Físico atlético' },
-  fitness: { min: 13, max: 17, descricao: 'Fitness/Saudável' },
-  normal: { min: 17, max: 24, descricao: 'Normal' },
-  acima: { min: 24, max: 35, descricao: 'Acima do recomendado' },
-  obesidade: { min: 35, max: 100, descricao: 'Obesidade' },
+  essencial: { min: 0, max: 6, label: 'Essencial', descricao: 'Gordura essencial para funções vitais' },
+  atletico: { min: 6, max: 13, label: 'Atleta', descricao: 'Físico atlético / competição' },
+  fitness: { min: 13, max: 17, label: 'Fitness', descricao: 'Fitness / Saudável' },
+  aceitavel: { min: 17, max: 25, label: 'Aceitável', descricao: 'Faixa aceitável' },
+  acima: { min: 25, max: 30, label: 'Acima', descricao: 'Acima do recomendado' },
+  obesidade: { min: 30, max: 100, label: 'Obesidade', descricao: 'Obesidade' },
 }
 
-function classificarBFMasculino(bf) {
-  for (const [nivel, range] of Object.entries(CLASSIFICACAO_BF_MASCULINO)) {
+const CLASSIFICACAO_BF_FEMININO = {
+  essencial: { min: 0, max: 14, label: 'Essencial', descricao: 'Gordura essencial para funções vitais' },
+  atletico: { min: 14, max: 21, label: 'Atleta', descricao: 'Físico atlético / competição' },
+  fitness: { min: 21, max: 25, label: 'Fitness', descricao: 'Fitness / Saudável' },
+  aceitavel: { min: 25, max: 32, label: 'Aceitável', descricao: 'Faixa aceitável' },
+  acima: { min: 32, max: 39, label: 'Acima', descricao: 'Acima do recomendado' },
+  obesidade: { min: 39, max: 100, label: 'Obesidade', descricao: 'Obesidade' },
+}
+
+function classificarBF(bf, categorias) {
+  for (const [nivel, range] of Object.entries(categorias)) {
     if (bf >= range.min && bf < range.max) {
-      return { nivel, descricao: range.descricao, faixa: `${range.min}-${range.max}%` }
+      return { nivel, label: range.label, descricao: range.descricao, faixa: `${range.min}-${range.max}%` }
     }
   }
-  return { nivel: 'indefinido', descricao: 'Valor fora do range' }
+  return { nivel: 'indefinido', label: 'Indefinido', descricao: 'Valor fora do range' }
 }
 ```
 
