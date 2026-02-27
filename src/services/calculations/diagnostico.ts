@@ -91,6 +91,7 @@ export interface MetaProporcao {
     meta6M: number;
     meta9M: number;
     meta12M: number;
+    idealFinal: number;
 }
 
 export interface DiagnosticoDados {
@@ -137,6 +138,7 @@ export interface DiagnosticoInput {
         pelvis: number;
         pescoco: number;
     };
+    proporcoesPreCalculadas?: any[];
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -282,116 +284,224 @@ export function projetarMetas(
 
 // ═══════════════════════════════════════════════════════════
 // ANÁLISE ESTÉTICA E PROPORÇÕES
+// Usa mesmas constantes de constants.ts (GOLDEN_RATIO)
 // ═══════════════════════════════════════════════════════════
 
-const GOLDEN_RATIO = 1.618;
+const PHI = 1.618;
 
-interface ProporcaoIdeal {
-    grupo: string;
-    calcularIdeal: (medidas: DiagnosticoInput['medidas'], punho: number) => number;
-    getAtual: (medidas: DiagnosticoInput['medidas']) => number;
-}
+// Targets oficiais da constante GOLDEN_RATIO em constants.ts
+const GR_TARGETS = {
+    PEITO_PUNHO: 6.5,
+    BRACO_PUNHO: 2.52,
+    ANTEBRACO_BRACO: 0.80,
+    CINTURA_PELVIS: 0.86,
+    COXA_JOELHO: 1.75,
+    COXA_PANTURRILHA: 1.5,
+    PANTURRILHA_TORNOZELO: 1.92,
+    UPPER_LOWER_RATIO: 0.75,
+};
 
 /**
- * Gera tabela de proporções baseada em RATIOS (Índices), consistente com a avaliação principal.
+ * Gera tabela de proporções baseada em RATIOS (Índices).
+ * Usa as mesmas fórmulas e targets da tela de Avaliação (proportionItems.ts)
+ * para garantir 100% de consistência nos dados.
+ * Total: 11 proporções (mesmas da Avaliação Golden Ratio).
  */
 export function analisarProporcoes(
-    medidas: DiagnosticoInput['medidas']
+    medidas: DiagnosticoInput['medidas'],
+    proporcoesPreCalculadas?: any[]
 ): ProporcoesGrupo[] {
+    // ─── Baselines fisiológicos compartilhados ───
+    const BASELINES: Record<string, { baseline: number; inverse?: boolean }> = {
+        'Shape-V': { baseline: 1.0 },
+        'Costas': { baseline: 1.0 },
+        'Peitoral': { baseline: 4.8 },
+        'Braço': { baseline: 1.5 },
+        'Antebraço': { baseline: 0.70 },
+        'Tríade': { baseline: 70 },
+        'Cintura': { baseline: 1.05, inverse: true },
+        'Coxa': { baseline: 1.2 },
+        'Coxa vs Pantur.': { baseline: 1.15 },
+        'Panturrilha': { baseline: 1.45 },
+        'Upper vs Lower': { baseline: 1.0, inverse: true },
+    };
+
+    const calcPct = (atual: number, ideal: number, baseline: number, inverse = false) => {
+        if (inverse) {
+            const range = baseline - ideal;
+            if (range <= 0) return 100;
+            const progress = baseline - atual;
+            return Math.max(0, Math.min(115, Math.round((progress / range) * 100)));
+        }
+        const range = ideal - baseline;
+        if (range <= 0) return 100;
+        const progress = atual - baseline;
+        return Math.max(0, Math.min(115, Math.round((progress / range) * 100)));
+    };
+
+    // ─── Se recebeu dados do banco, usar atual/ideal e recalcular % com baselines ───
+    if (proporcoesPreCalculadas?.length && proporcoesPreCalculadas[0]?.nome) {
+        console.log('[Diagnostico] ✅ USANDO ratios do banco + recalculando % com baselines');
+        return proporcoesPreCalculadas.map(p => {
+            const bl = BASELINES[p.nome] || { baseline: 0 };
+            const pct = calcPct(p.atual, p.ideal, bl.baseline, bl.inverse);
+            return {
+                grupo: p.nome,
+                atual: Math.round(p.atual * 100) / 100,
+                ideal: p.ideal,
+                pct,
+                status: pct >= 103 ? 'ELITE' :
+                    pct >= 97 ? 'META' :
+                        pct >= 90 ? 'QUASE LÁ' :
+                            pct >= 82 ? 'CAMINHO' : 'INÍCIO',
+            };
+        });
+    }
+
+    console.log('[Diagnostico] ⚠️ FALLBACK: calculando proporções localmente');
+    // ─── Fallback: cálculo local (atletas sem dados gravados) ───
     const proporcoes: ProporcoesGrupo[] = [];
 
-    // Helper: Calcula porcentagem calibrada (da base até a meta)
+    // ─── Baselines fisiológicos (piso realista de pessoa destreinada) ───
+    // A escala vai de baseline → ideal, não de 0 → ideal
     const getCalibratedPct = (atual: number, ideal: number, baseline: number) => {
         if (ideal === baseline) return 100;
 
-        // Caso normal (músculo/ratio: ideal > baseline)
+        // Caso normal (ratio: ideal > baseline → maior = melhor)
         if (ideal > baseline) {
             const range = ideal - baseline;
             const progress = atual - baseline;
-            return Math.max(0, Math.min(100, Math.round((progress / range) * 100)));
+            return Math.max(0, Math.min(110, Math.round((progress / range) * 100)));
         }
-        // Caso inverso (cintura: ideal < baseline)
+        // Caso inverso (cintura, upper/lower: ideal < baseline → menor = melhor)
         else {
             const range = baseline - ideal;
             const progress = baseline - atual;
-            return Math.max(0, Math.min(100, Math.round((progress / range) * 100)));
+            return Math.max(0, Math.min(110, Math.round((progress / range) * 100)));
         }
     };
 
-    // 1. Shape-V (Ratio Ombros/Cintura)
-    const shapeVAtual = medidas.ombros / medidas.cintura;
-    const shapeVTarget = GOLDEN_RATIO;
-    const shapeVBaseline = 1.0;
-    const shapeVPct = getCalibratedPct(shapeVAtual, shapeVTarget, shapeVBaseline);
+    // Médias bilaterais (para uso nos cálculos)
+    const bracoMD = (medidas.bracoD + medidas.bracoE) / 2;
+    const antebracoMD = (medidas.antebracoD + medidas.antebracoE) / 2;
+    const coxaMD = (medidas.coxaD + medidas.coxaE) / 2;
+    const panturrilhaMD = (medidas.panturrilhaD + medidas.panturrilhaE) / 2;
 
-    proporcoes.push({
-        grupo: 'Shape-V',
-        atual: Math.round(shapeVAtual * 100) / 100,
-        ideal: shapeVTarget,
-        pct: shapeVPct,
-        status: shapeVPct >= 95 ? 'ELITE' : shapeVPct >= 85 ? 'META' : shapeVPct >= 70 ? 'CAMINHO' : 'INÍCIO',
-    });
+    // ─── 11 Proporções (Mesmas fórmulas/targets da Avaliação Golden Ratio) ──
+    // Cada item tem um baseline = valor fisiológico de uma pessoa média destreinada.
+    // A escala de % vai de baseline (0%) até ideal (100%).
 
-    // 2. Grupos baseados em Ratios (Índices)
-    // Baselines = valor fisiológico mínimo de uma pessoa DESTREINADA
-    const r = [
+    const items: { nome: string; atual: number; ideal: number; baseline: number }[] = [
+        // 1. Shape-V (Ombros ÷ Cintura)
+        //    Destreinado: ombros ≈ cintura → ratio ~1.0 (cilindro)
         {
-            nome: 'Peitoral',                                         // Peito / Punho
-            atual: medidas.peitoral / medidas.punho,
-            ideal: 6.5,
-            baseline: 4.8                                              // destreinado: peito ~84cm / punho ~17.5cm
+            nome: 'Shape-V',
+            atual: medidas.ombros / medidas.cintura,
+            ideal: PHI,                          // 1.618
+            baseline: 1.0,
         },
+        // 2. Costas (Costas ÷ Cintura)
+        //    Destreinado: costas ≈ cintura → ~1.0 (sem lat spread)
         {
-            nome: 'Braço (MD)',                                        // Braço / Punho
-            atual: ((medidas.bracoD + medidas.bracoE) / 2) / medidas.punho,
-            ideal: 2.5,
-            baseline: 1.5                                              // destreinado: braço ~26cm / punho ~17.5cm
-        },
-        {
-            nome: 'Antebraço (MD)',                                    // Antebraço / Braço
-            atual: ((medidas.antebracoD + medidas.antebracoE) / 2) / ((medidas.bracoD + medidas.bracoE) / 2),
-            ideal: 0.81,
-            baseline: 0.70                                             // destreinado: ante ~25cm / braço ~34cm = ~0.74, chão em 0.70
-        },
-        {
-            nome: 'Coxa (MD)',                                         // Coxa / Joelho
-            atual: ((medidas.coxaD + medidas.coxaE) / 2) / medidas.joelho,
-            ideal: 1.75,
-            baseline: 1.2                                              // destreinado: coxa ~46cm / joelho ~38cm = ~1.21
-        },
-        {
-            nome: 'Panturrilha (MD)',                                  // Panturrilha / Tornozelo
-            atual: ((medidas.panturrilhaD + medidas.panturrilhaE) / 2) / medidas.tornozelo,
-            ideal: 1.62,
-            baseline: 1.45                                             // destreinado: pant ~32cm / tornozelo ~22cm = ~1.45
-        },
-        {
-            nome: 'Cintura',                                          // Cintura / Pélvis (INVERSO: menor = melhor)
-            atual: medidas.cintura / medidas.pelvis,
-            ideal: 0.62,
-            baseline: 1.0                                              // destreinado/sobrepeso: cintura ≈ pélvis (1:1)
-        },
-        {
-            nome: 'Costas',                                           // Costas / Cintura
+            nome: 'Costas',
             atual: medidas.costas / medidas.cintura,
-            ideal: 1.62,
-            baseline: 1.0                                              // destreinado: costas ≈ cintura (sem lat spread)
-        }
+            ideal: 1.6,
+            baseline: 1.0,
+        },
+        // 3. Peitoral (Peito ÷ Punho)
+        //    Destreinado: peito ~84cm / punho ~17.5cm → ~4.8
+        {
+            nome: 'Peitoral',
+            atual: medidas.peitoral / medidas.punho,
+            ideal: GR_TARGETS.PEITO_PUNHO,       // 6.5
+            baseline: 4.8,
+        },
+        // 4. Braço (Braço ÷ Punho)
+        //    Destreinado: braço ~26cm / punho ~17.5cm → ~1.5
+        {
+            nome: 'Braço',
+            atual: bracoMD / medidas.punho,
+            ideal: GR_TARGETS.BRACO_PUNHO,       // 2.52
+            baseline: 1.5,
+        },
+        // 5. Antebraço (Antebraço ÷ Braço)
+        //    Destreinado: ante ~25cm / braço ~34cm → ~0.74, chão em 0.70
+        {
+            nome: 'Antebraço',
+            atual: antebracoMD / bracoMD,
+            ideal: GR_TARGETS.ANTEBRACO_BRACO,   // 0.80
+            baseline: 0.70,
+        },
+        // 6. Tríade (Score de Harmonia Pescoço/Braço/Panturrilha)
+        //    Destreinado com desequilíbrio alto → ~70%
+        {
+            nome: 'Tríade',
+            atual: (() => {
+                const media = (medidas.pescoco + bracoMD + panturrilhaMD) / 3;
+                const desvio = (Math.abs(medidas.pescoco - media) + Math.abs(bracoMD - media) + Math.abs(panturrilhaMD - media)) / media / 3;
+                return Math.max(0, (1 - desvio) * 100);
+            })(),
+            ideal: 100,
+            baseline: 70,
+        },
+        // 7. Cintura (Cintura ÷ Pélvis) — INVERSO (menor = melhor)
+        //    Destreinado/sobrepeso: cintura ≈ pélvis → 1.0
+        {
+            nome: 'Cintura',
+            atual: medidas.cintura / medidas.pelvis,
+            ideal: GR_TARGETS.CINTURA_PELVIS,    // 0.86
+            baseline: 1.05,
+        },
+        // 8. Coxa (Coxa ÷ Joelho)
+        //    Destreinado: coxa ~46cm / joelho ~38cm → ~1.21
+        {
+            nome: 'Coxa',
+            atual: coxaMD / medidas.joelho,
+            ideal: GR_TARGETS.COXA_JOELHO,       // 1.75
+            baseline: 1.2,
+        },
+        // 9. Coxa vs Panturrilha (Coxa ÷ Panturrilha)
+        //    Destreinado: coxa e panturrilha parecidas → ~1.15
+        {
+            nome: 'Coxa vs Pantur.',
+            atual: coxaMD / panturrilhaMD,
+            ideal: GR_TARGETS.COXA_PANTURRILHA,  // 1.50
+            baseline: 1.15,
+        },
+        // 10. Panturrilha (Panturrilha ÷ Tornozelo)
+        //     Destreinado: pant ~32cm / tornozelo ~22cm → ~1.45
+        {
+            nome: 'Panturrilha',
+            atual: panturrilhaMD / medidas.tornozelo,
+            ideal: GR_TARGETS.PANTURRILHA_TORNOZELO,  // 1.92
+            baseline: 1.45,
+        },
+        // 11. Upper vs Lower — INVERSO (menor = melhor)
+        //     Destreinado: upper ≈ lower → ~1.0
+        {
+            nome: 'Upper vs Lower',
+            atual: (bracoMD + antebracoMD) / (coxaMD + panturrilhaMD),
+            ideal: GR_TARGETS.UPPER_LOWER_RATIO, // 0.75
+            baseline: 1.0,
+        },
     ];
 
-    for (const item of r) {
+    for (const item of items) {
         const pct = getCalibratedPct(item.atual, item.ideal, item.baseline);
         proporcoes.push({
             grupo: item.nome,
             atual: Math.round(item.atual * 100) / 100,
             ideal: item.ideal,
             pct,
-            status: pct >= 95 ? 'ELITE' : pct >= 85 ? 'META' : pct >= 70 ? 'CAMINHO' : 'INÍCIO',
+            status: pct >= 100 ? 'ELITE' :
+                pct >= 90 ? 'META' :
+                    pct >= 75 ? 'QUASE LÁ' :
+                        pct >= 50 ? 'CAMINHO' : 'INÍCIO',
         });
     }
-
     return proporcoes;
 }
+
 
 /**
  * Analisa simetria bilateral (braço, antebraço, coxa, panturrilha).
@@ -433,34 +543,101 @@ export function analisarSimetria(medidas: DiagnosticoInput['medidas']): {
  */
 export function gerarPrioridades(proporcoes: ProporcoesGrupo[]): Prioridade[] {
     return proporcoes
-        .filter(p => p.grupo !== 'Shape-V' && p.grupo !== 'Cintura')
         .sort((a, b) => a.pct - b.pct)
-        .slice(0, 4)
-        .map((p, idx) => ({
+        .map((p) => ({
             grupo: p.grupo,
-            nivel: idx < 2 ? 'ALTA' as const : idx < 3 ? 'MEDIA' as const : 'BAIXA' as const,
+            nivel: p.pct < 50 ? 'ALTA' as const
+                : p.pct < 75 ? 'MEDIA' as const
+                    : 'BAIXA' as const,
             pctAtual: p.pct,
             meta: p.ideal,
-            obs: `${p.atual}cm → ${p.ideal}cm`,
+            obs: `${p.atual} → ${p.ideal} (${p.pct}%)`,
         }));
 }
 
 /**
  * Gera metas de proporção trimestrais para 12 meses.
+ * 
+ * Baseado em dados científicos de crescimento muscular natural:
+ * - Grupos grandes (peito, costas, ombros, coxa): +2-3cm/ano para intermediários
+ * - Grupos médios (braço): +1.5-2cm/ano
+ * - Panturrilha: +0.5-1cm/ano (grupo mais resistente a hipertrofia)
+ * - Redução cintura: -2-4cm/ano com dieta adequada
+ * 
+ * Refs: Schoenfeld (2010), ACSM Position Stand, Wernbom et al. (2007)
  */
-export function gerarMetasProporcoes(proporcoes: ProporcoesGrupo[]): MetaProporcao[] {
+export function gerarMetasProporcoes(
+    proporcoes: ProporcoesGrupo[],
+    medidas?: DiagnosticoInput['medidas']
+): MetaProporcao[] {
+    // ─── Crescimento máximo realista em CM por grupo em 12 meses ───
+    // Valores para praticantes intermediários naturais
+    const MAX_CM_12M: Record<string, number> = {
+        'Costas': 3,              // circunferência torácica (lat spread)
+        'Shape-V': 2.5,           // circunferência de ombros
+        'Peitoral': 3,            // circunferência torácica
+        'Braço': 1.5,             // braço (grupo menor, cresce menos em cm)
+        'Antebraço': 0.5,         // muito limitado geneticamente
+        'Coxa': 2.5,              // grupo grande, responde bem
+        'Coxa vs Pantur.': 2.5,   // coxa
+        'Panturrilha': 0.8,       // grupo mais resistente a hipertrofia
+        'Tríade': 5,              // pontos de score (não cm)
+        'Upper vs Lower': 1.5,    // combinação de grupos
+    };
+
+    // ─── Denominador fixo de cada proporção (medida estrutural/referência) ───
+    const getDenominador = (grupo: string): number => {
+        if (!medidas) return 0;
+        switch (grupo) {
+            case 'Costas':
+            case 'Shape-V':
+                return medidas.cintura;
+            case 'Peitoral':
+            case 'Braço':
+                return medidas.punho;
+            case 'Antebraço':
+                return Math.max(medidas.bracoD, medidas.bracoE);
+            case 'Coxa':
+                return medidas.joelho;
+            case 'Coxa vs Pantur.':
+                return Math.max(medidas.panturrilhaD, medidas.panturrilhaE);
+            case 'Panturrilha':
+                return medidas.tornozelo;
+            default:
+                return 0;
+        }
+    };
+
     return proporcoes
         .filter(p => p.pct < 100 && p.grupo !== 'Cintura')
         .slice(0, 5)
         .map(p => {
             const diff = p.ideal - p.atual;
+            const maxCm = MAX_CM_12M[p.grupo] || 2;
+            const denominador = getDenominador(p.grupo);
+
+            let ganho12M: number;
+
+            if (denominador > 0) {
+                // Calcular ganho máximo em ratio baseado no cap de cm
+                const maxRatioGain = maxCm / denominador;
+                // Usar o menor: cap de cm OU gap restante (não ultrapassar o ideal)
+                ganho12M = Math.min(maxRatioGain, diff);
+            } else {
+                // Fallback: Tríade, Upper vs Lower, etc. → 15% do gap
+                ganho12M = diff * 0.15;
+            }
+
+            const meta12M = p.atual + ganho12M;
+
             return {
                 grupo: p.grupo,
                 atual: p.atual,
-                meta3M: Math.round((p.atual + diff * 0.25) * 10) / 10,
-                meta6M: Math.round((p.atual + diff * 0.50) * 10) / 10,
-                meta9M: Math.round((p.atual + diff * 0.75) * 10) / 10,
-                meta12M: Math.round(p.ideal * 10) / 10,
+                meta3M: Math.round((p.atual + ganho12M * 0.25) * 100) / 100,
+                meta6M: Math.round((p.atual + ganho12M * 0.50) * 100) / 100,
+                meta9M: Math.round((p.atual + ganho12M * 0.75) * 100) / 100,
+                meta12M: Math.round(meta12M * 100) / 100,
+                idealFinal: Math.round(p.ideal * 100) / 100,
             };
         });
 }
@@ -494,7 +671,7 @@ export function gerarDiagnosticoCompleto(input: DiagnosticoInput): DiagnosticoDa
     const metasComposicao = projetarMetas(composicaoAtual, gorduraMeta12M);
 
     // 3. Análise estética
-    const proporcoes = analisarProporcoes(input.medidas);
+    const proporcoes = analisarProporcoes(input.medidas, input.proporcoesPreCalculadas);
     const simetria = analisarSimetria(input.medidas);
 
     // Meta de score: +6 pontos em 12 meses (realista)
@@ -513,7 +690,7 @@ export function gerarDiagnosticoCompleto(input: DiagnosticoInput): DiagnosticoDa
 
     // 4. Prioridades e metas
     const prioridades = gerarPrioridades(proporcoes);
-    const metasProporcoes = gerarMetasProporcoes(proporcoes);
+    const metasProporcoes = gerarMetasProporcoes(proporcoes, input.medidas);
 
     // 5. Resumo do Vitrúvio
     const resumoVitruvio = `${input.nomeAtleta}, você está na classificação ${input.classificacao.toUpperCase()} com score ${input.score}. Em 12 meses, com foco nos pontos fracos identificados, você pode atingir score ${scoreMeta12M}+ (${classificacaoMeta}). Na composição corporal, a meta é uma recomposição: reduzir gordura de ${input.gorduraPct}% para ${gorduraMeta12M}% enquanto ganha massa magra. Com consistência e dedicação, essas metas são desafiadoras mas realistas. Vamos montar o plano de treino para fazer isso acontecer!`;
@@ -527,6 +704,7 @@ export function gerarDiagnosticoCompleto(input: DiagnosticoInput): DiagnosticoDa
         metasProporcoes,
         resumoVitruvio,
         geradoEm: new Date().toISOString(),
+        _medidas: input.medidas, // Para referência em cm na UI
     };
 }
 

@@ -12,8 +12,9 @@ import {
 const getStatus = (percentual: number): string => {
     if (percentual >= 103) return 'ELITE';
     if (percentual >= 97) return 'META';
-    if (percentual >= 90) return 'QUASE LÁ';
-    if (percentual >= 82) return 'CAMINHO';
+    if (percentual >= 82) return 'QUASE LÁ';
+    if (percentual >= 65) return 'BOA BASE';
+    if (percentual >= 40) return 'CAMINHO';
     return 'INÍCIO';
 };
 

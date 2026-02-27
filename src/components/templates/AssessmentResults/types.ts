@@ -88,3 +88,11 @@ export interface ProportionItem {
     card: ProportionCardData;
     ai: ProportionAIAnalysis;
 }
+
+export interface ProportionRatioSnapshot {
+    nome: string;
+    atual: number;
+    ideal: number;
+    pct: number;
+    status: string;
+}

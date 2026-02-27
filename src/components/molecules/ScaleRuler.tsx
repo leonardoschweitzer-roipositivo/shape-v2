@@ -18,11 +18,12 @@ export interface ScaleRulerProps {
 }
 
 const DEFAULT_ZONES: ScaleZone[] = [
-    { label: 'INÍCIO', min: 75, max: 82, color: '#1E3A5F' },
-    { label: 'CAMINHO', min: 82, max: 90, color: '#2563EB' },
-    { label: 'QUASE LÁ', min: 90, max: 97, color: '#3B82F6' },
+    { label: 'INÍCIO', min: 0, max: 40, color: '#1E293B' },
+    { label: 'CAMINHO', min: 40, max: 65, color: '#1E3A5F' },
+    { label: 'BOA BASE', min: 65, max: 82, color: '#2563EB' },
+    { label: 'QUASE LÁ', min: 82, max: 97, color: '#3B82F6' },
     { label: 'META', min: 97, max: 103, color: '#8B5CF6' },
-    { label: 'ELITE', min: 103, max: 110, color: '#EAB308' }
+    { label: 'ELITE', min: 103, max: 115, color: '#EAB308' }
 ];
 
 export const ScaleRuler: React.FC<ScaleRulerProps> = ({
@@ -32,11 +33,11 @@ export const ScaleRuler: React.FC<ScaleRulerProps> = ({
     zones = DEFAULT_ZONES,
     currentValueLabel = "VOCÊ"
 }) => {
-    // Definimos o range da régua: de 75% a 110%
-    const minScale = 75;
-    const maxScale = 110;
+    // Definimos o range da régua: de 0% a 115%
+    const minScale = 0;
+    const maxScale = 115;
 
-    // Função para mapear o valor (75-105) para a posição percentual da barra (0-100)
+    // Função para mapear o valor (0-115) para a posição percentual da barra (0-100)
     const getPercentage = (val: number) => {
         const percentage = ((val - minScale) / (maxScale - minScale)) * 100;
         return Math.max(0, Math.min(100, percentage));

@@ -38,24 +38,6 @@ export const ProportionCard: React.FC<ProportionCardProps> = ({
                     />
                 </div>
                 {!rawImage && <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#050810]/20 to-[#131B2C]/90"></div>}
-
-                {/* Anatomy Overlays */}
-                <div className="relative z-10 w-full h-full flex items-center justify-center pointer-events-none">
-                    {overlayStyle === 'v-taper' && (
-                        <div className="flex flex-col items-center gap-12 w-full px-8 mt-4">
-                            <div className="w-full border-t border-dashed border-white/60 relative"></div>
-                            <div className="h-20 w-full border-x border-blue-500/30 rounded-[50%]"></div>
-                            <div className="w-2/3 border-t border-dashed border-blue-400 relative"></div>
-                        </div>
-                    )}
-                    {/* Add more overlay styles here if needed */}
-
-                    {overlayStyle && (
-                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 bg-blue-900/40 border border-blue-500/30 rounded text-[10px] font-bold text-blue-400 uppercase tracking-widest backdrop-blur-sm">
-                            {badge}
-                        </div>
-                    )}
-                </div>
             </div>
 
             {/* Data Section */}

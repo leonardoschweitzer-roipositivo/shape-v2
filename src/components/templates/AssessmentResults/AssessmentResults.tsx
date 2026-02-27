@@ -123,7 +123,7 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
         ombros: assessment.measurements.shoulders,
         peito: assessment.measurements.chest,
         busto: assessment.measurements.chest, // Using chest as bust for now, as they are usually same circle
-        costas: assessment.measurements.chest * 1.05, // Approximation
+        costas: assessment.measurements.chest, // Mesma circunferência torácica do peitoral
         cintura: assessment.measurements.waist,
         quadril: assessment.measurements.hips,
         braco: Math.max(assessment.measurements.armRight, assessment.measurements.armLeft),

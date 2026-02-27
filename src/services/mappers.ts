@@ -51,7 +51,7 @@ export function mapAtletaToPersonalAthlete(
             ratio: Number(assessment.ratio) || 0,
             bf: Number(assessment.body_fat) || 0,
             ffmi: resultsStored?.scores?.composicao?.detalhes?.detalhes?.ffmi?.valor || 0,
-            proporcoes: resultsStored?.scores || null,
+            proporcoes: resultsStored?.proporcoes_aureas || resultsStored?.scores || null,
             measurements: {
                 weight: Number(linear.weight) || Number(assessment.weight) || 0,
                 height: Number(linear.height) || alturaCm || 0,

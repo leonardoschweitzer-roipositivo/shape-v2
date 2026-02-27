@@ -42,7 +42,7 @@ import {
 // import { GamificationPage } from './pages/GamificationPage'; // DISABLED - Feature para depois
 import { AthletePortal } from './pages/AthletePortal';
 import { PortalLanding } from './pages/athlete/PortalLanding';
-import { TestSupabaseConnection } from '@/components/TestSupabaseConnection';
+
 import { calculateAge } from '@/utils/dateUtils';
 import { useAthleteStore } from '@/stores/athleteStore';
 import { useDataStore } from '@/stores/dataStore';
@@ -784,7 +784,7 @@ const App: React.FC = () => {
         }}
       />
 
-      <TestSupabaseConnection />
+
 
       <DebugAccess
         onLogin={handleQuickLogin}

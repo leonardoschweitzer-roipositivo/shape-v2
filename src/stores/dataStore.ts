@@ -9,6 +9,8 @@ import { supabase } from '@/services/supabase';
 import { useAthleteStore } from '@/stores/athleteStore';
 import { calculateAge } from '@/utils/dateUtils';
 import type { Atleta, Ficha, Medida } from '@/lib/database.types';
+import { extractProportionRatios } from '@/components/templates/AssessmentResults/config/proportionItems';
+import type { Measurements } from '@/components/templates/AssessmentResults/types';
 
 type DataSource = 'MOCK' | 'SUPABASE';
 
@@ -151,6 +153,30 @@ export const useDataStore = create<DataState>()(
                 );
                 const physicalRatio = vTaperDetail?.valor || 0;
 
+                // ─── Calcular proporções áureas snapshot ───
+                // Monta userMeasurements com Math.max(D,E) — MESMA lógica da tela de Avaliação
+                const userMeasForRatios: Measurements = {
+                    altura: measurements.height,
+                    peso: measurements.weight,
+                    ombros: measurements.shoulders,
+                    peito: measurements.chest,
+                    busto: measurements.chest,
+                    costas: measurements.chest, // Mesma circunferência torácica
+                    cintura: measurements.waist,
+                    quadril: measurements.hips,
+                    braco: Math.max(measurements.armRight, measurements.armLeft),
+                    antebraco: Math.max(measurements.forearmRight, measurements.forearmLeft),
+                    punho: (measurements.wristRight + measurements.wristLeft) / 2 || 17,
+                    pescoco: measurements.neck,
+                    coxa: Math.max(measurements.thighRight, measurements.thighLeft),
+                    joelho: (measurements.kneeRight + measurements.kneeLeft) / 2 || 40,
+                    panturrilha: Math.max(measurements.calfRight, measurements.calfLeft),
+                    tornozelo: (measurements.ankleRight + measurements.ankleLeft) / 2 || 22,
+                    pelvis: measurements.hips,
+                    cabeca: 56
+                };
+                const proporcoesAureas = extractProportionRatios(userMeasForRatios, 'golden');
+
                 const newAssessment: MeasurementHistory = {
                     id: `assessment-${Date.now()}`,
                     date: new Date().toISOString(),
@@ -159,7 +185,8 @@ export const useDataStore = create<DataState>()(
                     score: result.avaliacaoGeral,
                     ratio: physicalRatio,
                     bf: result.scores.composicao.detalhes.detalhes.bf.valor,
-                    ffmi: result.scores.composicao.detalhes.detalhes.ffmi.valor
+                    ffmi: result.scores.composicao.detalhes.detalhes.ffmi.valor,
+                    proporcoes: proporcoesAureas
                 };
 
                 // Update athletes list
@@ -225,6 +252,7 @@ export const useDataStore = create<DataState>()(
                                 scores: result.scores,
                                 penalizacoes: result.penalizacoes,
                                 insights: result.insights,
+                                proporcoes_aureas: proporcoesAureas,
                             }, (_, v) => typeof v === 'number' && !isFinite(v) ? 0 : v));
 
                             const heightCm = measurements.height > 0 && measurements.height < 3

@@ -113,18 +113,34 @@ const MetricCard: React.FC<{
 );
 
 /** Box de insight do Vitrúvio */
-const InsightBox: React.FC<{ text: string }> = ({ text }) => (
-    <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mt-4">
-        <div className="flex items-start gap-3">
-            <Bot size={18} className="text-primary mt-0.5 shrink-0" />
-            <p className="text-sm text-gray-300 leading-relaxed italic">"{text}"</p>
+const InsightBox: React.FC<{ text: string; title?: string }> = ({ text, title = 'Análise Vitrúvio IA' }) => (
+    <div className="bg-primary/5 border border-primary/20 rounded-xl p-6 mt-4">
+        <div className="flex items-start gap-4">
+            <Bot size={26} className="text-primary mt-0.5 shrink-0" />
+            <div>
+                <p className="text-base font-bold text-primary mb-2 uppercase tracking-wider">{title}</p>
+                <p className="text-lg text-gray-300 leading-relaxed">"{text}"</p>
+                <p className="text-xs text-gray-600 mt-3 text-right">— VITRÚVIO IA</p>
+            </div>
+        </div>
+    </div>
+);
+
+/** Bloco de referências científicas */
+const RefsBox: React.FC<{ refs: string[] }> = ({ refs }) => (
+    <div className="bg-white/[0.02] rounded-lg px-4 py-3 mt-4">
+        <p className="text-[10px] uppercase tracking-wider text-gray-600 font-semibold mb-2">Referências Científicas</p>
+        <div className="space-y-1">
+            {refs.map((r, i) => (
+                <p key={i} className="text-[10px] text-gray-600 leading-relaxed" dangerouslySetInnerHTML={{ __html: `[${i + 1}] ${r}` }} />
+            ))}
         </div>
     </div>
 );
 
 /** Barra de progresso visual */
 const ProgressBar: React.FC<{ pct: number; color?: string }> = ({ pct, color = 'bg-primary' }) => (
-    <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+    <div className="w-full h-3.5 bg-white/5 rounded-full overflow-hidden">
         <div
             className={`h-full rounded-full transition-all ${color}`}
             style={{ width: `${Math.min(100, Math.max(0, pct))}%` }}
@@ -197,7 +213,13 @@ const SecaoTaxas: React.FC<{ dados: DiagnosticoDados }> = ({ dados }) => {
                 </div>
             )}
 
-            <InsightBox text="Seu gasto com atividades diárias (NEAT) pode ser otimizado. Incluir caminhadas de 20-30min pode aumentar seu TDEE em ~150-200 kcal/dia." />
+            <InsightBox text={`Seu TDEE total é de ${taxas.tdee} kcal/dia, composto por TMB (${taxas.tmbAjustada} kcal — o mínimo para funções vitais), NEAT (${taxas.neat} kcal — atividades do dia a dia) e EAT (${taxas.eat} kcal — exercícios). ${taxas.neat < 400 ? 'O NEAT está baixo — incluir caminhadas de 20-30min pode elevar o gasto em ~150-200 kcal/dia, acelerando resultados sem esforço extra no treino.' : 'Seu NEAT está em bom nível, mas pode ser otimizado com deslocamentos ativos e atividades diárias.'} ${taxas.fatoresConsiderados.length > 0 ? `Foram considerados ajustes por: ${taxas.fatoresConsiderados.join(', ').toLowerCase()}.` : ''} Para recomposição corporal, o déficit ideal é de 300-500 kcal abaixo do TDEE.`} />
+
+            <RefsBox refs={[
+                'Harris, J.A. & Benedict, F.G. (1918). <span class="text-gray-500 italic">"A biometric study of human basal metabolism."</span> Proc Natl Acad Sci, 4(12), 370-373.',
+                'Cunningham, J.J. (1991). <span class="text-gray-500 italic">"Body composition as a determinant of energy expenditure."</span> Am J Clin Nutr, 54(6), 963-969.',
+                'Levine, J.A. (2002). <span class="text-gray-500 italic">"Non-exercise activity thermogenesis (NEAT)."</span> Best Pract Res Clin Endocrinol Metab, 16(4), 679-702.',
+            ]} />
         </SectionCard>
     );
 };
@@ -262,53 +284,114 @@ const SecaoComposicao: React.FC<{ dados: DiagnosticoDados }> = ({ dados }) => {
                 </table>
             </div>
 
-            <InsightBox text={`Meta de recomposição: reduzir gordura de ${composicaoAtual.gorduraPct}% para ${metasComposicao.gordura12Meses}% enquanto ganha massa magra. O peso cairá moderadamente, mas a mudança visual será significativa.`} />
+            <InsightBox text={`Atualmente com ${composicaoAtual.peso}kg — sendo ${composicaoAtual.massaMagra}kg de massa magra e ${composicaoAtual.massaGorda}kg de gordura (${composicaoAtual.gorduraPct}%). ${composicaoAtual.gorduraPct > 20 ? 'A prioridade é reduzir gordura corporal via déficit calórico moderado combinado com treino de força para preservar massa magra.' : composicaoAtual.gorduraPct > 15 ? 'Faixa de transição — é possível buscar recomposição corporal simultânea (perder gordura e ganhar músculo) com alimentação estratégica.' : 'BF em faixa atlética. O foco deve ser ganho gradual de massa magra com surplus calórico controlado (+200-300 kcal).'} Meta 12M: ${metasComposicao.gordura12Meses}% de gordura, peso projetado de ${metasComposicao.peso12Meses}kg. A mudança visual será significativa mesmo que a balança não mude drasticamente.`} />
+
+            <RefsBox refs={[
+                'Jackson, A.S. & Pollock, M.L. (1978). <span class="text-gray-500 italic">"Generalized equations for predicting body density of men."</span> Br J Nutr, 40(3), 497-504.',
+                'ACSM (2013). <span class="text-gray-500 italic">"Guidelines for Exercise Testing and Prescription."</span> 9th Ed. — Classificação de % gordura corporal.',
+                'Helms, E.R. et al. (2014). <span class="text-gray-500 italic">"Evidence-based recommendations for natural bodybuilding contest preparation."</span> J Int Soc Sports Nutr, 11:20.',
+            ]} />
         </SectionCard>
     );
 };
 
 /** Seção 3: Proporções Áureas */
 const SecaoEstetica: React.FC<{ dados: DiagnosticoDados }> = ({ dados }) => {
-    const { analiseEstetica } = dados;
+    const { analiseEstetica, prioridades } = dados;
+
+    // Mapa de prioridades para badges
+    const prioMap = new Map(prioridades.map(p => [p.grupo, p.nivel]));
 
     return (
         <SectionCard icon={Star} title="PROPORÇÕES ÁUREAS" subtitle="Avaliação baseada na Proporção Áurea (φ = 1.618)">
             {/* Score e classificação */}
             <div className="grid grid-cols-2 gap-5 mb-6">
-                <div className="bg-[#0D1525] border border-white/5 rounded-xl p-5 text-center">
+                <div className="bg-[#0D1525] border border-white/5 rounded-xl p-5 text-center flex flex-col items-center justify-center min-h-[140px]">
                     <p className="text-xs uppercase tracking-widest text-gray-500 mb-2">Score Geral</p>
                     <p className="text-5xl font-bold text-primary">{analiseEstetica.scoreAtual}</p>
                     <p className="text-sm text-gray-500 mt-2">Meta 12M: {analiseEstetica.scoreMeta12M}+</p>
                 </div>
-                <div className="bg-[#0D1525] border border-white/5 rounded-xl p-5 text-center">
-                    <p className="text-xs uppercase tracking-widest text-gray-500 mb-2">Classificação</p>
-                    <p className="text-xl font-bold text-white mt-2">{analiseEstetica.classificacaoAtual}</p>
-                    <div className="mt-3 space-y-1.5">
-                        {['ELITE', 'META', 'CAMINHO', 'INÍCIO'].map(c => (
-                            <p key={c} className={`text-xs ${c === analiseEstetica.classificacaoAtual ? 'text-primary font-bold' : 'text-gray-600'}`}>
-                                {c} {c === analiseEstetica.classificacaoAtual && '◀'}
-                            </p>
-                        ))}
-                    </div>
+                <div className="bg-[#0D1525] border border-white/5 rounded-xl p-5 flex flex-col items-center justify-center min-h-[140px]">
+                    <p className="text-xs uppercase tracking-widest text-gray-500 mb-4">Classificação</p>
+                    {(() => {
+                        const stages = [
+                            { key: 'INICIANTE', label: 'Iniciante', emoji: '🌱' },
+                            { key: 'INTERMEDIÁRIO', label: 'Intermediário', emoji: '📈' },
+                            { key: 'ATLÉTICO', label: 'Atlético', emoji: '⚡' },
+                            { key: 'AVANÇADO', label: 'Avançado', emoji: '💪' },
+                            { key: 'ELITE', label: 'Elite', emoji: '🏆' },
+                        ];
+                        const currentIdx = stages.findIndex(s => s.key === analiseEstetica.classificacaoAtual);
+                        return (
+                            <div className="flex items-center w-full justify-between">
+                                {stages.map((stage, idx) => {
+                                    const isActive = idx === currentIdx;
+                                    const isPast = idx < currentIdx;
+                                    return (
+                                        <React.Fragment key={stage.key}>
+                                            {idx > 0 && (
+                                                <div className={`h-[2px] flex-1 mx-0.5 ${idx <= currentIdx ? 'bg-primary' : 'bg-white/10'}`} />
+                                            )}
+                                            <div className="flex flex-col items-center shrink-0" style={{ minWidth: '48px' }}>
+                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm border-2 transition-all ${isActive
+                                                    ? 'bg-primary/20 border-primary shadow-[0_0_12px_rgba(0,201,167,0.3)] scale-110'
+                                                    : isPast
+                                                        ? 'bg-primary/10 border-primary/40'
+                                                        : 'bg-white/[0.03] border-white/10'
+                                                    }`}>
+                                                    {stage.emoji}
+                                                </div>
+                                                <span className={`text-[9px] mt-1.5 font-semibold uppercase tracking-wider text-center leading-tight ${isActive ? 'text-primary' : isPast ? 'text-primary/50' : 'text-gray-600'
+                                                    }`}>
+                                                    {stage.label}
+                                                </span>
+                                            </div>
+                                        </React.Fragment>
+                                    );
+                                })}
+                            </div>
+                        );
+                    })()}
                 </div>
             </div>
 
             {/* Tabela de proporções */}
-            <p className="text-base text-gray-500 mb-3 uppercase tracking-wider font-semibold">Proporções por Grupo (Índices)</p>
+            <p className="text-lg text-white mb-3 uppercase tracking-wider font-semibold pb-2 border-b border-white/10">Proporções por Grupo (Índices)</p>
+
+            {/* Cabeçalho */}
+            <div className="flex items-center gap-4 px-1 pb-2 mb-4 border-b border-white/10">
+                <span className="text-xs uppercase tracking-wider text-white font-semibold w-44 shrink-0">Proporção</span>
+                <span className="text-xs uppercase tracking-wider text-white font-semibold w-14 text-right">Atual</span>
+                <span className="text-xs uppercase tracking-wider text-white font-semibold flex-1 text-center">Progresso</span>
+                <span className="text-xs uppercase tracking-wider text-white font-semibold w-14 text-right">%</span>
+                <span className="text-xs uppercase tracking-wider text-white font-semibold w-14 text-right">Meta</span>
+            </div>
+
             <div className="space-y-3 mb-4">
-                {analiseEstetica.proporcoes.map((p) => (
-                    <div key={p.grupo} className="flex items-center gap-4">
-                        <span className="text-base text-gray-400 w-32 shrink-0">{p.grupo}</span>
-                        <span className="text-base text-gray-500 w-16 text-right">{p.atual}</span>
-                        <span className="text-base text-gray-600 w-16 text-right">{p.ideal}</span>
-                        <div className="flex-1">
-                            <ProgressBar pct={p.pct} color={p.pct >= 95 ? 'bg-emerald-500' : p.pct >= 85 ? 'bg-primary' : p.pct >= 70 ? 'bg-yellow-500' : 'bg-red-500'} />
+                {analiseEstetica.proporcoes.map((p) => {
+                    const prio = prioMap.get(p.grupo);
+                    return (
+                        <div key={p.grupo} className="flex items-center gap-4">
+                            <span className="text-base text-gray-400 w-44 shrink-0 flex items-center gap-2">
+                                {prio && (
+                                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 ${prio === 'ALTA' ? 'bg-red-500/20 text-red-400' :
+                                        prio === 'MEDIA' ? 'bg-yellow-500/20 text-yellow-400' :
+                                            'bg-green-500/20 text-green-400'
+                                        }`}>{prio}</span>
+                                )}
+                                {p.grupo}
+                            </span>
+                            <span className="text-base text-white font-semibold w-14 text-right">{p.atual}</span>
+                            <div className="flex-1">
+                                <ProgressBar pct={p.pct} color={p.pct >= 95 ? 'bg-emerald-500' : p.pct >= 85 ? 'bg-primary' : p.pct >= 70 ? 'bg-yellow-500' : 'bg-red-500'} />
+                            </div>
+                            <span className={`text-base font-bold w-14 text-right ${p.pct >= 95 ? 'text-emerald-400' : p.pct >= 85 ? 'text-primary' : p.pct >= 70 ? 'text-yellow-400' : 'text-red-400'}`}>
+                                {p.pct}%
+                            </span>
+                            <span className="text-base text-gray-600 w-14 text-right">{p.ideal}</span>
                         </div>
-                        <span className={`text-base font-bold w-14 text-right ${p.pct >= 95 ? 'text-emerald-400' : p.pct >= 85 ? 'text-primary' : p.pct >= 70 ? 'text-yellow-400' : 'text-red-400'}`}>
-                            {p.pct}%
-                        </span>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
 
             {/* Simetria */}
@@ -334,6 +417,30 @@ const SecaoEstetica: React.FC<{ dados: DiagnosticoDados }> = ({ dados }) => {
                     ))}
                 </div>
             </div>
+
+            {/* Análise IA das proporções */}
+            {(() => {
+                const melhores = [...analiseEstetica.proporcoes].sort((a, b) => b.pct - a.pct).slice(0, 2);
+                const piores = [...analiseEstetica.proporcoes].sort((a, b) => a.pct - b.pct).slice(0, 2);
+                const mediaGeral = Math.round(analiseEstetica.proporcoes.reduce((s, p) => s + p.pct, 0) / analiseEstetica.proporcoes.length);
+                const acimaMeta = analiseEstetica.proporcoes.filter(p => p.pct >= 97).length;
+                const abaixo50 = analiseEstetica.proporcoes.filter(p => p.pct < 50).length;
+
+                return <InsightBox text={
+                    `Média geral das proporções: ${mediaGeral}%. ` +
+                    `${acimaMeta > 0 ? `${acimaMeta} proporção(ões) já atingiram ou superaram a meta (${melhores.map(m => m.grupo).join(', ')}).` : `Nenhuma proporção atingiu a meta ainda.`} ` +
+                    `${abaixo50 > 0 ? `${abaixo50} proporção(ões) estão abaixo de 50% e precisam de atenção prioritária: ${piores.map(p => `${p.grupo} (${p.pct}%)`).join(', ')}.` : 'Todas as proporções estão acima de 50% — boa base construída.'} ` +
+                    `A simetria bilateral está em ${analiseEstetica.simetria.scoreGeral}% (${analiseEstetica.simetria.status}). ` +
+                    `O foco do treino deve priorizar as proporções mais fracas para elevar o score geral de ${analiseEstetica.scoreAtual} para ${analiseEstetica.scoreMeta12M}+ em 12 meses.`
+                } />;
+            })()}
+
+            <RefsBox refs={[
+                'Vitruvius, M. (séc. I a.C.). <span class="text-gray-500 italic">"De Architectura"</span> — Proporções ideais do corpo humano.',
+                'Da Vinci, L. (1490). <span class="text-gray-500 italic">"Homem Vitruviano"</span> — Estudo geométrico da proporção áurea (φ = 1.618).',
+                'Sandow, E. (1894). <span class="text-gray-500 italic">"Strength and How to Obtain It"</span> — Primeiros índices de proporcionalidade física.',
+                'Butt, C. (2010). <span class="text-gray-500 italic">"Your Muscular Potential"</span> — Modelo preditivo baseado em circunferências ósseas (punho/tornozelo).',
+            ]} />
         </SectionCard>
     );
 };
@@ -371,31 +478,27 @@ const SecaoPrioridades: React.FC<{ dados: DiagnosticoDados }> = ({ dados }) => {
                 </div>
             </div>
 
-            {/* Tabela de prioridades */}
-            <p className="text-lg text-gray-500 mb-3 uppercase tracking-wider font-semibold">Prioridades de Desenvolvimento</p>
-            <div className="space-y-3">
-                {prioridades.map((p, idx) => (
-                    <div key={p.grupo} className="flex items-center gap-4 bg-white/[0.03] rounded-lg px-5 py-4">
-                        <span className="text-base font-bold text-gray-500 w-6">#{idx + 1}</span>
-                        <span className={`text-base font-bold px-2.5 py-1 rounded ${p.nivel === 'ALTA' ? 'bg-red-500/20 text-red-400' :
-                            p.nivel === 'MEDIA' ? 'bg-yellow-500/20 text-yellow-400' :
-                                'bg-green-500/20 text-green-400'
-                            }`}>
-                            {p.nivel}
-                        </span>
-                        <span className="text-base text-gray-300 flex-1">{p.grupo}</span>
-                        <span className="text-base text-gray-500">{p.obs}</span>
-                    </div>
-                ))}
-            </div>
 
-            <InsightBox text="Os grupos com prioridade ALTA receberão volume extra no plano de treino. Assimetrias serão corrigidas com trabalho unilateral." />
+
+            {(() => {
+                const fortes3 = [...analiseEstetica.proporcoes].sort((a, b) => b.pct - a.pct).slice(0, 3);
+                const fracos3 = [...analiseEstetica.proporcoes].sort((a, b) => a.pct - b.pct).slice(0, 3);
+                const prioAltas = prioridades.filter(p => p.nivel === 'ALTA');
+                const assimetrias = analiseEstetica.simetria.itens.filter(s => s.diffPct >= 4);
+
+                return <InsightBox text={
+                    `Destaques positivos: ${fortes3.map(f => `${f.grupo} (${f.pct}%)`).join(', ')} — esses grupos devem ser mantidos com volume de manutenção. ` +
+                    `Pontos a desenvolver: ${fracos3.map(f => `${f.grupo} (${f.pct}%)`).join(', ')} — receberão volume extra e prioridade no plano de treino. ` +
+                    `${prioAltas.length > 0 ? `${prioAltas.length} grupo(s) marcado(s) como prioridade ALTA: ${prioAltas.map(p => p.grupo).join(', ')}.` : 'Nenhum grupo em prioridade crítica.'} ` +
+                    `${assimetrias.length > 0 ? `Assimetrias detectadas em ${assimetrias.map(a => `${a.grupo} (${a.diffPct}%)`).join(', ')} — serão corrigidas com trabalho unilateral (halteres e cabos).` : 'Simetria bilateral em bom nível — nenhuma correção unilateral necessária.'}`
+                } />;
+            })()}
         </SectionCard>
     );
 };
 
 /** Seção 5: Metas 12 Meses */
-const SecaoMetas: React.FC<{ dados: DiagnosticoDados; nomeAtleta: string }> = ({ dados, nomeAtleta }) => {
+const SecaoMetas: React.FC<{ dados: DiagnosticoDados; nomeAtleta: string; medidas?: any }> = ({ dados, nomeAtleta, medidas }) => {
     const { analiseEstetica, metasProporcoes, resumoVitruvio } = dados;
     const progressoPct = Math.round((analiseEstetica.scoreAtual / analiseEstetica.scoreMeta12M) * 100);
 
@@ -420,37 +523,110 @@ const SecaoMetas: React.FC<{ dados: DiagnosticoDados; nomeAtleta: string }> = ({
             </div>
 
             {/* Metas trimestrais por proporção */}
-            {metasProporcoes.length > 0 && (
-                <>
-                    <p className="text-base text-gray-500 mb-3 uppercase tracking-wider font-semibold">Metas Trimestrais de Proporções</p>
-                    <div className="overflow-x-auto mb-6">
-                        <table className="w-full text-base">
-                            <thead>
-                                <tr className="border-b border-white/10">
-                                    <th className="text-left py-3 text-gray-500 font-semibold">Grupo</th>
-                                    <th className="text-right py-3 text-gray-500 font-semibold">Atual</th>
-                                    <th className="text-right py-3 text-gray-500 font-semibold">3M</th>
-                                    <th className="text-right py-3 text-gray-500 font-semibold">6M</th>
-                                    <th className="text-right py-3 text-gray-500 font-semibold">9M</th>
-                                    <th className="text-right py-3 text-gray-500 font-semibold">12M</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {metasProporcoes.map((m) => (
-                                    <tr key={m.grupo} className="border-b border-white/5">
-                                        <td className="py-3 text-gray-300 font-medium">{m.grupo}</td>
-                                        <td className="py-3 text-right text-gray-400">{m.atual}</td>
-                                        <td className="py-3 text-right text-gray-500">{m.meta3M}</td>
-                                        <td className="py-3 text-right text-gray-500">{m.meta6M}</td>
-                                        <td className="py-3 text-right text-gray-500">{m.meta9M}</td>
-                                        <td className="py-3 text-right text-primary font-bold">{m.meta12M}</td>
+            {metasProporcoes.length > 0 && (() => {
+                // Mapa de prioridades para badges
+                const prioMap = new Map(dados.prioridades.map(p => [p.grupo, p.nivel]));
+
+                // Mapa de referência cm: para cada grupo, qual músculo cresce e qual é fixo
+                const getCmRef = (grupo: string, ratioAtual: number, ratio12M: number) => {
+                    if (!medidas) return null;
+                    const refs: Record<string, { musculo: string; fixo: number; label: string }> = {
+                        'Costas': { musculo: 'Costas', fixo: medidas.cintura, label: 'cintura' },
+                        'Shape-V': { musculo: 'Ombros', fixo: medidas.cintura, label: 'cintura' },
+                        'Peitoral': { musculo: 'Peitoral', fixo: medidas.punho, label: 'punho' },
+                        'Braço': { musculo: 'Braço', fixo: medidas.punho, label: 'punho' },
+                        'Coxa': { musculo: 'Coxa', fixo: medidas.joelho, label: 'joelho' },
+                        'Panturrilha': { musculo: 'Panturrilha', fixo: medidas.tornozelo, label: 'tornozelo' },
+                        'Coxa vs Pantur.': { musculo: 'Coxa', fixo: Math.max(medidas.panturrilhaD, medidas.panturrilhaE), label: 'panturrilha' },
+                    };
+                    const ref = refs[grupo];
+                    if (!ref || !ref.fixo) return null;
+                    const cmAtual = Math.round(ratioAtual * ref.fixo * 10) / 10;
+                    const cm12M = Math.round(ratio12M * ref.fixo * 10) / 10;
+                    return { musculo: ref.musculo, cmAtual, cm12M, fixoLabel: ref.label, fixoVal: ref.fixo };
+                };
+
+                return (
+                    <>
+                        <p className="text-base text-gray-500 mb-1 uppercase tracking-wider font-semibold">Metas Trimestrais de Proporções</p>
+                        <p className="text-xs text-gray-600 mb-3">Meta 12M baseada em crescimento muscular natural realista (cm/ano por grupo)</p>
+                        <div className="overflow-x-auto mb-6">
+                            <table className="w-full text-base">
+                                <thead>
+                                    <tr className="border-b border-white/10">
+                                        <th className="text-left py-3 text-gray-500 font-semibold">Grupo</th>
+                                        <th className="text-right py-3 text-gray-500 font-semibold">Atual</th>
+                                        <th className="text-right py-3 text-gray-500 font-semibold">3M</th>
+                                        <th className="text-right py-3 text-gray-500 font-semibold">6M</th>
+                                        <th className="text-right py-3 text-gray-500 font-semibold">9M</th>
+                                        <th className="text-right py-3 text-primary font-semibold">12M</th>
+                                        <th className="text-right py-3 text-gray-600 font-semibold">Ideal</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </>
-            )}
+                                </thead>
+                                <tbody>
+                                    {metasProporcoes.map((m) => {
+                                        const cm = getCmRef(m.grupo, m.atual, m.meta12M);
+                                        const prio = prioMap.get(m.grupo);
+                                        return (
+                                            <React.Fragment key={m.grupo}>
+                                                <tr className={cm ? '' : 'border-b border-white/5'}>
+                                                    <td className="pt-3 pb-1 text-gray-300 font-medium flex items-center gap-2">
+                                                        {prio && (
+                                                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 ${prio === 'ALTA' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
+                                                                prio === 'MEDIA' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
+                                                                    'bg-green-500/20 text-green-400 border border-green-500/30'
+                                                                }`}>{prio}</span>
+                                                        )}
+                                                        {m.grupo}
+                                                    </td>
+                                                    <td className="pt-3 pb-1 text-right text-gray-400">{m.atual}</td>
+                                                    <td className="pt-3 pb-1 text-right text-gray-500">{m.meta3M}</td>
+                                                    <td className="pt-3 pb-1 text-right text-gray-500">{m.meta6M}</td>
+                                                    <td className="pt-3 pb-1 text-right text-gray-500">{m.meta9M}</td>
+                                                    <td className="pt-3 pb-1 text-right text-primary font-bold">{m.meta12M}</td>
+                                                    <td className="pt-3 pb-1 text-right text-gray-600">{m.idealFinal}</td>
+                                                </tr>
+                                                {cm && (
+                                                    <tr className="border-b border-white/5">
+                                                        <td colSpan={7} className="pb-3 pt-0">
+                                                            <div className="flex items-center gap-2 pl-1">
+                                                                <span className="text-[11px] text-gray-600">📐</span>
+                                                                <span className="text-[11px] text-gray-500">
+                                                                    {cm.musculo}: <span className="text-gray-400 font-medium">{cm.cmAtual}cm</span>
+                                                                    {' → '}
+                                                                    <span className="text-primary font-medium">{cm.cm12M}cm</span>
+                                                                    <span className="text-gray-600"> ({cm.fixoLabel}: {cm.fixoVal}cm fixo)</span>
+                                                                </span>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </React.Fragment>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div className="bg-white/[0.02] rounded-lg px-4 py-3 mt-2 mb-6">
+                            <p className="text-[10px] uppercase tracking-wider text-gray-600 font-semibold mb-2">Referências Científicas — Taxas de Crescimento</p>
+                            <div className="space-y-1">
+                                <p className="text-[10px] text-gray-600 leading-relaxed">
+                                    [1] Schoenfeld, B.J. (2010). <span className="text-gray-500 italic">"The mechanisms of muscle hypertrophy and their application to resistance training."</span> J Strength Cond Res, 24(10), 2857-2872.
+                                </p>
+                                <p className="text-[10px] text-gray-600 leading-relaxed">
+                                    [2] Wernbom, M., Augustsson, J., & Thomeé, R. (2007). <span className="text-gray-500 italic">"The influence of frequency, intensity, volume and mode of strength training on whole muscle cross-sectional area in humans."</span> Sports Medicine, 37(3), 225-264.
+                                </p>
+                                <p className="text-[10px] text-gray-600 leading-relaxed">
+                                    [3] ACSM (2009). <span className="text-gray-500 italic">"Position Stand: Progression models in resistance training for healthy adults."</span> Med Sci Sports Exerc, 41(3), 687-708.
+                                </p>
+                                <p className="text-[10px] text-gray-600 leading-relaxed">
+                                    [4] Butt, C. (2010). <span className="text-gray-500 italic">"Your Muscular Potential: How to predict your maximum muscular bodyweight and measurements."</span> — Modelo preditivo baseado em estrutura óssea (punho/tornozelo).
+                                </p>
+                            </div>
+                        </div>
+                    </>
+                );
+            })()}
 
             {/* Resumo do Vitrúvio */}
             <div className="bg-primary/5 border border-primary/20 rounded-xl p-6 mt-4">
@@ -541,6 +717,9 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
     const handleGerar = () => {
         setEstado('generating');
 
+        // Alias para facilitar mapeamento se vierem como peito/braco etc
+        const anyM = m as any;
+
         // Simular delay de processamento IA
         setTimeout(() => {
             const input: DiagnosticoInput = {
@@ -560,22 +739,24 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                 medidas: {
                     ombros: m.shoulders,
                     cintura: m.waist,
-                    peitoral: m.chest,
-                    costas: m.costas || (m.shoulders * 0.9), // Estimativa se não houver
-                    bracoD: m.armRight,
-                    bracoE: m.armLeft,
-                    antebracoD: m.forearmRight,
-                    antebracoE: m.forearmLeft,
-                    coxaD: m.thighRight,
-                    coxaE: m.thighLeft,
-                    panturrilhaD: m.calfRight,
-                    panturrilhaE: m.calfLeft,
-                    punho: m.wrist || 17.5,
-                    joelho: m.knee || 38,
-                    tornozelo: m.ankle || 22,
-                    pelvis: m.pelvis || m.waist * 1.1,
-                    pescoco: m.neck || 40,
+                    peitoral: m.chest || anyM.peito,
+                    costas: anyM.costas || m.chest || (m.shoulders * 0.9),
+                    bracoD: m.armRight || anyM.braco,
+                    bracoE: m.armLeft || anyM.braco,
+                    antebracoD: m.forearmRight || anyM.antebraco,
+                    antebracoE: m.forearmLeft || anyM.antebraco,
+                    coxaD: m.thighRight || anyM.coxa,
+                    coxaE: m.thighLeft || anyM.coxa,
+                    panturrilhaD: m.calfRight || anyM.panturrilha,
+                    panturrilhaE: m.calfLeft || anyM.panturrilha,
+                    punho: m.wrist || atleta.punho || 17.5,
+                    joelho: m.knee || anyM.joelho || 38,
+                    tornozelo: m.ankle || atleta.tornozelo || 22,
+                    pelvis: m.pelvis || anyM.pelvis || m.waist * 1.1,
+                    pescoco: m.neck || anyM.pescoco || 40,
                 },
+                // Se a avaliação já tem proporções gravadas, usar diretamente (zero discrepância)
+                proporcoesPreCalculadas: Array.isArray(ultimaAvaliacao.proporcoes) ? ultimaAvaliacao.proporcoes : undefined,
             };
 
             const resultado = gerarDiagnosticoCompleto(input);
@@ -601,7 +782,7 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
 
     return (
         <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth custom-scrollbar flex flex-col">
-            <div className="max-w-7xl mx-auto flex flex-col gap-6 pb-24 flex-1 w-full">
+            <div className="max-w-7xl mx-auto flex flex-col gap-6 pb-16 flex-1 w-full">
                 {/* Page Header */}
                 <div className="flex flex-col animate-fade-in-up">
                     <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight uppercase">
@@ -718,48 +899,46 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                         <SecaoComposicao dados={diagnostico} />
                         <SecaoEstetica dados={diagnostico} />
                         <SecaoPrioridades dados={diagnostico} />
-                        <SecaoMetas dados={diagnostico} nomeAtleta={atleta.name} />
+                        <SecaoMetas dados={diagnostico} nomeAtleta={atleta.name} medidas={(diagnostico as any)?._medidas} />
                     </>
                 )}
 
-                {/* Footer fixo */}
+                {/* Ações de Navegação */}
                 {diagnostico && (
-                    <div className="fixed bottom-0 left-0 right-0 bg-[#0a0a0a]/95 backdrop-blur border-t border-white/5 p-4 z-50">
-                        <div className="max-w-4xl mx-auto flex items-center justify-between">
-                            <button
-                                onClick={onBack}
-                                className="flex items-center gap-2 px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
-                            >
-                                <ArrowLeft size={16} />
-                                Voltar
-                            </button>
+                    <div className="flex items-center justify-between pt-10 border-t border-white/10 mt-8">
+                        <button
+                            onClick={onBack}
+                            className="flex items-center gap-2 px-6 py-3 text-sm font-bold uppercase tracking-wider text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all"
+                        >
+                            <ArrowLeft size={18} />
+                            Voltar
+                        </button>
 
-                            <div className="flex items-center gap-3">
-                                {estado === 'ready' && (
-                                    <button
-                                        onClick={handleSalvar}
-                                        className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white font-bold text-xs uppercase tracking-wider rounded-lg hover:bg-emerald-500 transition-colors"
-                                    >
-                                        <Save size={14} />
-                                        Confirmar e Salvar
-                                    </button>
-                                )}
-                                {estado === 'saving' && (
-                                    <button disabled className="flex items-center gap-2 px-5 py-2.5 bg-gray-700 text-gray-400 font-bold text-xs uppercase tracking-wider rounded-lg">
-                                        <Loader2 size={14} className="animate-spin" />
-                                        Salvando...
-                                    </button>
-                                )}
-                                {estado === 'saved' && (
-                                    <button
-                                        onClick={onNext}
-                                        className="flex items-center gap-2 px-5 py-2.5 bg-primary text-[#0A0F1C] font-bold text-xs uppercase tracking-wider rounded-lg hover:shadow-[0_0_20px_rgba(0,201,167,0.3)] transition-all"
-                                    >
-                                        Próximo: Plano de Treino
-                                        <ArrowRight size={14} />
-                                    </button>
-                                )}
-                            </div>
+                        <div className="flex items-center gap-4">
+                            {estado === 'ready' && (
+                                <button
+                                    onClick={handleSalvar}
+                                    className="flex items-center gap-3 px-8 py-3.5 bg-emerald-600 text-white font-bold text-sm uppercase tracking-wider rounded-xl hover:bg-emerald-500 hover:shadow-[0_0_20px_rgba(16,185,129,0.2)] transition-all"
+                                >
+                                    <Save size={18} />
+                                    Confirmar e Salvar
+                                </button>
+                            )}
+                            {estado === 'saving' && (
+                                <button disabled className="flex items-center gap-3 px-8 py-3.5 bg-gray-800 text-gray-500 font-bold text-sm uppercase tracking-wider rounded-xl">
+                                    <Loader2 size={18} className="animate-spin" />
+                                    Salvando...
+                                </button>
+                            )}
+                            {estado === 'saved' && (
+                                <button
+                                    onClick={onNext}
+                                    className="flex items-center gap-3 px-8 py-3.5 bg-primary text-[#0A0F1C] font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(0,201,167,0.3)] transition-all"
+                                >
+                                    Próximo: Plano de Treino
+                                    <ArrowRight size={18} />
+                                </button>
+                            )}
                         </div>
                     </div>
                 )}
