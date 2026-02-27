@@ -448,10 +448,7 @@ const App: React.FC = () => {
         case 'evolution':
           return <PersonalEvolutionView initialAthleteId={selectedAthleteId} />;
         case 'coach':
-          return <PersonalCoachDashboard onAtletaClick={(id) => {
-            setSelectedAthleteId(id);
-            setCurrentView('athlete-details');
-          }} />;
+          return <PersonalCoachView />;
         case 'hall':
           return <HallDosDeuses />;
         case 'results':
@@ -641,7 +638,7 @@ const App: React.FC = () => {
         case 'students': return 'MEUS ALUNOS';
         case 'assessment': return 'AVALIAÇÃO IA';
         case 'evolution': return 'EVOLUÇÃO DOS ALUNOS';
-        case 'coach': return 'COACH IA DOS ALUNOS';
+        case 'coach': return 'VITRÚVIO IA';
         case 'hall': return 'HALL DOS DEUSES';
         case 'results': return 'RESULTADOS DA AVALIAÇÃO IA';
         case 'design-system': return 'DESIGN SYSTEM';
