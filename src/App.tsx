@@ -23,6 +23,7 @@ import {
   PersonalEvolutionView,
   PersonalCoachView,
   PersonalProfilePage,
+  DiagnosticoView,
   AthleteDetailsView,
   AcademyDashboard,
   AcademyPersonalsList,
@@ -49,7 +50,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useSupabaseSync } from '@/hooks/useSupabaseSync';
 import { PersonalAthlete, MeasurementHistory } from '@/mocks/personal';
 
-type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details' | 'terms' | 'privacy' | 'my-record' | 'gamification' | 'athlete-portal' | 'personal-details' | 'student-details';
+type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details' | 'terms' | 'privacy' | 'my-record' | 'gamification' | 'athlete-portal' | 'personal-details' | 'student-details' | 'diagnostico';
 
 const App: React.FC = () => {
   console.log('🎯 App component rendering...');
@@ -448,7 +449,21 @@ const App: React.FC = () => {
         case 'evolution':
           return <PersonalEvolutionView initialAthleteId={selectedAthleteId} />;
         case 'coach':
-          return <PersonalCoachView />;
+          return <PersonalCoachView onStartDiagnostico={(atletaId) => {
+            setSelectedAthleteId(atletaId);
+            setCurrentView('diagnostico');
+          }} />;
+        case 'diagnostico':
+          return selectedAthleteId ? (
+            <DiagnosticoView
+              atletaId={selectedAthleteId}
+              onBack={() => setCurrentView('coach')}
+              onNext={() => {
+                // TODO: Fase 2 - navegar para 'treino-plano'
+                setCurrentView('coach');
+              }}
+            />
+          ) : null;
         case 'hall':
           return <HallDosDeuses />;
         case 'results':
@@ -639,6 +654,7 @@ const App: React.FC = () => {
         case 'assessment': return 'AVALIAÇÃO IA';
         case 'evolution': return 'EVOLUÇÃO DOS ALUNOS';
         case 'coach': return 'VITRÚVIO IA';
+        case 'diagnostico': return 'DIAGNÓSTICO — PLANO DE EVOLUÇÃO';
         case 'hall': return 'HALL DOS DEUSES';
         case 'results': return 'RESULTADOS DA AVALIAÇÃO IA';
         case 'design-system': return 'DESIGN SYSTEM';

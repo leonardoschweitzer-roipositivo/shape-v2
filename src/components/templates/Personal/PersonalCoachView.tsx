@@ -28,7 +28,7 @@ import {
 } from 'lucide-react';
 import { PersonalAthlete } from '@/mocks/personal';
 import { useDataStore } from '@/stores/dataStore';
-import { EvolutionPlanWizard } from '@/components/organisms/EvolutionPlanWizard';
+// EvolutionPlanWizard removido — agora navega para DiagnosticoView via App routing
 
 // ===== TYPES =====
 
@@ -58,8 +58,8 @@ const StatusCard: React.FC<{
         <button
             onClick={onClick}
             className={`flex-1 min-w-[140px] p-4 rounded-xl border transition-all ${isActive
-                    ? `${data.bgColor} ${data.borderColor} shadow-lg`
-                    : 'bg-white/5 border-white/10 hover:border-white/20'
+                ? `${data.bgColor} ${data.borderColor} shadow-lg`
+                : 'bg-white/5 border-white/10 hover:border-white/20'
                 }`}
         >
             <div className="flex items-center justify-between mb-2">
@@ -99,16 +99,16 @@ const AthleteRow: React.FC<{
     return (
         <tr
             className={`transition-colors cursor-pointer group ${isSelected
-                    ? 'bg-primary/5 border-l-2 border-l-primary'
-                    : 'hover:bg-white/[0.03]'
+                ? 'bg-primary/5 border-l-2 border-l-primary'
+                : 'hover:bg-white/[0.03]'
                 }`}
             onClick={() => onSelect(athlete)}
         >
             <td className="px-6 py-4">
                 <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm shrink-0 ${isSelected
-                            ? 'bg-primary/20 border-2 border-primary'
-                            : 'bg-gradient-to-br from-primary/20 to-secondary/20'
+                        ? 'bg-primary/20 border-2 border-primary'
+                        : 'bg-gradient-to-br from-primary/20 to-secondary/20'
                         }`}>
                         {isSelected ? (
                             <Check size={16} className="text-primary" />
@@ -156,11 +156,14 @@ const AthleteRow: React.FC<{
 
 // ===== MAIN COMPONENT =====
 
-export const PersonalCoachView: React.FC = () => {
+interface PersonalCoachViewProps {
+    onStartDiagnostico?: (atletaId: string) => void;
+}
+
+export const PersonalCoachView: React.FC<PersonalCoachViewProps> = ({ onStartDiagnostico }) => {
     const [selectedAthlete, setSelectedAthlete] = useState<PersonalAthlete | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-    const [isWizardOpen, setIsWizardOpen] = useState(false);
 
     const planBlockRef = useRef<HTMLDivElement>(null);
 
@@ -320,8 +323,8 @@ export const PersonalCoachView: React.FC = () => {
                     <div
                         ref={planBlockRef}
                         className={`bg-[#131B2C] border rounded-2xl p-6 md:p-8 transition-all duration-500 ${selectedAthlete
-                                ? 'border-primary/30 shadow-[0_0_20px_rgba(0,201,167,0.08)]'
-                                : 'border-white/10 opacity-60'
+                            ? 'border-primary/30 shadow-[0_0_20px_rgba(0,201,167,0.08)]'
+                            : 'border-white/10 opacity-60'
                             }`}
                     >
                         {/* Atleta selecionado badge */}
@@ -353,8 +356,8 @@ export const PersonalCoachView: React.FC = () => {
                         {/* Header da seção */}
                         <div className="flex items-start gap-4 mb-6">
                             <div className={`w-12 h-12 rounded-xl border flex items-center justify-center shrink-0 transition-all ${selectedAthlete
-                                    ? 'bg-primary/10 border-primary/20'
-                                    : 'bg-white/5 border-white/10'
+                                ? 'bg-primary/10 border-primary/20'
+                                : 'bg-white/5 border-white/10'
                                 }`}>
                                 <Target size={22} className={selectedAthlete ? 'text-primary' : 'text-gray-600'} />
                             </div>
@@ -389,8 +392,8 @@ export const PersonalCoachView: React.FC = () => {
                                         <ArrowRight size={14} className="text-gray-600 shrink-0" />
                                     )}
                                     <div className={`flex items-center gap-2 px-3 py-2 border rounded-lg transition-all ${selectedAthlete
-                                            ? 'bg-white/5 border-white/10'
-                                            : 'bg-white/[0.02] border-white/5'
+                                        ? 'bg-white/5 border-white/10'
+                                        : 'bg-white/[0.02] border-white/5'
                                         }`}>
                                         <step.icon size={14} className={selectedAthlete ? 'text-primary' : 'text-gray-600'} />
                                         <span className={`text-xs font-bold uppercase tracking-wider ${selectedAthlete ? 'text-gray-300' : 'text-gray-600'
@@ -404,11 +407,11 @@ export const PersonalCoachView: React.FC = () => {
 
                         {/* CTA */}
                         <button
-                            onClick={() => selectedAthlete && setIsWizardOpen(true)}
+                            onClick={() => selectedAthlete && onStartDiagnostico?.(selectedAthlete.id)}
                             disabled={!selectedAthlete}
                             className={`w-full flex items-center justify-center gap-3 h-14 rounded-xl font-bold text-sm uppercase tracking-wider transition-all ${selectedAthlete
-                                    ? 'bg-primary text-[#0A0F1C] shadow-[0_0_20px_rgba(0,201,167,0.2)] hover:shadow-[0_0_30px_rgba(0,201,167,0.4)] hover:scale-[1.02] active:scale-[0.98] cursor-pointer'
-                                    : 'bg-white/5 text-gray-600 cursor-not-allowed border border-white/5'
+                                ? 'bg-primary text-[#0A0F1C] shadow-[0_0_20px_rgba(0,201,167,0.2)] hover:shadow-[0_0_30px_rgba(0,201,167,0.4)] hover:scale-[1.02] active:scale-[0.98] cursor-pointer'
+                                : 'bg-white/5 text-gray-600 cursor-not-allowed border border-white/5'
                                 }`}
                         >
                             <Play size={18} />
@@ -428,15 +431,7 @@ export const PersonalCoachView: React.FC = () => {
                 </div>
             </div>
 
-            {/* Wizard Overlay */}
-            {isWizardOpen && selectedAthlete && (
-                <EvolutionPlanWizard
-                    atletaId={selectedAthlete.id}
-                    atletaNome={selectedAthlete.name}
-                    onClose={() => setIsWizardOpen(false)}
-                    onComplete={() => setIsWizardOpen(false)}
-                />
-            )}
+            {/* Wizard removido — agora navega para DiagnosticoView */}
         </>
     );
 };
