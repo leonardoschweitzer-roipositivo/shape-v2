@@ -42,6 +42,7 @@ import {
 import { AthletePortal } from './pages/AthletePortal';
 import { PortalLanding } from './pages/athlete/PortalLanding';
 import { TestSupabaseConnection } from '@/components/TestSupabaseConnection';
+import { calculateAge } from '@/utils/dateUtils';
 import { useAthleteStore } from '@/stores/athleteStore';
 import { useDataStore } from '@/stores/dataStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -78,6 +79,24 @@ const App: React.FC = () => {
     checkSession();
   }, []);
 
+  // FORÇA limpeza de caches antigos para todos os usuários com a nova atualização
+  useEffect(() => {
+    // Estas chaves armazenavam 'MOCK' em versões anteriores. Vamos limpar.
+    const keysToPurge = ['vitru-data-storage', 'daily-tracking-storage'];
+    let purged = false;
+
+    keysToPurge.forEach(key => {
+      if (localStorage.getItem(key)) {
+        localStorage.removeItem(key);
+        purged = true;
+      }
+    });
+
+    if (purged) {
+      console.info('[App] 🧹 Caches de dados antigos/mocks limpos automaticamente com a nova versão.');
+    }
+  }, []);
+
   // Detect portal token in URL (?token=XXX)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -89,7 +108,7 @@ const App: React.FC = () => {
   }, []);
 
   // State for assessment flow
-  const [assessmentData, setAssessmentData] = useState<{ studentName?: string; gender?: 'male' | 'female', assessment?: MeasurementHistory }>({});
+  const [assessmentData, setAssessmentData] = useState<{ studentName?: string; gender?: 'male' | 'female', assessment?: MeasurementHistory, birthDate?: string, athleteId?: string, age?: number }>({});
   const [athleteForEvaluation, setAthleteForEvaluation] = useState<PersonalAthlete | null>(null);
 
   // Hook for persistent Data Store
@@ -104,6 +123,7 @@ const App: React.FC = () => {
     gender?: 'male' | 'female';
     measurements?: any;
     skinfolds?: any;
+    age?: number;
   }) => {
     setIsAssessmentOpen(false);
 
@@ -119,10 +139,14 @@ const App: React.FC = () => {
       });
 
       // Update assessment data for results view
+      const athlete = personalAthletes.find(a => a.id === data.studentId);
       setAssessmentData({
         studentName: data.studentName,
         gender: data.gender,
-        assessment: assessment
+        assessment: assessment,
+        birthDate: athlete?.birthDate,
+        athleteId: data.studentId,
+        age: data.age
       });
     } else if (data.measurements && data.skinfolds) {
       // Self/Atleta assessment
@@ -154,7 +178,9 @@ const App: React.FC = () => {
       setAssessmentData({
         studentName: profile?.name || 'Atleta',
         gender: profile?.gender === 'FEMALE' ? 'female' : 'male',
-        assessment: assessment
+        assessment: assessment,
+        birthDate: profile?.birthDate || existingAthlete?.birthDate,
+        athleteId: athleteId
       });
     } else if (data.studentName && data.gender) {
       // Legacy/Fallback or just simple pass-through
@@ -191,7 +217,10 @@ const App: React.FC = () => {
         setAssessmentData({
           studentName: selectedAthlete.name,
           gender: selectedAthlete.gender === 'FEMALE' ? 'female' : 'male',
-          assessment: assessment
+          assessment: assessment,
+          birthDate: selectedAthlete.birthDate,
+          athleteId: selectedAthlete.id,
+          age: selectedAthlete.birthDate ? calculateAge(selectedAthlete.birthDate) : undefined
         });
         setCurrentView('results');
       }
@@ -205,7 +234,10 @@ const App: React.FC = () => {
       setAssessmentData({
         studentName: athlete.name,
         gender: athlete.gender === 'FEMALE' ? 'female' : 'male',
-        assessment: latestAssessment
+        assessment: latestAssessment,
+        birthDate: athlete.birthDate,
+        athleteId: athleteId,
+        age: athlete.birthDate ? calculateAge(athlete.birthDate) : undefined
       });
       setSelectedAthleteId(athleteId);
       setCurrentView('results');
@@ -382,6 +414,28 @@ const App: React.FC = () => {
                 setAthleteForEvaluation(selectedAthlete);
                 setCurrentView('assessment');
               }}
+              onDeleteAthlete={async (athleteId) => {
+                try {
+                  // 1. Deletar medidas do atleta
+                  await supabase.from('medidas').delete().eq('atleta_id', athleteId);
+                  // 2. Deletar assessments do atleta
+                  await supabase.from('assessments').delete().eq('atleta_id', athleteId);
+                  // 3. Deletar ficha do atleta
+                  await supabase.from('fichas').delete().eq('atleta_id', athleteId);
+                  // 4. Deletar o atleta
+                  await supabase.from('atletas').delete().eq('id', athleteId);
+                  // 5. Recarregar dados
+                  const personalId = useAuthStore.getState().entity?.personal?.id;
+                  if (personalId) {
+                    await useDataStore.getState().loadFromSupabase(personalId);
+                  }
+                  console.info('[App] ✅ Atleta excluído com sucesso:', athleteId);
+                  setCurrentView('students');
+                } catch (error) {
+                  console.error('[App] ❌ Erro ao excluir atleta:', error);
+                  alert('Erro ao excluir aluno. Tente novamente.');
+                }
+              }}
             />
           );
         case 'assessment':
@@ -394,10 +448,7 @@ const App: React.FC = () => {
         case 'evolution':
           return <PersonalEvolutionView initialAthleteId={selectedAthleteId} />;
         case 'coach':
-          return <PersonalCoachDashboard onAtletaClick={(id) => {
-            setSelectedAthleteId(id);
-            setCurrentView('athlete-details');
-          }} />;
+          return <PersonalCoachView />;
         case 'hall':
           return <HallDosDeuses />;
         case 'results':
@@ -407,6 +458,9 @@ const App: React.FC = () => {
               studentName={assessmentData.studentName}
               gender={assessmentData.gender}
               assessment={assessmentData.assessment}
+              birthDate={assessmentData.birthDate}
+              athleteId={assessmentData.athleteId}
+              age={assessmentData.age}
             />
           );
         case 'design-system':
@@ -421,9 +475,17 @@ const App: React.FC = () => {
           return (
             <StudentRegistration
               onBack={() => setCurrentView('students')}
-              onComplete={() => {
-                alert('Aluno cadastrado com sucesso!');
-                setCurrentView('students');
+              onComplete={(atletaId?: string) => {
+                if (atletaId) {
+                  // Navigate to assessment with the newly created athlete pre-selected
+                  const newAthlete = personalAthletes.find(a => a.id === atletaId);
+                  if (newAthlete) {
+                    setAthleteForEvaluation(newAthlete);
+                  }
+                  setCurrentView('assessment');
+                } else {
+                  setCurrentView('students');
+                }
               }}
             />
           );
@@ -445,10 +507,25 @@ const App: React.FC = () => {
             studentName={assessmentData.studentName}
             gender={assessmentData.gender}
             assessment={assessmentData.assessment}
+            birthDate={assessmentData.birthDate}
+            athleteId={assessmentData.athleteId}
+            age={assessmentData.age}
           />
         );
-      case 'assessment':
-        return <AssessmentPage onConfirm={(data: any) => handleAssessmentSubmit(data)} />;
+      case 'assessment': {
+        const currentAthleteEmail = profile?.email?.toLowerCase();
+        const currentAthleteName = profile?.name?.toLowerCase();
+        const currentAthleteObj = personalAthletes.find(a =>
+          a.id === profile?.id ||
+          (currentAthleteEmail && a.email.toLowerCase() === currentAthleteEmail) ||
+          (currentAthleteName && a.name.toLowerCase().includes(currentAthleteName))
+        ) || personalAthletes.find(a => a.id === 'athlete-leonardo');
+
+        const latestAssessment = currentAthleteObj?.assessments?.[0];
+        const initialData = latestAssessment ? { measurements: latestAssessment.measurements, skinfolds: latestAssessment.skinfolds } : undefined;
+
+        return <AssessmentPage onConfirm={(data: any) => handleAssessmentSubmit(data)} initialData={initialData} />;
+      }
       case 'design-system':
         return <DesignSystem />;
       case 'evolution':
@@ -465,6 +542,7 @@ const App: React.FC = () => {
         return <Evolution
           gender={profile?.gender === 'FEMALE' ? 'FEMALE' : 'MALE'}
           assessments={currentAthleteForEvolution?.assessments || (assessmentData.assessment ? [assessmentData.assessment] : [])}
+          age={currentAthleteForEvolution?.birthDate ? calculateAge(currentAthleteForEvolution.birthDate) : undefined}
         />;
       case 'hall':
         return <HallDosDeuses />;
@@ -560,7 +638,7 @@ const App: React.FC = () => {
         case 'students': return 'MEUS ALUNOS';
         case 'assessment': return 'AVALIAÇÃO IA';
         case 'evolution': return 'EVOLUÇÃO DOS ALUNOS';
-        case 'coach': return 'COACH IA DOS ALUNOS';
+        case 'coach': return 'VITRÚVIO IA';
         case 'hall': return 'HALL DOS DEUSES';
         case 'results': return 'RESULTADOS DA AVALIAÇÃO IA';
         case 'design-system': return 'DESIGN SYSTEM';

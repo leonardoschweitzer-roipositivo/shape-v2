@@ -419,9 +419,9 @@ export const DesignSystem: React.FC = () => {
               <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Ratio Analysis Card</h3>
               <div className="h-[350px]">
                 <ProportionAiAnalysisCard
-                  strength="Seus <span class='text-primary font-bold'>Ombros Largos</span> são seu ponto forte genético."
-                  weakness="A largura da cintura aumentou levemente este mês."
+                  analysis="Ratio <span class='text-primary font-bold'>1.56</span> — 96% da meta (1.618). Muito próximo do ideal."
                   suggestion="Inclua vacuum abdominal na sua rotina matinal."
+                  goal12m="Ombros: <strong>133 → 135.6cm</strong> | Cintura: <strong>85 → 82cm</strong> — Ratio projetado: <strong>1.65</strong>"
                 />
               </div>
             </div>

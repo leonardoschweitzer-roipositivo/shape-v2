@@ -213,6 +213,7 @@ export type Database = {
                     categoria_preferida: string | null
                     observacoes: string | null
                     restricoes: string[] | null
+                    contexto: Json | null
                     created_at: string
                     updated_at: string
                 }
@@ -230,6 +231,7 @@ export type Database = {
                     categoria_preferida?: string | null
                     observacoes?: string | null
                     restricoes?: string[] | null
+                    contexto?: Json | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -247,6 +249,7 @@ export type Database = {
                     categoria_preferida?: string | null
                     observacoes?: string | null
                     restricoes?: string[] | null
+                    contexto?: Json | null
                     created_at?: string
                     updated_at?: string
                 }
@@ -272,8 +275,17 @@ export type Database = {
                     panturrilha_esquerda: number | null
                     panturrilha_direita: number | null
                     pescoco: number | null
+                    dobra_tricipital: number | null
+                    dobra_subescapular: number | null
+                    dobra_peitoral: number | null
+                    dobra_axilar_media: number | null
+                    dobra_suprailiaca: number | null
+                    dobra_abdominal: number | null
+                    dobra_coxa: number | null
                     registrado_por: 'PORTAL' | 'COACH_IA' | 'PERSONAL' | 'APP'
                     personal_id: string | null
+                    score: number | null
+                    ratio: number | null
                     created_at: string
                 }
                 Insert: {
@@ -296,8 +308,17 @@ export type Database = {
                     panturrilha_esquerda?: number | null
                     panturrilha_direita?: number | null
                     pescoco?: number | null
+                    dobra_tricipital?: number | null
+                    dobra_subescapular?: number | null
+                    dobra_peitoral?: number | null
+                    dobra_axilar_media?: number | null
+                    dobra_suprailiaca?: number | null
+                    dobra_abdominal?: number | null
+                    dobra_coxa?: number | null
                     registrado_por?: 'PORTAL' | 'COACH_IA' | 'PERSONAL' | 'APP'
                     personal_id?: string | null
+                    score?: number | null
+                    ratio?: number | null
                     created_at?: string
                 }
                 Update: {
@@ -320,8 +341,70 @@ export type Database = {
                     panturrilha_esquerda?: number | null
                     panturrilha_direita?: number | null
                     pescoco?: number | null
+                    dobra_tricipital?: number | null
+                    dobra_subescapular?: number | null
+                    dobra_peitoral?: number | null
+                    dobra_axilar_media?: number | null
+                    dobra_suprailiaca?: number | null
+                    dobra_abdominal?: number | null
+                    dobra_coxa?: number | null
                     registrado_por?: 'PORTAL' | 'COACH_IA' | 'PERSONAL' | 'APP'
                     personal_id?: string | null
+                    score?: number | null
+                    ratio?: number | null
+                    created_at?: string
+                }
+            }
+            assessments: {
+                Row: {
+                    id: string
+                    atleta_id: string
+                    personal_id: string | null
+                    date: string
+                    weight: number
+                    height: number
+                    age: number
+                    gender: 'MALE' | 'FEMALE'
+                    body_fat: number
+                    body_fat_method: string
+                    measurements: Json
+                    results: Json
+                    score: number | null
+                    ratio: number | null
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    atleta_id: string
+                    personal_id?: string | null
+                    date?: string
+                    weight: number
+                    height: number
+                    age: number
+                    gender: 'MALE' | 'FEMALE'
+                    body_fat: number
+                    body_fat_method: string
+                    measurements: Json
+                    results: Json
+                    score?: number | null
+                    ratio?: number | null
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    atleta_id?: string
+                    personal_id?: string | null
+                    date?: string
+                    weight?: number
+                    height?: number
+                    age?: number
+                    gender?: 'MALE' | 'FEMALE'
+                    body_fat?: number
+                    body_fat_method?: string
+                    measurements?: Json
+                    results?: Json
+                    score?: number | null
+                    ratio?: number | null
                     created_at?: string
                 }
             }
@@ -530,6 +613,7 @@ export type Atleta = Tables<'atletas'>
 export type Ficha = Tables<'fichas'>
 export type Medida = Tables<'medidas'>
 export type Avaliacao = Tables<'avaliacoes'>
+export type Assessment = Tables<'assessments'>
 export type Registro = Tables<'registros'>
 export type Consultoria = Tables<'consultorias'>
 

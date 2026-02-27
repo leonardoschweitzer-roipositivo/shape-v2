@@ -1,8 +1,10 @@
 # VITRU IA — Design System Specification
 
-**Versão:** 1.1  
-**Data:** 07/02/2026  
-**Referência:** PRD v1.0
+**Versão:** 2.0  
+**Data:** Fevereiro 2026  
+**Referência:** PRD v2.0
+
+> **Nota v2.0:** Inventário de componentes atualizado para refletir Atomic Design implementado.
 
 ---
 
@@ -428,22 +430,52 @@ Lista de avaliações físicas com histórico, scores e status de assimetria.
 
 ---
 
-## 13. Componentes Disponíveis
+## 13. Componentes Disponíveis (Atomic Design)
 
-### 13.1 Lista de Componentes
+### 13.1 Arquitetura
 
-| Arquivo | Componentes Exportados |
-|---------|------------------------|
-| `GlassPanel.tsx` | `GlassPanel` |
-| `InputField.tsx` | `InputField` |
-| `KpiCard.tsx` | `RatioCard`, `HeatmapCard`, `ScoreCard` |
-| `HeroCard.tsx` | `HeroCard` |
-| `MetricsGrid.tsx` | `MetricsGrid` |
-| `AssessmentCharts.tsx` | `RadarChart`, `BodyFatGauge`, `AsymmetryRadar` |
-| `AssessmentCards.tsx` | `MassCard`, `ProportionCard`, `AsymmetryCard`, `ScoreWidget`, `AiAnalysisWidget`, `ProportionAiAnalysisCard`, `AiInsightCard` |
-| `EvolutionCharts.tsx` | `GoldenEvolutionChart`, `MeasuresChart`, `WeightChart`, `BodyFatChart`, `AsymmetryScannerChart` |
-| `AssessmentList.tsx` | `AssessmentList` |
-| `ProfileSelector.tsx` | `ProfileSelector` |
+```
+src/components/
+├── atoms/          # 13 componentes base
+├── molecules/      # 73 componentes compostos
+├── organisms/      # 35+ organismos complexos
+├── templates/      # 59 templates de página
+└── index.ts        # Re-export centralizado
+```
+
+### 13.2 Atoms (Componentes Base)
+
+`GlassPanel`, `InputField`, `Button`, `Badge`, `Spinner`, `Toggle`, etc.
+
+### 13.3 Molecules (Compostos)
+
+`Header`, `Footer`, `Tabs`, `MetricCard`, `ProfileSelector`, `MassCard`, etc. (73 componentes)
+
+### 13.4 Organisms (Complexos)
+
+| Organismo | Descrição |
+|---|---|
+| `AssessmentCards/` | Cards de avaliação (9 componentes) |
+| `AssessmentCharts/` | Gráficos de avaliação (5 componentes) |
+| `AssessmentForm/` | Formulário de avaliação |
+| `AssessmentModal/` | Modal de avaliação |
+| `BodyHeatmap/` | Heatmap corporal |
+| `EvolutionCharts/` | Gráficos de evolução |
+| `AthleteEvolutionCharts/` | Evolução do atleta |
+| `Sidebar/` | Navegação lateral |
+| `BottomNavigation/` | Navegação inferior (mobile) |
+| `PersonalDashboard/` | Dashboard do personal |
+| `GamificationPanel/` | Painel de gamificação |
+| `DailyTrackingCard/` | Card de tracking diário |
+| `CoachModal/` | Modal do Coach IA |
+| `ChatMessages/` | Mensagens do chat IA |
+| `ProfileSelector/` | Seletor de perfil |
+| `ProgressiveProfilingModal/` | Modal de profiling progressivo |
+| `AthleteInvitationModal/` | Modal de convite de atleta |
+
+### 13.5 Templates (Páginas)
+
+`DashboardView`, `AssessmentResults`, `AssessmentPage`, `Evolution`, `CoachIA`, `Login`, `Settings`, `AthletesList`, `HallDosDeuses`, `DesignSystem`, etc. (59 templates)
 
 ---
 
@@ -469,4 +501,4 @@ Lista de avaliações físicas com histórico, scores e status de assimetria.
 
 ---
 
-**Versão 1.1 — Baseado em `components/DesignSystem.tsx`**
+**Versão 2.0 — Baseado em Atomic Design implementado em `src/components/`**

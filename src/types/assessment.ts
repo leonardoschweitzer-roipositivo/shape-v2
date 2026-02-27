@@ -41,6 +41,7 @@ export interface AvaliacaoGeralInput {
         coxaPanturrilha: ProportionData | null;
         panturrilha: ProportionData | null;
         costas?: ProportionData | null;     // Added for Open BB support if needed
+        upperLower?: ProportionData | null; // Upper vs Lower body volume ratio
     };
 
     // COMPOSIÇÃO CORPORAL

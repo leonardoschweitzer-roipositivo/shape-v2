@@ -3,6 +3,7 @@ import { Activity, User, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { AssessmentForm } from '@/components/organisms/AssessmentForm';
 import { PersonalAthleteSelector } from './PersonalAthleteSelector';
 import { PersonalAthlete } from '@/mocks/personal';
+import { calculateAge } from '@/utils/dateUtils';
 
 interface PersonalAssessmentViewProps {
     onConfirm: (data: {
@@ -11,6 +12,7 @@ interface PersonalAssessmentViewProps {
         studentName: string;
         measurements: any;
         skinfolds: any;
+        age?: number;
     }) => void;
     initialAthlete?: PersonalAthlete | null;
 }
@@ -18,7 +20,7 @@ interface PersonalAssessmentViewProps {
 export const PersonalAssessmentView: React.FC<PersonalAssessmentViewProps> = ({ onConfirm, initialAthlete }) => {
     const [selectedAthlete, setSelectedAthlete] = useState<PersonalAthlete | null>(initialAthlete || null);
 
-    const handleConfirm = (formData: { measurements: any; skinfolds: any }) => {
+    const handleConfirm = (formData: { measurements: any; skinfolds: any; age?: number }) => {
         if (!selectedAthlete) return;
 
         const gender: 'male' | 'female' = selectedAthlete.gender === 'FEMALE' ? 'female' : 'male';
@@ -28,9 +30,12 @@ export const PersonalAssessmentView: React.FC<PersonalAssessmentViewProps> = ({ 
             studentName: selectedAthlete.name,
             gender: gender,
             measurements: formData.measurements,
-            skinfolds: formData.skinfolds
+            skinfolds: formData.skinfolds,
+            age: formData.age || athleteAge
         });
     };
+
+    const athleteAge = selectedAthlete ? calculateAge(selectedAthlete.birthDate) : undefined;
 
     return (
         <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth custom-scrollbar flex flex-col">
@@ -100,7 +105,15 @@ export const PersonalAssessmentView: React.FC<PersonalAssessmentViewProps> = ({ 
                             </div>
                         </div>
 
-                        <AssessmentForm onConfirm={handleConfirm} isModal={false} />
+                        <AssessmentForm
+                            onConfirm={handleConfirm}
+                            isModal={false}
+                            initialData={selectedAthlete.assessments?.[0] ? {
+                                measurements: selectedAthlete.assessments[0].measurements,
+                                skinfolds: selectedAthlete.assessments[0].skinfolds
+                            } : undefined}
+                            initialAge={athleteAge}
+                        />
                     </div>
                 )}
             </div>

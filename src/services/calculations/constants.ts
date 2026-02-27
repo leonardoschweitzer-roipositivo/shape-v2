@@ -34,6 +34,9 @@ export const GOLDEN_RATIO = {
     /** Panturrilha = Tornozelo × 1.92 */
     PANTURRILHA_TORNOZELO: 1.92,
 
+    /** Upper/Lower Ratio = (Braço+Antebraço) ÷ (Coxa+Panturrilha) - INVERSO (menor = melhor) */
+    UPPER_LOWER_RATIO: 0.75,
+
     /** BF Ideal */
     BF_MIN: 8,
     BF_MAX: 12,
@@ -77,6 +80,9 @@ export const CLASSIC_PHYSIQUE = {
 
     /** Braço do CBum em cm (referência) */
     CBUM_BRACO: 50,
+
+    /** Upper/Lower Ratio = (Braço+Antebraço) ÷ (Coxa+Panturrilha) - INVERSO */
+    UPPER_LOWER_RATIO: 0.70,
 
     /** BF Ideal */
     BF_MIN: 3,
@@ -160,6 +166,9 @@ export const OPEN_BODYBUILDING = {
     /** Braço do Derek Lunsford em cm (referência) */
     DEREK_BRACO: 56,
 
+    /** Upper/Lower Ratio = (Braço+Antebraço) ÷ (Coxa+Panturrilha) - INVERSO */
+    UPPER_LOWER_RATIO: 0.68,
+
     /** BF Ideal */
     BF_MIN: 2,
     BF_MAX: 5,
@@ -196,28 +205,30 @@ export const CLASSIC_WEIGHT_LIMITS: Record<number, number> = {
 
 export const SCORE_WEIGHTS = {
     golden_ratio: {
-        ombros: 18,
-        peito: 14,
-        braco: 14,
+        ombros: 17,
+        peito: 13,
+        braco: 13,
         antebraco: 5,
-        triade: 10,
-        cintura: 12,
-        coxa: 10,
-        coxa_panturrilha: 8,
+        triade: 9,
+        cintura: 11,
+        coxa: 9,
+        coxa_panturrilha: 7,
         panturrilha: 9,
         costas: 0,
+        upperLower: 7,
     },
     classic_physique: {
-        ombros: 18,
-        peito: 14,
-        braco: 16,
+        ombros: 17,
+        peito: 13,
+        braco: 15,
         antebraco: 4,
-        triade: 8,
-        cintura: 16,
-        coxa: 10,
+        triade: 7,
+        cintura: 15,
+        coxa: 9,
         coxa_panturrilha: 6,
-        panturrilha: 8,
+        panturrilha: 7,
         costas: 0,
+        upperLower: 7,
     },
     mens_physique: {
         ombros: 25,
@@ -230,18 +241,20 @@ export const SCORE_WEIGHTS = {
         coxa_panturrilha: 0,
         panturrilha: 5,
         costas: 0,
+        upperLower: 0,
     },
     open_bodybuilding: {
-        ombros: 16,
-        peito: 14,
-        braco: 14,
+        ombros: 15,
+        peito: 13,
+        braco: 13,
         antebraco: 4,
-        triade: 6,
-        cintura: 12,
-        coxa: 14,
+        triade: 5,
+        cintura: 11,
+        coxa: 13,
         coxa_panturrilha: 8,
-        panturrilha: 8,
+        panturrilha: 7,
         costas: 4,
+        upperLower: 7,
     },
 } as const;
 

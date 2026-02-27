@@ -38,6 +38,7 @@ DROP POLICY IF EXISTS "personais_self_update" ON personais;
 DROP POLICY IF EXISTS "personais_academia_select" ON personais;
 DROP POLICY IF EXISTS "personais_academia_update" ON personais;
 DROP POLICY IF EXISTS "personais_academia_insert" ON personais;
+DROP POLICY IF EXISTS "personais_portal_select" ON personais;
 
 -- Personal pode ver/editar seus próprios dados
 CREATE POLICY "personal_own" ON personais FOR ALL
@@ -59,6 +60,18 @@ CREATE POLICY "personais_academia_update" ON personais FOR UPDATE
         )
     );
 
+-- Portal: atleta pode ver nome do personal via token
+CREATE POLICY "personais_portal_select" ON personais FOR SELECT
+    TO anon
+    USING (
+        id IN (
+            SELECT personal_id FROM atletas
+            WHERE portal_token IS NOT NULL
+            AND portal_token != ''
+            AND (portal_token_expira IS NULL OR portal_token_expira > now())
+        )
+    );
+
 -- =============================================
 -- ATLETAS
 -- =============================================
@@ -69,6 +82,8 @@ DROP POLICY IF EXISTS "atletas_personal_delete" ON atletas;
 DROP POLICY IF EXISTS "atletas_personal_insert" ON atletas;
 DROP POLICY IF EXISTS "atletas_academia_select" ON atletas;
 DROP POLICY IF EXISTS "atletas_self_select" ON atletas;
+DROP POLICY IF EXISTS "atletas_portal_select" ON atletas;
+DROP POLICY IF EXISTS "atletas_portal_update" ON atletas;
 
 -- Personal pode gerenciar seus atletas
 CREATE POLICY "atleta_personal" ON atletas FOR ALL
@@ -90,6 +105,24 @@ CREATE POLICY "atletas_academia_select" ON atletas FOR SELECT
         )
     );
 
+-- Portal: acesso anônimo via token (SELECT)
+CREATE POLICY "atletas_portal_select" ON atletas FOR SELECT
+    TO anon
+    USING (
+        portal_token IS NOT NULL
+        AND portal_token != ''
+        AND (portal_token_expira IS NULL OR portal_token_expira > now())
+    );
+
+-- Portal: atualizar contadores de acesso
+CREATE POLICY "atletas_portal_update" ON atletas FOR UPDATE
+    TO anon
+    USING (
+        portal_token IS NOT NULL
+        AND portal_token != ''
+        AND (portal_token_expira IS NULL OR portal_token_expira > now())
+    );
+
 -- =============================================
 -- FICHAS
 -- =============================================
@@ -98,6 +131,7 @@ DROP POLICY IF EXISTS "fichas_personal_select" ON fichas;
 DROP POLICY IF EXISTS "fichas_personal_update" ON fichas;
 DROP POLICY IF EXISTS "fichas_atleta_select" ON fichas;
 DROP POLICY IF EXISTS "fichas_academia_select" ON fichas;
+DROP POLICY IF EXISTS "fichas_portal_select" ON fichas;
 
 -- Personal pode gerenciar fichas dos seus atletas
 CREATE POLICY "ficha_via_personal" ON fichas FOR ALL
@@ -128,6 +162,18 @@ CREATE POLICY "fichas_academia_select" ON fichas FOR SELECT
         )
     );
 
+-- Portal: atleta pode ver sua ficha via token
+CREATE POLICY "fichas_portal_select" ON fichas FOR SELECT
+    TO anon
+    USING (
+        atleta_id IN (
+            SELECT id FROM atletas
+            WHERE portal_token IS NOT NULL
+            AND portal_token != ''
+            AND (portal_token_expira IS NULL OR portal_token_expira > now())
+        )
+    );
+
 -- =============================================
 -- MEDIDAS
 -- =============================================
@@ -136,6 +182,8 @@ DROP POLICY IF EXISTS "medidas_personal_select" ON medidas;
 DROP POLICY IF EXISTS "medidas_personal_insert" ON medidas;
 DROP POLICY IF EXISTS "medidas_atleta_select" ON medidas;
 DROP POLICY IF EXISTS "medidas_academia_select" ON medidas;
+DROP POLICY IF EXISTS "medidas_portal_select" ON medidas;
+DROP POLICY IF EXISTS "medidas_portal_insert" ON medidas;
 
 -- Personal pode gerenciar medidas dos seus atletas
 CREATE POLICY "medida_via_personal" ON medidas FOR ALL
@@ -166,6 +214,30 @@ CREATE POLICY "medidas_academia_select" ON medidas FOR SELECT
         )
     );
 
+-- Portal: atleta pode ver suas medidas via token
+CREATE POLICY "medidas_portal_select" ON medidas FOR SELECT
+    TO anon
+    USING (
+        atleta_id IN (
+            SELECT id FROM atletas
+            WHERE portal_token IS NOT NULL
+            AND portal_token != ''
+            AND (portal_token_expira IS NULL OR portal_token_expira > now())
+        )
+    );
+
+-- Portal: atleta pode inserir novas medidas via token
+CREATE POLICY "medidas_portal_insert" ON medidas FOR INSERT
+    TO anon
+    WITH CHECK (
+        atleta_id IN (
+            SELECT id FROM atletas
+            WHERE portal_token IS NOT NULL
+            AND portal_token != ''
+            AND (portal_token_expira IS NULL OR portal_token_expira > now())
+        )
+    );
+
 -- =============================================
 -- AVALIACOES
 -- =============================================
@@ -175,6 +247,7 @@ DROP POLICY IF EXISTS "avaliacoes_personal_insert" ON avaliacoes;
 DROP POLICY IF EXISTS "avaliacoes_atleta_select" ON avaliacoes;
 DROP POLICY IF EXISTS "avaliacoes_academia_select" ON avaliacoes;
 DROP POLICY IF EXISTS "avaliacao_atleta" ON avaliacoes;
+DROP POLICY IF EXISTS "avaliacoes_portal_select" ON avaliacoes;
 
 -- Personal pode gerenciar avaliações dos seus atletas
 CREATE POLICY "avaliacao_via_personal" ON avaliacoes FOR ALL
@@ -202,6 +275,18 @@ CREATE POLICY "avaliacoes_academia_select" ON avaliacoes FOR SELECT
             WHERE a.academia_id IN (
                 SELECT id FROM academias WHERE auth_user_id = auth.uid()
             )
+        )
+    );
+
+-- Portal: atleta pode ver suas avaliações via token
+CREATE POLICY "avaliacoes_portal_select" ON avaliacoes FOR SELECT
+    TO anon
+    USING (
+        atleta_id IN (
+            SELECT id FROM atletas
+            WHERE portal_token IS NOT NULL
+            AND portal_token != ''
+            AND (portal_token_expira IS NULL OR portal_token_expira > now())
         )
     );
 

@@ -7,7 +7,7 @@
 
 ---
 
-> **Nota de Versão 2.0:** Este documento foi atualizado para refletir o estado atual da implementação frontend (`shape-v2`). A fase atual é um **Protótipo Frontend** utilizando Vite/React + Tailwind + Zustand, com dados simulados (mock data) aguardando integração com backend.
+> **Nota de Versão 2.0:** Este documento foi atualizado para refletir o estado atual da implementação frontend (`shape-v2`). A fase atual é um **Protótipo Frontend** utilizando Vite/React + Zustand, com autenticação real via Supabase Auth e integração parcial com backend (Supabase PostgreSQL).
 
 ---
 
@@ -503,20 +503,20 @@ A tela de configurações do Atleta possui **6 seções ativas**:
 | **Gerenciamento de Estado** | Zustand | ✅ Implementado |
 | **Gráficos** | Recharts | ✅ Implementado |
 | **Ícones** | Lucide React | ✅ Implementado |
-| **Autenticação** | Mock (simulada no frontend) | ⏳ Aguardando backend |
-| **Dados** | Mock Data (dados simulados) | ⏳ Aguardando backend |
+| **Autenticação** | Supabase Auth (real) | ✅ Implementado |
+| **Dados** | Supabase PostgreSQL + Mock Data (fallback) | ⏳ Em migração |
 
-**Planejado (Integração Backend):**
+**Backend Integrado:**
 
-| Camada | Tecnologia Sugerida | Status |
-|--------|-------------------|--------|
-| Backend/API | Antigravity functions / API routes | 📋 Planejado |
-| Banco de Dados | PostgreSQL | 📋 Planejado |
-| Autenticação | Auth integrado (Antigravity) ou Clerk | 📋 Planejado |
-| IA/ML | Anthropic Claude API (para Coach IA) | 📋 Planejado |
-| Hospedagem | Antigravity Cloud | 📋 Planejado |
+| Camada | Tecnologia | Status |
+|--------|-----------|--------|
+| Backend | Supabase (BaaS) | ✅ Implementado |
+| Banco de Dados | Supabase PostgreSQL | ✅ Implementado |
+| Autenticação | Supabase Auth (GoTrue) | ✅ Implementado |
+| IA/ML | Gemini API (Google) | ✅ Implementado |
+| Hospedagem | Vercel (static SPA) | ✅ Implementado |
 
-> **Nota:** A implementação atual utiliza principalmente estado no frontend (Zustand) e dados simulados (mock data) para lógica como Autenticação e Avaliações, aguardando integração com backend.
+> **Nota:** A autenticação é real via Supabase Auth. Os dados estão em migração de mock para Supabase PostgreSQL. O Coach IA usa Gemini API diretamente do browser.
 
 ### 7.2 Modelo de Dados (Entidades Principais)
 
@@ -532,7 +532,7 @@ Organization (Academia)
 │   │
 │   └── Student (Aluno)
 │       ├── id, professional_id, org_id, name, email, birth_date, gender, goals
-│       ├── comparison_mode: enum('golden_ratio', 'classic_physique', 'mens_physique')
+│       ├── comparison_mode: enum('golden_ratio', 'classic_physique', 'mens_physique', 'open_bodybuilding')
 │       │
 │       └── Assessment (Avaliação)
 │           ├── id, student_id, professional_id, date, type
@@ -802,8 +802,8 @@ Pesos do Score Golden Ratio:
 
 ## 9. Roadmap
 
-### Fase 1 — MVP Frontend (Meses 1-3) ✅ ATUAL
-- ✅ Cadastro de usuários (personal + aluno direto) — mock
+### Fase 1 — MVP Frontend (Meses 1-3) ✅ CONCLUÍDO
+- ✅ Cadastro de usuários (personal + aluno direto)
 - ✅ Formulário de avaliação completo (medidas + dobras cutâneas)
 - ✅ Cálculos automáticos (composição corporal, proporções áureas, assimetrias)
 - ✅ Tela de resultados (3 abas)
@@ -811,13 +811,15 @@ Pesos do Score Golden Ratio:
 - ✅ Coach IA (3 pilares + chat)
 - ✅ Configurações (6 seções)
 - ✅ Navegação por perfil (Academia/Personal/Atleta)
-- ⏳ Autenticação real e billing (aguardando backend)
+- ✅ Autenticação real (Supabase Auth)
+- ✅ 4 modos de comparação (Golden Ratio, Classic, Men's, Open Bodybuilding)
+- ✅ Gamificação, Daily Tracking, Portal do Atleta
 
-### Fase 2 — Integração Backend (Meses 3-5)
-- Autenticação real (Clerk/NextAuth)
-- API routes para CRUD
-- Banco de dados PostgreSQL
-- Integração Claude API para Coach IA
+### Fase 2 — Integração Backend (Meses 3-5) ⏳ EM PROGRESSO
+- ✅ Autenticação real (Supabase Auth)
+- ✅ Banco de dados Supabase PostgreSQL
+- ✅ Integração Gemini API para Coach IA
+- ⏳ API routes para CRUD completo
 - Sistema de billing (Stripe)
 
 ### Fase 3 — Evolução + IA (Meses 5-7)

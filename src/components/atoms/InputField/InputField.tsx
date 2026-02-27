@@ -34,7 +34,7 @@ export const InputField: React.FC<InputFieldProps> = ({
         <div className="relative group">
             <input
                 type="number"
-                className="w-full bg-[#0A0F1C] border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-primary/50 transition-colors text-sm font-mono"
+                className="w-full bg-[#0A0F1C] border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-primary/50 transition-colors text-sm font-mono disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-[#0A0F1C]/50"
                 placeholder={placeholder}
                 {...props}
             />

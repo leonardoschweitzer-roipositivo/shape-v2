@@ -40,8 +40,10 @@ interface Skinfolds {
 }
 
 interface AssessmentFormProps {
-    onConfirm: (data: { measurements: Measurements; skinfolds: Skinfolds }) => void;
+    onConfirm: (data: { measurements: Measurements; skinfolds: Skinfolds; age?: number }) => void;
     isModal?: boolean;
+    initialData?: { measurements?: Partial<Measurements>; skinfolds?: Partial<Skinfolds> };
+    initialAge?: number;
 }
 
 interface SymmetryRowProps {
@@ -86,11 +88,24 @@ const UserIcon = () => (
     </svg>
 );
 
-export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onConfirm, isModal = false }) => {
+export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onConfirm, isModal = false, initialData, initialAge }) => {
     // Initialize state with default or empty values
     // Using simple flat state for easier binding, will allow partial entry but validation might be needed later
-    const [measurements, setMeasurements] = useState<Partial<Measurements>>({});
-    const [skinfolds, setSkinfolds] = useState<Partial<Skinfolds>>({});
+    const [measurements, setMeasurements] = useState<Partial<Measurements>>(initialData?.measurements || {});
+    const [skinfolds, setSkinfolds] = useState<Partial<Skinfolds>>(initialData?.skinfolds || {});
+    const [age, setAge] = useState<number | string>(initialAge || '');
+
+    React.useEffect(() => {
+        if (initialData?.measurements) {
+            setMeasurements(initialData.measurements);
+        }
+        if (initialData?.skinfolds) {
+            setSkinfolds(initialData.skinfolds);
+        }
+        if (initialAge) {
+            setAge(initialAge);
+        }
+    }, [initialData, initialAge]);
 
     const handleMeasurementChange = (field: keyof Measurements, value: string) => {
         setMeasurements(prev => ({ ...prev, [field]: parseFloat(value) || 0 }));
@@ -218,7 +233,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onConfirm, isMod
             thigh: skinfolds.thigh || 0,
         };
 
-        onConfirm({ measurements: finalMeasurements, skinfolds: finalSkinfolds });
+        onConfirm({ measurements: finalMeasurements, skinfolds: finalSkinfolds, age: typeof age === 'number' ? age : parseInt(String(age)) || undefined });
     };
 
     return (
@@ -236,7 +251,13 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onConfirm, isMod
                         <div className="h-[1px] w-full bg-white/5"></div>
                         <div className="space-y-4">
                             {/* Idade field is UI only for now in mock since it's not in measurements struct, or derived from birthdate */}
-                            <InputField label="Idade" unit="anos" placeholder="00" />
+                            <InputField
+                                label="Idade"
+                                unit="anos"
+                                placeholder="00"
+                                value={age || ''}
+                                disabled
+                            />
                             <InputField
                                 label="Altura" unit="cm" placeholder="000"
                                 value={measurements.height || ''}

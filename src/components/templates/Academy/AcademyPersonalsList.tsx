@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Plus, Filter, MoreVertical, GraduationCap, Mail, Phone, Calendar, UserCheck, ArrowUpRight } from 'lucide-react';
-import { mockPersonalsSummary } from '@/mocks/academy';
+import { useDataStore } from '@/stores/dataStore';
 
 interface AcademyPersonalsListProps {
     onSelectPersonal?: (id: string) => void;
@@ -11,10 +11,11 @@ export const AcademyPersonalsList: React.FC<AcademyPersonalsListProps> = ({
     onSelectPersonal,
     onInvitePersonal,
 }) => {
+    const { personals } = useDataStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
 
-    const filteredPersonals = mockPersonalsSummary.filter(p => {
+    const filteredPersonals = personals.filter(p => {
         const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus = filterStatus === 'all' || p.status === filterStatus;
         return matchesSearch && matchesStatus;
@@ -63,8 +64,8 @@ export const AcademyPersonalsList: React.FC<AcademyPersonalsListProps> = ({
                                     key={status}
                                     onClick={() => setFilterStatus(status)}
                                     className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${filterStatus === status
-                                            ? 'bg-primary/20 text-primary'
-                                            : 'text-gray-500 hover:text-gray-300'
+                                        ? 'bg-primary/20 text-primary'
+                                        : 'text-gray-500 hover:text-gray-300'
                                         }`}
                                 >
                                     {status === 'all' ? 'Todos' : status === 'active' ? 'Ativos' : 'Inativos'}
@@ -117,8 +118,8 @@ export const AcademyPersonalsList: React.FC<AcademyPersonalsListProps> = ({
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-widest ${personal.status === 'active'
-                                                    ? 'bg-green-500/10 text-green-500 border border-green-500/20'
-                                                    : 'bg-gray-500/10 text-gray-500 border border-gray-500/20'
+                                                ? 'bg-green-500/10 text-green-500 border border-green-500/20'
+                                                : 'bg-gray-500/10 text-gray-500 border border-gray-500/20'
                                                 }`}>
                                                 {personal.status === 'active' ? 'Ativo' : 'Inativo'}
                                             </span>
@@ -152,7 +153,7 @@ export const AcademyPersonalsList: React.FC<AcademyPersonalsListProps> = ({
 
                     <div className="px-6 py-4 bg-white/[0.01] border-t border-card-border flex items-center justify-between">
                         <p className="text-xs text-gray-500">
-                            Mostrando <span className="text-gray-300 font-medium">{filteredPersonals.length}</span> de <span className="text-gray-300 font-medium">{mockPersonalsSummary.length}</span> personais
+                            Mostrando <span className="text-gray-300 font-medium">{filteredPersonals.length}</span> de <span className="text-gray-300 font-medium">{personals.length}</span> personais
                         </p>
                         <div className="flex gap-2">
                             <button disabled className="px-3 py-1 rounded border border-white/10 text-xs text-gray-600 disabled:opacity-50">Anterior</button>

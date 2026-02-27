@@ -2,7 +2,7 @@
 // VITRU IA - Ranking Personais
 
 import React from 'react';
-import { Info, Award, Trophy, List, BarChart3, Calendar, ArrowRight } from 'lucide-react';
+import { Info, Award, Trophy, List, BarChart3, Calendar, ArrowRight, Users, Lock } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { usePersonalRankingStore } from '@/stores/personalRankingStore';
@@ -56,7 +56,6 @@ export const RankingPersonaisPage: React.FC = () => {
 
                 {/* Hero Banner */}
                 <div className="w-full h-[400px] md:h-[500px] rounded-2xl relative overflow-hidden group shadow-2xl shadow-black/50 border border-white/10 animate-fade-in-up">
-                    {/* Background Image */}
                     <div
                         className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 group-hover:scale-105"
                         style={{
@@ -64,20 +63,13 @@ export const RankingPersonaisPage: React.FC = () => {
                             backgroundPosition: 'center 20%'
                         }}
                     />
-
-                    {/* Gradient Overlays */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#0A0F1C] via-[#0A0F1C]/90 to-transparent"></div>
-
-                    {/* Decorative Grid */}
-                    <div className="absolute right-0 top-0 h-full w-1/2 opacity-10" style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
-
-                    {/* Circle Decoration */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#0A0F1C] via-[#0A0F1C]/90 to-transparent" />
+                    <div className="absolute right-0 top-0 h-full w-1/2 opacity-10" style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
                     <div className="absolute right-10 md:right-32 top-1/2 -translate-y-1/2 w-64 h-64 border border-primary/20 rounded-full flex items-center justify-center pointer-events-none opacity-60">
-                        <div className="w-40 h-40 border border-secondary/30 rounded-full"></div>
-                        <div className="absolute w-full h-[1px] bg-primary/20 rotate-45"></div>
+                        <div className="w-40 h-40 border border-secondary/30 rounded-full" />
+                        <div className="absolute w-full h-[1px] bg-primary/20 rotate-45" />
                     </div>
 
-                    {/* Content */}
                     <div className="relative z-10 h-full flex flex-col justify-center px-8 md:px-12 max-w-3xl">
                         <div className="inline-flex items-center gap-3 mb-4">
                             <span className="text-[10px] md:text-xs font-bold px-2.5 py-1 rounded border tracking-wider uppercase text-primary bg-primary/20 border-primary/20">
@@ -124,7 +116,25 @@ export const RankingPersonaisPage: React.FC = () => {
 
                 <div className="h-px w-full bg-white/5" />
 
-                {/* TOP 3 Podium */}
+                {/* Empty State — ranking global ainda não integrado ao Supabase */}
+                {filteredPersonals.length === 0 && (
+                    <div className="bg-white/5 border border-dashed border-white/10 rounded-2xl p-16 flex flex-col items-center justify-center text-center gap-4">
+                        <Lock size={48} className="text-gray-600" />
+                        <div>
+                            <h3 className="text-xl font-bold text-white mb-2">Ranking em breve</h3>
+                            <p className="text-gray-400 text-sm max-w-md leading-relaxed">
+                                O ranking global de personais é calculado a partir dos dados de todos os treinadores na plataforma.
+                                Esta funcionalidade estará disponível quando a plataforma estiver com múltiplos usuários cadastrados.
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/20 rounded-lg">
+                            <Users size={16} className="text-primary" />
+                            <span className="text-primary text-sm font-medium">Você já está registrado e será ranqueado automaticamente</span>
+                        </div>
+                    </div>
+                )}
+
+                {/* TOP 3 Podium — só aparece com dados reais */}
                 {filteredPersonals.length >= 3 && (
                     <div className="flex flex-col gap-4">
                         <SectionHeader
@@ -139,34 +149,38 @@ export const RankingPersonaisPage: React.FC = () => {
                     </div>
                 )}
 
-                <div className="h-px w-full bg-white/5" />
+                {filteredPersonals.length > 0 && <div className="h-px w-full bg-white/5" />}
 
                 {/* Ranking Table Section */}
-                <div className="flex flex-col gap-4">
-                    <SectionHeader
-                        icon={<List size={20} className="text-primary" />}
-                        title="Classificação Completa"
-                        subtitle="Lista detalhada por score, evolução e número de atletas"
-                    />
-                    <PersonalRankingTable
-                        personals={filteredPersonals}
-                        onSelectPersonal={selectPersonal}
-                        onLoadMore={loadMore}
-                        hasMore={hasMore}
-                    />
-                </div>
+                {filteredPersonals.length > 0 && (
+                    <div className="flex flex-col gap-4">
+                        <SectionHeader
+                            icon={<List size={20} className="text-primary" />}
+                            title="Classificação Completa"
+                            subtitle="Lista detalhada por score, evolução e número de atletas"
+                        />
+                        <PersonalRankingTable
+                            personals={filteredPersonals}
+                            onSelectPersonal={selectPersonal}
+                            onLoadMore={loadMore}
+                            hasMore={hasMore}
+                        />
+                    </div>
+                )}
 
-                <div className="h-px w-full bg-white/5" />
+                {filteredPersonals.length > 0 && <div className="h-px w-full bg-white/5" />}
 
                 {/* Stats Summary section */}
-                <div className="flex flex-col gap-4">
-                    <SectionHeader
-                        icon={<BarChart3 size={20} className="text-secondary" />}
-                        title="Visão Analítica"
-                        subtitle="Estatísticas globais do ecossistema de personais na plataforma"
-                    />
-                    <PersonalStatsSummary stats={stats} />
-                </div>
+                {filteredPersonals.length > 0 && (
+                    <div className="flex flex-col gap-4">
+                        <SectionHeader
+                            icon={<BarChart3 size={20} className="text-secondary" />}
+                            title="Visão Analítica"
+                            subtitle="Estatísticas globais do ecossistema de personais na plataforma"
+                        />
+                        <PersonalStatsSummary stats={stats} />
+                    </div>
+                )}
 
                 <div className="h-px w-full bg-white/5" />
 

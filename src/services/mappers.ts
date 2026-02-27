@@ -7,96 +7,137 @@
  * Isso permite uma migração gradual: os componentes continuam
  * usando as mesmas interfaces, mas os dados vêm do banco real.
  */
-import type { Atleta, Ficha, Medida, Avaliacao, Personal } from '@/lib/database.types';
+import type { Atleta, Ficha, Medida, Personal } from '@/lib/database.types';
 import type { PersonalAthlete, MeasurementHistory, PersonalProfile, PersonalStats } from '@/mocks/personal';
 
-// ===== MEDIDA → MeasurementHistory =====
 
-export function mapMedidaToHistory(medida: Medida, avaliacao?: Avaliacao | null): MeasurementHistory {
-    return {
-        id: medida.id,
-        date: medida.data,
-        score: avaliacao?.score_geral ? Number(avaliacao.score_geral) : undefined,
-        ratio: undefined, // Calculado posteriormente
-        measurements: {
-            weight: Number(medida.peso) || 0,
-            height: 0, // Vem da ficha, não da medida
-            neck: Number(medida.pescoco) || 0,
-            shoulders: Number(medida.ombros) || 0,
-            chest: Number(medida.peitoral) || 0,
-            waist: Number(medida.cintura) || 0,
-            hips: Number(medida.quadril) || 0,
-            pelvis: 0, // Vem da ficha
-            armRight: Number(medida.braco_direito) || 0,
-            armLeft: Number(medida.braco_esquerdo) || 0,
-            forearmRight: Number(medida.antebraco_direito) || 0,
-            forearmLeft: Number(medida.antebraco_esquerdo) || 0,
-            thighRight: Number(medida.coxa_direita) || 0,
-            thighLeft: Number(medida.coxa_esquerda) || 0,
-            calfRight: Number(medida.panturrilha_direita) || 0,
-            calfLeft: Number(medida.panturrilha_esquerda) || 0,
-            wristRight: 0,  // Vem da ficha
-            wristLeft: 0,   // Vem da ficha
-            kneeRight: 0,   // Vem da ficha
-            kneeLeft: 0,    // Vem da ficha
-            ankleRight: 0,  // Vem da ficha
-            ankleLeft: 0,   // Vem da ficha
-        },
-        skinfolds: {
-            tricep: 0,
-            subscapular: 0,
-            chest: 0,
-            axillary: 0,
-            suprailiac: 0,
-            abdominal: 0,
-            thigh: 0,
-        },
-    };
-}
 
-/**
- * Enriquecer MeasurementHistory com dados fixos da ficha
- */
-export function enriquecerComFicha(history: MeasurementHistory, ficha: Ficha | null): MeasurementHistory {
-    if (!ficha) return history;
-
-    return {
-        ...history,
-        measurements: {
-            ...history.measurements,
-            height: Number(ficha.altura) || 0,
-            pelvis: Number(ficha.pelve) || 0,
-            wristRight: Number(ficha.punho) || 0,
-            wristLeft: Number(ficha.punho) || 0,
-            kneeRight: Number(ficha.joelho) || 0,
-            kneeLeft: Number(ficha.joelho) || 0,
-            ankleRight: Number(ficha.tornozelo) || 0,
-            ankleLeft: Number(ficha.tornozelo) || 0,
-        },
-    };
-}
 
 // ===== ATLETA → PersonalAthlete =====
 
+/**
+ * Converte dados do Supabase para PersonalAthlete (interface da UI).
+ * Agora recebe `assessments[]` da tabela consolidada ao invés de `avaliacoes[]`.
+ */
 export function mapAtletaToPersonalAthlete(
     atleta: Atleta,
     ficha: Ficha | null,
     medidas: Medida[],
-    avaliacoes: Avaliacao[]
+    assessments: any[]
 ): PersonalAthlete {
-    const ultimaAvaliacao = avaliacoes[0]; // Já vem ordenado DESC
-    const penultimaAvaliacao = avaliacoes[1];
+    const ultimoAssessment = assessments[0]; // Já vem ordenado DESC por date
+    const penultimoAssessment = assessments[1];
 
-    const score = ultimaAvaliacao?.score_geral ? Number(ultimaAvaliacao.score_geral) : 0;
-    const scoreAnterior = penultimaAvaliacao?.score_geral ? Number(penultimaAvaliacao.score_geral) : score;
-    const scoreVariation = score - scoreAnterior;
+    // Score e ratio agora vêm direto das colunas dedicadas do DB
+    const score = Number(ultimoAssessment?.score) || 0;
+    const penultimaScore = Number(penultimoAssessment?.score) || score;
+    const scoreVariation = score - penultimaScore;
+    const ratio = Number(ultimoAssessment?.ratio) || 0;
 
-    // Mapear medidas para MeasurementHistory
-    const assessments: MeasurementHistory[] = medidas.map(medida => {
-        const avaliacaoCorrespondente = avaliacoes.find(a => a.medidas_id === medida.id);
-        const history = mapMedidaToHistory(medida, avaliacaoCorrespondente);
-        return enriquecerComFicha(history, ficha);
+    // Auto-converter altura de metros para cm
+    let alturaCm = Number(ficha?.altura) || 0;
+    if (alturaCm > 0 && alturaCm < 3) alturaCm = Math.round(alturaCm * 100);
+
+    // Construir MeasurementHistory[] a partir dos assessments
+    const mappedAssessments: MeasurementHistory[] = assessments.map((assessment) => {
+        const linear = assessment.measurements?.linear || {};
+        const skins = assessment.measurements?.skinfolds || {};
+        const resultsStored = assessment.results || {};
+
+        return {
+            id: assessment.id,
+            date: assessment.date,
+            score: Number(assessment.score) || 0,
+            ratio: Number(assessment.ratio) || 0,
+            bf: Number(assessment.body_fat) || 0,
+            ffmi: resultsStored?.scores?.composicao?.detalhes?.detalhes?.ffmi?.valor || 0,
+            proporcoes: resultsStored?.scores || null,
+            measurements: {
+                weight: Number(linear.weight) || Number(assessment.weight) || 0,
+                height: Number(linear.height) || alturaCm || 0,
+                neck: Number(linear.neck) || 0,
+                shoulders: Number(linear.shoulders) || 0,
+                chest: Number(linear.chest) || 0,
+                waist: Number(linear.waist) || 0,
+                abdomen: Number(linear.abdomen) || Number(linear.waist) || 0,
+                hips: Number(linear.hips) || 0,
+                pelvis: Number(linear.pelvis) || Number(ficha?.pelve) || 0,
+                armRight: Number(linear.armRight) || 0,
+                armLeft: Number(linear.armLeft) || 0,
+                forearmRight: Number(linear.forearmRight) || 0,
+                forearmLeft: Number(linear.forearmLeft) || 0,
+                thighRight: Number(linear.thighRight) || 0,
+                thighLeft: Number(linear.thighLeft) || 0,
+                calfRight: Number(linear.calfRight) || 0,
+                calfLeft: Number(linear.calfLeft) || 0,
+                wristRight: Number(linear.wristRight) || Number(ficha?.punho) || 17,
+                wristLeft: Number(linear.wristLeft) || Number(ficha?.punho) || 17,
+                kneeRight: Number(linear.kneeRight) || Number(ficha?.joelho) || 40,
+                kneeLeft: Number(linear.kneeLeft) || Number(ficha?.joelho) || 40,
+                ankleRight: Number(linear.ankleRight) || Number(ficha?.tornozelo) || 22,
+                ankleLeft: Number(linear.ankleLeft) || Number(ficha?.tornozelo) || 22,
+            },
+            skinfolds: {
+                tricep: Number(skins.tricep) || 0,
+                subscapular: Number(skins.subscapular) || 0,
+                chest: Number(skins.chest) || 0,
+                axillary: Number(skins.axillary) || 0,
+                suprailiac: Number(skins.suprailiac) || 0,
+                abdominal: Number(skins.abdominal) || 0,
+                thigh: Number(skins.thigh) || 0,
+            },
+        };
     });
+
+    // Fallback: se não existem assessments mas existem medidas na tabela 'medidas',
+    // criar um assessment virtual a partir da medida mais recente para exibição na UI.
+    // Isso garante que alunos recém-cadastrados com medidas no formulário de registro
+    // tenham seus dados visíveis na tela de perfil, mesmo antes de uma avaliação IA.
+    if (mappedAssessments.length === 0 && medidas.length > 0) {
+        const m = medidas[0]; // Já vem ordenado DESC por data
+        mappedAssessments.push({
+            id: m.id,
+            date: m.data || m.created_at || new Date().toISOString(),
+            score: 0,
+            ratio: 0,
+            bf: Number(m.gordura_corporal) || 0,
+            ffmi: 0,
+            measurements: {
+                weight: Number(m.peso) || 0,
+                height: alturaCm || 0,
+                neck: Number(m.pescoco) || 0,
+                shoulders: Number(m.ombros) || 0,
+                chest: Number(m.peitoral) || 0,
+                waist: Number(m.cintura) || 0,
+                hips: Number(m.quadril) || 0,
+                pelvis: Number(ficha?.pelve) || 0,
+                armRight: Number(m.braco_direito) || 0,
+                armLeft: Number(m.braco_esquerdo) || 0,
+                forearmRight: Number(m.antebraco_direito) || 0,
+                forearmLeft: Number(m.antebraco_esquerdo) || 0,
+                thighRight: Number(m.coxa_direita) || 0,
+                thighLeft: Number(m.coxa_esquerda) || 0,
+                calfRight: Number(m.panturrilha_direita) || 0,
+                calfLeft: Number(m.panturrilha_esquerda) || 0,
+                wristRight: Number(ficha?.punho) || 17,
+                wristLeft: Number(ficha?.punho) || 17,
+                kneeRight: Number(ficha?.joelho) || 40,
+                kneeLeft: Number(ficha?.joelho) || 40,
+                ankleRight: Number(ficha?.tornozelo) || 22,
+                ankleLeft: Number(ficha?.tornozelo) || 22,
+            },
+            skinfolds: {
+                tricep: Number(m.dobra_tricipital) || 0,
+                subscapular: Number(m.dobra_subescapular) || 0,
+                chest: Number(m.dobra_peitoral) || 0,
+                axillary: Number(m.dobra_axilar_media) || 0,
+                suprailiac: Number(m.dobra_suprailiaca) || 0,
+                abdominal: Number(m.dobra_abdominal) || 0,
+                thigh: Number(m.dobra_coxa) || 0,
+            },
+        });
+        console.info(`[Mapper] ⚡ Criado assessment virtual a partir de medida para: ${atleta.nome}`);
+    }
 
     // Determinar status
     let status: 'active' | 'inactive' | 'attention' = 'active';
@@ -108,17 +149,21 @@ export function mapAtletaToPersonalAthlete(
 
     return {
         id: atleta.id,
+        personalId: atleta.personal_id,
         name: atleta.nome,
         email: atleta.email || '',
         gender: ficha?.sexo === 'F' ? 'FEMALE' : 'MALE',
         avatarUrl: atleta.foto_url,
         score,
         scoreVariation: Math.round(scoreVariation * 10) / 10,
-        ratio: 0, // Calculado separadamente
-        lastMeasurement: medidas[0]?.data || atleta.created_at,
+        ratio,
+        lastMeasurement: assessments[0]?.date || medidas[0]?.data || atleta.created_at,
         status,
         linkedSince: atleta.created_at,
-        assessments,
+        assessments: mappedAssessments,
+        birthDate: ficha?.data_nascimento || undefined,
+        phone: atleta.telefone || undefined,
+        contexto: (ficha?.contexto as any) || null,
     };
 }
 

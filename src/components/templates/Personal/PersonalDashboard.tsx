@@ -5,11 +5,6 @@ import { HeroCard } from '@/components/organisms/HeroCard';
 import { HeroContent } from '@/features/dashboard/types';
 import { useDataStore } from '@/stores/dataStore';
 import { useAuthStore } from '@/stores/authStore';
-import {
-    mockAthletesNeedingAttention,
-    mockTopPerformers,
-    mockRecentActivity,
-} from '@/mocks/personal';
 
 interface PersonalDashboardProps {
     onNavigateToAthlete: (athleteId: string) => void;
@@ -28,9 +23,15 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
 
     // Calculate stats from store
     const totalAthletes = personalAthletes.length;
-    const maxAthletes = 50; // Mock limit
-    const averageScore = Math.round(personalAthletes.reduce((acc, a) => acc + (a.score || 0), 0) / totalAthletes * 10) / 10;
+
+    // Calcula o score médio baseado nos scores que não são zero
+    const athletesWithScore = personalAthletes.filter(a => (a.score || 0) > 0);
+    const averageScore = athletesWithScore.length > 0
+        ? Math.round(athletesWithScore.reduce((acc, a) => acc + (a.score || 0), 0) / athletesWithScore.length * 10) / 10
+        : 0;
+
     const measuredThisWeek = personalAthletes.filter(a => {
+        if (!a.lastMeasurement) return false;
         const lastDate = new Date(a.lastMeasurement);
         const diff = Date.now() - lastDate.getTime();
         return diff < 7 * 24 * 60 * 60 * 1000;
@@ -38,15 +39,15 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
 
     const stats = {
         totalAthletes,
-        maxAthletes,
+        maxAthletes: 50, // Limite do plano (pode vir do perfil no futuro)
         measuredThisWeek,
         averageScore,
-        scoreVariation: 1.2, // Mock variation
-        needsAttention: personalAthletes.filter(a => (a.score || 0) < 60).length
+        scoreVariation: 0, // Variação média global será calculada a partir do histórico no futuro
+        needsAttention: personalAthletes.filter(a => (a.score || 0) > 0 && (a.score || 0) < 60).length
     };
 
     const athletesNeedingAttention = personalAthletes
-        .filter(a => (a.score || 0) < 60)
+        .filter(a => (a.score || 0) < 60 && a.assessments?.length > 0)
         .slice(0, 3)
         .map(a => ({
             id: a.id,
@@ -68,7 +69,17 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
             position: idx + 1
         }));
 
-    const recentActivity = mockRecentActivity;
+    const recentActivity = personalAthletes
+        .filter(a => a.lastMeasurement)
+        .sort((a, b) => new Date(b.lastMeasurement).getTime() - new Date(a.lastMeasurement).getTime())
+        .slice(0, 5)
+        .map((a, idx) => ({
+            id: `activity-${idx}`,
+            type: 'measurement',
+            athleteName: a.name,
+            action: 'registrou nova medição',
+            timestamp: a.lastMeasurement,
+        }));
 
     const heroContent: HeroContent = {
         badge: { label: 'GESTÃO E PERFORMANCE', variant: 'primary' },
@@ -259,7 +270,7 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
                                         <span className="text-2xl">{getMedalEmoji(athlete.position)}</span>
                                         <div>
                                             <p className="text-white font-medium">{athlete.name}</p>
-                                            <p className="text-xs text-gray-400">Ratio: {athlete.ratio}</p>
+                                            <p className="text-xs text-gray-400">Ratio: {typeof athlete.ratio === 'number' ? athlete.ratio.toFixed(2) : athlete.ratio}</p>
                                         </div>
                                     </div>
                                     <div className="text-right">

@@ -29,6 +29,39 @@ export const ScoreWidget: React.FC<ScoreWidgetProps> = ({
                 <div className="absolute inset-0 rounded-full blur-3xl opacity-20" style={{ background: colors.brand.primary }}></div>
                 <svg className="w-full h-full transform -rotate-90 overflow-visible" viewBox="0 0 240 240">
                     <circle cx="120" cy="120" r="80" fill="none" stroke={colors.background.card} strokeWidth="16" />
+
+                    {/* Zone boundary markers */}
+                    {[
+                        { score: 50, color: '#F59E0B' },
+                        { score: 60, color: '#8B5CF6' },
+                        { score: 70, color: '#3B82F6' },
+                        { score: 80, color: '#10B981' },
+                        { score: 90, color: '#FFD700' },
+                    ].map(zone => {
+                        const angle = (zone.score / 100) * 2 * Math.PI;
+                        const cos = Math.cos(angle);
+                        const sin = Math.sin(angle);
+                        return (
+                            <g key={zone.score}>
+                                {/* Tick mark */}
+                                <line
+                                    x1={120 + 70 * cos} y1={120 + 70 * sin}
+                                    x2={120 + 90 * cos} y2={120 + 90 * sin}
+                                    stroke={zone.color} strokeWidth="1.5" opacity="0.2" strokeLinecap="round"
+                                />
+                                {/* Score label (counter-rotated to stay readable) */}
+                                <text
+                                    x={120 + 103 * cos} y={120 + 103 * sin}
+                                    fill={zone.color} fontSize="9" fontWeight="600"
+                                    textAnchor="middle" dominantBaseline="central"
+                                    opacity="0.35"
+                                    transform={`rotate(90, ${120 + 103 * cos}, ${120 + 103 * sin})`}
+                                >{zone.score}</text>
+                            </g>
+                        );
+                    })}
+
+                    {/* Score progress arc */}
                     <circle
                         cx="120" cy="120" r="80" fill="none" stroke={colors.brand.primary} strokeWidth="16"
                         strokeDasharray="502" strokeDashoffset={502 - (502 * score) / 100}

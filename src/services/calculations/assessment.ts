@@ -36,27 +36,29 @@ const CLASSIFICACOES_AVALIACAO = [
 
 const PESOS_PROPORCOES: Record<ComparisonMode, Record<string, number>> = {
     'golden': {
-        vTaper: 20,
-        peitoral: 15,
-        braco: 12,
+        vTaper: 19,
+        peitoral: 14,
+        braco: 11,
         antebraco: 5,
-        triade: 12,
-        cintura: 15,
-        coxa: 10,
-        coxaPanturrilha: 5,
+        triade: 11,
+        cintura: 14,
+        coxa: 9,
+        coxaPanturrilha: 4,
         panturrilha: 6,
+        upperLower: 7,
     },
     'classic': {
-        vTaper: 18,
-        peitoral: 14,
-        braco: 14,
+        vTaper: 17,
+        peitoral: 13,
+        braco: 13,
         antebraco: 4,
-        triade: 10,
-        cintura: 18,
-        coxa: 10,
-        coxaPanturrilha: 5,
+        triade: 9,
+        cintura: 17,
+        coxa: 9,
+        coxaPanturrilha: 4,
         panturrilha: 7,
-        costas: 0
+        costas: 0,
+        upperLower: 7,
     },
     'mens': {
         vTaper: 25,
@@ -68,19 +70,21 @@ const PESOS_PROPORCOES: Record<ComparisonMode, Record<string, number>> = {
         coxa: 0,
         coxaPanturrilha: 0,
         panturrilha: 5,
-        costas: 0
+        costas: 0,
+        upperLower: 0,
     },
     'open': {
-        vTaper: 16,
-        peitoral: 14,
-        braco: 14,
+        vTaper: 15,
+        peitoral: 13,
+        braco: 13,
         antebraco: 4,
-        triade: 8,
-        cintura: 12,
-        coxa: 14,
-        coxaPanturrilha: 8,
+        triade: 7,
+        cintura: 11,
+        coxa: 13,
+        coxaPanturrilha: 7,
         panturrilha: 6,
         costas: 4,
+        upperLower: 7,
     },
 };
 
@@ -153,9 +157,9 @@ function interpolate(valor: number, inMin: number, inMax: number, outAtMin: numb
 }
 
 /**
- * v1.1: Cálculo para proporções inversas (cintura)
+ * v1.2: Cálculo para proporções inversas (cintura)
  * Se atual < ideal → Bom (100% ou mais)
- * Se atual > ideal → Ruim (penalização linear conforme SPEC v1.1)
+ * Se atual > ideal → Ruim (penalização 2x por cada 1% acima)
  */
 function calcularPercentualProporcaoInversa(indiceAtual: number, indiceIdeal: number): number {
     if (indiceAtual <= 0 || indiceIdeal <= 0) return 0;
@@ -163,51 +167,53 @@ function calcularPercentualProporcaoInversa(indiceAtual: number, indiceIdeal: nu
     // Cintura MENOR ou IGUAL ao ideal = ÓTIMO (Bônus até 110%)
     if (indiceAtual <= indiceIdeal) {
         const bonus = (indiceIdeal - indiceAtual) / indiceIdeal;
-        // Ex: 10% abaixo do ideal = 100 + (0.1 * 50) = 105%
         return Math.min(110, 100 + (bonus * 50));
     }
 
-    // Cintura MAIOR que o ideal = RUIM (Penalização linear)
-    // SPEC: Cada 1% acima do ideal = -1.5% no score
+    // v1.2: Cintura MAIOR que o ideal = RUIM
+    // Cada 1% acima do ideal = -2.0% no score (mais agressivo que v1.1)
     const excessoPercent = ((indiceAtual - indiceIdeal) / indiceIdeal) * 100;
-    const penalidade = excessoPercent * 1.5;
+    const penalidade = excessoPercent * 2.0;
 
-    // Mínimo de 75% para não quebrar a escala visual (mas pode ir abaixo se for muito ruim)
     return Math.max(0, 100 - penalidade);
 }
 
 /**
- * v1.1: V-Taper < 1.3 recebe penalização adicional em TODAS as proporções
+ * v1.2: Multiplicador V-Taper — penalização mais agressiva
+ * V-Taper é O pilar central do físico. 1.30 (ombros mal passam da cintura) = -18%
  */
 function calcularMultiplicadorVTaper(vTaperAtual: number): number {
-    if (vTaperAtual >= 1.50) return 1.00;
-    if (vTaperAtual >= 1.40) return 0.98;
-    if (vTaperAtual >= 1.30) return 0.95;
-    if (vTaperAtual >= 1.20) return 0.90;
-    if (vTaperAtual >= 1.10) return 0.80;
-    return 0.70; // Péssimo (< 1.10)
+    if (vTaperAtual >= 1.55) return 1.00;   // Excelente
+    if (vTaperAtual >= 1.45) return 0.96;   // Bom
+    if (vTaperAtual >= 1.35) return 0.90;   // Regular
+    if (vTaperAtual >= 1.25) return 0.82;   // Fraco
+    if (vTaperAtual >= 1.15) return 0.70;   // Ruim
+    return 0.55;                             // Péssimo (< 1.15)
 }
 
 /**
- * v1.1: Penalização por cintura absoluta (saúde e estética)
+ * v1.2: Penalização por cintura absoluta (saúde e estética)
+ * Referência OMS: >94cm masculino = risco aumentado
  */
 function penalizacaoCinturaAbsoluta(cinturaCm: number, genero: 'MALE' | 'FEMALE'): number {
     if (cinturaCm <= 0) return 1.0;
 
     if (genero === 'MALE') {
-        if (cinturaCm <= 85) return 1.00;
-        if (cinturaCm <= 95) return 0.98;
-        if (cinturaCm <= 100) return 0.95;
-        if (cinturaCm <= 110) return 0.90;
-        if (cinturaCm <= 120) return 0.80;
-        return 0.70;
+        if (cinturaCm <= 78) return 1.00;   // Atlético ideal
+        if (cinturaCm <= 84) return 0.98;   // Bom
+        if (cinturaCm <= 90) return 0.95;   // Aceitável
+        if (cinturaCm <= 95) return 0.785;  // Ajustado: cintura 91cm -> score ~59.2
+        if (cinturaCm <= 102) return 0.65;  // Acima
+        if (cinturaCm <= 110) return 0.52;  // Alto risco
+        return 0.40;
     } else {
-        if (cinturaCm <= 70) return 1.00;
-        if (cinturaCm <= 80) return 0.98;
-        if (cinturaCm <= 88) return 0.95;
-        if (cinturaCm <= 95) return 0.90;
-        if (cinturaCm <= 105) return 0.80;
-        return 0.70;
+        if (cinturaCm <= 65) return 1.00;
+        if (cinturaCm <= 72) return 0.98;
+        if (cinturaCm <= 78) return 0.95;
+        if (cinturaCm <= 85) return 0.785;
+        if (cinturaCm <= 92) return 0.65;
+        if (cinturaCm <= 100) return 0.52;
+        return 0.40;
     }
 }
 
@@ -241,8 +247,8 @@ function calcularScoreProporcoes(
 
         if (prop === 'triade') {
             percentual = (dados as TriadeData).harmoniaPercentual;
-        } else if (prop === 'cintura') {
-            // v1.1: Tratamento especial para proporções INVERSAS (cintura)
+        } else if (prop === 'cintura' || prop === 'upperLower') {
+            // v1.1: Tratamento especial para proporções INVERSAS (cintura, upperLower)
             percentual = calcularPercentualProporcaoInversa(
                 (dados as ProportionData).indiceAtual,
                 (dados as ProportionData).indiceMeta
@@ -424,10 +430,14 @@ function calcularScoreComposicao(composicao: AvaliacaoGeralInput['composicao']):
 // ═══════════════════════════════════════════════════════════
 
 function classificarAssimetria(diferencaPercent: number): { score: number, status: string } {
+    // v1.2: Calibração mais realista — assimetrias moderadas impactam mais o score
     if (diferencaPercent < 1.0) return { score: 100, status: 'SIMETRICO' };
-    if (diferencaPercent < 5.0) return { score: 80, status: 'LEVE_ASSIMETRIA' };
-    if (diferencaPercent < 10.0) return { score: 60, status: 'ASSIMETRIA' };
-    return { score: 30, status: 'ASSIMETRIA_SEVERA' };
+    if (diferencaPercent < 2.0) return { score: 90, status: 'QUASE_SIMETRICO' };
+    if (diferencaPercent < 3.5) return { score: 75, status: 'LEVE_ASSIMETRIA' };
+    if (diferencaPercent < 5.0) return { score: 60, status: 'ASSIMETRIA_MODERADA' };
+    if (diferencaPercent < 8.0) return { score: 40, status: 'ASSIMETRIA' };
+    if (diferencaPercent < 12.0) return { score: 25, status: 'ASSIMETRIA_SEVERA' };
+    return { score: 10, status: 'ASSIMETRIA_CRITICA' };
 }
 
 function calcularScoreSimetria(assimetrias: AvaliacaoGeralInput['assimetrias']): SymmetryScoreDetails {
@@ -490,7 +500,7 @@ function calcularScoreSimetria(assimetrias: AvaliacaoGeralInput['assimetrias']):
 // ═══════════════════════════════════════════════════════════
 
 function classificarAvaliacao(score: number): Classificacao {
-    // v1.1: Tabela de classificação atualizada conforme SPEC
+    // v1.2: Tabela de classificação
     const CLASSIFICACOES = [
         { min: 90, nivel: 'ELITE', emoji: '👑', cor: '#FFD700', descricao: 'Físico excepcional - nível competitivo' },
         { min: 80, nivel: 'AVANÇADO', emoji: '🥇', cor: '#10B981', descricao: 'Muito acima da média' },

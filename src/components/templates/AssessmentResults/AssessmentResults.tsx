@@ -7,6 +7,10 @@ import {
 } from 'lucide-react';
 import { MeasurementHistory } from '@/mocks/personal';
 import { Measurements } from './types';
+import { supabase } from '@/services/supabase';
+import { mapMeasurementToInput } from '@/services/calculations/evolutionProcessor';
+import { calcularAvaliacaoGeral } from '@/services/calculations/assessment';
+import { useDataStore } from '@/stores/dataStore';
 
 // Import extracted tab components
 import { DiagnosticTab, ProportionsTab, AsymmetryTab } from './tabs';
@@ -19,6 +23,9 @@ interface AssessmentResultsProps {
     studentName?: string;
     gender?: 'male' | 'female';
     assessment?: MeasurementHistory;
+    birthDate?: string;
+    athleteId?: string;
+    age?: number;
 }
 
 // Token styles for main component
@@ -94,9 +101,14 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
     onBack,
     studentName,
     gender,
-    assessment
+    assessment,
+    birthDate,
+    athleteId,
+    age
 }) => {
     const [activeTab, setActiveTab] = useState<'diagnostic' | 'golden' | 'asymmetry'>('diagnostic');
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
     const tabs = [
         { id: 'diagnostic', label: 'Diagnóstico Estético' },
@@ -126,45 +138,34 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
         cabeca: 56 // Default
     } : undefined;
 
-    const handleSaveAssessment = () => {
-        // Data to be saved (filtered as per requirements)
-        // SAVED: Linear measurements, Skinfolds
-        // EXCLUDED: Aesthetic diagnosis, Golden ratios, Asymmetry analysis (recalculated on read)
+    const { getAthleteById, personalAthletes } = useDataStore();
 
-        const assessmentPayload = {
-            studentId: "student_123", // Context variable
-            date: new Date().toISOString(),
-            // 1. LINEAR MEASUREMENTS (Medidas Lineares)
-            measurements: {
-                height: 178, // cm
-                weight: 88.5, // kg
-                neck: 42,
-                shoulders: 133,
-                chest: 120,
-                waist: 85,
-                hips: 100,
-                arms: { left: 41.0, right: 44.5 },
-                forearms: { left: 32.0, right: 32.2 },
-                thighs: { left: 62.0, right: 60.5 },
-                knees: { left: 40.0, right: 40.0 },
-                calves: { left: 38.0, right: 38.0 },
-                ankles: { left: 22.0, right: 22.0 },
-                wrists: { left: 17.0, right: 17.0 }
-            },
-            // 2. SKINFOLDS (Dobras Cutâneas)
-            skinfolds: {
-                tricep: 12,
-                subscapular: 15,
-                chest: 8,
-                axillary: 10,
-                suprailiac: 14,
-                abdominal: 18,
-                thigh: 12
-            }
-        };
+    // Resolve birthDate: use prop first, fallback to athlete in store
+    const resolvedBirthDate = React.useMemo(() => {
+        if (birthDate) return birthDate;
+        if (athleteId) {
+            const athlete = personalAthletes.find(a => a.id === athleteId);
+            if (athlete?.birthDate) return athlete.birthDate;
+        }
+        return undefined;
+    }, [birthDate, athleteId, personalAthletes]);
 
-        console.log("Saving Assessment (Measurements Only):", assessmentPayload);
-        alert("Avaliação salva com sucesso na ficha do aluno!");
+    const handleSaveAssessment = async () => {
+        setIsSaving(true);
+        setSaveStatus('idle');
+
+        try {
+            // A avaliação já foi salva automaticamente pela Store via App.tsx/handleAssessmentSubmit
+            setSaveStatus('success');
+            setTimeout(() => {
+                setSaveStatus('idle');
+                setIsSaving(false);
+            }, 3000);
+        } catch (err) {
+            console.error('[AssessmentResults] ❌ Exceção:', err);
+            setSaveStatus('error');
+            setIsSaving(false);
+        }
     };
 
     return (
@@ -184,9 +185,14 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
                     <div className="flex gap-3 flex-wrap">
                         <button
                             onClick={handleSaveAssessment}
-                            style={tokenStyles.primaryButton}
+                            disabled={isSaving}
+                            style={{
+                                ...tokenStyles.primaryButton,
+                                opacity: isSaving ? 0.6 : 1,
+                                cursor: isSaving ? 'not-allowed' : 'pointer',
+                            }}
                         >
-                            <Save size={16} /> SALVAR AVALIAÇÃO IA
+                            <Save size={16} /> {isSaving ? 'SALVANDO...' : saveStatus === 'success' ? '✅ SALVO' : 'SALVAR AVALIAÇÃO IA'}
                         </button>
                         <button style={tokenStyles.secondaryButton}>
                             <Download size={16} /> Exportar PDF
@@ -216,7 +222,7 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
 
                 {/* Main Content - Render active tab */}
                 <div className="flex flex-col gap-6">
-                    {activeTab === 'diagnostic' && <DiagnosticTab assessment={assessment} gender={gender} />}
+                    {activeTab === 'diagnostic' && <DiagnosticTab assessment={assessment} gender={gender} birthDate={resolvedBirthDate} age={age} />}
                     {activeTab === 'golden' && <ProportionsTab gender={gender} userMeasurements={userMeasurements} />}
                     {activeTab === 'asymmetry' && <AsymmetryTab assessment={assessment} />}
                 </div>

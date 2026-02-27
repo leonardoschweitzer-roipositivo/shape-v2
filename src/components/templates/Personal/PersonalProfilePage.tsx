@@ -16,6 +16,8 @@ import {
     MessageCircle
 } from 'lucide-react';
 import { mockPersonalProfile, PersonalProfile } from '@/mocks/personal';
+import { useAuthStore } from '@/stores/authStore';
+import { useDataStore } from '@/stores/dataStore';
 
 // ============================================
 // SUB-COMPONENTS
@@ -126,7 +128,33 @@ const InfoRow: React.FC<{ label: string; value: string | React.ReactNode; icon?:
 // ============================================
 
 export const PersonalProfilePage: React.FC = () => {
-    const profile = mockPersonalProfile;
+    const { profile: authProfile, entity } = useAuthStore();
+    const { personalAthletes } = useDataStore();
+
+    // Constrói o perfil a partir dos dados reais do Supabase
+    const profile: PersonalProfile = {
+        id: entity.personal?.id || authProfile?.id || '',
+        name: entity.personal?.nome || authProfile?.full_name || 'Personal',
+        email: entity.personal?.email || authProfile?.email || '',
+        avatarUrl: entity.personal?.foto_url || authProfile?.avatar_url || null,
+        gender: 'MALE', // futuramente: vir do banco
+        cref: entity.personal?.cref || 'Não cadastrado',
+        specialties: [], // futuramente: vir do banco
+        bio: 'Personal trainer dedicado à transformação física e bem-estar dos alunos.',
+        whatsapp: entity.personal?.telefone || null,
+        instagram: null,
+        createdAt: new Date().toISOString(),
+        stats: {
+            totalAthletes: personalAthletes.length,
+            maxAthletes: 50,
+            measuredThisWeek: 0,
+            averageScore: personalAthletes.length > 0
+                ? Math.round(personalAthletes.reduce((acc, a) => acc + (a.score || 0), 0) / personalAthletes.length * 10) / 10
+                : 0,
+            scoreVariation: 0,
+            needsAttention: personalAthletes.filter(a => (a.score || 0) < 60).length,
+        },
+    };
 
     return (
         <div className="flex-1 p-4 md:p-8 pb-20 overflow-y-auto">

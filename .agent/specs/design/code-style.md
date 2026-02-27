@@ -44,71 +44,62 @@ Este documento define as convenções de código para o VITRU IA. Focamos em cri
 ### 2.3 Tokens de Cores
 
 ```typescript
-// tokens/colors.ts
+// tokens/colors.ts (IMPLEMENTADO)
 
 export const colors = {
   // === BRAND ===
   brand: {
-    primary: '#6366F1',      // Indigo - ação principal
-    secondary: '#8B5CF6',    // Violet - ação secundária
-    accent: '#F59E0B',       // Amber - destaques
+    /** Dynamic - Ações principais, CTAs, progresso positivo */
+    primary: 'var(--color-primary)',  // Teal (#00C9A7 / #00D9A5)
+    /** #7C3AED - Gradientes, acentos secundários, badges PRO */
+    secondary: '#7C3AED',
   },
 
   // === SEMANTIC ===
   semantic: {
-    success: '#10B981',      // Verde - sucesso/positivo
-    warning: '#F59E0B',      // Amarelo - atenção
-    error: '#EF4444',        // Vermelho - erro/negativo
-    info: '#3B82F6',         // Azul - informação
+    success: '#22c55e',      // Verde - sucesso/positivo
+    warning: '#eab308',      // Amarelo - atenção
+    error: '#ef4444',        // Vermelho - erro/negativo
+    orange: '#f97316',       // Laranja - assimetria moderada
+    info: '#3b82f6',         // Azul - informação
+  },
+
+  // === BACKGROUND (Dark Theme) ===
+  background: {
+    dark: '#0A0F1C',         // Fundo principal da aplicação
+    card: '#131B2C',         // Painéis, cards, elementos elevados
+    glass: 'rgba(255, 255, 255, 0.05)', // Glassmorphism overlay
+  },
+
+  // === TEXT (Dark Theme) ===
+  text: {
+    primary: '#FFFFFF',      // Títulos, valores principais
+    secondary: '#D1D5DB',    // Texto de corpo, parágrafos
+    muted: '#9CA3AF',        // Legendas, descrições secundárias
+    disabled: '#6B7280',     // Labels, informações de suporte
   },
 
   // === PROPORTIONS (específico VITRU IA) ===
   proportions: {
     golden: '#FFD700',       // Dourado - Golden Ratio
-    classic: '#8B5CF6',      // Roxo - Classic Physique
-    physique: '#3B82F6',     // Azul - Men's Physique
+    classic: '#7C3AED',      // Roxo - Classic Physique
+    physique: '#3b82f6',     // Azul - Men's Physique
   },
 
-  // === SCORE LEVELS ===
-  score: {
-    elite: '#FFD700',        // 95-100%
-    advanced: '#10B981',     // 85-94%
-    intermediate: '#3B82F6', // 75-84%
-    beginner: '#F59E0B',     // 60-74%
-    developing: '#6B7280',   // 0-59%
+  // === SCALE LEVELS (Shape-V) ===
+  scale: {
+    bloco: '#6B7280',        // < 1.20
+    normal: '#3b82f6',       // 1.20-1.35
+    atletico: '#22c55e',     // 1.35-1.50
+    estetico: '#eab308',     // 1.50-1.618
+    freak: '#ef4444',        // > 1.618
   },
 
-  // === NEUTRALS ===
-  neutral: {
-    white: '#FFFFFF',
-    gray50: '#F9FAFB',
-    gray100: '#F3F4F6',
-    gray200: '#E5E7EB',
-    gray300: '#D1D5DB',
-    gray400: '#9CA3AF',
-    gray500: '#6B7280',
-    gray600: '#4B5563',
-    gray700: '#374151',
-    gray800: '#1F2937',
-    gray900: '#111827',
-    black: '#000000',
-  },
-
-  // === BACKGROUND ===
-  background: {
-    primary: '#FFFFFF',
-    secondary: '#F9FAFB',
-    tertiary: '#F3F4F6',
-    dark: '#111827',
-  },
-
-  // === TEXT ===
-  text: {
-    primary: '#111827',
-    secondary: '#4B5563',
-    tertiary: '#9CA3AF',
-    inverse: '#FFFFFF',
-    link: '#6366F1',
+  // === ASYMMETRY LEVELS ===
+  asymmetry: {
+    symmetrical: '#22c55e',  // < 3% - Simétrico
+    moderate: '#eab308',     // 3-5% - Moderado
+    high: '#ef4444',         // > 5% - Alta assimetria
   },
 } as const
 

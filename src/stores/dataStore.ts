@@ -1,12 +1,14 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { MeasurementHistory, PersonalAthlete, mockPersonalAthletes } from '@/mocks/personal';
-import { PersonalSummary, mockPersonalsSummary, AcademyStats, mockAcademyStats } from '@/mocks/academy';
+import { MeasurementHistory, PersonalAthlete } from '@/mocks/personal';
+import { PersonalSummary, AcademyStats } from '@/mocks/academy';
 import { mapMeasurementToInput } from '@/services/calculations/evolutionProcessor';
 import { calcularAvaliacaoGeral } from '@/services/calculations/assessment';
-import { supabase } from '@/services/supabase';
 import { mapAtletaToPersonalAthlete } from '@/services/mappers';
-import type { Atleta, Ficha, Medida, Avaliacao } from '@/lib/database.types';
+import { supabase } from '@/services/supabase';
+import { useAthleteStore } from '@/stores/athleteStore';
+import { calculateAge } from '@/utils/dateUtils';
+import type { Atleta, Ficha, Medida } from '@/lib/database.types';
 
 type DataSource = 'MOCK' | 'SUPABASE';
 
@@ -41,10 +43,10 @@ interface DataState {
 export const useDataStore = create<DataState>()(
     persist(
         (set, get) => ({
-            personalAthletes: mockPersonalAthletes,
-            personals: mockPersonalsSummary,
-            academyStats: mockAcademyStats,
-            dataSource: 'MOCK' as DataSource,
+            personalAthletes: [],
+            personals: [],
+            academyStats: { totalAthletes: 0, totalPersonals: 0, averageScore: 0, measuredThisWeek: 0 } as AcademyStats,
+            dataSource: 'SUPABASE' as DataSource,
             isLoadingFromDB: false,
 
             /**
@@ -63,16 +65,23 @@ export const useDataStore = create<DataState>()(
                         .eq('personal_id', personalId)
                         .order('nome', { ascending: true });
 
-                    if (atletasError || !atletas || atletas.length === 0) {
-                        console.info('[DataStore] Nenhum atleta no Supabase, usando mocks.');
-                        set({ isLoadingFromDB: false, dataSource: 'MOCK' });
+                    if (atletasError) {
+                        console.error('[DataStore] Erro ao buscar atletas do Supabase:', atletasError.message);
+                        set({ isLoadingFromDB: false, dataSource: 'SUPABASE', personalAthletes: [] });
                         return;
                     }
 
-                    // 2. Para cada atleta, buscar ficha, medidas e avaliações
+                    // Banco pode estar vazio — isso é válido!
+                    if (!atletas || atletas.length === 0) {
+                        console.info('[DataStore] ✅ Banco vazio — nenhum atleta cadastrado ainda.');
+                        set({ isLoadingFromDB: false, dataSource: 'SUPABASE', personalAthletes: [] });
+                        return;
+                    }
+
+                    // 2. Para cada atleta, buscar ficha, medidas e assessments (tabela consolidada)
                     const mappedAthletes: PersonalAthlete[] = await Promise.all(
                         atletas.map(async (atleta: Atleta) => {
-                            const [fichaRes, medidasRes, avaliacoesRes] = await Promise.all([
+                            const [fichaRes, medidasRes, assessmentsRes] = await Promise.all([
                                 supabase
                                     .from('fichas')
                                     .select('*')
@@ -84,17 +93,23 @@ export const useDataStore = create<DataState>()(
                                     .eq('atleta_id', atleta.id)
                                     .order('data', { ascending: false }),
                                 supabase
-                                    .from('avaliacoes')
+                                    .from('assessments')
                                     .select('*')
                                     .eq('atleta_id', atleta.id)
-                                    .order('data', { ascending: false }),
+                                    .order('date', { ascending: false }),
                             ]);
+
+                            const ficha = fichaRes.data as Ficha | null;
+                            const medidas = (medidasRes.data || []) as Medida[];
+                            const assessments = (assessmentsRes.data || []) as any[];
+
+                            console.info(`[DataStore] Atleta: ${atleta.nome} | Medidas: ${medidas.length} | Assessments: ${assessments.length}`);
 
                             return mapAtletaToPersonalAthlete(
                                 atleta,
-                                fichaRes.data as Ficha | null,
-                                (medidasRes.data || []) as Medida[],
-                                (avaliacoesRes.data || []) as Avaliacao[]
+                                ficha,
+                                medidas,
+                                assessments
                             );
                         })
                     );
@@ -108,17 +123,33 @@ export const useDataStore = create<DataState>()(
 
                 } catch (err) {
                     console.error('[DataStore] Erro ao carregar do Supabase:', err);
-                    set({ isLoadingFromDB: false, dataSource: 'MOCK' });
+                    set({ isLoadingFromDB: false, dataSource: 'SUPABASE', personalAthletes: [] });
                 }
             },
 
             addAssessment: ({ athleteId, measurements, skinfolds, gender }) => {
+                const athlete = get().personalAthletes.find(a => a.id === athleteId);
+
+                // Tratar de pegar a data de nascimento seja do atleta, ou do próprio profile ativo
+                const store = useAthleteStore.getState();
+                const profile = store.profile;
+
+                const birthDate = athlete?.birthDate || (profile?.id === athleteId ? profile?.birthDate : undefined);
+                const realAge = calculateAge(birthDate) || 30;
+
                 // Calculate score
                 const calculationInput = mapMeasurementToInput(
                     { id: '', date: '', measurements, skinfolds },
-                    gender === 'FEMALE' ? 'FEMALE' : 'MALE'
+                    gender === 'FEMALE' ? 'FEMALE' : 'MALE',
+                    realAge
                 );
                 const result = calcularAvaliacaoGeral(calculationInput);
+
+                // Encontrar o ratio físico (V-Taper) nos detalhes
+                const vTaperDetail = result.scores.proporcoes.detalhes.detalhes.find(
+                    (d: any) => d.proporcao === 'vTaper' || d.proporcao === 'shapeV'
+                );
+                const physicalRatio = vTaperDetail?.valor || 0;
 
                 const newAssessment: MeasurementHistory = {
                     id: `assessment-${Date.now()}`,
@@ -126,7 +157,9 @@ export const useDataStore = create<DataState>()(
                     measurements,
                     skinfolds,
                     score: result.avaliacaoGeral,
-                    ratio: result.scores.proporcoes.valor
+                    ratio: physicalRatio,
+                    bf: result.scores.composicao.detalhes.detalhes.bf.valor,
+                    ffmi: result.scores.composicao.detalhes.detalhes.ffmi.valor
                 };
 
                 // Update athletes list
@@ -138,7 +171,7 @@ export const useDataStore = create<DataState>()(
                                 ...athlete,
                                 assessments: updatedAssessments,
                                 score: result.avaliacaoGeral,
-                                ratio: result.scores.proporcoes.valor,
+                                ratio: physicalRatio,
                                 lastMeasurement: newAssessment.date,
                                 scoreVariation: updatedAssessments.length > 1
                                     ? result.avaliacaoGeral - (athlete.score || 0)
@@ -180,21 +213,71 @@ export const useDataStore = create<DataState>()(
                     return { personalAthletes: updatedAthletes };
                 });
 
-                // Se usando Supabase, também persiste no banco
+                // Se usando Supabase, persistir na nova tabela assessments
                 const state = get();
                 if (state.dataSource === 'SUPABASE') {
-                    // Async sem bloquear - persistir no Supabase em background
                     (async () => {
                         try {
-                            // Criar medida
+                            // Sanitizar resultados (remover NaN/Infinity)
+                            const safeResults = JSON.parse(JSON.stringify({
+                                avaliacaoGeral: result.avaliacaoGeral,
+                                classificacao: result.classificacao,
+                                scores: result.scores,
+                                penalizacoes: result.penalizacoes,
+                                insights: result.insights,
+                            }, (_, v) => typeof v === 'number' && !isFinite(v) ? 0 : v));
+
+                            const heightCm = measurements.height > 0 && measurements.height < 3
+                                ? Math.round(measurements.height * 100)
+                                : measurements.height;
+
+                            // Determinar método de BF usado
+                            const hasSkinfolds = skinfolds && Object.values(skinfolds).some((v: any) => v > 0);
+                            const bfMethod = hasSkinfolds ? 'POLLOCK_7' : 'NAVY';
+
+                            const assessmentInsert = {
+                                atleta_id: athleteId,
+                                personal_id: athlete?.personalId, // Usar o personalId do registro do atleta
+                                date: new Date().toISOString(),
+                                weight: Math.round(measurements.weight * 100) / 100,
+                                height: heightCm,
+                                age: realAge,
+                                gender: gender === 'FEMALE' ? 'FEMALE' : 'MALE',
+                                body_fat: Math.round(result.scores.composicao.detalhes.detalhes.bf.valor * 100) / 100,
+                                body_fat_method: bfMethod,
+                                measurements: {
+                                    linear: measurements,
+                                    skinfolds: skinfolds,
+                                },
+                                results: safeResults,
+                                score: Math.round(result.avaliacaoGeral * 10) / 10,
+                                ratio: Math.round(physicalRatio * 100) / 100,
+                            };
+
+                            const { error: assessmentError } = await supabase
+                                .from('assessments')
+                                .insert(assessmentInsert as any);
+
+                            if (assessmentError) {
+                                console.error('[DataStore] ❌ Erro ao inserir na tabela assessments:', assessmentError.message, assessmentError.details, assessmentError.hint);
+                                console.error('[DataStore] ❌ Payload (primeiros 500 chars):', JSON.stringify(assessmentInsert).substring(0, 500));
+                            } else {
+                                console.info('[DataStore] ✅ Avaliação completa persistida na tabela assessments');
+                            }
+
+                            // Backward compat: também gravar na tabela medidas (para manter histórico detalhado)
                             const medidaInsert = {
                                 atleta_id: athleteId,
+                                personal_id: athlete?.personalId,
+                                data: new Date().toISOString().split('T')[0], // YYYY-MM-DD
                                 peso: measurements.weight,
+                                gordura_corporal: Math.round(result.scores.composicao.detalhes.detalhes.bf.valor * 100) / 100,
                                 pescoco: measurements.neck,
                                 ombros: measurements.shoulders,
                                 peitoral: measurements.chest,
                                 cintura: measurements.waist,
                                 quadril: measurements.hips,
+                                abdomen: measurements.abdomen || measurements.waist, // Fallback abdomen para cintura
                                 braco_direito: measurements.armRight,
                                 braco_esquerdo: measurements.armLeft,
                                 antebraco_direito: measurements.forearmRight,
@@ -203,32 +286,21 @@ export const useDataStore = create<DataState>()(
                                 coxa_esquerda: measurements.thighLeft,
                                 panturrilha_direita: measurements.calfRight,
                                 panturrilha_esquerda: measurements.calfLeft,
+                                dobra_tricipital: skinfolds.tricep,
+                                dobra_subescapular: skinfolds.subscapular,
+                                dobra_peitoral: skinfolds.chest,
+                                dobra_axilar_media: skinfolds.axillary,
+                                dobra_suprailiaca: skinfolds.suprailiac,
+                                dobra_abdominal: skinfolds.abdominal,
+                                dobra_coxa: skinfolds.thigh,
+                                registrado_por: 'COACH_IA',
+                                score: Math.round(result.avaliacaoGeral * 10) / 10,
+                                ratio: Math.round(physicalRatio * 100) / 100,
                             };
+                            await supabase.from('medidas').insert(medidaInsert as any);
 
-                            const { data: medida } = await supabase
-                                .from('medidas')
-                                .insert(medidaInsert as any)
-                                .select()
-                                .single();
-
-                            if (medida) {
-                                const avaliacaoInsert = {
-                                    atleta_id: athleteId,
-                                    medidas_id: (medida as any).id,
-                                    peso: measurements.weight,
-                                    score_geral: result.avaliacaoGeral,
-                                    classificacao_geral: getClassificacao(result.avaliacaoGeral),
-                                    proporcoes: result.scores,
-                                };
-
-                                await supabase
-                                    .from('avaliacoes')
-                                    .insert(avaliacaoInsert as any);
-
-                                console.info('[DataStore] ✅ Avaliação persistida no Supabase');
-                            }
                         } catch (err) {
-                            console.error('[DataStore] Erro ao persistir no Supabase:', err);
+                            console.error('[DataStore] ❌ Exceção ao persistir no Supabase:', err);
                         }
                     })();
                 }
@@ -259,11 +331,12 @@ export const useDataStore = create<DataState>()(
             },
 
             resetToMocks: () => {
+                // Mantido por compatibilidade, mas agora reseta para vazio (sem mocks)
                 set({
-                    personalAthletes: mockPersonalAthletes,
-                    personals: mockPersonalsSummary,
-                    academyStats: mockAcademyStats,
-                    dataSource: 'MOCK' as DataSource
+                    personalAthletes: [],
+                    personals: [],
+                    academyStats: { totalAthletes: 0, totalPersonals: 0, averageScore: 0, measuredThisWeek: 0 } as AcademyStats,
+                    dataSource: 'SUPABASE' as DataSource
                 });
             }
         }),
@@ -273,11 +346,3 @@ export const useDataStore = create<DataState>()(
     )
 );
 
-// Helper para classificação
-function getClassificacao(score: number): 'INICIO' | 'CAMINHO' | 'QUASE_LA' | 'META' | 'ELITE' {
-    if (score >= 90) return 'ELITE';
-    if (score >= 80) return 'META';
-    if (score >= 70) return 'QUASE_LA';
-    if (score >= 60) return 'CAMINHO';
-    return 'INICIO';
-}

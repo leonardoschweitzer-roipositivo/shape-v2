@@ -4,9 +4,6 @@ import { PersonalStatsCard } from '../Personal/PersonalStatsCard';
 import { HeroCard } from '@/components/organisms/HeroCard';
 import { HeroContent } from '@/features/dashboard/types';
 import { useDataStore } from '@/stores/dataStore';
-import {
-    mockRecentAcademyActivity,
-} from '@/mocks/academy';
 
 interface AcademyDashboardProps {
     onNavigateToPersonals: () => void;
@@ -18,7 +15,8 @@ export const AcademyDashboard: React.FC<AcademyDashboardProps> = ({
     onNavigateToAthletes,
 }) => {
     const { personals, academyStats: stats } = useDataStore();
-    const activities = mockRecentAcademyActivity;
+    // Atividade recente: futuramente virá do Supabase
+    const activities: { id: string; type: string; message: string; timestamp: string }[] = [];
 
     const heroContent: HeroContent = {
         badge: { label: 'GESTÃO EMPRESARIAL', variant: 'primary' },

@@ -1,4 +1,5 @@
 // Mock data para Personal Trainer
+import type { ContextoAtleta } from '@/components/templates/Personal/AthleteContextSection';
 
 export interface PersonalStats {
     totalAthletes: number;
@@ -41,6 +42,9 @@ export interface MeasurementHistory {
     date: string;
     score?: number;
     ratio?: number;
+    bf?: number;
+    ffmi?: number;
+    proporcoes?: any; // Blob JSON da AvaliaçãoGeralOutput
     measurements: {
         weight: number;
         height: number;
@@ -58,15 +62,12 @@ export interface MeasurementHistory {
         thighLeft: number;
         calfRight: number;
         calfLeft: number;
-        // New measurements for full analysis
         wristRight: number;
         wristLeft: number;
         kneeRight: number;
         kneeLeft: number;
         ankleRight: number;
         ankleLeft: number;
-        ankleRightProp?: number;
-        ankleLeftProp?: number;
     };
     skinfolds: {
         tricep: number;
@@ -81,6 +82,7 @@ export interface MeasurementHistory {
 
 export interface PersonalAthlete {
     id: string;
+    personalId?: string; // Add this
     name: string;
     email: string;
     gender: 'MALE' | 'FEMALE' | 'OTHER';
@@ -92,6 +94,9 @@ export interface PersonalAthlete {
     status: 'active' | 'inactive' | 'attention';
     linkedSince: string;
     assessments: MeasurementHistory[];
+    birthDate?: string; // ISO date string from ficha.data_nascimento
+    phone?: string; // telefone from atletas table
+    contexto?: ContextoAtleta | null; // Contexto geral do atleta (saúde, medicações, etc)
 }
 
 export interface PersonalProfile {

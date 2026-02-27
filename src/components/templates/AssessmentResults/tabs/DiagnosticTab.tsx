@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Activity } from 'lucide-react';
 import { GlassPanel } from '@/components/atoms';
 import {
@@ -11,7 +11,9 @@ import {
 import { colors as designColors, typography as designTypography, spacing as designSpacing } from '@/tokens';
 import { MeasurementHistory } from '@/mocks/personal';
 import { calcularAvaliacaoGeral } from '@/services/calculations';
-import { AvaliacaoGeralInput } from '@/types/assessment.ts';
+import { mapMeasurementToInput } from '@/services/calculations/evolutionProcessor';
+import { calculateAge } from '@/utils/dateUtils';
+import { useDataStore } from '@/stores/dataStore';
 
 // Token styles (shared with parent)
 const tokenStyles = {
@@ -63,13 +65,40 @@ const tokenStyles = {
 interface DiagnosticTabProps {
     assessment?: MeasurementHistory;
     gender?: 'male' | 'female';
+    birthDate?: string;
+    age?: number;
 }
 
-export const DiagnosticTab: React.FC<DiagnosticTabProps> = ({ assessment, gender = 'male' }) => {
+export const DiagnosticTab: React.FC<DiagnosticTabProps> = ({ assessment, gender = 'male', birthDate, age: ageProp }) => {
     const [filter, setFilter] = useState<'todos' | 'comp' | 'metrics'>('todos');
-    const [bfMethod, setBfMethod] = useState<'navy' | 'pollock'>('navy');
 
-    // Calculate metrics
+    // Resolve birthDate: prop first, then search in store for the athlete owning this assessment
+    const { personalAthletes } = useDataStore();
+    const resolvedBirthDate = useMemo(() => {
+        if (birthDate) return birthDate;
+        if (assessment?.id) {
+            const owner = personalAthletes.find(a =>
+                a.assessments.some(ass => ass.id === assessment.id)
+            );
+            if (owner?.birthDate) return owner.birthDate;
+        }
+        return undefined;
+    }, [birthDate, assessment?.id, personalAthletes]);
+
+    // Auto-select method based on skinfold availability
+    const hasSkinfolds = useMemo(() => {
+        if (!assessment?.skinfolds) return false;
+        return Object.values(assessment.skinfolds).some((v) => Number(v) > 0);
+    }, [assessment]);
+
+    const [bfMethod, setBfMethod] = useState<'navy' | 'pollock'>(hasSkinfolds ? 'pollock' : 'navy');
+
+    // Sync method when assessment changes (e.g. switching between historical evaluations)
+    useEffect(() => {
+        setBfMethod(hasSkinfolds ? 'pollock' : 'navy');
+    }, [hasSkinfolds]);
+
+    // Calculate metrics using the SAME shared mapper used by dashboard/store
     const metrics = useMemo(() => {
         if (!assessment) return {
             weight: 88.5,
@@ -80,106 +109,59 @@ export const DiagnosticTab: React.FC<DiagnosticTabProps> = ({ assessment, gender
         };
 
         const m = assessment.measurements;
-        const { weight, height, waist, neck, hips } = m;
-        let bf = 0;
+        const { weight, waist, neck, hips } = m;
+        const height = m.height > 0 && m.height < 3 ? Math.round(m.height * 100) : m.height;
 
-        if (bfMethod === 'pollock') {
-            const s = assessment.skinfolds;
-            const sumSkinfolds = s.tricep + s.subscapular + s.chest + s.axillary + s.suprailiac + s.abdominal + s.thigh;
-            const age = 30; // Default age as we don't have it in props yet
+        // Priority: 1) age prop from form, 2) calculated from birthDate, 3) from store, 4) fallback 30
+        const age = ageProp || calculateAge(resolvedBirthDate) || 30;
 
-            // Pollock 7-site formula
-            let bodyDensity;
-            if (gender === 'male') {
-                bodyDensity = 1.112 - 0.00043499 * sumSkinfolds + 0.00000055 * sumSkinfolds * sumSkinfolds - 0.00028826 * age;
+        const genderUpper = (gender === 'female' ? 'FEMALE' : 'MALE') as 'MALE' | 'FEMALE';
+
+        // Use the SAME shared mapper that dashboard uses
+        const sharedInput = mapMeasurementToInput(assessment, genderUpper, age);
+
+        // The shared mapper auto-detects BF method. If user explicitly chose a different method,
+        // we need to recalculate BF and override it.
+        const sharedHasSkinfolds = assessment.skinfolds && Object.values(assessment.skinfolds).some(v => Number(v) > 0);
+        const sharedDetectedMethod = sharedHasSkinfolds ? 'pollock' : 'navy';
+
+        let bf = sharedInput.composicao.bf;
+
+        if (bfMethod !== sharedDetectedMethod) {
+            // User manually switched method, recalculate BF
+            if (bfMethod === 'pollock' && assessment.skinfolds) {
+                const s = assessment.skinfolds;
+                const sumSkinfolds = s.tricep + s.subscapular + s.chest + s.axillary + s.suprailiac + s.abdominal + s.thigh;
+                let bodyDensity;
+                if (gender === 'male') {
+                    bodyDensity = 1.112 - 0.00043499 * sumSkinfolds + 0.00000055 * sumSkinfolds * sumSkinfolds - 0.00028826 * age;
+                } else {
+                    bodyDensity = 1.097 - 0.00046971 * sumSkinfolds + 0.00000056 * sumSkinfolds * sumSkinfolds - 0.00012828 * age;
+                }
+                bf = Math.max(2, Math.min(60, (495 / bodyDensity) - 450));
             } else {
-                bodyDensity = 1.097 - 0.00046971 * sumSkinfolds + 0.00000056 * sumSkinfolds * sumSkinfolds - 0.00012828 * age;
+                // Navy method
+                if (gender === 'male') {
+                    bf = 495 / (1.0324 - 0.19077 * Math.log10(waist - neck) + 0.15456 * Math.log10(height)) - 450;
+                } else {
+                    bf = 495 / (1.29579 - 0.35004 * Math.log10(waist + (hips || waist) - neck) + 0.22100 * Math.log10(height)) - 450;
+                }
+                bf = Math.max(2, Math.min(60, bf));
             }
-            bf = Math.max(0, (495 / bodyDensity) - 450);
-        } else {
-            // Navy Method
-            // Formula from PRD: BF% = 86.010 × log10(cintura - pescoço) - 70.041 × log10(altura) + 36.76
-            // Note: This is the metric version coefficients
-            if (gender === 'male') {
-                bf = 86.010 * Math.log10(waist - neck) - 70.041 * Math.log10(height) + 30.30;
-            } else {
-                // Female Navy (Metric): 163.205 × log10(waist + hip - neck) - 97.684 × log10(height) - 104.912
-                bf = 163.205 * Math.log10(waist + (hips || waist) - neck) - 97.684 * Math.log10(height) - 104.912;
-            }
+
+            // Update composition in input with overridden BF
+            const overrideFatMass = weight * (bf / 100);
+            const overrideLeanMass = weight - overrideFatMass;
+            sharedInput.composicao.bf = bf;
+            sharedInput.composicao.metodo_bf = bfMethod === 'pollock' ? 'POLLOCK_7' : 'NAVY';
+            sharedInput.composicao.pesoMagro = overrideLeanMass;
+            sharedInput.composicao.pesoGordo = overrideFatMass;
         }
 
-        bf = Math.max(2, bf); // Minimum 2%
         const fatMass = weight * (bf / 100);
         const leanMass = weight - fatMass;
 
-        // Helper to calculate ratio percentage for General Assessment Input
-        const getRatioPercent = (current: number, target: number, inverse = false) => {
-            if (!target || !current) return 0;
-            if (inverse) return current <= target ? 100 : Math.round(Math.max(0, (target / current) * 100) * 10) / 10;
-            return Math.round(Math.min(100, (current / target) * 100) * 10) / 10;
-        };
-
-        const punho = (m.wristLeft + m.wristRight) / 2 || 17;
-        const joelho = (m.kneeLeft + m.kneeRight) / 2 || 40;
-        const tornozelo = (m.ankleLeft + m.ankleRight) / 2 || 22;
-        const bracoMedio = (m.armLeft + m.armRight) / 2;
-        const pantMedio = (m.calfLeft + m.calfRight) / 2;
-        const coxaMedia = (m.thighLeft + m.thighRight) / 2;
-
-        const vTaperAtual = m.shoulders / m.waist;
-        const vTaperMeta = 1.618;
-        const vTaperScore = getRatioPercent(vTaperAtual, vTaperMeta);
-
-        const peitoRatio = m.chest / punho;
-        const peitoMeta = 6.5;
-        const peitoScore = getRatioPercent(peitoRatio, peitoMeta);
-
-        const bracoRatio = bracoMedio / punho;
-        const bracoMeta = 2.5;
-        const bracoScore = getRatioPercent(bracoRatio, bracoMeta);
-
-        const cinturaRatio = m.waist / height;
-        const cinturaMeta = 0.45;
-        const cinturaScore = getRatioPercent(cinturaRatio, cinturaMeta, true);
-
-        const triadeMedia = (bracoMedio + pantMedio + neck) / 3;
-        const triadeDesvio = (Math.abs(bracoMedio - triadeMedia) + Math.abs(pantMedio - triadeMedia) + Math.abs(neck - triadeMedia)) / triadeMedia / 3;
-        const triadeScore = Math.max(0, Math.round((1 - triadeDesvio) * 100 * 10) / 10);
-
-        // Map data to AvaliacaoGeralInput
-        const assessmentInput: AvaliacaoGeralInput = {
-            proporcoes: {
-                metodo: 'golden',
-                vTaper: { indiceAtual: vTaperAtual, indiceMeta: vTaperMeta, percentualDoIdeal: vTaperScore, classificacao: 'NORMAL' },
-                peitoral: { indiceAtual: peitoRatio, indiceMeta: peitoMeta, percentualDoIdeal: peitoScore, classificacao: 'NORMAL' },
-                braco: { indiceAtual: bracoRatio, indiceMeta: bracoMeta, percentualDoIdeal: bracoScore, classificacao: 'NORMAL' },
-                antebraco: { indiceAtual: (m.forearmLeft + m.forearmRight) / 2 / bracoMedio, indiceMeta: 0.8, percentualDoIdeal: getRatioPercent((m.forearmLeft + m.forearmRight) / 2 / bracoMedio, 0.8), classificacao: 'NORMAL' },
-                triade: { harmoniaPercentual: triadeScore, pescoco: neck, braco: bracoMedio, panturrilha: pantMedio },
-                cintura: { indiceAtual: cinturaRatio, indiceMeta: cinturaMeta, percentualDoIdeal: cinturaScore, classificacao: 'NORMAL' },
-                coxa: { indiceAtual: coxaMedia / joelho, indiceMeta: 1.75, percentualDoIdeal: getRatioPercent(coxaMedia / joelho, 1.75), classificacao: 'NORMAL' },
-                coxaPanturrilha: { indiceAtual: coxaMedia / pantMedio, indiceMeta: 1.5, percentualDoIdeal: getRatioPercent(coxaMedia / pantMedio, 1.5), classificacao: 'NORMAL' },
-                panturrilha: { indiceAtual: pantMedio / tornozelo, indiceMeta: 1.9, percentualDoIdeal: getRatioPercent(pantMedio / tornozelo, 1.9), classificacao: 'NORMAL' },
-            },
-            composicao: {
-                peso: weight,
-                altura: height,
-                idade: 30,
-                genero: gender === 'female' ? 'FEMALE' : 'MALE',
-                bf,
-                metodo_bf: bfMethod === 'pollock' ? 'POLLOCK_7' : 'NAVY',
-                pesoMagro: leanMass,
-                pesoGordo: fatMass,
-                cintura: waist,
-            },
-            assimetrias: {
-                braco: { esquerdo: m.armLeft, direito: m.armRight, diferenca: Math.abs(m.armLeft - m.armRight), diferencaPercentual: (Math.abs(m.armLeft - m.armRight) / ((m.armLeft + m.armRight) / 2)) * 100, status: 'SIMETRICO' },
-                antebraco: { esquerdo: m.forearmLeft, direito: m.forearmRight, diferenca: Math.abs(m.forearmLeft - m.forearmRight), diferencaPercentual: (Math.abs(m.forearmLeft - m.forearmRight) / ((m.forearmLeft + m.forearmRight) / 2)) * 100, status: 'SIMETRICO' },
-                coxa: { esquerdo: m.thighLeft, direito: m.thighRight, diferenca: Math.abs(m.thighLeft - m.thighRight), diferencaPercentual: (Math.abs(m.thighLeft - m.thighRight) / ((m.thighLeft + m.thighRight) / 2)) * 100, status: 'SIMETRICO' },
-                panturrilha: { esquerdo: m.calfLeft, direito: m.calfRight, diferenca: Math.abs(m.calfLeft - m.calfRight), diferencaPercentual: (Math.abs(m.calfLeft - m.calfRight) / ((m.calfLeft + m.calfRight) / 2)) * 100, status: 'SIMETRICO' },
-            }
-        };
-
-        const result = calcularAvaliacaoGeral(assessmentInput);
+        const result = calcularAvaliacaoGeral(sharedInput);
 
         return {
             weight,
@@ -189,7 +171,7 @@ export const DiagnosticTab: React.FC<DiagnosticTabProps> = ({ assessment, gender
             score: result.avaliacaoGeral,
             classificacao: result.classificacao
         };
-    }, [assessment, gender, bfMethod]);
+    }, [assessment, gender, bfMethod, resolvedBirthDate, ageProp]);
 
     return (
         <div className="flex flex-col gap-8 animate-fade-in-up">
