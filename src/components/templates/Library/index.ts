@@ -6,3 +6,4 @@ export { ProteinSourceView } from './ProteinSourceView';
 export { EnergyBalanceSourceView } from './EnergyBalanceSourceView';
 export { TrainingFrequencySourceView } from './TrainingFrequencySourceView';
 export { PeriodizationSourceView } from './PeriodizationSourceView';
+export { FeminineProportionsSourceView } from './FeminineProportionsSourceView';

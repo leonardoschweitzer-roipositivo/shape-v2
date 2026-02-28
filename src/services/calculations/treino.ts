@@ -10,6 +10,8 @@
 
 import { DiagnosticoDados } from './diagnostico';
 import { PotencialAtleta } from './potencial';
+import { supabase } from '@/services/supabase';
+import { type ObjetivoVitruvio, getObjetivoMeta } from './objetivos';
 
 // ═══════════════════════════════════════════════════════════
 // TYPES
@@ -120,7 +122,8 @@ export const gerarPlanoTreino = (
     atletaId: string,
     nomeAtleta: string,
     diagnostico: DiagnosticoDados,
-    potencial: PotencialAtleta
+    potencial: PotencialAtleta,
+    objetivo: ObjetivoVitruvio = 'RECOMP'
 ): PlanoTreino => {
     const dataRef = new Date().toISOString();
 
@@ -132,6 +135,23 @@ export const gerarPlanoTreino = (
     const isIntermediario = nivel === 'INTERMEDIÁRIO';
     const labelNivel = nivel;
     const freq = frequenciaSemanal;
+
+    // ═══════════════════════════════════════════════════════
+    // CONFIG POR OBJETIVO — rep ranges, descanso, volume
+    // ═══════════════════════════════════════════════════════
+    const objetivoConfig = {
+        BULK: { repComposto: '5-7', repIsolado: '8-10', repFinalizador: '10-12', descComposto: 120, descIsolado: 75, descFinalizador: 60, volMult: 1.05, splitFoco: 'Ganho de Massa' },
+        CUT: { repComposto: '10-12', repIsolado: '12-15', repFinalizador: '15-20', descComposto: 75, descIsolado: 50, descFinalizador: 40, volMult: 0.90, splitFoco: 'Preservação Muscular' },
+        RECOMP: { repComposto: '8-10', repIsolado: '10-12', repFinalizador: '12-15', descComposto: 90, descIsolado: 60, descFinalizador: 50, volMult: 1.00, splitFoco: 'Recomposição Corporal' },
+        GOLDEN_RATIO: { repComposto: '8-10', repIsolado: '10-12', repFinalizador: '12-15', descComposto: 90, descIsolado: 60, descFinalizador: 50, volMult: 1.00, splitFoco: 'Proporções Áureas' },
+        TRANSFORM: { repComposto: '8-10', repIsolado: '10-12', repFinalizador: '12-15', descComposto: 90, descIsolado: 60, descFinalizador: 50, volMult: 0.95, splitFoco: 'Transformação Completa' },
+        MAINTAIN: { repComposto: '10-12', repIsolado: '12-15', repFinalizador: '15-20', descComposto: 75, descIsolado: 50, descFinalizador: 40, volMult: 0.75, splitFoco: 'Manutenção' },
+    } as const;
+    const cfg = objetivoConfig[objetivo];
+    const metaObj = getObjetivoMeta(objetivo);
+
+    // Multiplicar fatorVolume pelo multiplicador do objetivo
+    const fatorVolumeEfetivo = fatorVolume * cfg.volMult;
 
     // Scores trimestrais do potencial (alinhados com o diagnóstico reanalisado)
     const scoreAtual = diagnostico.analiseEstetica.scoreAtual;
@@ -149,15 +169,15 @@ export const gerarPlanoTreino = (
             {
                 numero: 1,
                 semanas: [1, 12],
-                foco: [...priosAltas, 'Base Geral'],
-                volume: 'ALTO',
+                foco: [...priosAltas, cfg.splitFoco],
+                volume: objetivo === 'MAINTAIN' ? 'BAIXO' : 'ALTO',
                 scoreEsperado: scoreT1
             },
             {
                 numero: 2,
                 semanas: [13, 24],
                 foco: ['Consolidação', ...(priosMedias.length > 0 ? priosMedias.slice(0, 2) : ['Novas Prioridades'])],
-                volume: 'ALTO',
+                volume: objetivo === 'MAINTAIN' ? 'BAIXO' : 'ALTO',
                 scoreEsperado: scoreT2
             },
             {
@@ -177,19 +197,29 @@ export const gerarPlanoTreino = (
         ]
     };
 
-    // 2. Mesociclos adaptados ao nível do atleta
+    // 2. Mesociclos — framing adaptado ao objetivo
+    const mesocicloDesc = {
+        BULK: ['Adaptação com foco em técnica pesada — aprendizado dos compostos multiarticulares com cargas progressivas.', 'Acumulação: pico de volume e carga. Aqui acontece o maior crescimento muscular — cada repet conta.', 'Intensificação: carga máxima, volume reduzido. O corpo consolida os ganhos e prepara o próximo ciclo.'],
+        CUT: ['Adaptação: manutenção do estímulo com volume levemente reduzido — preservar massa é a prioridade.', 'Acumulação de volume moderado com descansos curtos para manter músculo e criar déficit calórico.', 'Intensificação: manter força máxima para sinalizar ao corpo que a massa magra deve ser preservada.'],
+        RECOMP: ['Adaptação: volume e carga balanceados — estímulo suficiente para crescer e queimar gordura simultaneamente.', 'Acumulação mista: estimulo anabólico + gasto calórico. A recomposição acontece aqui gradualmente.', 'Intensificação: aumentar carga progressivamente consolidando força e perfil hormonal favorável.'],
+        GOLDEN_RATIO: ['Adaptação focada em prioridades estéticas — técnica refinada nos grupos que mais impactam suas proporções.', 'Acumulação: volume extra nos grupos prioritários identificados no diagnóstico. Cada milímetro é ganho aqui.', 'Intensificação: esculpir e lapidar as proporções. Técnicas avançadas como drop-sets e rest-pause.'],
+        TRANSFORM: ['Adaptação: base técnica sólida — o ponto de partida para uma transformação sustentável de 12 meses.', 'Acumulação: combina estímulo máximo com controle calórico. Fase de maior transformação visual.', 'Intensificação e pedágio: força + composição corporal. A transformação se consolida aqui.'],
+        MAINTAIN: ['Manutenção ativa: volume mínimo efetivo para preservar força e massa muscular com praticidade.', 'Consolidação: treino inteligente que respeita a vida fora da academia sem perder o que foi conquistado.', 'Manutenção avançada: variedade de estímulo para evitar adaptação e manter o shape.'],
+    } as const;
+    const descMeso = mesocicloDesc[objetivo];
+
     const mesociclos: Mesociclo[] = isIniciante ? [
-        { numero: 1, nome: 'Adaptação', descricao: 'Sua prioridade é aprender o movimento com técnica perfeita. Cargas leves, foco no controle — essa fase constrói a base para tudo que vem depois.', semanas: [1, 4], volumeRelativo: 65, intensidadeRelativa: 55, rpeAlvo: [5, 6] },
-        { numero: 2, nome: 'Progressão', descricao: 'Aumento gradual de carga e volume. Continue priorizando a técnica — iniciantes crescem muito com pouco estímulo nessa fase.', semanas: [5, 8], volumeRelativo: 80, intensidadeRelativa: 65, rpeAlvo: [6, 7] },
-        { numero: 3, nome: 'Consolidação', descricao: 'Consolide os movimentos e aumente o esforço com segurança. O corpo já se adaptou — agora é hora de crescer de verdade.', semanas: [9, 12], volumeRelativo: 90, intensidadeRelativa: 75, rpeAlvo: [7, 8] }
+        { numero: 1, nome: 'Adaptação', descricao: descMeso[0], semanas: [1, 4], volumeRelativo: 65, intensidadeRelativa: 55, rpeAlvo: [5, 6] },
+        { numero: 2, nome: 'Progressão', descricao: descMeso[1], semanas: [5, 8], volumeRelativo: 80, intensidadeRelativa: 65, rpeAlvo: [6, 7] },
+        { numero: 3, nome: 'Consolidação', descricao: descMeso[2], semanas: [9, 12], volumeRelativo: 90, intensidadeRelativa: 75, rpeAlvo: [7, 8] }
     ] as Mesociclo[] : isIntermediario ? [
-        { numero: 1, nome: 'Adaptação', descricao: 'Fase de preparação: técnica perfeita, condicionamento articular. Volume moderado antes do pico.', semanas: [1, 4], volumeRelativo: 75, intensidadeRelativa: 65, rpeAlvo: [6, 7] },
-        { numero: 2, nome: 'Acumulação', descricao: 'Pico de volume com cargas moderadas-altas. Aqui acontece a maior parte da hipertrofia — cada série conta.', semanas: [5, 8], volumeRelativo: 100, intensidadeRelativa: 78, rpeAlvo: [7, 8] },
-        { numero: 3, nome: 'Intensificação', descricao: 'Reduz volume, aumenta carga. O corpo consolida os ganhos e se prepara para o próximo ciclo.', semanas: [9, 12], volumeRelativo: 88, intensidadeRelativa: 88, rpeAlvo: [8, 9] }
+        { numero: 1, nome: 'Adaptação', descricao: descMeso[0], semanas: [1, 4], volumeRelativo: 75, intensidadeRelativa: 65, rpeAlvo: [6, 7] },
+        { numero: 2, nome: 'Acumulação', descricao: descMeso[1], semanas: [5, 8], volumeRelativo: 100, intensidadeRelativa: 78, rpeAlvo: [7, 8] },
+        { numero: 3, nome: 'Intensificação', descricao: descMeso[2], semanas: [9, 12], volumeRelativo: 88, intensidadeRelativa: 88, rpeAlvo: [8, 9] }
     ] as Mesociclo[] : [
-        { numero: 1, nome: 'Adaptação', descricao: 'Fase de preparação: técnica perfeita, condicionamento articular e aprendizado motor. Volume moderado com cargas leves — o corpo se prepara para o trabalho pesado.', semanas: [1, 4], volumeRelativo: 80, intensidadeRelativa: 70, rpeAlvo: [6, 7] },
-        { numero: 2, nome: 'Acumulação', descricao: 'Fase de crescimento máximo: pico de volume semanal com cargas moderadas-altas. Aqui acontece a maior parte da hipertrofia — cada série conta.', semanas: [5, 8], volumeRelativo: 100, intensidadeRelativa: 80, rpeAlvo: [7, 8] },
-        { numero: 3, nome: 'Intensificação', descricao: 'Fase de força e consolidação: reduz volume e aumenta carga. O corpo consolida os ganhos musculares e desenvolve força para o próximo ciclo.', semanas: [9, 12], volumeRelativo: 90, intensidadeRelativa: 90, rpeAlvo: [8, 9] }
+        { numero: 1, nome: 'Adaptação', descricao: descMeso[0], semanas: [1, 4], volumeRelativo: 80, intensidadeRelativa: 70, rpeAlvo: [6, 7] },
+        { numero: 2, nome: 'Acumulação', descricao: descMeso[1], semanas: [5, 8], volumeRelativo: 100, intensidadeRelativa: 80, rpeAlvo: [7, 8] },
+        { numero: 3, nome: 'Intensificação', descricao: descMeso[2], semanas: [9, 12], volumeRelativo: 90, intensidadeRelativa: 90, rpeAlvo: [8, 9] }
     ] as Mesociclo[];
 
     // 3. Volume por Grupo (Baseado no diagnóstico)
@@ -221,16 +251,16 @@ export const gerarPlanoTreino = (
         }
     }
 
-    // Bases de séries escaladas pelo nível
+    // Bases de séries escaladas pelo nível E pelo objetivo
     const gruposBase = [
-        { grupo: 'Peitoral', base: Math.round(14 * fatorVolume) },
-        { grupo: 'Costas', base: Math.round(16 * fatorVolume) },
-        { grupo: 'Deltóide Lat.', base: Math.round(12 * fatorVolume) },
-        { grupo: 'Quadríceps', base: Math.round(14 * fatorVolume) },
-        { grupo: 'Posterior', base: Math.round(12 * fatorVolume) },
-        { grupo: 'Bíceps', base: Math.round(10 * fatorVolume) },
-        { grupo: 'Tríceps', base: Math.round(10 * fatorVolume) },
-        { grupo: 'Panturrilha', base: Math.round(10 * fatorVolume) }
+        { grupo: 'Peitoral', base: Math.round(14 * fatorVolumeEfetivo) },
+        { grupo: 'Costas', base: Math.round(16 * fatorVolumeEfetivo) },
+        { grupo: 'Deltóide Lat.', base: Math.round(12 * fatorVolumeEfetivo) },
+        { grupo: 'Quadríceps', base: Math.round(14 * fatorVolumeEfetivo) },
+        { grupo: 'Posterior', base: Math.round(12 * fatorVolumeEfetivo) },
+        { grupo: 'Bíceps', base: Math.round(10 * fatorVolumeEfetivo) },
+        { grupo: 'Tríceps', base: Math.round(10 * fatorVolumeEfetivo) },
+        { grupo: 'Panturrilha', base: Math.round(10 * fatorVolumeEfetivo) }
     ];
 
     const volumePorGrupo: VolumePorGrupo[] = gruposBase.map(g => {
@@ -331,6 +361,14 @@ export const gerarPlanoTreino = (
     const dPantD = distribuirSeries(seriesPantD, 2);
     const dPantE = distribuirSeries(seriesPantE, 2);
 
+    // Rep ranges e descanso variam pelo objetivo
+    const rC = cfg.repComposto;
+    const rI = cfg.repIsolado;
+    const rF = cfg.repFinalizador;
+    const dC = cfg.descComposto;
+    const dI = cfg.descIsolado;
+    const dF = cfg.descFinalizador;
+
     const treinos: TreinoDetalhado[] = [
         {
             id: 'treino-a',
@@ -343,10 +381,10 @@ export const gerarPlanoTreino = (
                     seriesTotal: seriesPeito,
                     isPrioridade: getIsPrio('Peitoral'),
                     exercicios: [
-                        { ordem: 1, nome: 'Supino Reto Barra', series: dPeito[0], repeticoes: '6-8', descansoSegundos: 120 },
-                        { ordem: 2, nome: 'Supino Inclinado Halt.', series: dPeito[1], repeticoes: '8-10', descansoSegundos: 90 },
-                        { ordem: 3, nome: 'Crucifixo Inclinado', series: dPeito[2], repeticoes: '10-12', descansoSegundos: 60 },
-                        { ordem: 4, nome: 'Crossover', series: dPeito[3], repeticoes: '12-15', descansoSegundos: 60, tecnica: 'Drop-set na última' }
+                        { ordem: 1, nome: 'Supino Reto Barra', series: dPeito[0], repeticoes: rC, descansoSegundos: dC },
+                        { ordem: 2, nome: 'Supino Inclinado Halt.', series: dPeito[1], repeticoes: rI, descansoSegundos: dI },
+                        { ordem: 3, nome: 'Crucifixo Inclinado', series: dPeito[2], repeticoes: rI, descansoSegundos: dI },
+                        { ordem: 4, nome: 'Crossover', series: dPeito[3], repeticoes: rF, descansoSegundos: dF, tecnica: 'Drop-set na última' }
                     ]
                 },
                 {
@@ -354,9 +392,9 @@ export const gerarPlanoTreino = (
                     seriesTotal: seriesTriA,
                     isPrioridade: getIsPrio('Tríceps'),
                     exercicios: [
-                        { ordem: 5, nome: 'Tríceps Pulley Corda', series: dTriA[0], repeticoes: '10-12', descansoSegundos: 60 },
-                        { ordem: 6, nome: 'Tríceps Testa', series: dTriA[1], repeticoes: '10-12', descansoSegundos: 60 },
-                        { ordem: 7, nome: 'Mergulho Banco', series: dTriA[2], repeticoes: 'AMRAP', descansoSegundos: 60 }
+                        { ordem: 5, nome: 'Tríceps Pulley Corda', series: dTriA[0], repeticoes: rI, descansoSegundos: dI },
+                        { ordem: 6, nome: 'Tríceps Testa', series: dTriA[1], repeticoes: rI, descansoSegundos: dI },
+                        { ordem: 7, nome: 'Mergulho Banco', series: dTriA[2], repeticoes: 'AMRAP', descansoSegundos: dF }
                     ]
                 }
             ]
@@ -372,10 +410,10 @@ export const gerarPlanoTreino = (
                     seriesTotal: seriesCostas,
                     isPrioridade: getIsPrio('Costas'),
                     exercicios: [
-                        { ordem: 1, nome: 'Barra Fixa', series: dCostas[0], repeticoes: '6-8', descansoSegundos: 120 },
-                        { ordem: 2, nome: 'Remada Curvada', series: dCostas[1], repeticoes: '8-10', descansoSegundos: 90 },
-                        { ordem: 3, nome: 'Puxada Frontal', series: dCostas[2], repeticoes: '10-12', descansoSegundos: 60 },
-                        { ordem: 4, nome: 'Remada Unilateral', series: dCostas[3], repeticoes: '10-12', descansoSegundos: 60 }
+                        { ordem: 1, nome: 'Barra Fixa', series: dCostas[0], repeticoes: rC, descansoSegundos: dC },
+                        { ordem: 2, nome: 'Remada Curvada', series: dCostas[1], repeticoes: rI, descansoSegundos: dI },
+                        { ordem: 3, nome: 'Puxada Frontal', series: dCostas[2], repeticoes: rI, descansoSegundos: dI },
+                        { ordem: 4, nome: 'Remada Unilateral', series: dCostas[3], repeticoes: rI, descansoSegundos: dF }
                     ]
                 },
                 {
@@ -383,9 +421,9 @@ export const gerarPlanoTreino = (
                     seriesTotal: seriesBiB,
                     isPrioridade: getIsPrio('Bíceps'),
                     exercicios: [
-                        { ordem: 5, nome: 'Rosca Direta Barra', series: dBiB[0], repeticoes: '8-10', descansoSegundos: 60 },
-                        { ordem: 6, nome: 'Rosca Inclinada H.', series: dBiB[1], repeticoes: '10-12', descansoSegundos: 60 },
-                        { ordem: 7, nome: 'Rosca Martelo', series: dBiB[2], repeticoes: '10-12', descansoSegundos: 60 }
+                        { ordem: 5, nome: 'Rosca Direta Barra', series: dBiB[0], repeticoes: rI, descansoSegundos: dI },
+                        { ordem: 6, nome: 'Rosca Inclinada H.', series: dBiB[1], repeticoes: rI, descansoSegundos: dI },
+                        { ordem: 7, nome: 'Rosca Martelo', series: dBiB[2], repeticoes: rF, descansoSegundos: dF }
                     ]
                 }
             ]
@@ -401,10 +439,10 @@ export const gerarPlanoTreino = (
                     seriesTotal: seriesOmbros,
                     isPrioridade: getIsPrio('Deltóide Lat.'),
                     exercicios: [
-                        { ordem: 1, nome: 'Desenvolvimento Halt.', series: dOmbros[0], repeticoes: '6-8', descansoSegundos: 120 },
-                        { ordem: 2, nome: 'Elevação Lateral Halt.', series: dOmbros[1], repeticoes: '10-12', descansoSegundos: 60 },
-                        { ordem: 3, nome: 'Elevação Lateral Cabo', series: dOmbros[2], repeticoes: '12-15', descansoSegundos: 45, tecnica: 'Drop-set' },
-                        { ordem: 4, nome: 'Face Pull', series: dOmbros[3], repeticoes: '15-20', descansoSegundos: 45 }
+                        { ordem: 1, nome: 'Desenvolvimento Halt.', series: dOmbros[0], repeticoes: rC, descansoSegundos: dC },
+                        { ordem: 2, nome: 'Elevação Lateral Halt.', series: dOmbros[1], repeticoes: rI, descansoSegundos: dI },
+                        { ordem: 3, nome: 'Elevação Lateral Cabo', series: dOmbros[2], repeticoes: rF, descansoSegundos: dF, tecnica: 'Drop-set' },
+                        { ordem: 4, nome: 'Face Pull', series: dOmbros[3], repeticoes: rF, descansoSegundos: dF }
                     ]
                 },
                 {
@@ -412,8 +450,8 @@ export const gerarPlanoTreino = (
                     seriesTotal: seriesPantC,
                     isPrioridade: getIsPrio('Panturrilha'),
                     exercicios: [
-                        { ordem: 5, nome: 'Panturrilha Sentado', series: dPantC[0], repeticoes: '12-15', descansoSegundos: 45, observacao: 'Pausa 2s no topo' },
-                        { ordem: 6, nome: 'Panturrilha Em Pé', series: dPantC[1], repeticoes: '10-12', descansoSegundos: 45, observacao: 'Pausa 2s no topo' }
+                        { ordem: 5, nome: 'Panturrilha Sentado', series: dPantC[0], repeticoes: rF, descansoSegundos: dF, observacao: 'Pausa 2s no topo' },
+                        { ordem: 6, nome: 'Panturrilha Em Pé', series: dPantC[1], repeticoes: rI, descansoSegundos: dF, observacao: 'Pausa 2s no topo' }
                     ]
                 }
             ]
@@ -429,10 +467,10 @@ export const gerarPlanoTreino = (
                     seriesTotal: seriesQuad,
                     isPrioridade: getIsPrio('Quadríceps'),
                     exercicios: [
-                        { ordem: 1, nome: 'Agachamento Livre', series: dQuad[0], repeticoes: '6-8', descansoSegundos: 180 },
-                        { ordem: 2, nome: 'Leg Press', series: dQuad[1], repeticoes: '10-12', descansoSegundos: 90 },
-                        { ordem: 3, nome: 'Cadeira Extensora', series: dQuad[2], repeticoes: '12-15', descansoSegundos: 60 },
-                        { ordem: 4, nome: 'Avanço', series: dQuad[3], repeticoes: '10-12', descansoSegundos: 60 }
+                        { ordem: 1, nome: 'Agachamento Livre', series: dQuad[0], repeticoes: rC, descansoSegundos: 180 },
+                        { ordem: 2, nome: 'Leg Press', series: dQuad[1], repeticoes: rI, descansoSegundos: dI },
+                        { ordem: 3, nome: 'Cadeira Extensora', series: dQuad[2], repeticoes: rF, descansoSegundos: dI },
+                        { ordem: 4, nome: 'Avanço', series: dQuad[3], repeticoes: rI, descansoSegundos: dF }
                     ]
                 },
                 {
@@ -440,9 +478,9 @@ export const gerarPlanoTreino = (
                     seriesTotal: seriesPost,
                     isPrioridade: getIsPrio('Posterior'),
                     exercicios: [
-                        { ordem: 5, nome: 'Stiff', series: dPost[0], repeticoes: '8-10', descansoSegundos: 90 },
-                        { ordem: 6, nome: 'Mesa Flexora', series: dPost[1], repeticoes: '10-12', descansoSegundos: 60 },
-                        { ordem: 7, nome: 'Cadeira Flexora', series: dPost[2], repeticoes: '12-15', descansoSegundos: 60 }
+                        { ordem: 5, nome: 'Stiff', series: dPost[0], repeticoes: rI, descansoSegundos: dI },
+                        { ordem: 6, nome: 'Mesa Flexora', series: dPost[1], repeticoes: rI, descansoSegundos: dI },
+                        { ordem: 7, nome: 'Cadeira Flexora', series: dPost[2], repeticoes: rF, descansoSegundos: dF }
                     ]
                 },
                 {
@@ -467,8 +505,8 @@ export const gerarPlanoTreino = (
                     seriesTotal: seriesBiE,
                     isPrioridade: getIsPrio('Bíceps'),
                     exercicios: [
-                        { ordem: 1, nome: 'Rosca Barra W', series: dBiE[0], repeticoes: '8-10', descansoSegundos: 60 },
-                        { ordem: 2, nome: 'Rosca Direta Unilat.', series: dBiE[1], repeticoes: '10-12', descansoSegundos: 45 }
+                        { ordem: 1, nome: 'Rosca Barra W', series: dBiE[0], repeticoes: rI, descansoSegundos: dI },
+                        { ordem: 2, nome: 'Rosca Direta Unilat.', series: dBiE[1], repeticoes: rF, descansoSegundos: dF }
                     ]
                 },
                 {
@@ -476,8 +514,8 @@ export const gerarPlanoTreino = (
                     seriesTotal: seriesTriE,
                     isPrioridade: getIsPrio('Tríceps'),
                     exercicios: [
-                        { ordem: 3, nome: 'Tríceps Barra', series: dTriE[0], repeticoes: '8-10', descansoSegundos: 60 },
-                        { ordem: 4, nome: 'Tríceps Corda', series: dTriE[1], repeticoes: '12-15', descansoSegundos: 45, tecnica: 'Drop-set' }
+                        { ordem: 3, nome: 'Tríceps Barra', series: dTriE[0], repeticoes: rI, descansoSegundos: dI },
+                        { ordem: 4, nome: 'Tríceps Corda', series: dTriE[1], repeticoes: rF, descansoSegundos: dF, tecnica: 'Drop-set' }
                     ]
                 },
                 {
@@ -493,11 +531,17 @@ export const gerarPlanoTreino = (
         }
     ];
 
-    // 6. Observações — inclui alertas do contexto (potencial.observacoesContexto)
+    // 6. Observações — alinhadas com o objetivo
     const alertasContexto = potencial.observacoesContexto;
     const observacoes: ObservacoesTreino = {
-        resumo: `Plano ${labelNivel} desenhado com foco em ${diagnostico.prioridades.filter(p => p.nivel === 'ALTA').map(p => p.grupo).join(', ')}. Divisão ${tipoDivisao} (${freq}x/semana) calibrada para o seu nível e recuperação (fator: ${(potencial.fatorRecuperacao * 100).toFixed(0)}%).`,
+        resumo: `Plano ${metaObj.emoji} ${metaObj.label} — ${labelNivel} — foco em ${cfg.splitFoco}. ${diagnostico.prioridades.filter(p => p.nivel === 'ALTA').length > 0 ? `Prioridades: ${diagnostico.prioridades.filter(p => p.nivel === 'ALTA').map(p => p.grupo).join(', ')}.` : ''} Divisão ${tipoDivisao} (${freq}x/sem), rep range ${cfg.repComposto}→${cfg.repFinalizador}, descanso ${cfg.descComposto}→${cfg.descFinalizador}s.`,
         pontosAtencao: [
+            objetivo === 'BULK' ? 'BULK: priorize carga progressiva e descanso completo — o crescimento acontece na recuperação.' :
+                objetivo === 'CUT' ? 'CUT: mantenha a intensidade alta mesmo em déficit — o treino pesado sinaliza ao corpo para preservar músculo.' :
+                    objetivo === 'RECOMP' ? 'RECOMP: equilíbrio entre carga e volume — não economize no esforço, mas respeite a recuperação.' :
+                        objetivo === 'GOLDEN_RATIO' ? 'GOLDEN RATIO: grupos prioritários do diagnóstico recebem volume extra — consistência nas proporções cria o shape.' :
+                            objetivo === 'MAINTAIN' ? 'MAINTAIN: volume mínimo efetivo — menos é mais, mas a intensidade não pode cair.' :
+                                'TRANSFORM: cada fase tem um propósito — respeite a periodização para a transformação ser completa.',
             'Respeitar a pausa de 2s no topo da panturrilha para máximo estímulo.',
             'Iniciar o treino sempre pelos grupos prioritários.',
             'Deload na semana 4 de cada mesociclo é obrigatório.',
@@ -507,7 +551,7 @@ export const gerarPlanoTreino = (
         sugestaoForaMetodologia: potencial.fatorRecuperacao < 0.90
             ? `Recuperação reduzida detectada (${(potencial.fatorRecuperacao * 100).toFixed(0)}%). Priorize sono e nutrição pós-treino.`
             : undefined,
-        mensagemFinal: `Vamos pra cima, ${nomeAtleta}! Este plano foi calibrado para o seu perfil de ${labelNivel} e vai te levar do score ${scoreAtual} para ${scoreT4}. Consistência é o segredo.`
+        mensagemFinal: `${metaObj.mensagemInicio} Este plano foi calibrado para o seu perfil de ${labelNivel} com objetivo ${metaObj.label} — do score ${scoreAtual} para ${scoreT4} em 12 meses.`
     };
 
     return {
@@ -531,3 +575,64 @@ export const gerarPlanoTreino = (
         geradoEm: dataRef
     };
 };
+
+// ═══════════════════════════════════════════════════════════
+// PERSISTÊNCIA - SUPABASE
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * Salva plano de treino no Supabase (tabela planos_treino).
+ * Cada chamada insere um novo registro (histórico) — nunca sobrescreve.
+ */
+export async function salvarPlanoTreino(
+    atletaId: string,
+    personalId: string | null,
+    dados: PlanoTreino
+): Promise<{ id: string } | null> {
+    try {
+        const safeDados = JSON.parse(JSON.stringify(dados,
+            (_, v) => typeof v === 'number' && !isFinite(v) ? 0 : v
+        ));
+
+        const { data, error } = await supabase
+            .from('planos_treino')
+            .insert({
+                atleta_id: atletaId,
+                personal_id: personalId,
+                dados: safeDados,
+                status: 'ativo',
+            } as any)
+            .select('id')
+            .single();
+
+        if (error) {
+            console.error('[Treino] Erro ao salvar:', error.message);
+            return null;
+        }
+        return data as { id: string };
+    } catch (err) {
+        console.error('[Treino] Exceção ao salvar:', err);
+        return null;
+    }
+}
+
+/**
+ * Busca o último plano de treino ativo de um atleta.
+ */
+export async function buscarPlanoTreino(atletaId: string): Promise<PlanoTreino | null> {
+    try {
+        const { data, error } = await supabase
+            .from('planos_treino')
+            .select('dados')
+            .eq('atleta_id', atletaId)
+            .eq('status', 'ativo')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+        if (error || !data) return null;
+        return data.dados as PlanoTreino;
+    } catch {
+        return null;
+    }
+}

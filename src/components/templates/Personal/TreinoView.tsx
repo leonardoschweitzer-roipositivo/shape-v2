@@ -42,6 +42,7 @@ import {
 } from '@/services/calculations/diagnostico';
 import {
     gerarPlanoTreino,
+    salvarPlanoTreino,
     type PlanoTreino,
     type TreinoDetalhado,
     type VolumePorGrupo
@@ -50,6 +51,11 @@ import {
     calcularPotencialAtleta,
     type PotencialAtleta,
 } from '@/services/calculations/potencial';
+import {
+    recomendarObjetivo,
+    getObjetivoMeta,
+    type ObjetivoVitruvio,
+} from '@/services/calculations/objetivos';
 
 // ═══════════════════════════════════════════════════════════
 // TYPES
@@ -101,7 +107,7 @@ const EvolutionStepper: React.FC<{ etapaAtual: number }> = ({ etapaAtual }) => {
     );
 };
 
-/** Card de seção */
+/** Card de seção — Gold Standard alinhado com DiagnosticoView */
 const SectionCard: React.FC<{
     icon: React.ElementType;
     title: string;
@@ -138,7 +144,7 @@ const InsightBox: React.FC<{ text: string; title?: string }> = ({ text, title = 
 
 /** Barra de progresso visual */
 const ProgressBar: React.FC<{ pct: number; color?: string }> = ({ pct, color = 'bg-primary' }) => (
-    <div className="w-full h-2.5 bg-white/5 rounded-full overflow-hidden">
+    <div className="w-full h-3.5 bg-white/5 rounded-full overflow-hidden">
         <div
             className={`h-full rounded-full transition-all ${color}`}
             style={{ width: `${Math.min(100, Math.max(0, pct))}%` }}
@@ -479,6 +485,7 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
     const [diagnostico, setDiagnostico] = useState<DiagnosticoDados | null>(null);
     const [potencial, setPotencial] = useState<PotencialAtleta | null>(null);
     const [estado, setEstado] = useState<TreinoState>('idle');
+    const [objetivoAtleta, setObjetivoAtleta] = useState<ObjetivoVitruvio>('RECOMP');
 
     // Pegar dados da última avaliação (mesmo que DiagnosticoView)
     const ultimaAvaliacao = useMemo(() => {
@@ -547,22 +554,42 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
             const diag = gerarDiagnosticoLocal(pot);
             setDiagnostico(diag);
 
-            // 3. Gerar treino consumindo o potencial como fonte única
-            const resultado = gerarPlanoTreino(atletaId, atleta.name, diag, pot);
+            // 3. Calcular objetivo recomendado (mesmo algoritmo do Diagnóstico)
+            const adonisProp = diag.analiseEstetica.proporcoes.find(
+                p => p.grupo === 'Shape-V' || p.grupo === 'V-Taper'
+            );
+            const rec = recomendarObjetivo({
+                bf: diag.composicaoAtual.gorduraPct,
+                ffmi: ultimaAvaliacao.ffmi ?? 20,
+                sexo: atleta.gender === 'FEMALE' ? 'F' : 'M',
+                score: diag.analiseEstetica.scoreAtual,
+                nivel: diag.analiseEstetica.classificacaoAtual,
+                adonis: adonisProp?.atual ?? undefined,
+            });
+            setObjetivoAtleta(rec.objetivo);
+
+            // 4. Gerar treino consumindo o potencial como fonte única + objetivo
+            const resultado = gerarPlanoTreino(atletaId, atleta.name, diag, pot, rec.objetivo);
             setPlano(resultado);
             setEstado('ready');
         }, 1800);
     };
 
-    /** Salva o plano */
+    /** Salva o plano no Supabase */
     const handleSalvar = async () => {
         if (!plano) return;
         setEstado('saving');
 
-        // Simula persistência no store/supabase
-        setTimeout(() => {
-            setEstado('saved');
-        }, 1000);
+        const personalId = atleta.personalId ?? null;
+        const result = await salvarPlanoTreino(atletaId, personalId, plano);
+
+        if (!result) {
+            console.warn('[Treino] Tabela não existe ainda — salvo localmente.');
+        } else {
+            console.info('[Treino] ✅ Plano salvo:', result.id);
+        }
+
+        setEstado('saved');
     };
 
     return (
@@ -608,60 +635,126 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
                         )}
                     </div>
 
-                    {/* Estado: Gerando */}
-                    {estado === 'generating' && (
-                        <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-10 text-center">
-                            <Loader2 size={48} className="text-primary mx-auto mb-5 animate-spin" />
-                            <h3 className="text-xl font-bold text-white mb-3">Vitrúvio montando seu plano...</h3>
-                            <p className="text-base text-gray-500">Cruzando prioridades do diagnóstico com metas de 12 meses e periodização.</p>
+                    {/* Métricas do atleta — mesmo padrão do DietaView */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                        <div className="bg-white/[0.03] p-4 rounded-xl border border-white/5">
+                            <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">Score Atual</p>
+                            <p className="text-2xl font-bold text-white">{atleta.score}</p>
                         </div>
-                    )}
+                        <div className="bg-white/[0.03] p-4 rounded-xl border border-white/5">
+                            <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">Peso</p>
+                            <p className="text-2xl font-bold text-white">{ultimaAvaliacao.measurements.weight} <span className="text-sm text-gray-500">kg</span></p>
+                        </div>
+                        <div className="bg-white/[0.03] p-4 rounded-xl border border-white/5">
+                            <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">BF Atual</p>
+                            <p className="text-2xl font-bold text-white">{ultimaAvaliacao.bf ?? '--'}<span className="text-sm text-gray-500">%</span></p>
+                        </div>
+                        <div className="bg-white/[0.03] p-4 rounded-xl border border-white/5">
+                            <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">Nível</p>
+                            <p className="text-lg font-bold text-white">
+                                {atleta.score >= 90 ? 'ELITE' : atleta.score >= 80 ? 'AVANÇADO' : atleta.score >= 70 ? 'ATLÉTICO' : atleta.score >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE'}
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
-                    {/* Conteúdo Gerado */}
-                    {plano && diagnostico && (estado === 'ready' || estado === 'saving' || estado === 'saved') && (
-                        <div className="animate-in fade-in duration-500">
-                            <SecaoResumoDiagnostico diagnostico={diagnostico} potencial={potencial ?? undefined} />
-                            <SecaoVisaoAnual plano={plano} />
-                            <SecaoTrimestreAtual plano={plano} />
-                            <SecaoDivisao plano={plano} />
-                            <SecaoTreinosSemanais treinos={plano.treinos} />
+                {/* Estado: Ainda não gerou */}
+                {estado === 'idle' && (
+                    <div className="bg-[#131B2C] border border-white/10 rounded-2xl p-10 text-center">
+                        <Dumbbell size={48} className="text-primary mx-auto mb-5" />
+                        <h3 className="text-xl font-bold text-white mb-3">Gerar Plano de Treino Completo</h3>
+                        <p className="text-sm text-gray-500 mb-8 max-w-lg mx-auto">
+                            O Vitrúvio vai calcular sua periodização anual, divisão semanal, fichas detalhadas e volume calibrado com base no diagnóstico.
+                        </p>
+                        <button
+                            onClick={handleGerar}
+                            className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary text-[#0A0F1C] font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(0,201,167,0.3)] transition-all"
+                        >
+                            <Dumbbell size={18} /> Gerar Plano de Treino
+                        </button>
+                    </div>
+                )}
 
-                            {/* Seção 6: Observações do Vitrúvio */}
-                            <SectionCard icon={Award} title="Instruções de Sucesso" subtitle="Diretrizes metodológicas para garantir os resultados planejados">
-                                <div className="space-y-4">
-                                    <div className="bg-white/[0.03] p-5 rounded-xl border border-white/5">
-                                        <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-3 font-bold">Resumo Metodológico</p>
-                                        <p className="text-gray-300 leading-relaxed text-base">{plano.observacoes.resumo}</p>
-                                    </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="bg-red-500/5 p-5 rounded-xl border border-red-500/10">
-                                            <p className="text-[10px] uppercase tracking-widest text-red-400 mb-3 font-bold">⚠️ Pontos de Atenção</p>
-                                            <ul className="space-y-2">
-                                                {plano.observacoes.pontosAtencao.map((p, i) => (
-                                                    <li key={i} className="text-sm text-gray-400 flex items-start gap-2">
-                                                        <span className="text-red-400 mt-1">•</span> {p}
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                        <div className="bg-primary/5 p-5 rounded-xl border border-primary/10">
-                                            <p className="text-[10px] uppercase tracking-widest text-primary mb-3 font-bold">✅ Alinhamento Vitruviano</p>
-                                            <p className="text-sm text-gray-400">
-                                                {plano.observacoes.alinhamentoMetodologia
-                                                    ? "Protocolo 100% alinhado com as diretrizes de hipertrofia máxima e proporção áurea."
-                                                    : plano.observacoes.sugestaoForaMetodologia}
-                                            </p>
-                                        </div>
+                {/* Estado: Gerando */}
+                {estado === 'generating' && (
+                    <div className="bg-[#131B2C] border border-white/10 rounded-2xl p-10 text-center">
+                        <Loader2 size={48} className="text-primary mx-auto mb-5 animate-spin" />
+                        <h3 className="text-xl font-bold text-white mb-3">Vitrúvio montando seu plano...</h3>
+                        <p className="text-sm text-gray-500">Cruzando prioridades do diagnóstico com metas de 12 meses e periodização.</p>
+                    </div>
+                )}
+
+                {/* Conteúdo Gerado — cards soltos, igual Dieta/Diagnóstico */}
+                {plano && diagnostico && (estado === 'ready' || estado === 'saving' || estado === 'saved') && (
+                    <div className="animate-in fade-in duration-500 flex flex-col gap-0">
+
+                        {/* ★ Estrela do Norte — Objetivo */}
+                        <div className={`rounded-2xl border p-6 mb-6 ${getObjetivoMeta(objetivoAtleta).cor}`}>
+                            <div className="flex items-start gap-5">
+                                <span className="text-5xl leading-none mt-1">{getObjetivoMeta(objetivoAtleta).emoji}</span>
+                                <div className="flex-1">
+                                    <p className="text-[10px] uppercase tracking-[0.25em] text-gray-500 font-bold mb-1">Estrela do Norte deste Plano</p>
+                                    <h3 className="text-2xl font-bold text-white mb-2">{getObjetivoMeta(objetivoAtleta).label}</h3>
+                                    <p className="text-sm text-gray-300 leading-relaxed mb-4">{getObjetivoMeta(objetivoAtleta).descricao}</p>
+                                    <div className="flex flex-wrap gap-3">
+                                        <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                                            <Activity size={12} className="text-primary" />
+                                            Rep Range: {(() => {
+                                                const o = objetivoAtleta;
+                                                return o === 'BULK' ? '5-7 → 10-12' : o === 'CUT' ? '10-12 → 15-20' : o === 'MAINTAIN' ? '10-12 → 15-20' : '8-10 → 12-15';
+                                            })()}
+                                        </span>
+                                        <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                                            <Clock size={12} className="text-primary" />
+                                            Descanso: {objetivoAtleta === 'BULK' ? '75-120s' : objetivoAtleta === 'CUT' || objetivoAtleta === 'MAINTAIN' ? '40-75s' : '50-90s'}
+                                        </span>
+                                        <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                                            <TrendingUp size={12} className="text-primary" />
+                                            Volume: {objetivoAtleta === 'BULK' ? '+5% base' : objetivoAtleta === 'CUT' ? '-10% base' : objetivoAtleta === 'MAINTAIN' ? '-25% base' : 'base'}
+                                        </span>
                                     </div>
                                 </div>
-                                <InsightBox text={plano.observacoes.mensagemFinal} title="Mensagem do Vitrúvio" />
-                            </SectionCard>
+                            </div>
                         </div>
-                    )}
 
-                    {/* Navegação/Ações Bottom */}
-                    {plano && (
-                        <div className="flex items-center justify-between pt-10 border-t border-white/10 mt-8">
+                        <SecaoResumoDiagnostico diagnostico={diagnostico} potencial={potencial ?? undefined} />
+                        <SecaoVisaoAnual plano={plano} />
+                        <SecaoTrimestreAtual plano={plano} />
+                        <SecaoDivisao plano={plano} />
+                        <SecaoTreinosSemanais treinos={plano.treinos} />
+
+                        <SectionCard icon={Award} title="Instruções de Sucesso" subtitle="Diretrizes metodológicas para garantir os resultados planejados">
+                            <div className="space-y-4">
+                                <div className="bg-white/[0.03] p-5 rounded-xl border border-white/5">
+                                    <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-3 font-bold">Resumo Metodológico</p>
+                                    <p className="text-sm text-gray-300 leading-relaxed">{plano.observacoes.resumo}</p>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="bg-red-500/5 p-5 rounded-xl border border-red-500/10">
+                                        <p className="text-[10px] uppercase tracking-widest text-red-400 mb-3 font-bold">⚠️ Pontos de Atenção</p>
+                                        <ul className="space-y-2">
+                                            {plano.observacoes.pontosAtencao.map((p, i) => (
+                                                <li key={i} className="text-sm text-gray-400 flex items-start gap-2">
+                                                    <span className="text-red-400 mt-1">•</span> {p}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                    <div className="bg-primary/5 p-5 rounded-xl border border-primary/10">
+                                        <p className="text-[10px] uppercase tracking-widest text-primary mb-3 font-bold">✅ Alinhamento Vitruviano</p>
+                                        <p className="text-sm text-gray-400">
+                                            {plano.observacoes.alinhamentoMetodologia
+                                                ? 'Protocolo 100% alinhado com as diretrizes de hipertrofia máxima e proporção áurea.'
+                                                : plano.observacoes.sugestaoForaMetodologia}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <InsightBox text={plano.observacoes.mensagemFinal} title="Mensagem do Vitrúvio" />
+                        </SectionCard>
+
+                        {/* Navegação bottom */}
+                        <div className="flex items-center justify-between pt-10 border-t border-white/10">
                             <button
                                 onClick={onBack}
                                 className="flex items-center gap-2 px-6 py-3 text-sm font-bold uppercase tracking-wider text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all"
@@ -669,36 +762,26 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
                                 <ArrowLeft size={18} />
                                 Voltar: Diagnóstico
                             </button>
-
                             <div className="flex items-center gap-4">
                                 {estado === 'ready' && (
-                                    <button
-                                        onClick={handleSalvar}
-                                        className="flex items-center gap-3 px-8 py-3.5 bg-emerald-600 text-white font-bold text-sm uppercase tracking-wider rounded-xl hover:bg-emerald-500 hover:shadow-[0_0_20px_rgba(16,185,129,0.2)] transition-all"
-                                    >
-                                        <Save size={18} />
-                                        Confirmar e Salvar
+                                    <button onClick={handleSalvar} className="flex items-center gap-3 px-8 py-3.5 bg-emerald-600 text-white font-bold text-sm uppercase tracking-wider rounded-xl hover:bg-emerald-500 transition-all">
+                                        <Save size={18} /> Confirmar e Salvar
                                     </button>
                                 )}
                                 {estado === 'saving' && (
                                     <button disabled className="flex items-center gap-3 px-8 py-3.5 bg-gray-800 text-gray-500 font-bold text-sm uppercase tracking-wider rounded-xl">
-                                        <Loader2 size={18} className="animate-spin" />
-                                        Salvando...
+                                        <Loader2 size={18} className="animate-spin" /> Salvando...
                                     </button>
                                 )}
                                 {estado === 'saved' && (
-                                    <button
-                                        onClick={onNext}
-                                        className="flex items-center gap-3 px-8 py-3.5 bg-primary text-[#0A0F1C] font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(0,201,167,0.3)] transition-all"
-                                    >
-                                        Próximo: Plano de Dieta
-                                        <ArrowRight size={18} />
+                                    <button onClick={onNext} className="flex items-center gap-3 px-8 py-3.5 bg-primary text-[#0A0F1C] font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(0,201,167,0.3)] transition-all">
+                                        Próximo: Plano de Dieta <ArrowRight size={18} />
                                     </button>
                                 )}
                             </div>
                         </div>
-                    )}
-                </div>
+                    </div>
+                )}
             </div>
         </div>
     );

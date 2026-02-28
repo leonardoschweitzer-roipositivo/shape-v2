@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronRight, Library, Flame, Dumbbell, Beef, Scale, Activity, GitBranch } from 'lucide-react';
+import { ChevronRight, Library, Flame, Dumbbell, Beef, Scale, Activity, GitBranch, Heart } from 'lucide-react';
 
 interface LibraryViewProps {
     onNavigateToSource: (sourceId: string) => void;
@@ -74,6 +74,16 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onNavigateToSource }) 
             bgIconColor: 'bg-indigo-500/10',
             icon: <GitBranch className="w-5 h-5 text-indigo-400" />,
             badges: ['Plano de Treino', 'Evolução'],
+            version: 'v1.0',
+            lastUpdate: 'Fev 2026'
+        },
+        {
+            id: 'feminine-proportions',
+            title: 'Proporções Corporais Femininas',
+            description: 'WHR (Venus Index), tipos de corpo (ampulheta/pera/retângulo/maçã), categorias de competição (Bikini/Wellness/Figure), gordura corporal feminina e ciclo menstrual.',
+            bgIconColor: 'bg-rose-500/10',
+            icon: <Heart className="w-5 h-5 text-rose-400" />,
+            badges: ['Avaliação', 'Feminino'],
             version: 'v1.0',
             lastUpdate: 'Fev 2026'
         }

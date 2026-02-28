@@ -41,6 +41,14 @@ import {
     type DiagnosticoInput,
 } from '@/services/calculations/diagnostico';
 import { calcularPotencialAtleta, inferirNivelAtividade } from '@/services/calculations/potencial';
+import {
+    recomendarObjetivo,
+    getObjetivoMeta,
+    TODOS_OBJETIVOS,
+    type RecomendacaoObjetivo,
+    type ObjetivoVitruvio,
+} from '@/services/calculations/objetivos';
+import { supabase } from '@/services/supabase';
 import { ScoreWidget } from '@/components/organisms/AssessmentCards/ScoreWidget';
 import { colors } from '@/tokens';
 import { type ContextoAtleta } from './AthleteContextSection';
@@ -697,6 +705,8 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
 
     const [diagnostico, setDiagnostico] = useState<DiagnosticoDados | null>(null);
     const [estado, setEstado] = useState<DiagnosticoState>('idle');
+    const [recomendacao, setRecomendacao] = useState<RecomendacaoObjetivo | null>(null);
+    const [objetivoSelecionado, setObjetivoSelecionado] = useState<ObjetivoVitruvio | null>(null);
 
     // Pegar dados da última avaliação
     const ultimaAvaliacao = useMemo(() => {
@@ -770,24 +780,55 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
             input.nivelAtividade = inferirNivelAtividade(atleta.contexto);
             input.freqTreino = potencial.frequenciaSemanal;
             const resultado = gerarDiagnosticoCompleto(input, potencial);
+
+            // Calcular o objetivo recomendado baseado nos dados do diagnóstico
+            const adonisProp = resultado.analiseEstetica.proporcoes.find(
+                p => p.grupo === 'Shape-V' || p.grupo === 'V-Taper'
+            );
+            const adonisVal = adonisProp?.atual ?? undefined;
+            const rec = recomendarObjetivo({
+                bf: resultado.composicaoAtual.gorduraPct,
+                ffmi: ultimaAvaliacao.ffmi ?? 20,
+                sexo: input.sexo,
+                score: resultado.analiseEstetica.scoreAtual,
+                nivel: resultado.analiseEstetica.classificacaoAtual,
+                adonis: adonisVal,
+            });
+
             setDiagnostico(resultado);
+            setRecomendacao(rec);
+            setObjetivoSelecionado(rec.objetivo);
             setEstado('ready');
         }, 1500);
     };
 
-    /** Salva diagnóstico no Supabase */
+    /** Salva diagnóstico no Supabase e persiste objetivo em fichas */
     const handleSalvar = async () => {
         if (!diagnostico) return;
         setEstado('saving');
 
-        const result = await salvarDiagnostico(atletaId, null, diagnostico);
-        if (result) {
-            setEstado('saved');
-        } else {
-            // Salva local se falhar
-            setEstado('saved');
-            console.warn('[Diagnostico] Tabela não encontrada - salvo localmente.');
+        const personalId = atleta.personalId ?? null;
+
+        // 1. Salvar diagnóstico
+        const result = await salvarDiagnostico(atletaId, personalId, diagnostico);
+        if (!result) {
+            console.warn('[Diagnostico] Tabela não existe ainda — salvo localmente.');
         }
+
+        // 2. Persistir objetivo recomendado em fichas
+        if (objetivoSelecionado) {
+            try {
+                await supabase
+                    .from('fichas')
+                    .update({ objetivo_vitruvio: objetivoSelecionado } as any)
+                    .eq('atleta_id', atletaId);
+                console.info('[Diagnostico] ✅ Objetivo Vitrúvio salvo:', objetivoSelecionado);
+            } catch (err) {
+                console.warn('[Diagnostico] Aviso ao salvar objetivo:', err);
+            }
+        }
+
+        setEstado('saved');
     };
 
     return (
@@ -910,6 +951,68 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                         <SecaoEstetica dados={diagnostico} />
                         <SecaoPrioridades dados={diagnostico} />
                         <SecaoMetas dados={diagnostico} nomeAtleta={atleta.name} medidas={(diagnostico as any)?._medidas} />
+
+                        {/* Card de recomendação de objetivo */}
+                        {recomendacao && (
+                            <div className="bg-[#131B2C] border border-white/10 rounded-2xl overflow-hidden">
+                                <div className="px-6 py-5 border-b border-white/10 flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                                        <Bot size={22} className="text-primary" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-white uppercase tracking-wider">Objetivo Recomendado</h3>
+                                        <p className="text-base text-gray-500">Baseado na análise completa do seu diagnóstico</p>
+                                    </div>
+                                </div>
+                                <div className="p-6">
+                                    {/* Recomendação principal */}
+                                    <div className={`border rounded-xl p-5 mb-6 ${getObjetivoMeta(recomendacao.objetivo).cor}`}>
+                                        <div className="flex items-start gap-4">
+                                            <span className="text-4xl">{getObjetivoMeta(recomendacao.objetivo).emoji}</span>
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-3 mb-2">
+                                                    <p className="text-xl font-bold text-white">{getObjetivoMeta(recomendacao.objetivo).label}</p>
+                                                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${recomendacao.confianca === 'ALTA' ? 'text-emerald-400 border-emerald-400/40 bg-emerald-400/10'
+                                                            : recomendacao.confianca === 'MEDIA' ? 'text-yellow-400 border-yellow-400/40 bg-yellow-400/10'
+                                                                : 'text-gray-400 border-gray-400/40 bg-gray-400/10'
+                                                        }`}>
+                                                        Confiança {recomendacao.confianca}
+                                                    </span>
+                                                </div>
+                                                <p className="text-base text-gray-300 leading-relaxed">{recomendacao.justificativa}</p>
+                                                {recomendacao.alternativa && (
+                                                    <p className="text-sm text-gray-500 mt-2">
+                                                        Alternativa: {getObjetivoMeta(recomendacao.alternativa).emoji} {getObjetivoMeta(recomendacao.alternativa).label}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Seletor manual */}
+                                    <p className="text-xs uppercase tracking-widest text-gray-500 mb-3 font-semibold">Ou selecione um objetivo diferente:</p>
+                                    <div className="grid grid-cols-3 gap-3">
+                                        {TODOS_OBJETIVOS.map(obj => {
+                                            const meta = getObjetivoMeta(obj);
+                                            const isSelected = objetivoSelecionado === obj;
+                                            return (
+                                                <button
+                                                    key={obj}
+                                                    onClick={() => setObjetivoSelecionado(obj)}
+                                                    className={`flex items-center gap-2 px-4 py-3 rounded-xl border text-sm font-bold transition-all ${isSelected
+                                                            ? meta.cor + ' shadow-md scale-[1.02]'
+                                                            : 'bg-white/[0.02] border-white/10 text-gray-500 hover:bg-white/5'
+                                                        }`}
+                                                >
+                                                    <span>{meta.emoji}</span>
+                                                    <span className="text-left leading-tight">{meta.label}</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </>
                 )}
 

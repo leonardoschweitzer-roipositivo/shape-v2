@@ -27,6 +27,10 @@ import {
     LayoutList,
     UtensilsCrossed,
     Calendar,
+    Save,
+    ArrowRight,
+    Activity,
+    TrendingUp,
 } from 'lucide-react';
 import { useDataStore } from '@/stores/dataStore';
 import {
@@ -41,10 +45,16 @@ import {
 } from '@/services/calculations/potencial';
 import {
     gerarPlanoDieta,
+    salvarPlanoDieta,
     type PlanoDieta,
     type MacroSet,
     type RefeicaoEstrutura,
 } from '@/services/calculations/dieta';
+import {
+    recomendarObjetivo,
+    getObjetivoMeta,
+    type ObjetivoVitruvio,
+} from '@/services/calculations/objetivos';
 
 // ═══════════════════════════════════════════════════════════
 // TYPES
@@ -209,6 +219,7 @@ export const DietaView: React.FC<DietaViewProps> = ({
     const [potencial, setPotencial] = useState<PotencialAtleta | null>(null);
     const [diagnostico, setDiagnostico] = useState<DiagnosticoDados | null>(null);
     const [showDescanso, setShowDescanso] = useState(false);
+    const [objetivoAtleta, setObjetivoAtleta] = useState<ObjetivoVitruvio>('RECOMP');
 
     const nomeAtleta = atleta?.name ?? 'Atleta';
 
@@ -265,7 +276,21 @@ export const DietaView: React.FC<DietaViewProps> = ({
             const diag = gerarDiagnosticoCompleto(input, pot);
             setDiagnostico(diag);
 
-            // 3. Gerar Plano de Dieta
+            // 3. Calcular objetivo recomendado (mesmo algoritmo do Diagnóstico/Treino)
+            const adonisProp = diag.analiseEstetica.proporcoes.find(
+                p => p.grupo === 'Shape-V' || p.grupo === 'V-Taper'
+            );
+            const rec = recomendarObjetivo({
+                bf: diag.composicaoAtual.gorduraPct,
+                ffmi: ultimaAvaliacao.ffmi ?? 20,
+                sexo: atleta.gender === 'FEMALE' ? 'F' : 'M',
+                score: diag.analiseEstetica.scoreAtual,
+                nivel: diag.analiseEstetica.classificacaoAtual,
+                adonis: adonisProp?.atual ?? undefined,
+            });
+            setObjetivoAtleta(rec.objetivo);
+
+            // 4. Gerar Plano de Dieta
             const resultado = gerarPlanoDieta(atletaId, atleta.name, diag, pot);
             setPlano(resultado);
             setEstado('ready');
@@ -276,6 +301,23 @@ export const DietaView: React.FC<DietaViewProps> = ({
         if (fase === 'CUTTING') return 'text-rose-400 bg-rose-500/10 border-rose-500/20';
         if (fase === 'BULKING') return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
         return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
+    };
+
+    /** Salva plano de dieta no Supabase */
+    const handleSalvar = async () => {
+        if (!plano) return;
+        setEstado('saving');
+
+        const personalId = atleta.personalId ?? null;
+        const result = await salvarPlanoDieta(atletaId, personalId, plano);
+
+        if (!result) {
+            console.warn('[Dieta] Tabela não existe ainda — salvo localmente.');
+        } else {
+            console.info('[Dieta] ✅ Plano salvo:', result.id);
+        }
+
+        setEstado('saved');
     };
 
     return (
@@ -374,6 +416,32 @@ export const DietaView: React.FC<DietaViewProps> = ({
                 {/* Conteúdo gerado */}
                 {plano && (estado === 'ready' || estado === 'saving' || estado === 'saved') && (
                     <>
+                        {/* ★ Estrela do Norte — Objetivo */}
+                        <div className={`rounded-2xl border p-6 ${getObjetivoMeta(objetivoAtleta).cor}`}>
+                            <div className="flex items-start gap-5">
+                                <span className="text-5xl leading-none mt-1">{getObjetivoMeta(objetivoAtleta).emoji}</span>
+                                <div className="flex-1">
+                                    <p className="text-[10px] uppercase tracking-[0.25em] text-gray-500 font-bold mb-1">Estrela do Norte deste Plano</p>
+                                    <h3 className="text-2xl font-bold text-white mb-2">{getObjetivoMeta(objetivoAtleta).label}</h3>
+                                    <p className="text-base text-gray-300 leading-relaxed mb-4">{getObjetivoMeta(objetivoAtleta).descricao}</p>
+                                    <div className="flex flex-wrap gap-3">
+                                        <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                                            <Flame size={12} className="text-primary" />
+                                            Fase: {plano.faseLabel.split(' — ')[0]}
+                                        </span>
+                                        <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                                            <Activity size={12} className="text-primary" />
+                                            {plano.deficit > 0 ? `Déficit ${plano.deficit} kcal/dia` : `Superávit ${Math.abs(plano.deficit)} kcal/dia`}
+                                        </span>
+                                        <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                                            <TrendingUp size={12} className="text-primary" />
+                                            Proteína {plano.macrosTreino.proteina.gKg} g/kg
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         {/* SEÇÃO 1: Estratégia Calórica */}
                         <SectionCard icon={Flame} title="Estratégia Calórica" subtitle="Definição do balanço energético para atingir as metas">
                             <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-bold uppercase tracking-widest mb-6 ${faseColor(plano.fase)}`}>
@@ -707,7 +775,7 @@ export const DietaView: React.FC<DietaViewProps> = ({
                             <InsightBox text={plano.mensagemFinal} title="Mensagem Final do Vitrúvio" />
                         </SectionCard>
 
-                        {/* Ações de Navegação (padrão DiagnosticoView/TreinoView) */}
+                        {/* Ações de Navegação */}
                         <div className="flex items-center justify-between pt-10 border-t border-white/10 mt-8">
                             <button
                                 onClick={onBack}
@@ -716,19 +784,32 @@ export const DietaView: React.FC<DietaViewProps> = ({
                                 <ArrowLeft size={18} /> Voltar: Treino
                             </button>
 
-                            <div className="text-center">
-                                <p className="text-xs text-emerald-400 font-bold uppercase tracking-widest flex items-center gap-2 justify-center">
-                                    <CheckCircle size={14} /> Plano de Evolução Completo!
-                                </p>
-                                <p className="text-[10px] text-gray-600 mt-1">Diagnóstico ✓ · Treino ✓ · Dieta ✓</p>
+                            <div className="flex items-center gap-4">
+                                {estado === 'ready' && (
+                                    <button
+                                        onClick={handleSalvar}
+                                        className="flex items-center gap-3 px-8 py-3.5 bg-emerald-600 text-white font-bold text-sm uppercase tracking-wider rounded-xl hover:bg-emerald-500 hover:shadow-[0_0_20px_rgba(16,185,129,0.2)] transition-all"
+                                    >
+                                        <Save size={18} /> Confirmar e Salvar
+                                    </button>
+                                )}
+                                {estado === 'saving' && (
+                                    <button disabled className="flex items-center gap-3 px-8 py-3.5 bg-gray-800 text-gray-500 font-bold text-sm uppercase tracking-wider rounded-xl">
+                                        <Loader2 size={18} className="animate-spin" /> Salvando...
+                                    </button>
+                                )}
+                                {estado === 'saved' && (
+                                    <div className="flex flex-col items-end gap-1">
+                                        <button
+                                            onClick={onBack}
+                                            className="flex items-center gap-3 px-8 py-3.5 bg-primary text-[#0A0F1C] font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(0,201,167,0.3)] transition-all"
+                                        >
+                                            <CheckCircle size={18} /> Concluir Plano
+                                        </button>
+                                        <p className="text-[10px] text-gray-600">Diagnóstico ✓ · Treino ✓ · Dieta ✓</p>
+                                    </div>
+                                )}
                             </div>
-
-                            <button
-                                onClick={onBack}
-                                className="flex items-center gap-3 px-8 py-3.5 bg-emerald-600 text-white font-bold text-sm uppercase tracking-wider rounded-xl hover:bg-emerald-500 hover:shadow-[0_0_20px_rgba(16,185,129,0.2)] transition-all"
-                            >
-                                <CheckCircle size={18} /> Concluir Plano
-                            </button>
                         </div>
                     </>
                 )}

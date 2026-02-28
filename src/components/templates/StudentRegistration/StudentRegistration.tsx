@@ -102,6 +102,7 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                     data_nascimento: formData.birthDate || null,
                     altura: height,
                     objetivo: 'HIPERTROFIA',
+                    objetivo_vitruvio: 'RECOMP',
                 } as any)
                 .eq('atleta_id', atleta.id);
 

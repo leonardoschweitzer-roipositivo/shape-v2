@@ -210,6 +210,7 @@ export type Database = {
                     joelho: number | null
                     pelve: number | null
                     objetivo: 'HIPERTROFIA' | 'DEFINICAO' | 'RECOMPOSICAO' | 'COMPETICAO' | 'SAUDE' | 'EMAGRECIMENTO'
+                    objetivo_vitruvio: 'BULK' | 'CUT' | 'RECOMP' | 'GOLDEN_RATIO' | 'TRANSFORM' | 'MAINTAIN' | null
                     categoria_preferida: string | null
                     observacoes: string | null
                     restricoes: string[] | null
@@ -228,6 +229,7 @@ export type Database = {
                     joelho?: number | null
                     pelve?: number | null
                     objetivo?: 'HIPERTROFIA' | 'DEFINICAO' | 'RECOMPOSICAO' | 'COMPETICAO' | 'SAUDE' | 'EMAGRECIMENTO'
+                    objetivo_vitruvio?: 'BULK' | 'CUT' | 'RECOMP' | 'GOLDEN_RATIO' | 'TRANSFORM' | 'MAINTAIN' | null
                     categoria_preferida?: string | null
                     observacoes?: string | null
                     restricoes?: string[] | null
@@ -246,6 +248,7 @@ export type Database = {
                     joelho?: number | null
                     pelve?: number | null
                     objetivo?: 'HIPERTROFIA' | 'DEFINICAO' | 'RECOMPOSICAO' | 'COMPETICAO' | 'SAUDE' | 'EMAGRECIMENTO'
+                    objetivo_vitruvio?: 'BULK' | 'CUT' | 'RECOMP' | 'GOLDEN_RATIO' | 'TRANSFORM' | 'MAINTAIN' | null
                     categoria_preferida?: string | null
                     observacoes?: string | null
                     restricoes?: string[] | null
@@ -531,6 +534,84 @@ export type Database = {
                     created_at?: string
                 }
             }
+            diagnosticos: {
+                Row: {
+                    id: string
+                    atleta_id: string
+                    personal_id: string | null
+                    dados: Json
+                    status: string
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    atleta_id: string
+                    personal_id?: string | null
+                    dados: Json
+                    status?: string
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    atleta_id?: string
+                    personal_id?: string | null
+                    dados?: Json
+                    status?: string
+                    created_at?: string
+                }
+            }
+            planos_treino: {
+                Row: {
+                    id: string
+                    atleta_id: string
+                    personal_id: string | null
+                    dados: Json
+                    status: string
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    atleta_id: string
+                    personal_id?: string | null
+                    dados: Json
+                    status?: string
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    atleta_id?: string
+                    personal_id?: string | null
+                    dados?: Json
+                    status?: string
+                    created_at?: string
+                }
+            }
+            planos_dieta: {
+                Row: {
+                    id: string
+                    atleta_id: string
+                    personal_id: string | null
+                    dados: Json
+                    status: string
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    atleta_id: string
+                    personal_id?: string | null
+                    dados: Json
+                    status?: string
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    atleta_id?: string
+                    personal_id?: string | null
+                    dados?: Json
+                    status?: string
+                    created_at?: string
+                }
+            }
         }
         Views: {
             v_atletas_com_avaliacao: {
@@ -585,6 +666,7 @@ export type Database = {
             plano_academia_tipo: 'BASIC' | 'PRO' | 'ENTERPRISE'
             plano_personal_tipo: 'FREE' | 'PRO' | 'UNLIMITED'
             objetivo_tipo: 'HIPERTROFIA' | 'DEFINICAO' | 'RECOMPOSICAO' | 'COMPETICAO' | 'SAUDE' | 'EMAGRECIMENTO'
+            objetivo_vitruvio_tipo: 'BULK' | 'CUT' | 'RECOMP' | 'GOLDEN_RATIO' | 'TRANSFORM' | 'MAINTAIN'
             categoria_tipo: 'GOLDEN_RATIO' | 'CLASSIC_PHYSIQUE' | 'MENS_PHYSIQUE' | 'BODYBUILDING' | 'BIKINI' | 'WELLNESS' | 'FIGURE' | 'WOMENS_PHYSIQUE' | 'WOMENS_BODYBUILDING'
             classificacao_tipo: 'INICIO' | 'CAMINHO' | 'QUASE_LA' | 'META' | 'ELITE'
             registro_tipo: 'REFEICAO' | 'TREINO' | 'AGUA' | 'SONO' | 'DOR' | 'PESO' | 'SUPLEMENTO' | 'OUTRO'

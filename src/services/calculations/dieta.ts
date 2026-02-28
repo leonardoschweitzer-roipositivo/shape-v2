@@ -10,6 +10,7 @@
 
 import { type DiagnosticoDados } from './diagnostico';
 import { type PotencialAtleta } from './potencial';
+import { supabase } from '@/services/supabase';
 
 // ═══════════════════════════════════════════════════════════
 // TYPES
@@ -440,4 +441,65 @@ export function gerarPlanoDieta(
         observacoesContexto: potencial.observacoesContexto,
         geradoEm: new Date().toISOString(),
     };
+}
+
+// ═══════════════════════════════════════════════════════════
+// PERSISTÊNCIA - SUPABASE
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * Salva plano de dieta no Supabase (tabela planos_dieta).
+ * Cada chamada insere um novo registro (histórico) — nunca sobrescreve.
+ */
+export async function salvarPlanoDieta(
+    atletaId: string,
+    personalId: string | null,
+    dados: PlanoDieta
+): Promise<{ id: string } | null> {
+    try {
+        const safeDados = JSON.parse(JSON.stringify(dados,
+            (_, v) => typeof v === 'number' && !isFinite(v) ? 0 : v
+        ));
+
+        const { data, error } = await supabase
+            .from('planos_dieta')
+            .insert({
+                atleta_id: atletaId,
+                personal_id: personalId,
+                dados: safeDados,
+                status: 'ativo',
+            } as any)
+            .select('id')
+            .single();
+
+        if (error) {
+            console.error('[Dieta] Erro ao salvar:', error.message);
+            return null;
+        }
+        return data as { id: string };
+    } catch (err) {
+        console.error('[Dieta] Exceção ao salvar:', err);
+        return null;
+    }
+}
+
+/**
+ * Busca o último plano de dieta ativo de um atleta.
+ */
+export async function buscarPlanoDieta(atletaId: string): Promise<PlanoDieta | null> {
+    try {
+        const { data, error } = await supabase
+            .from('planos_dieta')
+            .select('dados')
+            .eq('atleta_id', atletaId)
+            .eq('status', 'ativo')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+        if (error || !data) return null;
+        return data.dados as PlanoDieta;
+    } catch {
+        return null;
+    }
 }
