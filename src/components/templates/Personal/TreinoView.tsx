@@ -33,6 +33,8 @@ import {
     ChevronRight,
     Search,
     BookOpen,
+    CheckCircle,
+    XCircle,
 } from 'lucide-react';
 import { useDataStore } from '@/stores/dataStore';
 import {
@@ -65,6 +67,7 @@ interface TreinoViewProps {
     atletaId: string;
     onBack: () => void;
     onNext: () => void;
+    diagnosticoId?: string;
 }
 
 type TreinoState = 'idle' | 'generating' | 'ready' | 'saving' | 'saved';
@@ -477,6 +480,7 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
     atletaId,
     onBack,
     onNext,
+    diagnosticoId,
 }) => {
     const { personalAthletes } = useDataStore();
     const atleta = useMemo(() => personalAthletes.find(a => a.id === atletaId), [personalAthletes, atletaId]);
@@ -486,6 +490,7 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
     const [potencial, setPotencial] = useState<PotencialAtleta | null>(null);
     const [estado, setEstado] = useState<TreinoState>('idle');
     const [objetivoAtleta, setObjetivoAtleta] = useState<ObjetivoVitruvio>('RECOMP');
+    const [toastStatus, setToastStatus] = useState<'success' | 'error' | null>(null);
 
     // Pegar dados da última avaliação (mesmo que DiagnosticoView)
     const ultimaAvaliacao = useMemo(() => {
@@ -568,8 +573,8 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
             });
             setObjetivoAtleta(rec.objetivo);
 
-            // 4. Gerar treino consumindo o potencial como fonte única + objetivo
-            const resultado = gerarPlanoTreino(atletaId, atleta.name, diag, pot, rec.objetivo);
+            // 4. Gerar treino consumindo o potencial como fonte única + objetivo + contexto
+            const resultado = gerarPlanoTreino(atletaId, atleta.name, diag, pot, rec.objetivo, atleta.contexto);
             setPlano(resultado);
             setEstado('ready');
         }, 1800);
@@ -581,20 +586,36 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
         setEstado('saving');
 
         const personalId = atleta.personalId ?? null;
-        const result = await salvarPlanoTreino(atletaId, personalId, plano);
+        const result = await salvarPlanoTreino(atletaId, personalId, plano, diagnosticoId);
 
         if (!result) {
             console.warn('[Treino] Tabela não existe ainda — salvo localmente.');
+            setToastStatus('error');
         } else {
             console.info('[Treino] ✅ Plano salvo:', result.id);
+            setToastStatus('success');
         }
 
         setEstado('saved');
+        setTimeout(() => setToastStatus(null), 3000);
     };
 
     return (
         <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth custom-scrollbar flex flex-col">
             <div className="max-w-7xl mx-auto flex flex-col gap-6 pb-16 flex-1 w-full">
+
+                {/* Toast inline */}
+                {toastStatus && (
+                    <div className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-2xl border text-sm font-bold uppercase tracking-wider animate-in fade-in slide-in-from-top-4 duration-300 ${toastStatus === 'success'
+                            ? 'bg-emerald-900/90 border-emerald-500/40 text-emerald-300'
+                            : 'bg-red-900/90 border-red-500/40 text-red-300'
+                        }`}>
+                        {toastStatus === 'success'
+                            ? <CheckCircle size={18} className="text-emerald-400" />
+                            : <XCircle size={18} className="text-red-400" />}
+                        {toastStatus === 'success' ? 'Plano de Treino salvo com sucesso!' : 'Erro ao salvar. Tente novamente.'}
+                    </div>
+                )}
                 {/* Page Header */}
                 <div className="flex flex-col animate-fade-in-up">
                     <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight uppercase">

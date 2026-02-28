@@ -32,6 +32,8 @@ import {
     Bot,
     Loader2,
     Save,
+    CheckCircle,
+    XCircle,
 } from 'lucide-react';
 import { useDataStore } from '@/stores/dataStore';
 import {
@@ -60,7 +62,7 @@ import { type ContextoAtleta } from './AthleteContextSection';
 interface DiagnosticoViewProps {
     atletaId: string;
     onBack: () => void;
-    onNext: () => void;
+    onNext: (diagnosticoId?: string) => void;
 }
 
 type DiagnosticoState = 'idle' | 'generating' | 'ready' | 'saving' | 'saved';
@@ -707,6 +709,7 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
     const [estado, setEstado] = useState<DiagnosticoState>('idle');
     const [recomendacao, setRecomendacao] = useState<RecomendacaoObjetivo | null>(null);
     const [objetivoSelecionado, setObjetivoSelecionado] = useState<ObjetivoVitruvio | null>(null);
+    const [toastStatus, setToastStatus] = useState<'success' | 'error' | null>(null);
 
     // Pegar dados da última avaliação
     const ultimaAvaliacao = useMemo(() => {
@@ -813,6 +816,9 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
         const result = await salvarDiagnostico(atletaId, personalId, diagnostico);
         if (!result) {
             console.warn('[Diagnostico] Tabela não existe ainda — salvo localmente.');
+            setToastStatus('error');
+        } else {
+            setToastStatus('success');
         }
 
         // 2. Persistir objetivo recomendado em fichas
@@ -829,11 +835,26 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
         }
 
         setEstado('saved');
+        // Limpa toast após 3s
+        setTimeout(() => setToastStatus(null), 3000);
     };
 
     return (
         <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth custom-scrollbar flex flex-col">
             <div className="max-w-7xl mx-auto flex flex-col gap-6 pb-16 flex-1 w-full">
+
+                {/* Toast inline */}
+                {toastStatus && (
+                    <div className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-2xl border text-sm font-bold uppercase tracking-wider animate-in fade-in slide-in-from-top-4 duration-300 ${toastStatus === 'success'
+                            ? 'bg-emerald-900/90 border-emerald-500/40 text-emerald-300'
+                            : 'bg-red-900/90 border-red-500/40 text-red-300'
+                        }`}>
+                        {toastStatus === 'success'
+                            ? <CheckCircle size={18} className="text-emerald-400" />
+                            : <XCircle size={18} className="text-red-400" />}
+                        {toastStatus === 'success' ? 'Diagnóstico salvo com sucesso!' : 'Erro ao salvar. Tente novamente.'}
+                    </div>
+                )}
                 {/* Page Header */}
                 <div className="flex flex-col animate-fade-in-up">
                     <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight uppercase">
@@ -973,8 +994,8 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                                                 <div className="flex items-center gap-3 mb-2">
                                                     <p className="text-xl font-bold text-white">{getObjetivoMeta(recomendacao.objetivo).label}</p>
                                                     <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${recomendacao.confianca === 'ALTA' ? 'text-emerald-400 border-emerald-400/40 bg-emerald-400/10'
-                                                            : recomendacao.confianca === 'MEDIA' ? 'text-yellow-400 border-yellow-400/40 bg-yellow-400/10'
-                                                                : 'text-gray-400 border-gray-400/40 bg-gray-400/10'
+                                                        : recomendacao.confianca === 'MEDIA' ? 'text-yellow-400 border-yellow-400/40 bg-yellow-400/10'
+                                                            : 'text-gray-400 border-gray-400/40 bg-gray-400/10'
                                                         }`}>
                                                         Confiança {recomendacao.confianca}
                                                     </span>
@@ -1000,8 +1021,8 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                                                     key={obj}
                                                     onClick={() => setObjetivoSelecionado(obj)}
                                                     className={`flex items-center gap-2 px-4 py-3 rounded-xl border text-sm font-bold transition-all ${isSelected
-                                                            ? meta.cor + ' shadow-md scale-[1.02]'
-                                                            : 'bg-white/[0.02] border-white/10 text-gray-500 hover:bg-white/5'
+                                                        ? meta.cor + ' shadow-md scale-[1.02]'
+                                                        : 'bg-white/[0.02] border-white/10 text-gray-500 hover:bg-white/5'
                                                         }`}
                                                 >
                                                     <span>{meta.emoji}</span>
@@ -1045,7 +1066,7 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                             )}
                             {estado === 'saved' && (
                                 <button
-                                    onClick={onNext}
+                                    onClick={() => onNext(undefined)}
                                     className="flex items-center gap-3 px-8 py-3.5 bg-primary text-[#0A0F1C] font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(0,201,167,0.3)] transition-all"
                                 >
                                     Próximo: Plano de Treino

@@ -142,7 +142,8 @@ function calcularDeficit(
     nivel: string,
     isGlp1: boolean,
     isAnabolizante: boolean,
-    pesoAtual: number
+    pesoAtual: number,
+    protocoloModerado?: boolean
 ): number {
     let pct: number;
     if (isGlp1) {
@@ -158,6 +159,9 @@ function calcularDeficit(
         // AVANÇADO
         pct = fase === 'CUTTING' ? 0.25 : 0.20;
     }
+
+    // G3: Histórico de sanfona/low-carb extremo → limitar déficit a 15% (protocolo moderado)
+    if (protocoloModerado && pct > 0.15) pct = 0.15;
 
     if (fase === 'BULKING') return -Math.round(tdee * 0.10); // superávit 10%
     if (fase === 'MANUTENCAO') return 0;
@@ -241,7 +245,8 @@ export function gerarPlanoDieta(
     nomeAtleta: string,
     diagnostico: DiagnosticoDados,
     potencial: PotencialAtleta,
-    objetivo: ObjetivoVitruvio = 'RECOMP'
+    objetivo: ObjetivoVitruvio = 'RECOMP',
+    contexto?: import('./potencial').ContextoAtleta
 ): PlanoDieta {
     const { composicaoAtual, metasComposicao, taxas } = diagnostico;
     const tdee = taxas.tdee;
@@ -255,6 +260,12 @@ export function gerarPlanoDieta(
     const obsTexto = potencial.observacoesContexto.join(' ').toLowerCase();
     const isGlp1 = /glp-1|tirzepatida|semaglutida|ozempic/i.test(obsTexto);
     const isAnabolizante = /protocolo hormonal|anaboliz|trt/i.test(obsTexto);
+
+    // G3 — Histórico de dietas (historico_dietas)
+    const histDieta = (contexto?.historico_dietas || '').toLowerCase();
+    const temSanfona = /sanfona|efeito sanfona|perde e engorda|engorda e perde|parou e voltou/i.test(histDieta);
+    const temLowCarbExtremo = /low.?carb extremo|zero carb|cetog[eê]ni|keto|carnivora|dieta zero/i.test(histDieta);
+    const protocoloModerado = temSanfona || temLowCarbExtremo;
 
     // 1. Fase — o objetivo GOLDEN_RATIO force BULKING para construir proporções
     // Outros objetivos também influenciam a fase:
@@ -278,7 +289,7 @@ export function gerarPlanoDieta(
     };
 
     // 2. Déficit/Superávit
-    const deficit = calcularDeficit(tdee, fase, nivel, isGlp1, isAnabolizante, peso);
+    const deficit = calcularDeficit(tdee, fase, nivel, isGlp1, isAnabolizante, peso, protocoloModerado);
     const deficitPct = Math.round((deficit / tdee) * 100);
     const calMedia = tdee - deficit;
 
@@ -397,6 +408,8 @@ export function gerarPlanoDieta(
     potencial.observacoesContexto.filter(a => /profissão|obra|constru/i.test(a)).forEach(a =>
         contextoConsiderado.push(`${a} → carboidratos ajustados para cobrir alto NEAT além do treino`)
     );
+    if (temSanfona) contextoConsiderado.push('⚠️ Histórico de efeito sanfona detectado → déficit limitado a 15% TDEE (protocolo moderado). Abordagem gradual evita rebound metabólico e aumenta aderência a longo prazo.');
+    if (temLowCarbExtremo) contextoConsiderado.push('⚠️ Histórico de low-carb extremo/cetogênica detectado → protocolo moderado com carboidratos presentes (ciclo treino/descanso). Restauração metabólica priorizada sobre velocidade de resultado.');
 
     // Pontos de atenção customizados por objetivo
     const pontosAtencao = objetivo === 'GOLDEN_RATIO' ? [
@@ -581,7 +594,8 @@ export function gerarPlanoDieta(
 export async function salvarPlanoDieta(
     atletaId: string,
     personalId: string | null,
-    dados: PlanoDieta
+    dados: PlanoDieta,
+    diagnosticoId?: string
 ): Promise<{ id: string } | null> {
     try {
         const safeDados = JSON.parse(JSON.stringify(dados,
@@ -593,6 +607,7 @@ export async function salvarPlanoDieta(
             .insert({
                 atleta_id: atletaId,
                 personal_id: personalId,
+                diagnostico_id: diagnosticoId ?? null,
                 dados: safeDados,
                 status: 'ativo',
             } as any)

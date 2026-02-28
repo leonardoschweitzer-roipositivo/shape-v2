@@ -77,6 +77,7 @@ const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
   const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(null);
   const [portalToken, setPortalToken] = useState<string | null>(null);
+  const [diagnosticoPlanId, setDiagnosticoPlanId] = useState<string | null>(null);
 
   // Derived user profile from Auth Store
   const userProfile: ProfileType = (authProfile?.role?.toLowerCase() as ProfileType) || 'atleta';
@@ -505,7 +506,8 @@ const App: React.FC = () => {
             <DiagnosticoView
               atletaId={selectedAthleteId}
               onBack={() => setCurrentView('coach')}
-              onNext={() => {
+              onNext={(diagId?: string) => {
+                if (diagId) setDiagnosticoPlanId(diagId);
                 setCurrentView('treino-plano');
               }}
             />
@@ -514,6 +516,7 @@ const App: React.FC = () => {
           return selectedAthleteId ? (
             <TreinoView
               atletaId={selectedAthleteId}
+              diagnosticoId={diagnosticoPlanId ?? undefined}
               onBack={() => setCurrentView('diagnostico')}
               onNext={() => {
                 setCurrentView('dieta-plano');
@@ -524,6 +527,7 @@ const App: React.FC = () => {
           return selectedAthleteId ? (
             <DietaView
               atletaId={selectedAthleteId}
+              diagnosticoId={diagnosticoPlanId ?? undefined}
               onBack={() => setCurrentView('treino-plano')}
             />
           ) : null;

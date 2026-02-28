@@ -123,9 +123,16 @@ export const gerarPlanoTreino = (
     nomeAtleta: string,
     diagnostico: DiagnosticoDados,
     potencial: PotencialAtleta,
-    objetivo: ObjetivoVitruvio = 'RECOMP'
+    objetivo: ObjetivoVitruvio = 'RECOMP',
+    contexto?: import('./potencial').ContextoAtleta
 ): PlanoTreino => {
     const dataRef = new Date().toISOString();
+
+    // ═══════════════════════════════════════════════════════
+    // G2 — RESTRIÇÕES FÍSICAS (dores_lesoes)
+    // ═══════════════════════════════════════════════════════
+    const lesaoTexto = (contexto?.dores_lesoes || '').toLowerCase();
+    const temLesaoOmbro = /ombro|manguito|rotat[oó]r|impingement|burs[ie]te|manguito rotador/i.test(lesaoTexto);
 
     // ═══════════════════════════════════════════════════════
     // FATORES DO POTENCIAL — fonte única de verdade
@@ -438,7 +445,12 @@ export const gerarPlanoTreino = (
                     nomeGrupo: 'Deltóide Lat.',
                     seriesTotal: seriesOmbros,
                     isPrioridade: getIsPrio('Deltóide Lat.'),
-                    exercicios: [
+                    exercicios: temLesaoOmbro ? [
+                        { ordem: 1, nome: 'Desenvolvimento Neutro Halt.', series: dOmbros[0], repeticoes: rC, descansoSegundos: dC, observacao: 'Substituído por neutro (restrição de ombro/manguito)' },
+                        { ordem: 2, nome: 'Elevação Lateral Cabo (unilateral)', series: dOmbros[1], repeticoes: rI, descansoSegundos: dI, observacao: 'Cabo reduz impacto articular — amplitude controlada' },
+                        { ordem: 3, nome: 'Face Pull com corda', series: dOmbros[2], repeticoes: rF, descansoSegundos: dF, observacao: 'Fortalece manguito rotador — fundamental na reabilitação' },
+                        { ordem: 4, nome: 'Abdução Cabo (baixo para cima)', series: dOmbros[3], repeticoes: rF, descansoSegundos: dF, observacao: 'Isola deltóide lateral sem risco de impingement' }
+                    ] : [
                         { ordem: 1, nome: 'Desenvolvimento Halt.', series: dOmbros[0], repeticoes: rC, descansoSegundos: dC },
                         { ordem: 2, nome: 'Elevação Lateral Halt.', series: dOmbros[1], repeticoes: rI, descansoSegundos: dI },
                         { ordem: 3, nome: 'Elevação Lateral Cabo', series: dOmbros[2], repeticoes: rF, descansoSegundos: dF, tecnica: 'Drop-set' },
@@ -534,7 +546,7 @@ export const gerarPlanoTreino = (
     // 6. Observações — alinhadas com o objetivo
     const alertasContexto = potencial.observacoesContexto;
     const observacoes: ObservacoesTreino = {
-        resumo: `Plano ${metaObj.emoji} ${metaObj.label} — ${labelNivel} — foco em ${cfg.splitFoco}. ${diagnostico.prioridades.filter(p => p.nivel === 'ALTA').length > 0 ? `Prioridades: ${diagnostico.prioridades.filter(p => p.nivel === 'ALTA').map(p => p.grupo).join(', ')}.` : ''} Divisão ${tipoDivisao} (${freq}x/sem), rep range ${cfg.repComposto}→${cfg.repFinalizador}, descanso ${cfg.descComposto}→${cfg.descFinalizador}s.`,
+        resumo: `Plano ${metaObj.emoji} ${metaObj.label} — ${labelNivel} — foco em ${cfg.splitFoco}. ${diagnostico.prioridades.filter(p => p.nivel === 'ALTA').length > 0 ? `Prioridades: ${diagnostico.prioridades.filter(p => p.nivel === 'ALTA').map(p => p.grupo).join(', ')}.` : ''} Divisão ${tipoDivisao} (${freq}x/sem), rep range ${cfg.repComposto}→${cfg.repFinalizador}, descanso ${cfg.descComposto}→${cfg.descFinalizador}s.${temLesaoOmbro ? ' ⚠️ Treino C adaptado: exercícios de ombro substituídos por variações seguras para manguito rotador.' : ''}`,
         pontosAtencao: [
             objetivo === 'BULK' ? 'BULK: priorize carga progressiva e descanso completo — o crescimento acontece na recuperação.' :
                 objetivo === 'CUT' ? 'CUT: mantenha a intensidade alta mesmo em déficit — o treino pesado sinaliza ao corpo para preservar músculo.' :
@@ -545,6 +557,7 @@ export const gerarPlanoTreino = (
             'Respeitar a pausa de 2s no topo da panturrilha para máximo estímulo.',
             'Iniciar o treino sempre pelos grupos prioritários.',
             'Deload na semana 4 de cada mesociclo é obrigatório.',
+            ...(temLesaoOmbro ? ['⚠️ RESTRIÇÃO DE OMBRO/MANGUITO: Evitar press militar pronado e elevações frontais. Treino C adaptado com variações neutras e de cabo. Aumentar progressão de carga gradualmente e interromper se houver dor aguda.'] : []),
             ...alertasContexto
         ],
         alinhamentoMetodologia: true,
@@ -587,7 +600,8 @@ export const gerarPlanoTreino = (
 export async function salvarPlanoTreino(
     atletaId: string,
     personalId: string | null,
-    dados: PlanoTreino
+    dados: PlanoTreino,
+    diagnosticoId?: string
 ): Promise<{ id: string } | null> {
     try {
         const safeDados = JSON.parse(JSON.stringify(dados,
@@ -599,6 +613,7 @@ export async function salvarPlanoTreino(
             .insert({
                 atleta_id: atletaId,
                 personal_id: personalId,
+                diagnostico_id: diagnosticoId ?? null,
                 dados: safeDados,
                 status: 'ativo',
             } as any)

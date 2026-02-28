@@ -64,6 +64,7 @@ import {
 interface DietaViewProps {
     atletaId: string;
     onBack: () => void;
+    diagnosticoId?: string;
 }
 
 type DietaState = 'idle' | 'generating' | 'ready' | 'saving' | 'saved';
@@ -217,6 +218,7 @@ const TabelaRefeicoes: React.FC<{ refeicoes: RefeicaoEstrutura[] }> = ({ refeico
 export const DietaView: React.FC<DietaViewProps> = ({
     atletaId,
     onBack,
+    diagnosticoId,
 }) => {
     const { personalAthletes } = useDataStore();
     const atleta = useMemo(() => personalAthletes.find(a => a.id === atletaId), [personalAthletes, atletaId]);
@@ -229,6 +231,7 @@ export const DietaView: React.FC<DietaViewProps> = ({
     const [showDescanso, setShowDescanso] = useState(false);
     const [objetivoAtleta, setObjetivoAtleta] = useState<ObjetivoVitruvio>('RECOMP');
     const [cardapioAberto, setCardapioAberto] = useState<Set<string>>(new Set());
+    const [toastStatus, setToastStatus] = useState<'success' | 'error' | null>(null);
 
     const toggleCardapio = (nome: string) => {
         setCardapioAberto(prev => {
@@ -307,8 +310,8 @@ export const DietaView: React.FC<DietaViewProps> = ({
             });
             setObjetivoAtleta(rec.objetivo);
 
-            // 4. Gerar Plano de Dieta (passando o objetivo Estrela do Norte)
-            const resultado = gerarPlanoDieta(atletaId, atleta.name, diag, pot, rec.objetivo);
+            // 4. Gerar Plano de Dieta (passando o objetivo Estrela do Norte + contexto do atleta)
+            const resultado = gerarPlanoDieta(atletaId, atleta.name, diag, pot, rec.objetivo, atleta.contexto);
             setPlano(resultado);
             setEstado('ready');
         }, 1200);
@@ -326,20 +329,36 @@ export const DietaView: React.FC<DietaViewProps> = ({
         setEstado('saving');
 
         const personalId = atleta.personalId ?? null;
-        const result = await salvarPlanoDieta(atletaId, personalId, plano);
+        const result = await salvarPlanoDieta(atletaId, personalId, plano, diagnosticoId);
 
         if (!result) {
             console.warn('[Dieta] Tabela não existe ainda — salvo localmente.');
+            setToastStatus('error');
         } else {
             console.info('[Dieta] ✅ Plano salvo:', result.id);
+            setToastStatus('success');
         }
 
         setEstado('saved');
+        setTimeout(() => setToastStatus(null), 3000);
     };
 
     return (
         <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth custom-scrollbar flex flex-col">
             <div className="max-w-7xl mx-auto flex flex-col gap-6 pb-16 flex-1 w-full">
+
+                {/* Toast inline */}
+                {toastStatus && (
+                    <div className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-2xl border text-sm font-bold uppercase tracking-wider animate-in fade-in slide-in-from-top-4 duration-300 ${toastStatus === 'success'
+                            ? 'bg-emerald-900/90 border-emerald-500/40 text-emerald-300'
+                            : 'bg-red-900/90 border-red-500/40 text-red-300'
+                        }`}>
+                        {toastStatus === 'success'
+                            ? <CheckCircle size={18} className="text-emerald-400" />
+                            : <XCircle size={18} className="text-red-400" />}
+                        {toastStatus === 'success' ? 'Plano de Dieta salvo com sucesso!' : 'Erro ao salvar. Tente novamente.'}
+                    </div>
+                )}
 
                 {/* Page Header */}
                 <div className="flex flex-col animate-fade-in-up">
