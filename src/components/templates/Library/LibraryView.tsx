@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronRight, Library, Flame, Dumbbell } from 'lucide-react';
+import { ChevronRight, Library, Flame, Dumbbell, Beef, Scale } from 'lucide-react';
 
 interface LibraryViewProps {
     onNavigateToSource: (sourceId: string) => void;
@@ -34,6 +34,26 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onNavigateToSource }) 
             bgIconColor: 'bg-blue-500/10',
             icon: <Dumbbell className="w-5 h-5 text-blue-400" />,
             badges: ['Plano de Treino', 'Hipertrofia'],
+            version: 'v1.0',
+            lastUpdate: 'Fev 2026'
+        },
+        {
+            id: 'protein',
+            title: 'Proteína para Hipertrofia',
+            description: 'Necessidades proteicas por objetivo (1.6–2.8 g/kg), leucine threshold, distribuição em refeições, timing, proteína no déficit e qualidade de fontes (PDCAAS/DIAAS).',
+            bgIconColor: 'bg-violet-500/10',
+            icon: <Beef className="w-5 h-5 text-violet-400" />,
+            badges: ['Plano de Dieta', 'Nutrição'],
+            version: 'v1.0',
+            lastUpdate: 'Fev 2026'
+        },
+        {
+            id: 'energy-balance',
+            title: 'Déficit e Superávit Calórico',
+            description: 'Taxas de perda/ganho de peso por % de gordura e nível de experiência, recomposição corporal, adaptação metabólica, platôs e protocolo de ajuste calórico.',
+            bgIconColor: 'bg-emerald-500/10',
+            icon: <Scale className="w-5 h-5 text-emerald-400" />,
+            badges: ['Plano de Dieta', 'Composição Corporal'],
             version: 'v1.0',
             lastUpdate: 'Fev 2026'
         }

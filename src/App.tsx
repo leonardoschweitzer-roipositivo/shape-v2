@@ -25,6 +25,7 @@ import {
   PersonalProfilePage,
   DiagnosticoView,
   TreinoView,
+  DietaView,
   AthleteDetailsView,
   AcademyDashboard,
   AcademyPersonalsList,
@@ -42,6 +43,8 @@ import {
   GoldenRatioSourceView,
   MetabolismSourceView,
   TrainingVolumeSourceView,
+  ProteinSourceView,
+  EnergyBalanceSourceView,
   type ProfileType
 } from '@/components';
 // import { GamificationPage } from './pages/GamificationPage'; // DISABLED - Feature para depois
@@ -55,7 +58,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useSupabaseSync } from '@/hooks/useSupabaseSync';
 import { PersonalAthlete, MeasurementHistory } from '@/mocks/personal';
 
-type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details' | 'terms' | 'privacy' | 'my-record' | 'gamification' | 'athlete-portal' | 'personal-details' | 'student-details' | 'diagnostico' | 'treino-plano' | 'library' | 'library-golden-ratio' | 'library-metabolism' | 'library-training-volume';
+type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details' | 'terms' | 'privacy' | 'my-record' | 'gamification' | 'athlete-portal' | 'personal-details' | 'student-details' | 'diagnostico' | 'treino-plano' | 'dieta-plano' | 'library' | 'library-golden-ratio' | 'library-metabolism' | 'library-training-volume' | 'library-protein' | 'library-energy-balance';
 
 const App: React.FC = () => {
   console.log('🎯 App component rendering...');
@@ -293,6 +296,8 @@ const App: React.FC = () => {
         if (id === 'golden-ratio') setCurrentView('library-golden-ratio');
         if (id === 'metabolism') setCurrentView('library-metabolism');
         if (id === 'training-volume') setCurrentView('library-training-volume');
+        if (id === 'protein') setCurrentView('library-protein');
+        if (id === 'energy-balance') setCurrentView('library-energy-balance');
       }} />;
     }
     if (currentView === 'library-golden-ratio') {
@@ -303,6 +308,12 @@ const App: React.FC = () => {
     }
     if (currentView === 'library-training-volume') {
       return <TrainingVolumeSourceView onBack={() => setCurrentView('library')} />;
+    }
+    if (currentView === 'library-protein') {
+      return <ProteinSourceView onBack={() => setCurrentView('library')} />;
+    }
+    if (currentView === 'library-energy-balance') {
+      return <EnergyBalanceSourceView onBack={() => setCurrentView('library')} />;
     }
 
     // Se usuário é Academia, renderiza views específicas
@@ -490,9 +501,15 @@ const App: React.FC = () => {
               atletaId={selectedAthleteId}
               onBack={() => setCurrentView('diagnostico')}
               onNext={() => {
-                // Dieta será a Etapa 3
-                setCurrentView('coach');
+                setCurrentView('dieta-plano');
               }}
+            />
+          ) : null;
+        case 'dieta-plano':
+          return selectedAthleteId ? (
+            <DietaView
+              atletaId={selectedAthleteId}
+              onBack={() => setCurrentView('treino-plano')}
             />
           ) : null;
         case 'hall':
@@ -665,6 +682,8 @@ const App: React.FC = () => {
     if (currentView === 'library-golden-ratio') return 'FONTE: PROPORÇÕES ÁUREAS';
     if (currentView === 'library-metabolism') return 'FONTE: METABOLISMO E GASTO ENERGÉTICO';
     if (currentView === 'library-training-volume') return 'FONTE: VOLUME DE TREINO';
+    if (currentView === 'library-protein') return 'FONTE: PROTEÍNA PARA HIPERTROFIA';
+    if (currentView === 'library-energy-balance') return 'FONTE: DÉFICIT E SUPERÁVIT CALÓRICO';
 
     if (userProfile === 'academia') {
       switch (currentView) {

@@ -9,3 +9,4 @@ export * from './AthleteContextSection';
 export { PersonalCoachDashboard } from './PersonalCoachDashboard';
 export { DiagnosticoView } from './DiagnosticoView';
 export { TreinoView } from './TreinoView';
+export { DietaView } from './DietaView';
