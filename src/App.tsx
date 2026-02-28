@@ -41,6 +41,7 @@ import {
   LibraryView,
   GoldenRatioSourceView,
   MetabolismSourceView,
+  TrainingVolumeSourceView,
   type ProfileType
 } from '@/components';
 // import { GamificationPage } from './pages/GamificationPage'; // DISABLED - Feature para depois
@@ -54,7 +55,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useSupabaseSync } from '@/hooks/useSupabaseSync';
 import { PersonalAthlete, MeasurementHistory } from '@/mocks/personal';
 
-type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details' | 'terms' | 'privacy' | 'my-record' | 'gamification' | 'athlete-portal' | 'personal-details' | 'student-details' | 'diagnostico' | 'treino-plano' | 'library' | 'library-golden-ratio' | 'library-metabolism';
+type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details' | 'terms' | 'privacy' | 'my-record' | 'gamification' | 'athlete-portal' | 'personal-details' | 'student-details' | 'diagnostico' | 'treino-plano' | 'library' | 'library-golden-ratio' | 'library-metabolism' | 'library-training-volume';
 
 const App: React.FC = () => {
   console.log('🎯 App component rendering...');
@@ -291,6 +292,7 @@ const App: React.FC = () => {
       return <LibraryView onNavigateToSource={(id) => {
         if (id === 'golden-ratio') setCurrentView('library-golden-ratio');
         if (id === 'metabolism') setCurrentView('library-metabolism');
+        if (id === 'training-volume') setCurrentView('library-training-volume');
       }} />;
     }
     if (currentView === 'library-golden-ratio') {
@@ -298,6 +300,9 @@ const App: React.FC = () => {
     }
     if (currentView === 'library-metabolism') {
       return <MetabolismSourceView onBack={() => setCurrentView('library')} />;
+    }
+    if (currentView === 'library-training-volume') {
+      return <TrainingVolumeSourceView onBack={() => setCurrentView('library')} />;
     }
 
     // Se usuário é Academia, renderiza views específicas
@@ -659,6 +664,7 @@ const App: React.FC = () => {
     if (currentView === 'library') return 'BIBLIOTECA CIENTÍFICA';
     if (currentView === 'library-golden-ratio') return 'FONTE: PROPORÇÕES ÁUREAS';
     if (currentView === 'library-metabolism') return 'FONTE: METABOLISMO E GASTO ENERGÉTICO';
+    if (currentView === 'library-training-volume') return 'FONTE: VOLUME DE TREINO';
 
     if (userProfile === 'academia') {
       switch (currentView) {

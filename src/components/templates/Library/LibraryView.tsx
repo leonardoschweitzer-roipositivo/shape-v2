@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronRight, Library, Flame } from 'lucide-react';
+import { ChevronRight, Library, Flame, Dumbbell } from 'lucide-react';
 
 interface LibraryViewProps {
     onNavigateToSource: (sourceId: string) => void;
@@ -26,8 +26,19 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onNavigateToSource }) 
             badges: ['Diagnóstico', 'Plano de Dieta'],
             version: 'v1.0',
             lastUpdate: 'Fev 2026'
+        },
+        {
+            id: 'training-volume',
+            title: 'Volume de Treino para Hipertrofia',
+            description: 'MEV, MAV e MRV por grupo muscular. Meta-análises de Schoenfeld, Krieger, Pelland. Tabelas de volume por nível de experiência, periodização em mesociclos e sinais de overreaching.',
+            bgIconColor: 'bg-blue-500/10',
+            icon: <Dumbbell className="w-5 h-5 text-blue-400" />,
+            badges: ['Plano de Treino', 'Hipertrofia'],
+            version: 'v1.0',
+            lastUpdate: 'Fev 2026'
         }
     ];
+
 
     return (
         <div className="flex-1 p-4 md:p-8 flex flex-col w-full">

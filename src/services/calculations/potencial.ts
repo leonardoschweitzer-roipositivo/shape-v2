@@ -278,8 +278,14 @@ export function calcularPotencialAtleta(
     const fatorPrioAlta = nivel === 'INICIANTE' ? 1.35 : nivel === 'INTERMEDIÁRIO' ? 1.50 : 1.60;
     const fatorPrioMedia = nivel === 'INICIANTE' ? 1.15 : nivel === 'INTERMEDIÁRIO' ? 1.25 : 1.30;
 
-    // 6. Frequência: extrai do texto do histórico ("4 vezes na semana" → 4), senao usa nível
-    const freqDoTexto = inferirFreqTreino(contexto);
+    // 6. Frequência: extrai do texto do histórico ("4 vezes na semana" → 4), senão usa nível
+    const _hist = (contexto?.historico_treino || '').toLowerCase();
+    const _mFreq = _hist.match(/(\d+)\s*(?:vezes|dias|treinos)\s*(?:por|na)\s*semana/i)
+        || _hist.match(/(\d+)\s*x\s*\/\s*semana/i)
+        || _hist.match(/(\d+)\s*x\s*semana/i)
+        || _hist.match(/treino\s*(\d+)\s*(?:x|vezes)/i);
+    const _freqTexto = _mFreq ? parseInt(_mFreq[1], 10) : null;
+    const freqDoTexto = (_freqTexto != null && _freqTexto >= 1 && _freqTexto <= 7) ? _freqTexto : null;
     const frequenciaSemanal = freqDoTexto ?? (nivel === 'INICIANTE' ? 3 : nivel === 'INTERMEDIÁRIO' ? 4 : 5);
     const divisao = frequenciaSemanal >= 5 ? 'ABCDE' : frequenciaSemanal >= 4 ? 'ABCD' : 'ABC';
 
@@ -303,8 +309,9 @@ export function calcularPotencialAtleta(
  * @returns 'SEDENTARIO' | 'LEVE' | 'MODERADO'
  */
 export function inferirNivelAtividade(contexto?: ContextoAtleta): 'SEDENTARIO' | 'LEVE' | 'MODERADO' {
-    const profissao = (contexto?.profissao?.descricao || '').toLowerCase();
-    const estilo = (contexto?.estiloVida?.descricao || '').toLowerCase();
+    // Campos reais snake_case do banco
+    const profissao = (contexto?.profissao || '').toLowerCase();
+    const estilo = (contexto?.estilo_vida || '').toLowerCase();
     const texto = profissao + ' ' + estilo;
 
     // NEAT ALTO: trabalho físico intenso, obras, campo, rua
