@@ -684,7 +684,7 @@ export function gerarDiagnosticoCompleto(
     const scoreMeta12M = Math.min(100, Math.round((input.score + deltaScore) * 10) / 10);
     const scoreMeta6M = Math.min(100, Math.round((input.score + deltaScore6M) * 10) / 10);
     const classificacaoMeta = scoreMeta12M >= 95 ? 'ELITE' : scoreMeta12M >= 85 ? 'META' : 'CAMINHO';
-    const labelNivel = potencial?.nivel ?? 'INTERMEDIÁRIO';
+    const labelNivel = potencial?.nivel ?? input.classificacao.toUpperCase();
 
     const analiseEstetica: AnaliseEstetica = {
         scoreAtual: input.score,

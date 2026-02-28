@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronRight, Library, Info, Tag, History } from 'lucide-react';
+import { ChevronRight, Library, Flame } from 'lucide-react';
 
 interface LibraryViewProps {
     onNavigateToSource: (sourceId: string) => void;
@@ -11,10 +11,19 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onNavigateToSource }) 
             id: 'golden-ratio',
             title: 'Proporções Áureas e Ideais Corporais',
             description: 'A base científica do VITRÚVIO para avaliação de simetria, incluindo o Grecian Ideal de Sandow, as proporções de Steve Reeves e o Modelo Científico de Casey Butt.',
-            iconColor: 'text-amber-500',
             bgIconColor: 'bg-amber-500/10',
             icon: <Library className="w-5 h-5 text-amber-500" />,
             badges: ['Estética', 'Módulo de Avaliação'],
+            version: 'v1.0',
+            lastUpdate: 'Fev 2026'
+        },
+        {
+            id: 'metabolism',
+            title: 'Metabolismo e Gasto Energético',
+            description: 'Equações científicas de TMB (Mifflin-St Jeor, Katch-McArdle), NEAT, EAT, TEF e adaptação metabólica — base para cálculo de necessidades calóricas e planos de dieta.',
+            bgIconColor: 'bg-orange-500/10',
+            icon: <Flame className="w-5 h-5 text-orange-500" />,
+            badges: ['Diagnóstico', 'Plano de Dieta'],
             version: 'v1.0',
             lastUpdate: 'Fev 2026'
         }

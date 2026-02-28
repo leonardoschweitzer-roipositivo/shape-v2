@@ -40,6 +40,7 @@ import {
     type DiagnosticoDados,
     type DiagnosticoInput,
 } from '@/services/calculations/diagnostico';
+import { calcularPotencialAtleta, inferirNivelAtividade } from '@/services/calculations/potencial';
 import { ScoreWidget } from '@/components/organisms/AssessmentCards/ScoreWidget';
 import { colors } from '@/tokens';
 import { type ContextoAtleta } from './AthleteContextSection';
@@ -759,7 +760,16 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                 proporcoesPreCalculadas: Array.isArray(ultimaAvaliacao.proporcoes) ? ultimaAvaliacao.proporcoes : undefined,
             };
 
-            const resultado = gerarDiagnosticoCompleto(input);
+            // Pipeline completo: Potencial → Diagnóstico reanalisado
+            const classificacao = input.score >= 90 ? 'ELITE'
+                : input.score >= 80 ? 'AVANÇADO'
+                    : input.score >= 70 ? 'ATLÉTICO'
+                        : input.score >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE';
+            const potencial = calcularPotencialAtleta(classificacao, input.score, atleta.contexto);
+            // Corrigir com valores reais do contexto (não mais hardcoded)
+            input.nivelAtividade = inferirNivelAtividade(atleta.contexto);
+            input.freqTreino = potencial.frequenciaSemanal;
+            const resultado = gerarDiagnosticoCompleto(input, potencial);
             setDiagnostico(resultado);
             setEstado('ready');
         }, 1500);

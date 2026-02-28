@@ -46,6 +46,10 @@ import {
     type TreinoDetalhado,
     type VolumePorGrupo
 } from '@/services/calculations/treino';
+import {
+    calcularPotencialAtleta,
+    type PotencialAtleta,
+} from '@/services/calculations/potencial';
 
 // ═══════════════════════════════════════════════════════════
 // TYPES
@@ -147,8 +151,13 @@ const ProgressBar: React.FC<{ pct: number; color?: string }> = ({ pct, color = '
 // ═══════════════════════════════════════════════════════════
 
 /** Seção 1: Resumo do Diagnóstico */
-const SecaoResumoDiagnostico: React.FC<{ diagnostico: DiagnosticoDados }> = ({ diagnostico }) => {
+const SecaoResumoDiagnostico: React.FC<{ diagnostico: DiagnosticoDados; potencial?: PotencialAtleta }> = ({ diagnostico, potencial }) => {
     const priosAltas = diagnostico.prioridades.filter(p => p.nivel === 'ALTA');
+    const nivelColors: Record<string, string> = {
+        'INICIANTE': 'bg-blue-500/20  text-blue-400   border-blue-500/30',
+        'INTERMEDIÁRIO': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+        'AVANÇADO': 'bg-red-500/20   text-red-400    border-red-500/30',
+    };
 
     return (
         <SectionCard icon={Target} title="Resumo do Diagnóstico" subtitle="Principais pontos que guiaram a montagem do treino">
@@ -161,9 +170,17 @@ const SecaoResumoDiagnostico: React.FC<{ diagnostico: DiagnosticoDados }> = ({ d
                     <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">Meta 12 Meses</p>
                     <p className="text-2xl font-bold text-primary">{diagnostico.analiseEstetica.scoreMeta12M}+</p>
                 </div>
-                <div className="bg-white/[0.03] p-4 rounded-xl border border-white/5 md:col-span-2">
+                {potencial && (
+                    <div className="bg-white/[0.03] p-4 rounded-xl border border-white/5">
+                        <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">Nível Detectado</p>
+                        <span className={`inline-block mt-1 text-xs font-black px-3 py-1 rounded border uppercase tracking-wider ${nivelColors[potencial.nivel] || ''}`}>
+                            {potencial.nivel}
+                        </span>
+                    </div>
+                )}
+                <div className="bg-white/[0.03] p-4 rounded-xl border border-white/5 md:col-span-1">
                     <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">Prioridades Cruciais</p>
-                    <div className="flex gap-2 mt-1">
+                    <div className="flex flex-wrap gap-2 mt-1">
                         {priosAltas.length > 0 ? (
                             priosAltas.map(p => (
                                 <span key={p.grupo} className="px-2 py-0.5 bg-red-500/20 text-red-400 text-xs font-bold rounded border border-red-500/30 uppercase">
@@ -176,7 +193,16 @@ const SecaoResumoDiagnostico: React.FC<{ diagnostico: DiagnosticoDados }> = ({ d
                     </div>
                 </div>
             </div>
-            <InsightBox text={`O treino foi ajustado com foco em elevar seu score de ${diagnostico.analiseEstetica.scoreAtual} para ${diagnostico.analiseEstetica.scoreMeta12M}. As prioridades máximas são: ${priosAltas.map(p => p.grupo).join(', ')}.`} />
+            {/* Alertas contextuais do potencial */}
+            {potencial && potencial.observacoesContexto.length > 0 && (
+                <div className="mt-4 p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 space-y-2">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-amber-400 mb-2">⚠️ Alertas do Contexto</p>
+                    {potencial.observacoesContexto.map((alerta, i) => (
+                        <p key={i} className="text-xs text-amber-200/70 leading-relaxed">• {alerta}</p>
+                    ))}
+                </div>
+            )}
+            <InsightBox text={`Plano calibrado para atleta ${potencial?.nivel ?? ''}: do score ${diagnostico.analiseEstetica.scoreAtual} para ${diagnostico.analiseEstetica.scoreMeta12M} em 12 meses. Prioridades máximas: ${priosAltas.map(p => p.grupo).join(', ') || 'equilíbrio geral'}.`} />
         </SectionCard>
     );
 };
@@ -451,6 +477,7 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
 
     const [plano, setPlano] = useState<PlanoTreino | null>(null);
     const [diagnostico, setDiagnostico] = useState<DiagnosticoDados | null>(null);
+    const [potencial, setPotencial] = useState<PotencialAtleta | null>(null);
     const [estado, setEstado] = useState<TreinoState>('idle');
 
     // Pegar dados da última avaliação (mesmo que DiagnosticoView)
@@ -467,37 +494,31 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
         );
     }
 
-    /** Gera o diagnóstico (mesma lógica determinística do DiagnosticoView) */
-    const gerarDiagnosticoLocal = (): DiagnosticoDados => {
+    /** Gera o diagnóstico (mesmo input determinístico do DiagnosticoView) */
+    const gerarDiagnosticoLocal = (pot: PotencialAtleta): DiagnosticoDados => {
         const m = ultimaAvaliacao.measurements;
         const anyM = m as any;
+        const classificacao = atleta.score >= 90 ? 'ELITE'
+            : atleta.score >= 80 ? 'AVANÇADO'
+                : atleta.score >= 70 ? 'ATLÉTICO'
+                    : atleta.score >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE';
         const input: DiagnosticoInput = {
-            peso: m.weight,
-            altura: m.height,
+            peso: m.weight, altura: m.height,
             idade: atleta.birthDate ? Math.floor((Date.now() - new Date(atleta.birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : 30,
             sexo: atleta.gender === 'FEMALE' ? 'F' : 'M',
             gorduraPct: ultimaAvaliacao.bf ?? 15,
-            score: atleta.score,
-            classificacao: atleta.score >= 90 ? 'ELITE' : atleta.score >= 80 ? 'AVANÇADO' : atleta.score >= 70 ? 'ATLÉTICO' : atleta.score >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE',
-            ratio: atleta.ratio,
-            freqTreino: 5,
-            nivelAtividade: 'SEDENTARIO',
-            usaAnabolizantes: atleta.contexto?.medicacoesUso?.descricao ? true : false,
-            usaTermogenicos: false,
-            nomeAtleta: atleta.name,
+            score: atleta.score, classificacao, ratio: atleta.ratio,
+            freqTreino: pot.frequenciaSemanal, nivelAtividade: 'SEDENTARIO',
+            usaAnabolizantes: /testosterona|trt|anaboliz|durateston/i.test(atleta.contexto?.medicacoesUso?.descricao || ''),
+            usaTermogenicos: false, nomeAtleta: atleta.name,
             medidas: {
-                ombros: m.shoulders,
-                cintura: m.waist,
+                ombros: m.shoulders, cintura: m.waist,
                 peitoral: m.chest || anyM.peito,
                 costas: anyM.costas || m.chest || (m.shoulders * 0.9),
-                bracoD: m.armRight || anyM.braco,
-                bracoE: m.armLeft || anyM.braco,
-                antebracoD: m.forearmRight || anyM.antebraco,
-                antebracoE: m.forearmLeft || anyM.antebraco,
-                coxaD: m.thighRight || anyM.coxa,
-                coxaE: m.thighLeft || anyM.coxa,
-                panturrilhaD: m.calfRight || anyM.panturrilha,
-                panturrilhaE: m.calfLeft || anyM.panturrilha,
+                bracoD: m.armRight || anyM.braco, bracoE: m.armLeft || anyM.braco,
+                antebracoD: m.forearmRight || anyM.antebraco, antebracoE: m.forearmLeft || anyM.antebraco,
+                coxaD: m.thighRight || anyM.coxa, coxaE: m.thighLeft || anyM.coxa,
+                panturrilhaD: m.calfRight || anyM.panturrilha, panturrilhaE: m.calfLeft || anyM.panturrilha,
                 punho: m.wrist || (atleta as any).punho || 17.5,
                 joelho: m.knee || anyM.joelho || 38,
                 tornozelo: m.ankle || (atleta as any).tornozelo || 22,
@@ -506,20 +527,28 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
             },
             proporcoesPreCalculadas: Array.isArray(ultimaAvaliacao.proporcoes) ? ultimaAvaliacao.proporcoes : undefined,
         };
-        return gerarDiagnosticoCompleto(input);
+        // Reanálise: diagnóstico recebe o potencial para usar score meta dinâmico
+        return gerarDiagnosticoCompleto(input, pot);
     };
 
-    /** Gera o plano de treino */
+    /** Gera o plano de treino — pipeline completo: Potencial → Diagnóstico → Treino */
     const handleGerar = () => {
         setEstado('generating');
-
-        // Simular delay de processamento IA
         setTimeout(() => {
-            // Regenera o diagnóstico (função determinística — mesmo input = mesmo output)
-            const diag = gerarDiagnosticoLocal();
+            // 1. Calcular potencial do atleta (contexto + classificação)
+            const classificacao = atleta.score >= 90 ? 'ELITE'
+                : atleta.score >= 80 ? 'AVANÇADO'
+                    : atleta.score >= 70 ? 'ATLÉTICO'
+                        : atleta.score >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE';
+            const pot = calcularPotencialAtleta(classificacao, atleta.score, atleta.contexto);
+            setPotencial(pot);
+
+            // 2. Reanalisar diagnóstico com o potencial (score meta dinâmico)
+            const diag = gerarDiagnosticoLocal(pot);
             setDiagnostico(diag);
 
-            const resultado = gerarPlanoTreino(atletaId, atleta.name, diag, atleta.contexto);
+            // 3. Gerar treino consumindo o potencial como fonte única
+            const resultado = gerarPlanoTreino(atletaId, atleta.name, diag, pot);
             setPlano(resultado);
             setEstado('ready');
         }, 1800);
@@ -591,7 +620,7 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
                     {/* Conteúdo Gerado */}
                     {plano && diagnostico && (estado === 'ready' || estado === 'saving' || estado === 'saved') && (
                         <div className="animate-in fade-in duration-500">
-                            <SecaoResumoDiagnostico diagnostico={diagnostico} />
+                            <SecaoResumoDiagnostico diagnostico={diagnostico} potencial={potencial ?? undefined} />
                             <SecaoVisaoAnual plano={plano} />
                             <SecaoTrimestreAtual plano={plano} />
                             <SecaoDivisao plano={plano} />

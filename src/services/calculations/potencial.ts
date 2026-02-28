@@ -18,18 +18,20 @@
 export type NivelAtleta = 'INICIANTE' | 'INTERMEDIÁRIO' | 'AVANÇADO';
 
 /**
- * Estrutura genérica de contexto do atleta.
- * Cada campo é um objeto com `descricao` (texto livre salvo no banco).
+ * Contexto armazenado no banco — espelha o tipo de AthleteContextSection.tsx.
+ * Campos snake_case, valores string simples.
  */
 export interface ContextoAtleta {
-    problemasSaude?: { descricao: string };
-    medicacoesUso?: { descricao: string };
-    doresLesoes?: { descricao: string };
-    estiloVida?: { descricao: string };
-    profissao?: { descricao: string };
-    historicoTreino?: { descricao: string };
-    historicoDietas?: { descricao: string };
-    exames?: { descricao: string };
+    problemas_saude?: string;
+    medicacoes?: string;
+    dores_lesoes?: string;
+    exames?: string;
+    estilo_vida?: string;
+    profissao?: string;
+    historico_treino?: string;
+    historico_dietas?: string;
+    atualizado_em?: string;
+    atualizado_por?: string;
 }
 
 export interface PotencialAtleta {
@@ -66,30 +68,41 @@ export interface PotencialAtleta {
  */
 function detectarNivel(
     classificacaoAtual: string,
-    historicoTreino: string
+    historicoTreino: string,
+    scoreAtual: number
 ): NivelAtleta {
     const texto = historicoTreino.toLowerCase();
-    const classe = classificacaoAtual.toUpperCase();
+    const classe = classificacaoAtual.toUpperCase().trim();
 
-    // Indicadores de INICIANTE (prioridade sobre classificação estética)
+    // ── Prioridade 1: a própria classificação já diz o nível ──────────────
+    if (classe === 'INICIANTE' || classe === 'INÍCIO' || classe === 'CAMINHO') {
+        return 'INICIANTE';
+    }
+    if (classe === 'ELITE' || classe === 'AVANÇADO') {
+        return 'AVANÇADO';
+    }
+
+    // ── Prioridade 2: texto do histórico de treino ─────────────────────────
     const indicadoresIniciante = [
         /\b1 ano\b/, /\bin[ií]cio\b/, /come[çc]ou/, /come[çc]ando/,
         /pouco tempo/, /nunca treinou/, /menos de 2 anos/, /recentemente/
     ];
-    if (indicadoresIniciante.some(r => r.test(texto)) || classe === 'INÍCIO' || classe === 'CAMINHO') {
+    if (indicadoresIniciante.some(r => r.test(texto))) {
         return 'INICIANTE';
     }
 
-    // Indicadores de AVANÇADO
     const indicadoresAvancado = [
         /\b[5-9] anos\b/, /\b\d{2} anos\b/, /alto n[ií]vel/, /competidor/,
         /federado/, /atleta profissional/
     ];
-    if (indicadoresAvancado.some(r => r.test(texto)) || classe === 'ELITE') {
+    if (indicadoresAvancado.some(r => r.test(texto))) {
         return 'AVANÇADO';
     }
 
-    // Default: INTERMEDIÁRIO
+    // ── Prioridade 3: fallback por score (segurança extra) ────────────────
+    if (scoreAtual < 60) return 'INICIANTE';
+    if (scoreAtual >= 80) return 'AVANÇADO';
+
     return 'INTERMEDIÁRIO';
 }
 
@@ -166,8 +179,8 @@ function gerarAlertas(contexto: ContextoAtleta | undefined): {
     let isGlp1 = false;
     let temLesoes = false;
 
-    // Medicações
-    const meds = (contexto.medicacoesUso?.descricao || '').toLowerCase();
+    // Medicações (campo real: medicacoes)
+    const meds = (contexto.medicacoes || '').toLowerCase();
     if (/tirzepatida|semaglutida|ozempic|wegovy|glp[-\s]?1/i.test(meds)) {
         isGlp1 = true;
         alertas.push('GLP-1 em uso: monitorar energia e apetite antes dos treinos. Hidratação redobrada.');
@@ -181,29 +194,29 @@ function gerarAlertas(contexto: ContextoAtleta | undefined): {
         fatorRecuperacao -= 0.05;
     }
 
-    // Lesões / dores
-    const lesoes = (contexto.doresLesoes?.descricao || '').toLowerCase();
+    // Lesões / dores (campo real: dores_lesoes)
+    const lesoes = (contexto.dores_lesoes || '').toLowerCase();
     if (lesoes && !/não informado|nenhum|sem dor|sem lesão/i.test(lesoes)) {
         temLesoes = true;
         fatorRecuperacao -= 0.15;
-        alertas.push(`Restrição física detectada: "${contexto.doresLesoes?.descricao}". Adaptar exercícios conforme orientação médica.`);
+        alertas.push(`Restrição física detectada: "${contexto.dores_lesoes}". Adaptar exercícios conforme orientação médica.`);
     }
 
-    // Profissão física
-    const profissao = (contexto.profissao?.descricao || '').toLowerCase();
-    if (/obra|construção|campo|operador|pedreiro|encanador|eletricista|farm/i.test(profissao)) {
+    // Profissão física (campo real: profissao)
+    const profissao = (contexto.profissao || '').toLowerCase();
+    if (/obra|constru|pedreiro|encanador|eletricista|campo|operador|carregador|motorista|entregador|militar|policia|agr[ií]cola|mec[aâ]nico|bombeiro/i.test(profissao)) {
         fatorRecuperacao -= 0.10;
         alertas.push('Profissão com alta demanda física: priorizar recuperação. Considerar 48h de descanso entre treinos de membros inferiores.');
     }
 
-    // Problemas de saúde
-    const saude = (contexto.problemasSaude?.descricao || '').toLowerCase();
+    // Problemas de saúde (campo real: problemas_saude)
+    const saude = (contexto.problemas_saude || '').toLowerCase();
     if (saude && !/não informado|nenhum/i.test(saude)) {
         if (/ferritina|anemia/i.test(saude)) {
             fatorRecuperacao -= 0.10;
             alertas.push('Ferritina baixa/anemia: monitorar disposição. Suplementação de ferro conforme orientação médica pode otimizar resultados.');
         } else {
-            alertas.push(`Condição de saúde: "${contexto.problemasSaude?.descricao}". Acompanhe com equipe médica.`);
+            alertas.push(`Condição de saúde: "${contexto.problemas_saude}". Acompanhe com equipe médica.`);
         }
     }
 
@@ -236,10 +249,10 @@ export function calcularPotencialAtleta(
     scoreAtual: number,
     contexto?: ContextoAtleta
 ): PotencialAtleta {
-    const historicoTreino = contexto?.historicoTreino?.descricao || '';
+    const historicoTreino = contexto?.historico_treino || '';
 
     // 1. Detectar nível
-    const nivel = detectarNivel(classificacaoAtual, historicoTreino);
+    const nivel = detectarNivel(classificacaoAtual, historicoTreino, scoreAtual);
 
     // 2. Analisar contexto e gerar alertas
     const {
@@ -265,8 +278,9 @@ export function calcularPotencialAtleta(
     const fatorPrioAlta = nivel === 'INICIANTE' ? 1.35 : nivel === 'INTERMEDIÁRIO' ? 1.50 : 1.60;
     const fatorPrioMedia = nivel === 'INICIANTE' ? 1.15 : nivel === 'INTERMEDIÁRIO' ? 1.25 : 1.30;
 
-    // 6. Frequência e divisão
-    const frequenciaSemanal = nivel === 'INICIANTE' ? 3 : nivel === 'INTERMEDIÁRIO' ? 4 : 5;
+    // 6. Frequência: extrai do texto do histórico ("4 vezes na semana" → 4), senao usa nível
+    const freqDoTexto = inferirFreqTreino(contexto);
+    const frequenciaSemanal = freqDoTexto ?? (nivel === 'INICIANTE' ? 3 : nivel === 'INTERMEDIÁRIO' ? 4 : 5);
     const divisao = frequenciaSemanal >= 5 ? 'ABCDE' : frequenciaSemanal >= 4 ? 'ABCD' : 'ABC';
 
     return {
@@ -281,4 +295,28 @@ export function calcularPotencialAtleta(
         divisao: divisao as 'ABC' | 'ABCD' | 'ABCDE',
         observacoesContexto: alertas,
     };
+}
+
+/**
+ * Infere o nível de atividade diária (NEAT) a partir do contexto do atleta.
+ * Usado em DiagnosticoInput.nivelAtividade para calcular corretamente TMB+NEAT e TDEE.
+ * @returns 'SEDENTARIO' | 'LEVE' | 'MODERADO'
+ */
+export function inferirNivelAtividade(contexto?: ContextoAtleta): 'SEDENTARIO' | 'LEVE' | 'MODERADO' {
+    const profissao = (contexto?.profissao?.descricao || '').toLowerCase();
+    const estilo = (contexto?.estiloVida?.descricao || '').toLowerCase();
+    const texto = profissao + ' ' + estilo;
+
+    // NEAT ALTO: trabalho físico intenso, obras, campo, rua
+    if (/obra|constru|pedreiro|encanador|eletricista|campo|operador|carregador|motorista|entregador|militar|policia|agr[ií]cola|mec[aâ]nico|bombeiro/i.test(texto)) {
+        return 'MODERADO';
+    }
+
+    // NEAT LEVE: em pé parte do dia, andando
+    if (/vendedor|professor|enfermeiro|balconista|gar[cç]|comerci|varejo|supermercado|escola|hospital|loja|fisio|recepci|anda bastante/i.test(texto)) {
+        return 'LEVE';
+    }
+
+    // Default: sedentário
+    return 'SEDENTARIO';
 }
