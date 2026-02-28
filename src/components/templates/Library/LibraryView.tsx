@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronRight, Library, Flame, Dumbbell, Beef, Scale, Activity } from 'lucide-react';
+import { ChevronRight, Library, Flame, Dumbbell, Beef, Scale, Activity, GitBranch } from 'lucide-react';
 
 interface LibraryViewProps {
     onNavigateToSource: (sourceId: string) => void;
@@ -64,6 +64,16 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onNavigateToSource }) 
             bgIconColor: 'bg-cyan-500/10',
             icon: <Activity className="w-5 h-5 text-cyan-400" />,
             badges: ['Plano de Treino', 'Hipertrofia'],
+            version: 'v1.0',
+            lastUpdate: 'Fev 2026'
+        },
+        {
+            id: 'periodization',
+            title: 'Periodização de Treino',
+            description: 'Modelos LP, DUP, WUP e Blocos — evidências sobre periodizado vs não-periodizado, deload (consenso Delphi), progressão de carga e estrutura de mesociclos.',
+            bgIconColor: 'bg-indigo-500/10',
+            icon: <GitBranch className="w-5 h-5 text-indigo-400" />,
+            badges: ['Plano de Treino', 'Evolução'],
             version: 'v1.0',
             lastUpdate: 'Fev 2026'
         }

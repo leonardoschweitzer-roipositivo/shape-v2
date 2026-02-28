@@ -46,6 +46,7 @@ import {
   ProteinSourceView,
   EnergyBalanceSourceView,
   TrainingFrequencySourceView,
+  PeriodizationSourceView,
   type ProfileType
 } from '@/components';
 // import { GamificationPage } from './pages/GamificationPage'; // DISABLED - Feature para depois
@@ -59,7 +60,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useSupabaseSync } from '@/hooks/useSupabaseSync';
 import { PersonalAthlete, MeasurementHistory } from '@/mocks/personal';
 
-type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details' | 'terms' | 'privacy' | 'my-record' | 'gamification' | 'athlete-portal' | 'personal-details' | 'student-details' | 'diagnostico' | 'treino-plano' | 'dieta-plano' | 'library' | 'library-golden-ratio' | 'library-metabolism' | 'library-training-volume' | 'library-protein' | 'library-energy-balance' | 'library-training-frequency';
+type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details' | 'terms' | 'privacy' | 'my-record' | 'gamification' | 'athlete-portal' | 'personal-details' | 'student-details' | 'diagnostico' | 'treino-plano' | 'dieta-plano' | 'library' | 'library-golden-ratio' | 'library-metabolism' | 'library-training-volume' | 'library-protein' | 'library-energy-balance' | 'library-training-frequency' | 'library-periodization';
 
 const App: React.FC = () => {
   console.log('🎯 App component rendering...');
@@ -300,6 +301,7 @@ const App: React.FC = () => {
         if (id === 'protein') setCurrentView('library-protein');
         if (id === 'energy-balance') setCurrentView('library-energy-balance');
         if (id === 'training-frequency') setCurrentView('library-training-frequency');
+        if (id === 'periodization') setCurrentView('library-periodization');
       }} />;
     }
     if (currentView === 'library-golden-ratio') {
@@ -319,6 +321,9 @@ const App: React.FC = () => {
     }
     if (currentView === 'library-training-frequency') {
       return <TrainingFrequencySourceView onBack={() => setCurrentView('library')} />;
+    }
+    if (currentView === 'library-periodization') {
+      return <PeriodizationSourceView onBack={() => setCurrentView('library')} />;
     }
 
     // Se usuário é Academia, renderiza views específicas
@@ -690,6 +695,7 @@ const App: React.FC = () => {
     if (currentView === 'library-protein') return 'FONTE: PROTEÍNA PARA HIPERTROFIA';
     if (currentView === 'library-energy-balance') return 'FONTE: DÉFICIT E SUPERÁVIT CALÓRICO';
     if (currentView === 'library-training-frequency') return 'FONTE: FREQUÊNCIA DE TREINO';
+    if (currentView === 'library-periodization') return 'FONTE: PERIODIZAÇÃO DE TREINO';
 
     if (userProfile === 'academia') {
       switch (currentView) {
