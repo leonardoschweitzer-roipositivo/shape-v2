@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronRight, Library, Flame, Dumbbell, Beef, Scale } from 'lucide-react';
+import { ChevronRight, Library, Flame, Dumbbell, Beef, Scale, Activity } from 'lucide-react';
 
 interface LibraryViewProps {
     onNavigateToSource: (sourceId: string) => void;
@@ -54,6 +54,16 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onNavigateToSource }) 
             bgIconColor: 'bg-emerald-500/10',
             icon: <Scale className="w-5 h-5 text-emerald-400" />,
             badges: ['Plano de Dieta', 'Composição Corporal'],
+            version: 'v1.0',
+            lastUpdate: 'Fev 2026'
+        },
+        {
+            id: 'training-frequency',
+            title: 'Frequência de Treino',
+            description: 'MPS timeline, meta-análises de Schoenfeld (2016/2019), frequência ótima por grupo muscular, comparação de splits e trade-off volume/sessão vs frequência.',
+            bgIconColor: 'bg-cyan-500/10',
+            icon: <Activity className="w-5 h-5 text-cyan-400" />,
+            badges: ['Plano de Treino', 'Hipertrofia'],
             version: 'v1.0',
             lastUpdate: 'Fev 2026'
         }
