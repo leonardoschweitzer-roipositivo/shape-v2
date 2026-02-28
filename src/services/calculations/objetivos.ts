@@ -113,7 +113,9 @@ export function recomendarObjetivo(input: InputRecomendacao): RecomendacaoObjeti
     const bfBaixo = sexo === 'M' ? 12 : 20;
     const ffmiAlto = sexo === 'M' ? 22 : 18;
     const adonisIdeal = 1.618;
-    const adonisLimite = 1.4;
+    // Adônis < 1.55 = ainda longe do ideal estético (ratio ombros÷cintura),
+    // acima de 1.55 o atleta já tem bom V-taper e outras prioridades fazem mais sentido
+    const adonisLimite = 1.55;
 
     // ─── Caso 1: BF muito alto — CUT obrigatório ───
     if (bf > bfAlto) {
@@ -153,12 +155,13 @@ export function recomendarObjetivo(input: InputRecomendacao): RecomendacaoObjeti
         };
     }
 
-    // ─── Caso 4: Score alto / proporções fora — GOLDEN_RATIO ───
-    if (score >= 75 && bf < bfModerado) {
+    // ─── Caso 4: Score intermediário-alto + BF controlado — GOLDEN_RATIO ───
+    // Atleta treinado com BF ok mas proporções ainda longe do ideal → GOLDEN_RATIO é o próximo nível
+    if (score >= 65 && bf < bfModerado) {
         return {
             objetivo: 'GOLDEN_RATIO',
-            confianca: 'MEDIA',
-            justificativa: `Com score de ${score} e composição corporal já controlada, o próximo nível é refinar as proporções áureas — o diferencial estético do VITRÚVIO.`,
+            confianca: score >= 75 ? 'ALTA' : 'MEDIA',
+            justificativa: `Com score de ${score} e BF controlado (${bf}%), você já saiu da fase de composição básica. O próximo nível é escultural: refinar as proporções áureas — ombros, V-taper, Índice de Adônis — é o que vai fazer a diferença real no shape.`,
             alternativa: nivel === 'AVANÇADO' || nivel === 'ATLÉTICO' || nivel === 'ELITE' ? 'MAINTAIN' : 'RECOMP',
         };
     }

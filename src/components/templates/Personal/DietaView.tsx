@@ -31,6 +31,7 @@ import {
     ArrowRight,
     Activity,
     TrendingUp,
+    ChevronDown,
 } from 'lucide-react';
 import { useDataStore } from '@/stores/dataStore';
 import {
@@ -101,31 +102,38 @@ const EvolutionStepper: React.FC<{ etapaAtual: number }> = ({ etapaAtual }) => {
     );
 };
 
+/** Card de seção — Gold Standard alinhado com DiagnosticoView */
 const SectionCard: React.FC<{
     icon: React.ElementType;
     title: string;
     subtitle?: string;
     children: React.ReactNode;
 }> = ({ icon: Icon, title, subtitle, children }) => (
-    <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-8 mb-8">
-        <div className="mb-6">
-            <div className="flex items-center gap-3 mb-1">
-                <Icon size={20} className="text-primary" />
-                <h3 className="text-base font-bold text-white uppercase tracking-widest">{title}</h3>
+    <div className="bg-[#131B2C] border border-white/10 rounded-2xl overflow-hidden mb-6">
+        <div className="px-6 py-5 border-b border-white/10 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <Icon size={22} className="text-primary" />
             </div>
-            {subtitle && <p className="text-xs text-gray-500 ml-8">{subtitle}</p>}
+            <div>
+                <h3 className="text-lg font-bold text-white uppercase tracking-wider">{title}</h3>
+                {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
+            </div>
         </div>
-        {children}
+        <div className="p-6">{children}</div>
     </div>
 );
 
+/** Box de insight do Vitrúvio — Gold Standard */
 const InsightBox: React.FC<{ text: string; title?: string }> = ({ text, title = 'Análise Vitrúvio IA' }) => (
-    <div className="mt-6 bg-primary/5 border border-primary/20 rounded-xl p-5">
-        <p className="text-[10px] uppercase tracking-widest text-primary mb-3 font-bold flex items-center gap-2">
-            <Bot size={12} /> {title}
-        </p>
-        <p className="text-sm text-gray-300 leading-relaxed italic">"{text}"</p>
-        <p className="text-right text-[10px] text-gray-600 mt-3 uppercase tracking-widest">— Vitrúvio IA</p>
+    <div className="bg-primary/5 border border-primary/20 rounded-xl p-6 mt-4">
+        <div className="flex items-start gap-4">
+            <Bot size={26} className="text-primary mt-0.5 shrink-0" />
+            <div>
+                <p className="text-base font-bold text-primary mb-2 uppercase tracking-wider">{title}</p>
+                <p className="text-lg text-gray-300 leading-relaxed">"{text}"</p>
+                <p className="text-xs text-gray-600 mt-3 text-right">— VITRÚVIO IA</p>
+            </div>
+        </div>
     </div>
 );
 
@@ -220,6 +228,15 @@ export const DietaView: React.FC<DietaViewProps> = ({
     const [diagnostico, setDiagnostico] = useState<DiagnosticoDados | null>(null);
     const [showDescanso, setShowDescanso] = useState(false);
     const [objetivoAtleta, setObjetivoAtleta] = useState<ObjetivoVitruvio>('RECOMP');
+    const [cardapioAberto, setCardapioAberto] = useState<Set<string>>(new Set());
+
+    const toggleCardapio = (nome: string) => {
+        setCardapioAberto(prev => {
+            const next = new Set(prev);
+            next.has(nome) ? next.delete(nome) : next.add(nome);
+            return next;
+        });
+    };
 
     const nomeAtleta = atleta?.name ?? 'Atleta';
 
@@ -290,8 +307,8 @@ export const DietaView: React.FC<DietaViewProps> = ({
             });
             setObjetivoAtleta(rec.objetivo);
 
-            // 4. Gerar Plano de Dieta
-            const resultado = gerarPlanoDieta(atletaId, atleta.name, diag, pot);
+            // 4. Gerar Plano de Dieta (passando o objetivo Estrela do Norte)
+            const resultado = gerarPlanoDieta(atletaId, atleta.name, diag, pot, rec.objetivo);
             setPlano(resultado);
             setEstado('ready');
         }, 1200);
@@ -584,28 +601,51 @@ export const DietaView: React.FC<DietaViewProps> = ({
                         </SectionCard>
 
                         {/* SEÇÃO 4: Cardápio */}
-                        <SectionCard icon={LayoutList} title="Exemplo de Cardápio" subtitle="Sugestões práticas de alimentos por refeição">
-                            <div className="space-y-4">
-                                {plano.cardapio.map((refeicao) => (
-                                    <div key={refeicao.nome} className="bg-white/[0.02] rounded-xl border border-white/5 p-5">
-                                        <p className="text-sm font-bold text-white mb-1">{refeicao.nome}</p>
-                                        <p className="text-xs text-gray-600 mb-4">{refeicao.macros}</p>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            {refeicao.opcoes.map((opcao) => (
-                                                <div key={opcao.letra} className="bg-white/[0.02] rounded-lg border border-white/[0.04] p-3">
-                                                    <p className="text-[10px] font-black text-primary/70 uppercase tracking-widest mb-2">Opção {opcao.letra}</p>
-                                                    <ul className="space-y-1">
-                                                        {opcao.itens.map((item, i) => (
-                                                            <li key={i} className="text-xs text-gray-400 flex items-start gap-1.5">
-                                                                <span className="text-gray-600 mt-0.5">•</span> {item}
-                                                            </li>
-                                                        ))}
-                                                    </ul>
+                        <SectionCard icon={LayoutList} title="Exemplo de Cardápio" subtitle="Clique em cada refeição para ver as opções">
+                            <div className="divide-y divide-white/5 rounded-xl overflow-hidden border border-white/5">
+                                {plano.cardapio.map((refeicao, idx) => {
+                                    const isOpen = cardapioAberto.has(refeicao.nome);
+                                    return (
+                                        <div key={refeicao.nome}>
+                                            {/* Header do accordion */}
+                                            <button
+                                                onClick={() => toggleCardapio(refeicao.nome)}
+                                                className={`w-full flex items-center justify-between px-5 py-4 text-left transition-colors ${isOpen ? 'bg-primary/5' : 'bg-white/[0.02] hover:bg-white/[0.04]'
+                                                    }`}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-1.5 h-1.5 rounded-full transition-colors ${isOpen ? 'bg-primary' : 'bg-gray-600'}`} />
+                                                    <span className="text-sm font-bold text-white">{refeicao.nome}</span>
+                                                    <span className="text-xs text-gray-600">{refeicao.macros}</span>
                                                 </div>
-                                            ))}
+                                                <ChevronDown
+                                                    size={16}
+                                                    className={`text-gray-500 transition-transform duration-200 ${isOpen ? 'rotate-180 text-primary' : ''}`}
+                                                />
+                                            </button>
+
+                                            {/* Corpo expandido */}
+                                            {isOpen && (
+                                                <div className="px-5 pb-5 pt-4 bg-white/[0.01] animate-in fade-in slide-in-from-top-1 duration-200">
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                        {refeicao.opcoes.map((opcao) => (
+                                                            <div key={opcao.letra} className="bg-white/[0.03] rounded-xl border border-white/[0.05] p-4">
+                                                                <p className="text-xs font-black text-primary/70 uppercase tracking-widest mb-3">Opção {opcao.letra}</p>
+                                                                <ul className="space-y-1.5">
+                                                                    {opcao.itens.map((item, i) => (
+                                                                        <li key={i} className="text-sm text-gray-400 flex items-start gap-1.5">
+                                                                            <span className="text-gray-600 mt-0.5">•</span> {item}
+                                                                        </li>
+                                                                    ))}
+                                                                </ul>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
 
                             <div className="mt-6 grid grid-cols-3 gap-3">
@@ -615,10 +655,10 @@ export const DietaView: React.FC<DietaViewProps> = ({
                                     { label: '🥑 Gorduras', items: plano.alimentosSugeridos.gorduras, color: 'border-rose-500/10' },
                                 ].map(g => (
                                     <div key={g.label} className={`bg-white/[0.02] rounded-xl border p-4 ${g.color}`}>
-                                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">{g.label}</p>
-                                        <ul className="space-y-1">
+                                        <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">{g.label}</p>
+                                        <ul className="space-y-1.5">
                                             {g.items.map((item, i) => (
-                                                <li key={i} className="text-xs text-gray-400 flex items-start gap-1.5">
+                                                <li key={i} className="text-sm text-gray-400 flex items-start gap-1.5">
                                                     <span className="text-gray-600">•</span> {item}
                                                 </li>
                                             ))}
@@ -634,22 +674,22 @@ export const DietaView: React.FC<DietaViewProps> = ({
                                 <table className="w-full text-sm">
                                     <thead>
                                         <tr className="border-b border-white/5">
-                                            <th className="text-left text-[10px] text-gray-600 uppercase tracking-widest font-bold pb-3 pr-4">Semana</th>
-                                            <th className="text-left text-[10px] text-gray-600 uppercase tracking-widest font-bold pb-3 pr-4">Fase</th>
-                                            <th className="text-right text-[10px] text-gray-600 uppercase tracking-widest font-bold pb-3 pr-4">Peso Esperado</th>
-                                            <th className="text-left text-[10px] text-gray-600 uppercase tracking-widest font-bold pb-3">Ação</th>
+                                            <th className="text-left text-xs text-gray-500 uppercase tracking-widest font-bold pb-3 pr-4">Semana</th>
+                                            <th className="text-left text-xs text-gray-500 uppercase tracking-widest font-bold pb-3 pr-4">Fase</th>
+                                            <th className="text-right text-xs text-gray-500 uppercase tracking-widest font-bold pb-3 pr-4">Peso Esperado</th>
+                                            <th className="text-left text-xs text-gray-500 uppercase tracking-widest font-bold pb-3">Ação</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-white/[0.03]">
                                         {plano.checkpoints.map((c, i) => (
                                             <tr key={i} className="hover:bg-white/[0.02]">
-                                                <td className="py-3 pr-4 text-gray-500 text-xs">{c.semana}</td>
-                                                <td className="py-3 pr-4 text-gray-300 font-medium">{c.label}</td>
-                                                <td className="py-3 pr-4 text-right font-bold text-white">
+                                                <td className="py-3 pr-4 text-gray-500 text-sm">{c.semana}</td>
+                                                <td className="py-3 pr-4 text-gray-300 font-medium text-sm">{c.label}</td>
+                                                <td className="py-3 pr-4 text-right font-bold text-white text-sm">
                                                     {c.pesoEsperado} kg
                                                     {c.tolerancia > 0 && <span className="text-gray-600 text-xs"> ±{c.tolerancia}</span>}
                                                 </td>
-                                                <td className="py-3 text-xs text-gray-500">{c.acao}</td>
+                                                <td className="py-3 text-sm text-gray-400">{c.acao}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -658,20 +698,20 @@ export const DietaView: React.FC<DietaViewProps> = ({
 
                             <div className="grid grid-cols-2 gap-4 mb-6">
                                 <div className="bg-emerald-500/5 rounded-xl border border-emerald-500/10 p-4">
-                                    <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-3">✅ Fazer</p>
-                                    <ul className="space-y-1.5">
+                                    <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-3">✅ Fazer</p>
+                                    <ul className="space-y-2">
                                         {plano.comoPesar.fazer.map((f, i) => (
-                                            <li key={i} className="text-xs text-gray-400 flex items-start gap-2">
+                                            <li key={i} className="text-sm text-gray-400 flex items-start gap-2">
                                                 <span className="text-emerald-500 mt-0.5">•</span> {f}
                                             </li>
                                         ))}
                                     </ul>
                                 </div>
                                 <div className="bg-red-500/5 rounded-xl border border-red-500/10 p-4">
-                                    <p className="text-[10px] font-bold text-red-400 uppercase tracking-widest mb-3">❌ Não Fazer</p>
-                                    <ul className="space-y-1.5">
+                                    <p className="text-xs font-bold text-red-400 uppercase tracking-widest mb-3">❌ Não Fazer</p>
+                                    <ul className="space-y-2">
                                         {plano.comoPesar.naoFazer.map((f, i) => (
-                                            <li key={i} className="text-xs text-gray-400 flex items-start gap-2">
+                                            <li key={i} className="text-sm text-gray-400 flex items-start gap-2">
                                                 <span className="text-red-500 mt-0.5">•</span> {f}
                                             </li>
                                         ))}
@@ -680,7 +720,7 @@ export const DietaView: React.FC<DietaViewProps> = ({
                             </div>
 
                             <div className="mb-6">
-                                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">🔧 Regras de Ajuste</p>
+                                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">🔧 Regras de Ajuste</p>
                                 <div className="space-y-2">
                                     {plano.regrasAjuste.map((r, i) => {
                                         const colorMap = { ok: 'border-emerald-500/20 bg-emerald-500/5', warning: 'border-amber-500/20 bg-amber-500/5', danger: 'border-red-500/20 bg-red-500/5' };
@@ -690,8 +730,8 @@ export const DietaView: React.FC<DietaViewProps> = ({
                                             <div key={i} className={`rounded-xl border p-4 flex items-start gap-3 ${colorMap[r.tipo]}`}>
                                                 <Icon size={16} className={`${iconColor} mt-0.5 shrink-0`} />
                                                 <div>
-                                                    <p className="text-xs text-gray-400 font-medium">{r.cenario}</p>
-                                                    <p className="text-xs text-gray-500 mt-0.5">{r.ajuste}</p>
+                                                    <p className="text-sm text-gray-300 font-medium">{r.cenario}</p>
+                                                    <p className="text-sm text-gray-500 mt-0.5">{r.ajuste}</p>
                                                 </div>
                                             </div>
                                         );
@@ -700,22 +740,22 @@ export const DietaView: React.FC<DietaViewProps> = ({
                             </div>
 
                             <div>
-                                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">📈 Outros Indicadores</p>
+                                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">📈 Outros Indicadores</p>
                                 <div className="overflow-x-auto">
-                                    <table className="w-full text-xs">
+                                    <table className="w-full text-sm">
                                         <thead>
                                             <tr className="border-b border-white/5">
-                                                <th className="text-left text-gray-600 pb-2 pr-4">Indicador</th>
-                                                <th className="text-left text-gray-600 pb-2 pr-4">Frequência</th>
-                                                <th className="text-left text-gray-600 pb-2">Esperado</th>
+                                                <th className="text-left text-xs text-gray-600 pb-2 pr-4">Indicador</th>
+                                                <th className="text-left text-xs text-gray-600 pb-2 pr-4">Frequência</th>
+                                                <th className="text-left text-xs text-gray-600 pb-2">Esperado</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-white/[0.03]">
                                             {plano.outrosIndicadores.map((o, i) => (
                                                 <tr key={i}>
-                                                    <td className="py-2 pr-4 text-gray-300">{o.indicador}</td>
-                                                    <td className="py-2 pr-4 text-gray-500">{o.frequencia}</td>
-                                                    <td className="py-2 text-gray-500">{o.esperado}</td>
+                                                    <td className="py-2.5 pr-4 text-gray-300">{o.indicador}</td>
+                                                    <td className="py-2.5 pr-4 text-gray-500">{o.frequencia}</td>
+                                                    <td className="py-2.5 text-gray-500">{o.esperado}</td>
                                                 </tr>
                                             ))}
                                         </tbody>

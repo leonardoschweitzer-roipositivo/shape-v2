@@ -10,6 +10,7 @@
 
 import { type DiagnosticoDados } from './diagnostico';
 import { type PotencialAtleta } from './potencial';
+import { type ObjetivoVitruvio } from './objetivos';
 import { supabase } from '@/services/supabase';
 
 // ═══════════════════════════════════════════════════════════
@@ -239,13 +240,14 @@ export function gerarPlanoDieta(
     atletaId: string,
     nomeAtleta: string,
     diagnostico: DiagnosticoDados,
-    potencial: PotencialAtleta
+    potencial: PotencialAtleta,
+    objetivo: ObjetivoVitruvio = 'RECOMP'
 ): PlanoDieta {
     const { composicaoAtual, metasComposicao, taxas } = diagnostico;
     const tdee = taxas.tdee;
     const peso = composicaoAtual.peso;
     const bfAtual = composicaoAtual.gorduraPct;
-    const bfMeta = metasComposicao.gorduraPctMeta;
+    const bfMeta = metasComposicao.gordura12Meses;
     const nivel = potencial.nivel;
     const freq = potencial.frequenciaSemanal;
 
@@ -254,8 +256,20 @@ export function gerarPlanoDieta(
     const isGlp1 = /glp-1|tirzepatida|semaglutida|ozempic/i.test(obsTexto);
     const isAnabolizante = /protocolo hormonal|anaboliz|trt/i.test(obsTexto);
 
-    // 1. Fase
-    const fase = detectarFase(bfAtual, bfMeta, 'M');
+    // 1. Fase — o objetivo GOLDEN_RATIO force BULKING para construir proporções
+    // Outros objetivos também influenciam a fase:
+    const faseDoObjetivo = (obj: ObjetivoVitruvio, bfDiff: number): FaseDieta => {
+        if (obj === 'CUT') return 'CUTTING';
+        if (obj === 'BULK') return 'BULKING';
+        if (obj === 'MAINTAIN') return 'MANUTENCAO';
+        if (obj === 'GOLDEN_RATIO') {
+            // Físico proporcional: se BF confortável, prioriza BULKING lean para ganhar onde falta
+            return bfDiff <= 3 ? 'BULKING' : 'RECOMPOSICAO';
+        }
+        if (obj === 'TRANSFORM') return bfAtual > bfMeta + 2 ? 'CUTTING' : 'RECOMPOSICAO';
+        return detectarFase(bfAtual, bfMeta, 'M');
+    };
+    const fase = faseDoObjetivo(objetivo, bfAtual - bfMeta);
     const faseLabels: Record<FaseDieta, string> = {
         CUTTING: 'CUTTING — Perda de Gordura',
         RECOMPOSICAO: 'RECOMPOSIÇÃO CORPORAL',
@@ -354,8 +368,27 @@ export function gerarPlanoDieta(
         { cenario: 'Peso subindo', ajuste: 'Revisar aderência. Se ok, reduzir 150 kcal nos carbs.', tipo: 'danger' },
     ];
 
-    // 8. Considerações
+    // 8. Considerações — alinhadas ao objetivo Estrela do Norte
     const contextoConsiderado: string[] = [];
+
+    // Objetivo Estrela do Norte sempre em destaque
+    const objetivoLabels: Record<ObjetivoVitruvio, string> = {
+        GOLDEN_RATIO: 'Físico Proporcional (Razão Áurea)',
+        BULK: 'Ganhar Massa',
+        CUT: 'Emagrecer / Definir',
+        RECOMP: 'Recomposição Corporal',
+        TRANSFORM: 'Transformação Completa',
+        MAINTAIN: 'Manutenção',
+    };
+    contextoConsiderado.push(`Objetivo Estrela do Norte: ${objetivoLabels[objetivo]} → toda a estratégia calórica e de macros foi calibrada para servir esse objetivo`);
+
+    if (objetivo === 'GOLDEN_RATIO') {
+        contextoConsiderado.push('Físico Proporcional exige BULKING lean: superávit controlado para adicionar massa nos grupos deficitários sem acumular gordura excessiva');
+        contextoConsiderado.push('Proporcionalidade áurea requer foco cirúrgico: proteína alta (síntese muscular) + carboidratos nos treinos (energia para volume de treinamento nos pontos fracos)');
+    }
+    if (objetivo === 'CUT') contextoConsiderado.push('Objetivo CUT → déficit mais agressivo para revelar definição rapidamente');
+    if (objetivo === 'TRANSFORM') contextoConsiderado.push('Transformação completa → fases estratégicas: primeiro eliminar gordura, depois construir massa qualificada');
+
     if (isGlp1) contextoConsiderado.push('GLP-1 em uso → déficit conservador calculado; apetite naturalmente reduzido já auxilia o déficit');
     if (isAnabolizante) contextoConsiderado.push('Protocolo hormonal → proteína 2.2 g/kg para aproveitar maior síntese proteica');
     if (nivel === 'INICIANTE') contextoConsiderado.push('Atleta iniciante → déficit conservador para preservar performance e motivação na fase inicial');
@@ -365,16 +398,122 @@ export function gerarPlanoDieta(
         contextoConsiderado.push(`${a} → carboidratos ajustados para cobrir alto NEAT além do treino`)
     );
 
-    const pontosAtencao = [
+    // Pontos de atenção customizados por objetivo
+    const pontosAtencao = objetivo === 'GOLDEN_RATIO' ? [
+        { titulo: '📐 PROPORCIONALIDADE ACIMA DE TUDO', descricao: 'O foco não é apenas ganhar peso — é ganhar nos lugares certos. Grupos lagging (deltoides, panturrilha) têm prioridade absoluta nos treinos. A dieta suporta esse volume.' },
+        { titulo: '🥩 PROTEÍNA: BASE DAS PROPORÇÕES', descricao: 'Alta ingestão proteica não é opcional. É o combustível para reconstruir cada grupo deficitário. Não pule refeições proteicas, especialmente pós-treino.' },
+        { titulo: '⚡ CARBO NO TREINO, QUALIDADE NO DESCANSO', descricao: 'Carboidratos altos nos dias de treino garantem energia para sessões de alta intensidade. Nos dias de descanso, reduzir carbs previne acúmulo de gordura desnecessário.' },
+        { titulo: '📊 MEÇA MAIS DO QUE PESE', descricao: 'Para Físico Proporcional, a fita métrica importa mais que a balança. Monitore ombros, cintura, braços e coxas quinzenalmente — esses números vão contar a verdadeira história.' },
+    ] : [
         { titulo: 'CONSISTÊNCIA > PERFEIÇÃO', descricao: 'Seguir 80-90% do plano consistentemente > 100% por 3 dias e abandonar. Se errar, volte na próxima refeição.' },
         { titulo: 'HIDRATAÇÃO', descricao: 'Mínimo 3 litros de água/dia. Mais em dias de treino e calor. Ajuda no metabolismo e saciedade.' },
         { titulo: 'TIMING PÓS-TREINO', descricao: 'Janela pós-treino é real mas não mágica. Ideal: comer em até 2h. Priorizar proteína + carboidrato.' },
         { titulo: 'FLEXIBILIDADE COM CONTROLE', descricao: 'A refeição livre semanal é importante psicologicamente. Se o peso estagnar por 2+ semanas, avaliar reduzir para quinzenal.' },
     ];
 
-    const mensagemFinal = `${nomeAtleta.split(' ')[0]}, seu plano completo está pronto! Com o déficit de ${deficit > 0 ? deficit : Math.abs(deficit)} kcal/dia e a ciclagem de carboidratos, a meta é perder ${perdaGorduraKg} kg de gordura neste mês, evoluindo de ${bfAtual}% para ~${bfFinal}% de BF. Com consistência, em 12 meses você estará na classificação ${diagnostico.analiseEstetica.scoreMeta12M >= 80 ? 'AVANÇADO' : 'ATLÉTICO'}. Vamos juntos nessa jornada!`;
+    // Mensagem final alinhada ao objetivo
+    const mensagemFinalPorObjetivo: Record<ObjetivoVitruvio, string> = {
+        GOLDEN_RATIO: `${nomeAtleta.split(' ')[0]}, sua Estrela do Norte é o Físico Proporcional — e esse plano está calibrado exatamente para isso. Com o superávit de ${Math.abs(deficit)} kcal/dia e proteína em ${protGKg} g/kg, você vai construir massa muscular onde mais importa. Em 12 meses de consistência, as proporções áureas vão estar visíveis no espelho. Foco nas medidas, não só na balança!`,
+        BULK: `${nomeAtleta.split(' ')[0]}, é hora de construir! Com o superávit de ${Math.abs(deficit)} kcal/dia e proteína alta (${protGKg} g/kg), você tem combustível de qualidade para crescer. Em 12 meses, o FFMI vai refletir todo esse esforço.`,
+        CUT: `${nomeAtleta.split(' ')[0]}, hora de revelar o trabalho! Com déficit de ${deficit} kcal/dia (${deficitPct}% do TDEE) e proteína protetora (${protGKg} g/kg), a gordura vai sair preservando o músculo. Meta: ${perdaGorduraKg} kg de gordura a menos neste mês (${bfAtual}% → ~${bfFinal}% BF).`,
+        RECOMP: `${nomeAtleta.split(' ')[0]}, seu plano completo está pronto! Com o déficit de ${deficit > 0 ? deficit : Math.abs(deficit)} kcal/dia e a ciclagem de carboidratos, a meta é perder ${perdaGorduraKg} kg de gordura neste mês, evoluindo de ${bfAtual}% para ~${bfFinal}% de BF. Com consistência, em 12 meses você estará na classificação ${diagnostico.analiseEstetica.scoreMeta12M >= 80 ? 'AVANÇADO' : 'ATLÉTICO'}. Vamos juntos!`,
+        TRANSFORM: `${nomeAtleta.split(' ')[0]}, a transformação começa agora! Este é o mês 1 de 12 de uma jornada completa. Com disciplina na dieta e no treino, a mudança em 12 meses vai ser extraordinária.`,
+        MAINTAIN: `${nomeAtleta.split(' ')[0]}, manutenção inteligente é o que está em jogo. Com as calorias ajustadas ao seu TDEE e proteína preservando o músculo, você vai manter o que construiu com eficiência e qualidade de vida.`,
+    };
+    const mensagemFinal = mensagemFinalPorObjetivo[objetivo];
 
-    const estrategiaPrincipal = `Fase de ${faseLabels[fase]}: ${deficit > 0 ? `déficit de ${deficit} kcal (${deficitPct}% do TDEE)` : `superávit de ${Math.abs(deficit)} kcal`}, preservando massa magra com alto consumo proteico (${protGKg} g/kg) e ciclagem de carboidratos entre dias de treino e descanso.`;
+    // Estratégia principal alinhada ao objetivo
+    const estrategiaPorObjetivo: Record<ObjetivoVitruvio, string> = {
+        GOLDEN_RATIO: `Estrela do Norte: Físico Proporcional. ${faseLabels[fase]}: superávit de ${Math.abs(deficit)} kcal (${deficitPct}% do TDEE) para construir massa nos grupos musculares deficitários. Proteína em ${protGKg} g/kg para síntese máxima nos pontos de melhora. Ciclagem de carbs para energia nos treinos de hipertrofia focada em proporções.`,
+        BULK: `Estrela do Norte: Ganhar Massa. ${faseLabels[fase]}: superávit de ${Math.abs(deficit)} kcal para maximizar crescimento muscular com qualidade. Proteína em ${protGKg} g/kg para síntese proteica ótima.`,
+        CUT: `Estrela do Norte: Definição Muscular. ${faseLabels[fase]}: déficit de ${deficit} kcal (${deficitPct}% do TDEE) para eliminar gordura preservando massa magra. Proteína alta (${protGKg} g/kg) como âncora anabólica. Ciclagem de carbs para energia no treino e oxidação de gordura no descanso.`,
+        RECOMP: `Fase de ${faseLabels[fase]}: ${deficit > 0 ? `déficit de ${deficit} kcal (${deficitPct}% do TDEE)` : `superávit de ${Math.abs(deficit)} kcal`}, preservando massa magra com alto consumo proteico (${protGKg} g/kg) e ciclagem de carboidratos entre dias de treino e descanso.`,
+        TRANSFORM: `Estrela do Norte: Transformação Completa em 12 meses. ${faseLabels[fase]} como fase 1: ${deficit > 0 ? `déficit de ${deficit} kcal` : `superávit de ${Math.abs(deficit)} kcal`}. Proteína em ${protGKg} g/kg para preservar e construir músculo durante toda a jornada.`,
+        MAINTAIN: `Estrela do Norte: Manutenção do Shape Atual. Calorias ajustadas ao TDEE (${tdee} kcal) com pequena variação entre dias de treino e descanso. Proteína em ${protGKg} g/kg para preservar a massa muscular conquistada.`,
+    };
+    const estrategiaPrincipal = estrategiaPorObjetivo[objetivo];
+
+    // Próximos passos customizados por objetivo
+    const proximosPorObjetivo: Record<ObjetivoVitruvio, string[]> = {
+        GOLDEN_RATIO: [
+            'Iniciar execução na próxima segunda-feira com foco nas proporções áureas',
+            'Registrar peso E medidas (ombros, cintura, braços, coxas) quinzenalmente',
+            'Priorizar nos treinos os grupos musculares com maior déficit proporcional',
+            'Dar feedback semanal com fotos comparativas de frente e lado',
+            'Nova avaliação de medidas completa em 30 dias para calcular evolução das proporções',
+            'Renovar plano de dieta mensalmente ajustando o superávit conforme ganhos',
+        ],
+        BULK: [
+            'Iniciar execução na próxima segunda-feira priorizando volume de treino',
+            'Registrar peso semanalmente — meta de +200-400g/semana',
+            'Garantir pós-treino proteico sempre que treinar',
+            'Dar feedback semanal sobre energia e ganhos de força',
+            'Nova avaliação de medidas em 30 dias',
+            'Renovar plano de dieta mensalmente',
+        ],
+        CUT: [
+            'Iniciar execução na próxima segunda-feira',
+            'Registrar peso diariamente pela manhã — usar média semanal',
+            'Dar feedback semanal ao personal para ajustes finos',
+            'Nova avaliação de medidas em 30 dias',
+            'Renovar plano de dieta mensalmente',
+        ],
+        RECOMP: [
+            'Iniciar execução na próxima segunda-feira',
+            'Registrar peso diariamente pela manhã',
+            'Dar feedback semanal ao personal para ajustes finos',
+            'Nova avaliação de medidas em 30 dias',
+            'Renovar plano de dieta mensalmente',
+        ],
+        TRANSFORM: [
+            'Iniciar execução na próxima segunda-feira — este é o dia 1 da transformação',
+            'Registrar peso e medidas semanalmente',
+            'Comprometer-se com o processo de 12 meses — resultados são cumulativos',
+            'Dar feedback semanal para ajuste das fases (cutting → recomp → bulk)',
+            'Nova avaliação de medidas completa em 30 dias',
+        ],
+        MAINTAIN: [
+            'Iniciar execução na próxima segunda-feira',
+            'Registrar peso semanalmente para garantir estabilidade',
+            'Manter a consistência — manutenção é um hábito, não uma dieta',
+            'Nova avaliação de medidas em 60 dias',
+        ],
+    };
+    const proximosPassos = proximosPorObjetivo[objetivo];
+
+    // Justificativa de macros customizada por objetivo
+    const justProteinaBase = isAnabolizante
+        ? 'Alta para aproveitar síntese aumentada pelo protocolo hormonal.'
+        : objetivo === 'GOLDEN_RATIO'
+            ? 'Alta para maximizar hipertrofia nos grupos musculares deficitários — proporções áureas dependem de massa onde falta.'
+            : objetivo === 'CUT'
+                ? 'Alta para preservar ao máximo a massa muscular durante o déficit calórico.'
+                : objetivo === 'BULK'
+                    ? 'Alta para aproveitar o superávit calórico convertendo em massa muscular, não gordura.'
+                    : 'Alta para preservar massa magra e suportar a recomposição corporal.';
+
+    const justCarboidrato = objetivo === 'GOLDEN_RATIO'
+        ? `Ciclagem: ${macrosTreino.carboidrato.gKg} g/kg nos treinos / ${macrosDescanso.carboidrato.gKg} g/kg no descanso — energia concentrada nas sessões onde você treina os grupos musculares deficitários para maximizar performance e síntese.`
+        : `Ciclagem: ${macrosTreino.carboidrato.gKg} g/kg nos treinos / ${macrosDescanso.carboidrato.gKg} g/kg no descanso — para energia no treino e oxidação de gordura no descanso.`;
+
+    // Indicadores de monitoramento por objetivo
+    const indicadoresPorObjetivo = objetivo === 'GOLDEN_RATIO'
+        ? [
+            { indicador: 'Peso (média 7 dias)', frequencia: 'Semanal', esperado: fase === 'BULKING' ? '+0.2 a +0.4 kg/sem (lean bulk)' : 'Estável ou leve redução' },
+            { indicador: 'Medida de ombros', frequencia: 'Quinzenal', esperado: 'Aumentando gradualmente' },
+            { indicador: 'Medida de cintura', frequencia: 'Quinzenal', esperado: 'Estável ou reduzindo' },
+            { indicador: 'Índice ombro/cintura (Adônis)', frequencia: 'Mensal', esperado: 'Aumentando em direção ao ideal 1.618' },
+            { indicador: 'Fotos comparativas (frente + lado)', frequencia: 'Quinzenal', esperado: 'Melhora visual das proporções' },
+            { indicador: 'Energia no treino', frequencia: 'Diário', esperado: 'Boa e estável' },
+        ]
+        : [
+            { indicador: 'Peso (média 7 dias)', frequencia: 'Semanal', esperado: fase === 'BULKING' ? '+0.2 a +0.4 kg/sem' : '-0.3 a -0.5 kg/sem' },
+            { indicador: 'Medida de cintura', frequencia: 'Quinzenal', esperado: 'Reduzindo gradualmente' },
+            { indicador: 'Fotos comparativas', frequencia: 'Mensal', esperado: 'Mudança visual perceptível' },
+            { indicador: 'Energia no treino', frequencia: 'Diário', esperado: 'Boa e estável' },
+            { indicador: 'Fome', frequencia: 'Diário', esperado: 'Controlável (não insuportável)' },
+            { indicador: 'Qualidade do sono', frequencia: 'Diário', esperado: '7-8h, acorda disposto' },
+        ];
 
     return {
         atletaId,
@@ -393,8 +532,8 @@ export function gerarPlanoDieta(
         macrosTreino,
         macrosDescanso,
         justificativaMacros: {
-            proteina: `${protGKg} g/kg (${macrosTreino.proteina.gramas}g) — ${isAnabolizante ? 'Alta para aproveitar síntese aumentada pelo protocolo hormonal.' : 'Alta para preservar massa magra em déficit calórico.'}`,
-            carboidrato: `Ciclagem: ${macrosTreino.carboidrato.gKg} g/kg nos treinos / ${macrosDescanso.carboidrato.gKg} g/kg no descanso — para energia no treino e oxidação de gordura no descanso.`,
+            proteina: `${protGKg} g/kg (${macrosTreino.proteina.gramas}g) — ${justProteinaBase}`,
+            carboidrato: justCarboidrato,
             gordura: `${gordGKg} g/kg (${macrosTreino.gordura.gramas}g) — mínimo saudável para suporte hormonal e absorção de vitaminas lipossolúveis.`,
         },
         refeicoesTreino,
@@ -405,7 +544,8 @@ export function gerarPlanoDieta(
             'Comer até satisfação, não até passar mal',
             'Manter proteína adequada nas outras refeições do dia',
             'Não compensar com jejum no dia seguinte — faz parte do processo',
-            perdaGorduraKg < 0.3 ? 'Atenção: peso estagnando — avaliar reduzir para quinzenal' : '',
+            objetivo === 'GOLDEN_RATIO' ? 'Para Físico Proporcional: refeição livre não afeta as proporções quando a proteína do dia for mantida' : '',
+            perdaGorduraKg < 0.3 && fase !== 'BULKING' ? 'Atenção: peso estagnando — avaliar reduzir para quinzenal' : '',
         ].filter(Boolean),
         cardapio,
         alimentosSugeridos: {
@@ -419,24 +559,11 @@ export function gerarPlanoDieta(
             naoFazer: ['Entrar em pânico com variação diária (normal até ±1 kg)', 'Pesar após refeição livre', 'Comparar peso pela manhã com peso à noite', 'Ajustar dieta baseado em apenas 1 dia'],
         },
         regrasAjuste,
-        outrosIndicadores: [
-            { indicador: 'Peso (média 7 dias)', frequencia: 'Semanal', esperado: '-0.3 a -0.5 kg/sem' },
-            { indicador: 'Medida de cintura', frequencia: 'Quinzenal', esperado: 'Reduzindo gradualmente' },
-            { indicador: 'Fotos comparativas', frequencia: 'Mensal', esperado: 'Mudança visual perceptível' },
-            { indicador: 'Energia no treino', frequencia: 'Diário', esperado: 'Boa e estável' },
-            { indicador: 'Fome', frequencia: 'Diário', esperado: 'Controlável (não insuportável)' },
-            { indicador: 'Qualidade do sono', frequencia: 'Diário', esperado: '7-8h, acorda disposto' },
-        ],
+        outrosIndicadores: indicadoresPorObjetivo,
         estrategiaPrincipal,
         pontosAtencao,
         contextoConsiderado,
-        proximosPassos: [
-            'Iniciar execução na próxima segunda-feira',
-            'Registrar peso diariamente pela manhã',
-            'Dar feedback semanal ao personal para ajustes finos',
-            'Nova avaliação de medidas em 30 dias',
-            'Renovar plano de dieta mensalmente',
-        ],
+        proximosPassos,
         mensagemFinal,
         observacoesContexto: potencial.observacoesContexto,
         geradoEm: new Date().toISOString(),
