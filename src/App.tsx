@@ -24,6 +24,7 @@ import {
   PersonalCoachView,
   PersonalProfilePage,
   DiagnosticoView,
+  TreinoView,
   AthleteDetailsView,
   AcademyDashboard,
   AcademyPersonalsList,
@@ -37,6 +38,8 @@ import {
   DebugAccess,
   TermsOfUse,
   PrivacyPolicy,
+  LibraryView,
+  GoldenRatioSourceView,
   type ProfileType
 } from '@/components';
 // import { GamificationPage } from './pages/GamificationPage'; // DISABLED - Feature para depois
@@ -50,7 +53,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useSupabaseSync } from '@/hooks/useSupabaseSync';
 import { PersonalAthlete, MeasurementHistory } from '@/mocks/personal';
 
-type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details' | 'terms' | 'privacy' | 'my-record' | 'gamification' | 'athlete-portal' | 'personal-details' | 'student-details' | 'diagnostico';
+type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details' | 'terms' | 'privacy' | 'my-record' | 'gamification' | 'athlete-portal' | 'personal-details' | 'student-details' | 'diagnostico' | 'treino-plano' | 'library' | 'library-golden-ratio';
 
 const App: React.FC = () => {
   console.log('🎯 App component rendering...');
@@ -283,6 +286,14 @@ const App: React.FC = () => {
     if (currentView === 'privacy') {
       return <PrivacyPolicy onBack={() => setCurrentView('dashboard')} />;
     }
+    if (currentView === 'library') {
+      return <LibraryView onNavigateToSource={(id) => {
+        if (id === 'golden-ratio') setCurrentView('library-golden-ratio');
+      }} />;
+    }
+    if (currentView === 'library-golden-ratio') {
+      return <GoldenRatioSourceView onBack={() => setCurrentView('library')} />;
+    }
 
     // Se usuário é Academia, renderiza views específicas
     if (userProfile === 'academia') {
@@ -459,7 +470,17 @@ const App: React.FC = () => {
               atletaId={selectedAthleteId}
               onBack={() => setCurrentView('coach')}
               onNext={() => {
-                // TODO: Fase 2 - navegar para 'treino-plano'
+                setCurrentView('treino-plano');
+              }}
+            />
+          ) : null;
+        case 'treino-plano':
+          return selectedAthleteId ? (
+            <TreinoView
+              atletaId={selectedAthleteId}
+              onBack={() => setCurrentView('diagnostico')}
+              onNext={() => {
+                // Dieta será a Etapa 3
                 setCurrentView('coach');
               }}
             />
@@ -630,6 +651,8 @@ const App: React.FC = () => {
   const getPageTitle = () => {
     if (currentView === 'terms') return 'TERMOS DE USO';
     if (currentView === 'privacy') return 'POLÍTICA DE PRIVACIDADE';
+    if (currentView === 'library') return 'BIBLIOTECA CIENTÍFICA';
+    if (currentView === 'library-golden-ratio') return 'FONTE: PROPORÇÕES ÁUREAS';
 
     if (userProfile === 'academia') {
       switch (currentView) {
@@ -655,6 +678,7 @@ const App: React.FC = () => {
         case 'evolution': return 'EVOLUÇÃO DOS ALUNOS';
         case 'coach': return 'VITRÚVIO IA';
         case 'diagnostico': return 'DIAGNÓSTICO — PLANO DE EVOLUÇÃO';
+        case 'treino-plano': return 'PLANO DE TREINO — PLANO DE EVOLUÇÃO';
         case 'hall': return 'HALL DOS DEUSES';
         case 'results': return 'RESULTADOS DA AVALIAÇÃO IA';
         case 'design-system': return 'DESIGN SYSTEM';
@@ -749,6 +773,7 @@ const App: React.FC = () => {
 
           <Footer
             onOpenDesignSystem={() => setCurrentView('design-system')}
+            onOpenLibrary={() => setCurrentView('library')}
             onOpenTerms={() => setCurrentView('terms')}
             onOpenPrivacy={() => setCurrentView('privacy')}
             onOpenAthletePortal={() => setCurrentView('athlete-portal')}

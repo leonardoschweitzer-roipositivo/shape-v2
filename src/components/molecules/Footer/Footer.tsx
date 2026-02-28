@@ -5,10 +5,11 @@ interface FooterProps {
   onOpenDesignSystem: () => void;
   onOpenTerms: () => void;
   onOpenPrivacy: () => void;
+  onOpenLibrary?: () => void;
   onOpenAthletePortal?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onOpenDesignSystem, onOpenTerms, onOpenPrivacy, onOpenAthletePortal }) => {
+export const Footer: React.FC<FooterProps> = ({ onOpenDesignSystem, onOpenTerms, onOpenPrivacy, onOpenLibrary, onOpenAthletePortal }) => {
   return (
     <footer className="w-full border-t border-card-border bg-[#0A0F1C] py-6 px-8 mt-auto z-10">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
@@ -35,6 +36,14 @@ export const Footer: React.FC<FooterProps> = ({ onOpenDesignSystem, onOpenTerms,
           )}
 
           <div className="flex gap-4">
+            {onOpenLibrary && (
+              <button
+                onClick={onOpenLibrary}
+                className="text-xs text-gray-600 hover:text-gray-400 transition-colors"
+              >
+                Biblioteca
+              </button>
+            )}
             <button
               onClick={onOpenTerms}
               className="text-xs text-gray-600 hover:text-gray-400 transition-colors"

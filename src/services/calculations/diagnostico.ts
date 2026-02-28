@@ -11,6 +11,7 @@
  */
 
 import { supabase } from '@/services/supabase';
+import { PotencialAtleta } from './potencial';
 
 // ═══════════════════════════════════════════════════════════
 // TYPES
@@ -652,7 +653,10 @@ export function gerarMetasProporcoes(
  * @param input - Dados do atleta (peso, altura, medidas, contexto)
  * @returns DiagnosticoDados pronto para exibição e persistência
  */
-export function gerarDiagnosticoCompleto(input: DiagnosticoInput): DiagnosticoDados {
+export function gerarDiagnosticoCompleto(
+    input: DiagnosticoInput,
+    potencial?: PotencialAtleta
+): DiagnosticoDados {
     // 1. Taxas metabólicas
     const tmbBase = calcularTMB(input.peso, input.altura, input.idade, input.sexo);
     const { tmbAjustada, fatores } = ajustarTMBPorMedicacoes(tmbBase, input.usaAnabolizantes, input.usaTermogenicos);
@@ -674,10 +678,13 @@ export function gerarDiagnosticoCompleto(input: DiagnosticoInput): DiagnosticoDa
     const proporcoes = analisarProporcoes(input.medidas, input.proporcoesPreCalculadas);
     const simetria = analisarSimetria(input.medidas);
 
-    // Meta de score: +6 pontos em 12 meses (realista)
-    const scoreMeta12M = Math.min(100, input.score + 6);
-    const scoreMeta6M = Math.min(100, input.score + 3);
+    // Meta de score: dinâmica via PotencialAtleta (se disponível) ou fallback conservador
+    const deltaScore = potencial?.deltaPotencialScore12M ?? 6;
+    const deltaScore6M = Math.round(deltaScore * 0.55 * 10) / 10;
+    const scoreMeta12M = Math.min(100, Math.round((input.score + deltaScore) * 10) / 10);
+    const scoreMeta6M = Math.min(100, Math.round((input.score + deltaScore6M) * 10) / 10);
     const classificacaoMeta = scoreMeta12M >= 95 ? 'ELITE' : scoreMeta12M >= 85 ? 'META' : 'CAMINHO';
+    const labelNivel = potencial?.nivel ?? 'INTERMEDIÁRIO';
 
     const analiseEstetica: AnaliseEstetica = {
         scoreAtual: input.score,
@@ -692,8 +699,8 @@ export function gerarDiagnosticoCompleto(input: DiagnosticoInput): DiagnosticoDa
     const prioridades = gerarPrioridades(proporcoes);
     const metasProporcoes = gerarMetasProporcoes(proporcoes, input.medidas);
 
-    // 5. Resumo do Vitrúvio
-    const resumoVitruvio = `${input.nomeAtleta}, você está na classificação ${input.classificacao.toUpperCase()} com score ${input.score}. Em 12 meses, com foco nos pontos fracos identificados, você pode atingir score ${scoreMeta12M}+ (${classificacaoMeta}). Na composição corporal, a meta é uma recomposição: reduzir gordura de ${input.gorduraPct}% para ${gorduraMeta12M}% enquanto ganha massa magra. Com consistência e dedicação, essas metas são desafiadoras mas realistas. Vamos montar o plano de treino para fazer isso acontecer!`;
+    // 5. Resumo do Vitrúvio — contextualizado com nível e meta real
+    const resumoVitruvio = `${input.nomeAtleta}, você está classificado como ${labelNivel} com score ${input.score}. Com base no seu perfil, histórico e contexto, a meta realista em 12 meses é atingir score ${scoreMeta12M}+ (${classificacaoMeta}) — um ganho de ${deltaScore} pontos. Na composição corporal, a meta é reduzir gordura de ${input.gorduraPct}% para ${gorduraMeta12M}% enquanto ganha massa magra. Com consistência e o plano correto para o seu nível, essas metas são desafiadoras mas totalmente alcançáveis. Vamos montar o plano de treino para fazer isso acontecer!`;
 
     return {
         taxas,

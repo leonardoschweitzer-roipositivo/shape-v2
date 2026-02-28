@@ -90,7 +90,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           { icon: Users, label: 'Meus Alunos', id: 'students' },
           { icon: Activity, label: 'Avaliação IA', id: 'assessment' },
           { icon: TrendingUp, label: 'Evolução', id: 'evolution' },
-          { icon: Bot, label: 'Coach IA', id: 'coach', isPro: true },
+          { icon: Bot, label: 'Vitruvius IA', id: 'coach', isPro: true },
           { icon: Dumbbell, label: 'Hall dos Deuses', id: 'hall' },
           { icon: Trophy, label: 'Ranking Personais', id: 'trainers-ranking' },
         ];
@@ -101,7 +101,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           { icon: Users, label: 'Minha Ficha', id: 'my-record' },
           { icon: Activity, label: 'Avaliação', id: 'assessment' },
           { icon: TrendingUp, label: 'Evolução', id: 'evolution' },
-          { icon: Bot, label: 'Coach IA', id: 'coach', isPro: true },
+          { icon: Bot, label: 'Vitruvius IA', id: 'coach', isPro: true },
           // { icon: Award, label: 'Gamificação', id: 'gamification' }, // DISABLED - Feature para depois
           { icon: Dumbbell, label: 'Hall dos Deuses', id: 'hall' },
           { icon: Trophy, label: 'Ranking Personais', id: 'trainers-ranking' },
