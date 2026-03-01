@@ -26,7 +26,12 @@ import {
     Sparkles,
     Dumbbell,
     UtensilsCrossed,
-    Loader2
+    Loader2,
+    Link2,
+    Copy,
+    Share2,
+    CheckCircle,
+    Smartphone,
 } from 'lucide-react';
 import { PersonalAthlete } from '@/mocks/personal';
 import { Button } from '@/components/atoms/Button/Button';
@@ -36,6 +41,7 @@ import { useDataStore } from '@/stores/dataStore';
 import { atletaService } from '@/services/atleta.service';
 import { medidasService } from '@/services/medidas.service';
 import { supabase } from '@/services/supabase';
+import { portalService } from '@/services/portalService';
 import { AthleteContextSection } from './AthleteContextSection';
 import type { ContextoAtleta } from './AthleteContextSection';
 
@@ -168,6 +174,13 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
     const [isSaving, setIsSaving] = useState(false);
     const [evolutionPlans, setEvolutionPlans] = useState<any[]>([]);
     const [loadingPlans, setLoadingPlans] = useState(false);
+
+    // Portal do Aluno
+    const [showPortalModal, setShowPortalModal] = useState(false);
+    const [portalLoading, setPortalLoading] = useState(false);
+    const [portalLink, setPortalLink] = useState<string | null>(null);
+    const [portalCopied, setPortalCopied] = useState(false);
+    const [portalError, setPortalError] = useState<string | null>(null);
 
     // Fetch evolution plans (diagnosticos + relacionados)
     const fetchPlans = React.useCallback(async () => {
@@ -469,6 +482,29 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                 Perfil Arquivado
                             </div>
                         )}
+                        <Button
+                            variant="outline"
+                            className="flex items-center gap-2 border-white/10 hover:border-primary/30 hover:bg-primary/5 px-5"
+                            onClick={async () => {
+                                setShowPortalModal(true);
+                                setPortalLoading(true);
+                                setPortalLink(null);
+                                setPortalCopied(false);
+                                setPortalError(null);
+                                try {
+                                    const result = await portalService.generateToken(athlete.id);
+                                    setPortalLink(result.url);
+                                } catch (err) {
+                                    console.error('[AthleteDetails] Erro ao gerar link portal:', err);
+                                    setPortalError('Erro ao gerar link. Tente novamente.');
+                                } finally {
+                                    setPortalLoading(false);
+                                }
+                            }}
+                        >
+                            <Smartphone size={18} />
+                            <span className="font-bold uppercase tracking-wider text-xs">Portal do Aluno</span>
+                        </Button>
                         <Button
                             variant="outline"
                             className="flex items-center gap-2 border-white/10 hover:border-white/20 px-6"
@@ -1023,6 +1059,138 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                     {isDeleting ? 'Excluindo...' : 'Sim, Excluir'}
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Modal: Portal do Aluno */}
+            {showPortalModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-[#131B2C] border border-white/10 rounded-2xl shadow-2xl max-w-lg w-full mx-4 overflow-hidden animate-in zoom-in-95 duration-200">
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                                    <Smartphone size={22} className="text-primary" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-bold text-white uppercase tracking-wider">Portal do Aluno</h3>
+                                    <p className="text-xs text-gray-500">Gerar link de acesso para {draftAthlete.name}</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setShowPortalModal(false)}
+                                className="p-2 hover:bg-white/10 rounded-lg text-gray-500 hover:text-white transition-all"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        {/* Body */}
+                        <div className="px-6 py-6 space-y-5">
+                            {portalLoading ? (
+                                <div className="text-center py-8">
+                                    <Loader2 size={32} className="text-primary mx-auto animate-spin mb-3" />
+                                    <p className="text-gray-400 text-sm">Gerando link de acesso...</p>
+                                </div>
+                            ) : portalError ? (
+                                <div className="text-center py-6 space-y-3">
+                                    <div className="w-14 h-14 bg-red-500/10 rounded-full flex items-center justify-center mx-auto">
+                                        <X size={24} className="text-red-400" />
+                                    </div>
+                                    <p className="text-red-400 text-sm font-bold">{portalError}</p>
+                                    <button
+                                        onClick={async () => {
+                                            setPortalLoading(true);
+                                            setPortalError(null);
+                                            try {
+                                                const result = await portalService.generateToken(athlete.id);
+                                                setPortalLink(result.url);
+                                            } catch (err) {
+                                                setPortalError('Erro ao gerar link. Tente novamente.');
+                                            } finally {
+                                                setPortalLoading(false);
+                                            }
+                                        }}
+                                        className="px-5 py-2 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white text-xs font-bold uppercase tracking-wider transition-all"
+                                    >
+                                        Tentar novamente
+                                    </button>
+                                </div>
+                            ) : portalLink ? (
+                                <>
+                                    <div>
+                                        <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-2">Link de Acesso</p>
+                                        <div className="bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 flex items-center gap-3">
+                                            <Link2 size={16} className="text-primary shrink-0" />
+                                            <span className="text-sm text-gray-300 font-mono truncate flex-1">{portalLink}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            onClick={async () => {
+                                                try {
+                                                    await navigator.clipboard.writeText(portalLink);
+                                                    setPortalCopied(true);
+                                                    setTimeout(() => setPortalCopied(false), 3000);
+                                                } catch {
+                                                    // Fallback para browsers que não suportam clipboard API
+                                                    const textarea = document.createElement('textarea');
+                                                    textarea.value = portalLink;
+                                                    document.body.appendChild(textarea);
+                                                    textarea.select();
+                                                    document.execCommand('copy');
+                                                    document.body.removeChild(textarea);
+                                                    setPortalCopied(true);
+                                                    setTimeout(() => setPortalCopied(false), 3000);
+                                                }
+                                            }}
+                                            className={`flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${portalCopied
+                                                ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400'
+                                                : 'bg-primary text-background-dark hover:scale-[1.02] active:scale-95 shadow-[0_0_20px_rgba(0,201,167,0.3)]'
+                                                }`}
+                                        >
+                                            {portalCopied ? (
+                                                <>
+                                                    <CheckCircle size={16} />
+                                                    Link Copiado!
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Copy size={16} />
+                                                    Copiar Link
+                                                </>
+                                            )}
+                                        </button>
+
+                                        {typeof navigator.share === 'function' && (
+                                            <button
+                                                onClick={async () => {
+                                                    try {
+                                                        await navigator.share({
+                                                            title: `Portal do Aluno - ${draftAthlete.name}`,
+                                                            text: `Acesse seu Portal do Aluno Shape-V:`,
+                                                            url: portalLink,
+                                                        });
+                                                    } catch (err) {
+                                                        // Usuário cancelou o share — ok
+                                                    }
+                                                }}
+                                                className="flex items-center justify-center gap-2 px-5 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition-all font-bold text-xs uppercase tracking-widest"
+                                            >
+                                                <Share2 size={16} />
+                                                Enviar
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    <div className="flex items-center gap-2 text-[10px] text-gray-600 uppercase tracking-widest font-bold pt-1">
+                                        <Clock size={10} />
+                                        Link válido por 30 dias
+                                    </div>
+                                </>
+                            ) : null}
                         </div>
                     </div>
                 </div>

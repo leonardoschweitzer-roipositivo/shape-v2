@@ -659,7 +659,7 @@ const App: React.FC = () => {
             />
           ) : null;
         case 'consulta-treino':
-          return selectedAthleteId && consultaTreinoData ? (
+          return selectedAthleteId ? (
             <TreinoView
               atletaId={selectedAthleteId}
               onBack={() => {
@@ -672,11 +672,11 @@ const App: React.FC = () => {
               onNext={() => {
                 if (consultaPlanoCompleto) setCurrentView('consulta-dieta');
               }}
-              readOnlyData={consultaTreinoData}
+              readOnlyData={consultaTreinoData || undefined}
             />
           ) : null;
         case 'consulta-dieta':
-          return selectedAthleteId && consultaDietaData ? (
+          return selectedAthleteId ? (
             <DietaView
               atletaId={selectedAthleteId}
               onBack={() => {
@@ -686,7 +686,7 @@ const App: React.FC = () => {
                   setCurrentView('coach');
                 }
               }}
-              readOnlyData={consultaDietaData}
+              readOnlyData={consultaDietaData || undefined}
             />
           ) : null;
         case 'hall':

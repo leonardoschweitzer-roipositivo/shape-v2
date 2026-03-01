@@ -57,4 +57,23 @@
 
 ---
 
+### 2026-03-01 - Reformulação Home do Atleta v2.0
+
+**Tipo**: Atualização Completa / Criação
+**Mudança**: 
+- Modificou `TodayScreen.tsx` para apresentar o novo layout v2.0 com foco em engajamento.
+- Componentes modulares (SRP) criados sob `src/pages/athlete/components/`:
+  - `HeaderIdentidade`
+  - `CardPersonal`
+  - `CardScoreMeta`
+  - `CardRanking`
+  - `CardFocoSemana`
+  - `AcoesRapidas`
+  - `FooterUltimaMedicao`
+- Inclusão do mock temporário local dentro da Home para espelhar a SPEC em todos os dados de Gamificação visual enquanto os mocks do backend não vêm da API.
+- Adição da interface fortemente tipada em `HomeAtletaTypes.ts`.
+**Motivo**: Implementar o Documento de Especificação Técnica v2.0 com foco em dar Direção/Gamificação/Score visível e imediato ao atleta, guiando o usuário ao sucesso (Retenção, Engajamento).
+
+---
+
 <!-- Novos registros serão adicionados acima desta linha -->

@@ -62,7 +62,13 @@ export interface PortalAthleteData {
         data: string;
         score_geral: number | null;
         classificacao_geral: string | null;
+        results?: any;
+        gordura?: number;
     }>;
+    diagnostico?: {
+        id: string;
+        dados: any;
+    } | null;
 }
 
 export const portalService = {
@@ -156,11 +162,20 @@ export const portalService = {
             .order('date', { ascending: false })
             .limit(5);
 
-        // 7. Buscar nome do personal
         const { data: personal } = await supabase
             .from('personais')
             .select('nome')
             .eq('id', (atleta as any).personal_id)
+            .single();
+
+        // 8. Buscar Plano de Evolução (Diagnóstico confirmado mais recente)
+        const { data: diagnostico } = await supabase
+            .from('diagnosticos')
+            .select('*')
+            .eq('atleta_id', (atleta as any).id)
+            .eq('status', 'confirmado')
+            .order('created_at', { ascending: false })
+            .limit(1)
             .single();
 
         console.info(`[PortalService] ✅ Atleta validado: ${(atleta as any).nome}`);
@@ -206,7 +221,13 @@ export const portalService = {
                 data: a.date,
                 score_geral: a.score,
                 classificacao_geral: a.results?.classificacao?.nivel || '',
+                results: a.results, // Pass all results
+                gordura: a.results?.composicao?.gorduraPct || 0,
             })),
+            diagnostico: diagnostico ? {
+                id: diagnostico.id,
+                dados: diagnostico.dados,
+            } : null,
         };
     },
 

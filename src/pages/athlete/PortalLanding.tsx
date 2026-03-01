@@ -1,26 +1,66 @@
 /**
- * PortalLanding — Página de entrada do Portal do Atleta
+ * PortalLanding — HOME do Portal do Atleta v2.0
  * 
  * Exibida quando o atleta acessa via link de convite (?token=XXX)
- * Mostra dados do atleta e opções: ver ficha, registrar medidas
+ * Foco: Engajamento, Gamificação e Retenção
+ * 
+ * Layout v2:
+ *   1. Header (Identidade)
+ *   2. Card Personal (Vínculo)
+ *   3. Card Score + Meta (Progresso)
+ *   4. Card Ranking (Competição)
+ *   5. Card Foco da Semana (Direção)
+ *   6. Ações Rápidas (Secundárias)
+ *   7. Footer (Última medição)
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
-    User, Ruler, Activity, Trophy, ArrowRight,
-    Sparkles, Shield, TrendingUp, Clock,
+    Shield,
     Loader2
 } from 'lucide-react';
 import { portalService, PortalAthleteData } from '@/services/portalService';
 import { SelfMeasurements } from './SelfMeasurements';
 import { AthletePortal } from '../AthletePortal';
+import {
+    HeaderIdentidade,
+    CardPersonal,
+    CardScoreMeta,
+    CardRanking,
+    CardFocoSemana,
+    AcoesRapidas,
+    FooterUltimaMedicao,
+} from './components';
 
 interface PortalLandingProps {
     token: string;
     onClose: () => void;
 }
 
-type PortalView = 'home' | 'measurements' | 'history' | 'portal';
+type PortalView = 'home' | 'measurements' | 'portal';
+
+// ---- Helpers de classificação ----
+const CLASSIFICACOES = [
+    { min: 0, max: 30, nome: 'INICIANDO' },
+    { min: 30, max: 50, nome: 'COMEÇANDO' },
+    { min: 50, max: 65, nome: 'EVOLUINDO' },
+    { min: 65, max: 80, nome: 'ATLETA' },
+    { min: 80, max: 90, nome: 'AVANÇADO' },
+    { min: 90, max: 95, nome: 'ELITE' },
+    { min: 95, max: 100, nome: 'DEUS GREGO' },
+];
+
+function getClassificacao(score: number): string {
+    return CLASSIFICACOES.find(c => score >= c.min && score < c.max)?.nome || 'INICIANDO';
+}
+
+function getProximaClassificacao(score: number): { nome: string; min: number } {
+    const idx = CLASSIFICACOES.findIndex(c => score >= c.min && score < c.max);
+    if (idx >= 0 && idx < CLASSIFICACOES.length - 1) {
+        return CLASSIFICACOES[idx + 1];
+    }
+    return CLASSIFICACOES[CLASSIFICACOES.length - 1];
+}
 
 export function PortalLanding({ token, onClose }: PortalLandingProps) {
     const [loading, setLoading] = useState(true);
@@ -46,19 +86,19 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
         loadData();
     }, [token]);
 
-    // Loading
+    // ---- Loading ----
     if (loading) {
         return (
             <div className="min-h-screen bg-[#060B18] flex items-center justify-center">
                 <div className="text-center space-y-4">
                     <Loader2 className="text-indigo-400 mx-auto animate-spin" size={40} />
-                    <p className="text-gray-500 text-sm">Validando seu acesso...</p>
+                    <p className="text-zinc-500 text-sm font-medium">Carregando seu portal...</p>
                 </div>
             </div>
         );
     }
 
-    // Error
+    // ---- Error ----
     if (error || !athleteData) {
         return (
             <div className="min-h-screen bg-[#060B18] flex items-center justify-center p-6">
@@ -68,11 +108,11 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
                     </div>
                     <div className="space-y-2">
                         <h1 className="text-2xl font-black text-white">ACESSO NEGADO</h1>
-                        <p className="text-gray-400 text-sm">{error || 'Token inválido.'}</p>
+                        <p className="text-zinc-400 text-sm">{error || 'Token inválido.'}</p>
                     </div>
                     <button
                         onClick={onClose}
-                        className="px-6 py-3 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-xl text-sm font-bold transition-all"
+                        className="px-6 py-3 bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white rounded-xl text-sm font-bold transition-all"
                     >
                         Voltar ao Início
                     </button>
@@ -81,7 +121,7 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
         );
     }
 
-    // Portal completo (4 tabs)
+    // ---- Sub-views ----
     if (view === 'portal') {
         return (
             <AthletePortal
@@ -91,7 +131,6 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
         );
     }
 
-    // Measurements form
     if (view === 'measurements') {
         return (
             <SelfMeasurements
@@ -101,7 +140,6 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
                 onSave={async (measurements) => {
                     const result = await portalService.saveMeasurements(athleteData.id, measurements);
                     if (result.success) {
-                        // Reload data
                         const updated = await portalService.validateToken(token);
                         if (updated) setAthleteData(updated);
                     }
@@ -112,205 +150,213 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
         );
     }
 
-    // Home
-    const lastAval = athleteData.avaliacoes[0];
-    const lastMedida = athleteData.medidas[0];
-    const sexoLabel = athleteData.ficha?.sexo === 'F' ? 'FEMININO' : 'MASCULINO';
-    const scoreColor = lastAval?.score_geral
-        ? lastAval.score_geral >= 90 ? 'text-yellow-400'
-            : lastAval.score_geral >= 80 ? 'text-emerald-400'
-                : lastAval.score_geral >= 70 ? 'text-blue-400'
-                    : 'text-orange-400'
-        : 'text-gray-500';
-
+    // ===========================================================
+    //  HOME v2.0 — Layout baseado na SPEC
+    // ===========================================================
     return (
-        <div className="min-h-screen bg-[#060B18]">
-            {/* Gradient Header */}
-            <div className="relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-b from-indigo-600/20 via-indigo-900/10 to-transparent" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent" />
+        <HomeAtletaV2
+            athleteData={athleteData}
+            onGoToPortal={() => setView('portal')}
+            onGoToMeasurements={() => setView('measurements')}
+        />
+    );
+}
 
-                <div className="relative max-w-2xl mx-auto px-6 pt-10 pb-8">
-                    {/* Avatar + Name + Vitru Logo */}
-                    <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl shadow-indigo-500/20 flex-shrink-0">
-                            <User className="text-white" size={24} />
-                        </div>
-                        <div className="flex-1 space-y-1">
-                            <h1 className="text-xl font-black text-white tracking-tight uppercase">
-                                {athleteData.nome}
-                            </h1>
-                            <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-bold tracking-wider text-gray-500 uppercase">
-                                    {sexoLabel}
-                                </span>
-                                {athleteData.ficha?.altura && (
-                                    <>
-                                        <span className="text-gray-700">•</span>
-                                        <span className="text-[10px] font-bold tracking-wider text-gray-500">
-                                            {athleteData.ficha.altura} CM
-                                        </span>
-                                    </>
-                                )}
-                                {lastMedida?.peso && (
-                                    <>
-                                        <span className="text-gray-700">•</span>
-                                        <span className="text-[10px] font-bold tracking-wider text-gray-500">
-                                            {lastMedida.peso} KG
-                                        </span>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                        {/* Vitru Logo */}
-                        <div className="flex flex-col items-center gap-0.5 flex-shrink-0">
-                            <div className="w-8 h-8 bg-indigo-500/20 rounded-lg flex items-center justify-center">
-                                <span className="text-indigo-300 font-black text-sm">V</span>
-                            </div>
-                            <div className="flex items-center gap-0.5">
-                                <span className="text-white font-black text-[8px] tracking-widest">VITRU</span>
-                                <span className="text-indigo-400 font-black text-[7px] tracking-widest italic">IA</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+// ===========================================================
+//  Componente interno: HomeAtletaV2
+// ===========================================================
+interface HomeAtletaV2Props {
+    athleteData: PortalAthleteData;
+    onGoToPortal: () => void;
+    onGoToMeasurements: () => void;
+}
 
-            {/* Content */}
-            <div className="max-w-2xl mx-auto px-6 -mt-2 space-y-6 pb-12">
-                {/* Personal badge */}
-                <div className="flex items-center gap-3 px-4 py-3 bg-[#0A0F1C] rounded-xl border border-white/5">
-                    <Shield className="text-indigo-400" size={14} />
-                    <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">
-                        Personal: <span className="text-white">{athleteData.personalNome}</span>
-                    </span>
-                </div>
+function HomeAtletaV2({ athleteData, onGoToPortal, onGoToMeasurements }: HomeAtletaV2Props) {
+    const lastAval = athleteData.avaliacoes?.[0];
+    const lastMedida = athleteData.medidas?.[0];
+    const sexoLabel = athleteData.ficha?.sexo === 'F' ? 'FEMININO' : 'MASCULINO';
+    const peso = lastMedida?.peso ?? undefined;
+    const altura = athleteData.ficha?.altura ?? 0;
 
-                {/* Score Card (if exists) */}
-                {lastAval && (
-                    <div className="p-6 bg-gradient-to-br from-[#0C1220] to-[#0A0F1C] rounded-2xl border border-white/5 shadow-xl">
-                        <div className="flex items-center justify-between mb-4">
-                            <span className="text-[10px] font-bold tracking-[0.15em] text-gray-500 uppercase">
-                                Última Avaliação
-                            </span>
-                            <span className="text-[10px] text-gray-600 font-mono">
-                                {new Date(lastAval.data).toLocaleDateString('pt-BR')}
-                            </span>
-                        </div>
-                        <div className="flex items-end gap-6">
-                            <div>
-                                <span className={`text-5xl font-black ${scoreColor}`}>
-                                    {lastAval.score_geral}
-                                </span>
-                                <span className="text-gray-600 text-sm ml-1 font-bold">pts</span>
-                            </div>
-                            <div className="flex-1 pb-2">
-                                <span className={`text-xs font-black tracking-widest uppercase ${scoreColor}`}>
-                                    {lastAval.classificacao_geral}
-                                </span>
-                                <div className="mt-2 w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-gradient-to-r from-indigo-500 to-emerald-400 rounded-full"
-                                        style={{ width: `${lastAval.score_geral}%` }}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+    // ---- Score & Meta (dados reais + derivados) ----
+    const scoreAtual = lastAval?.score_geral ?? 0;
+    const classificacaoAtual = lastAval?.classificacao_geral || getClassificacao(scoreAtual);
+    const dataUltimaAvaliacao = lastAval ? new Date(lastAval.data) : new Date();
+
+    const proxClass = useMemo(() => getProximaClassificacao(scoreAtual), [scoreAtual]);
+    const scoreMeta = proxClass.min;
+    const classificacaoMeta = proxClass.nome;
+    const prazoMeta = 6;
+    const percentualMeta = scoreMeta > 0 ? Math.min(100, Math.round((scoreAtual / scoreMeta) * 100)) : 0;
+    const pontosRestantes = Math.max(0, scoreMeta - scoreAtual);
+
+    // Evolução: se tem 2+ avaliações, calcular
+    const evolucaoMes = useMemo(() => {
+        if (athleteData.avaliacoes && athleteData.avaliacoes.length >= 2) {
+            return Number(((athleteData.avaliacoes[0]?.score_geral ?? 0) - (athleteData.avaliacoes[1]?.score_geral ?? 0)).toFixed(1));
+        }
+        return 0;
+    }, [athleteData.avaliacoes]);
+
+    // ---- Footer: última medição ----
+    const diasDesdeUltima = useMemo(() => {
+        if (!lastMedida) return 999;
+        const diff = Date.now() - new Date(lastMedida.data).getTime();
+        return Math.floor(diff / (1000 * 60 * 60 * 24));
+    }, [lastMedida]);
+
+    const statusMedicao = diasDesdeUltima <= 7 ? 'em_dia' as const
+        : diasDesdeUltima <= 14 ? 'atencao' as const
+            : 'atrasado' as const;
+
+    // ---- Ações Rápidas ----
+    const acoes = [
+        {
+            id: 'medir',
+            icone: '📏',
+            label: 'MEDIR',
+            rota: '/atleta/medidas/nova',
+            onClick: onGoToMeasurements,
+        },
+        {
+            id: 'coach',
+            icone: '🤖',
+            label: 'COACH IA',
+            rota: '/atleta/coach',
+            onClick: onGoToPortal,
+        },
+        {
+            id: 'evolucao',
+            icone: '📊',
+            label: 'EVOLUÇÃO',
+            rota: '/atleta/evolucao',
+            onClick: onGoToPortal,
+        },
+    ];
+
+    // ---- Estado: Sem medidas (Primeiro acesso) ----
+    const temAvaliacao = !!lastAval;
+
+    if (!temAvaliacao) {
+        return (
+            <div className="min-h-screen bg-[#060B18] text-white">
+                <HeaderIdentidade
+                    nome={athleteData.nome}
+                    sexo={sexoLabel}
+                    altura={altura}
+                    peso={peso}
+                    fotoUrl={undefined}
+                />
+
+                {athleteData.personalNome && (
+                    <CardPersonal
+                        nome={athleteData.personalNome}
+                        exibirRanking={false}
+                    />
                 )}
 
-                {/* Action Cards */}
-                <div className="space-y-3">
-                    <h2 className="text-[10px] font-bold tracking-[0.15em] text-gray-500 uppercase px-1">
-                        O que deseja fazer?
+                {/* CTA Primeiro Acesso */}
+                <div className="mx-4 mt-8 bg-gradient-to-br from-[#0C1220] to-[#0A0F1C] rounded-2xl p-8 border border-white/5 text-center shadow-xl">
+                    <div className="text-5xl mb-4">🎯</div>
+                    <h2 className="text-white font-black text-lg uppercase tracking-widest mb-3">
+                        COMECE SUA JORNADA
                     </h2>
-
-                    {/* Entrar no Portal Completo */}
+                    <p className="text-gray-400 text-sm leading-relaxed max-w-xs mx-auto mb-6">
+                        Registre suas medidas para descobrir seu <strong className="text-white">Score Shape-V</strong> e
+                        receber seu plano personalizado de evolução.
+                    </p>
                     <button
-                        onClick={() => setView('portal')}
-                        className="w-full group flex items-center gap-4 p-5 bg-gradient-to-r from-emerald-500/10 to-teal-500/5 border border-emerald-500/20 rounded-2xl hover:border-emerald-500/40 hover:bg-emerald-500/15 transition-all text-left"
+                        onClick={onGoToMeasurements}
+                        className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-4 rounded-xl font-black tracking-widest text-sm uppercase transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
                     >
-                        <div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center group-hover:bg-emerald-500/30 transition-colors">
-                            <Activity className="text-emerald-400" size={22} />
-                        </div>
-                        <div className="flex-1 space-y-1">
-                            <span className="text-white font-bold text-sm uppercase tracking-wide block">
-                                Meu Portal Completo
-                            </span>
-                            <span className="text-gray-500 text-xs">
-                                Treino, dieta, progresso e chat com Coach IA
-                            </span>
-                        </div>
-                        <ArrowRight className="text-gray-600 group-hover:text-emerald-400 transition-colors" size={18} />
+                        📏 REGISTRAR MINHAS MEDIDAS
                     </button>
-
-                    {/* Registrar Medidas */}
-                    <button
-                        onClick={() => setView('measurements')}
-                        className="w-full group flex items-center gap-4 p-5 bg-gradient-to-r from-indigo-500/10 to-emerald-500/5 border border-indigo-500/20 rounded-2xl hover:border-indigo-500/40 hover:bg-indigo-500/15 transition-all text-left"
-                    >
-                        <div className="w-12 h-12 bg-indigo-500/20 rounded-xl flex items-center justify-center group-hover:bg-indigo-500/30 transition-colors">
-                            <Ruler className="text-indigo-400" size={22} />
-                        </div>
-                        <div className="flex-1 space-y-1">
-                            <span className="text-white font-bold text-sm uppercase tracking-wide block">
-                                Registrar Minhas Medidas
-                            </span>
-                            <span className="text-gray-500 text-xs">
-                                Preencha suas medidas corporais atuais com uma fita métrica
-                            </span>
-                        </div>
-                        <ArrowRight className="text-gray-600 group-hover:text-indigo-400 transition-colors" size={18} />
-                    </button>
-
-                    {/* Ver Histórico */}
-                    <button
-                        disabled
-                        className="w-full flex items-center gap-4 p-5 bg-[#0A0F1C] border border-white/5 rounded-2xl opacity-50 cursor-not-allowed text-left"
-                    >
-                        <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center">
-                            <TrendingUp className="text-gray-600" size={22} />
-                        </div>
-                        <div className="flex-1 space-y-1">
-                            <span className="text-gray-400 font-bold text-sm uppercase tracking-wide block">
-                                Ver Minha Evolução
-                            </span>
-                            <span className="text-gray-600 text-xs">
-                                Em breve — acompanhe seus resultados ao longo do tempo
-                            </span>
-                        </div>
-                        <span className="text-[9px] font-bold text-gray-600 bg-white/5 px-2 py-1 rounded-full">
-                            BREVE
-                        </span>
-                    </button>
-
-                    {/* Última medida info */}
-                    {lastMedida && (
-                        <div className="flex items-center gap-3 px-4 py-3 bg-[#0A0F1C] rounded-xl border border-white/5">
-                            <Clock className="text-gray-600" size={14} />
-                            <span className="text-[10px] text-gray-600">
-                                Última medida registrada em{' '}
-                                <span className="text-gray-400 font-bold">
-                                    {new Date(lastMedida.data).toLocaleDateString('pt-BR')}
-                                </span>
-                            </span>
-                        </div>
-                    )}
-                </div>
-
-                {/* Footer */}
-                <div className="pt-8 border-t border-white/5 text-center">
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                        <Sparkles className="text-indigo-400" size={12} />
-                        <span className="text-[10px] text-gray-600 font-bold tracking-wider uppercase">
-                            Powered by VITRU IA
-                        </span>
-                    </div>
-                    <p className="text-[10px] text-gray-700">
-                        Suas medidas são analisadas pela nossa IA para gerar seu score Shape-V
+                    <p className="text-gray-600 text-xs mt-4 font-medium">
+                        ⏱️ Leva apenas 5 minutos
                     </p>
                 </div>
+
+                <div className="mt-12 text-center">
+                    <span className="text-zinc-700 font-black text-[10px] tracking-widest uppercase">
+                        ✨ POWERED BY VITRU IA
+                    </span>
+                </div>
             </div>
+        );
+    }
+
+    // ---- Estado: Com avaliação — HOME COMPLETA v2.0 ----
+    return (
+        <div className="min-h-screen bg-[#060B18] text-white pb-4">
+            {/* 1. Header */}
+            <HeaderIdentidade
+                nome={athleteData.nome}
+                sexo={sexoLabel}
+                altura={altura}
+                peso={peso}
+                fotoUrl={undefined}
+            />
+
+            {/* 2. Card Personal */}
+            {athleteData.personalNome && (
+                <CardPersonal
+                    nome={athleteData.personalNome}
+                    rankingCidade={3}
+                    cidadeSigla="SP"
+                    exibirRanking={true}
+                />
+            )}
+
+            {/* 3. Card Score + Meta */}
+            <CardScoreMeta
+                scoreAtual={scoreAtual}
+                classificacaoAtual={classificacaoAtual}
+                dataUltimaAvaliacao={dataUltimaAvaliacao}
+                scoreMeta={scoreMeta}
+                classificacaoMeta={classificacaoMeta}
+                prazoMeta={prazoMeta}
+                evolucaoMes={evolucaoMes}
+                evolucaoMesAnterior={0}
+                melhorMesHistorico={Math.abs(evolucaoMes)}
+                percentualMeta={percentualMeta}
+                pontosRestantes={pontosRestantes}
+            />
+
+            {/* 4. Card Ranking */}
+            <CardRanking
+                contexto="academia"
+                nomeContexto="Academia"
+                posicaoGeral={47}
+                totalParticipantes={312}
+                percentilGeral={15}
+                posicaoEvolucao={12}
+                percentilEvolucao={4}
+                movimentoGeral={5}
+                movimentoEvolucao={-2}
+                atletaParticipa={true}
+            />
+
+            {/* 5. Card Foco da Semana */}
+            <CardFocoSemana
+                areaPrioritaria="OMBRO"
+                diferencaCm={4}
+                quantidadeTreinos={2}
+                grupamentoFoco="deltoides"
+                proximoTreinoNome="OMBRO + TRAPÉZIO"
+                temTreinoHoje={true}
+                treinoConcluido={false}
+                onVerTreino={onGoToPortal}
+            />
+
+            {/* 6. Ações Rápidas */}
+            <AcoesRapidas acoes={acoes} />
+
+            {/* 7. Footer */}
+            <FooterUltimaMedicao
+                dataUltimaMedida={lastMedida ? new Date(lastMedida.data) : new Date()}
+                diasDesdeUltima={diasDesdeUltima}
+                statusMedicao={statusMedicao}
+            />
         </div>
     );
 }

@@ -237,7 +237,7 @@ const SecaoVisaoAnual: React.FC<{ plano: PlanoTreino }> = ({ plano }) => {
     return (
         <SectionCard icon={Calendar} title="Visão Geral do Plano Anual" subtitle="Macro-objetivos de longo prazo para atingir as proporções áureas">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {plano.visaoAnual.trimestres.map((t) => (
+                {plano?.visaoAnual?.trimestres?.map((t) => (
                     <div key={t.numero} className="bg-[#0D1525] p-5 rounded-xl border border-white/5 relative overflow-hidden group hover:border-primary/30 transition-all">
                         <div className="flex items-center justify-between mb-4">
                             <span className="text-primary font-bold text-lg">T{t.numero}</span>
@@ -249,12 +249,12 @@ const SecaoVisaoAnual: React.FC<{ plano: PlanoTreino }> = ({ plano }) => {
                         </div>
                         <p className="text-xs text-gray-500 uppercase tracking-widest mb-2">Foco</p>
                         <div className="space-y-1 mb-4 min-h-[48px]">
-                            {t.foco.map((f, i) => (
+                            {t.foco?.map((f, i) => (
                                 <p key={i} className="text-sm text-gray-300">• {f}</p>
                             ))}
                         </div>
                         <div className="pt-4 border-t border-white/5">
-                            <p className="text-xs text-gray-500 mb-1 uppercase tracking-widest">Semana {t.semanas[0]} a {t.semanas[1]}</p>
+                            <p className="text-xs text-gray-500 mb-1 uppercase tracking-widest">Semana {t.semanas?.[0]} a {t.semanas?.[1]}</p>
                             <p className="text-base font-bold text-white">Score Alvo: {t.scoreEsperado}</p>
                         </div>
                     </div>
@@ -316,7 +316,7 @@ const SecaoTrimestreAtual: React.FC<{ plano: PlanoTreino }> = ({ plano }) => {
                         </tr>
                     </thead>
                     <tbody>
-                        {plano.trimestreAtual.volumePorGrupo.map((v) => (
+                        {plano?.trimestreAtual?.volumePorGrupo?.map((v) => (
                             <tr key={v.grupo} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors">
                                 <td className="py-4 flex items-center gap-3">
                                     <span className={`w-2 h-2 rounded-full ${v.prioridade === 'ALTA' ? 'bg-red-500 animate-pulse' :
@@ -364,13 +364,13 @@ const SecaoDivisao: React.FC<{ plano: PlanoTreino }> = ({ plano }) => {
             </div>
 
             <div className="space-y-3">
-                {plano.divisao.estruturaSemanal.map((e, idx) => (
+                {plano?.divisao?.estruturaSemanal?.map((e, idx) => (
                     <div key={idx} className="flex items-center gap-4 bg-white/[0.02] p-4 rounded-xl border border-white/5 hover:translate-x-1 transition-transform">
                         <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black border bg-primary/20 border-primary/40 text-primary`}>
                             {e.letra}
                         </div>
                         <div className="flex-1">
-                            <p className="text-base font-bold text-gray-200">{e.grupos.join(' + ')}</p>
+                            <p className="text-base font-bold text-gray-200">{e.grupos?.join(' + ')}</p>
                             <div className="flex items-center gap-3 mt-1">
                                 {e.duracaoMinutos > 0 && (
                                     <span className="flex items-center gap-1 text-[10px] text-gray-500 uppercase">
@@ -530,11 +530,23 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
     const [objetivoAtleta, setObjetivoAtleta] = useState<ObjetivoVitruvio>(
         readOnlyData?.objetivo || recomendacaoPadrao?.objetivo || 'RECOMP'
     );
+    const [toastStatus, setToastStatus] = useState<'success' | 'error' | null>(null);
+    const [iaEnriching, setIaEnriching] = useState(false);
+    const [isApplying, setIsApplying] = useState(false);
 
-    if (!atleta || !ultimaAvaliacao) {
+    if (!atleta) {
         return (
             <div className="flex items-center justify-center h-96">
-                <p className="text-gray-500">Atleta não encontrado ou sem avaliação.</p>
+                <p className="text-gray-500">Atleta não encontrado.</p>
+            </div>
+        );
+    }
+
+    // Em modo read-only, não exige avaliação — os dados já estão no readOnlyData
+    if (!isReadOnly && !ultimaAvaliacao) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <p className="text-gray-500">Atleta sem avaliação registrada. Realize uma avaliação primeiro.</p>
             </div>
         );
     }
@@ -763,33 +775,35 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
                     </div>
 
                     {/* Estrela do Norte — Objetivo (Substituindo os 4 cards antigos) */}
-                    <div className={`mt-6 rounded-2xl border p-6 ${getObjetivoMeta(objetivoAtleta).cor}`}>
-                        <div className="flex items-start gap-5">
-                            <span className="text-5xl leading-none mt-1">{getObjetivoMeta(objetivoAtleta).emoji}</span>
-                            <div className="flex-1">
-                                <p className="text-[10px] uppercase tracking-[0.25em] text-gray-500 font-bold mb-1">Estrela do Norte deste Plano</p>
-                                <h3 className="text-2xl font-bold text-white mb-2">{getObjetivoMeta(objetivoAtleta).label}</h3>
-                                <p className="text-sm text-gray-300 leading-relaxed mb-4">{getObjetivoMeta(objetivoAtleta).descricao}</p>
-                                <div className="flex flex-wrap gap-3">
-                                    <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
-                                        <Activity size={12} className="text-primary" />
-                                        Rep Range: {(() => {
-                                            const o = objetivoAtleta;
-                                            return o === 'BULK' ? '5-7 → 10-12' : o === 'CUT' ? '10-12 → 15-20' : o === 'MAINTAIN' ? '10-12 → 15-20' : '8-10 → 12-15';
-                                        })()}
-                                    </span>
-                                    <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
-                                        <Clock size={12} className="text-primary" />
-                                        Descanso: {objetivoAtleta === 'BULK' ? '75-120s' : objetivoAtleta === 'CUT' || objetivoAtleta === 'MAINTAIN' ? '40-75s' : '50-90s'}
-                                    </span>
-                                    <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
-                                        <TrendingUp size={12} className="text-primary" />
-                                        Volume: {objetivoAtleta === 'BULK' ? '+5% base' : objetivoAtleta === 'CUT' ? '-10% base' : objetivoAtleta === 'MAINTAIN' ? '-25% base' : 'base'}
-                                    </span>
+                    {getObjetivoMeta(objetivoAtleta || 'RECOMP') && (
+                        <div className={`mt-6 rounded-2xl border p-6 ${getObjetivoMeta(objetivoAtleta || 'RECOMP').cor}`}>
+                            <div className="flex items-start gap-5">
+                                <span className="text-5xl leading-none mt-1">{getObjetivoMeta(objetivoAtleta || 'RECOMP').emoji}</span>
+                                <div className="flex-1">
+                                    <p className="text-[10px] uppercase tracking-[0.25em] text-gray-500 font-bold mb-1">Estrela do Norte deste Plano</p>
+                                    <h3 className="text-2xl font-bold text-white mb-2">{getObjetivoMeta(objetivoAtleta || 'RECOMP').label}</h3>
+                                    <p className="text-sm text-gray-300 leading-relaxed mb-4">{getObjetivoMeta(objetivoAtleta || 'RECOMP').descricao}</p>
+                                    <div className="flex flex-wrap gap-3">
+                                        <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                                            <Activity size={12} className="text-primary" />
+                                            Rep Range: {(() => {
+                                                const o = objetivoAtleta;
+                                                return o === 'BULK' ? '5-7 → 10-12' : o === 'CUT' ? '10-12 → 15-20' : o === 'MAINTAIN' ? '10-12 → 15-20' : '8-10 → 12-15';
+                                            })()}
+                                        </span>
+                                        <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                                            <Clock size={12} className="text-primary" />
+                                            Descanso: {objetivoAtleta === 'BULK' ? '75-120s' : objetivoAtleta === 'CUT' || objetivoAtleta === 'MAINTAIN' ? '40-75s' : '50-90s'}
+                                        </span>
+                                        <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                                            <TrendingUp size={12} className="text-primary" />
+                                            Volume: {objetivoAtleta === 'BULK' ? '+5% base' : objetivoAtleta === 'CUT' ? '-10% base' : objetivoAtleta === 'MAINTAIN' ? '-25% base' : 'base'}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    )}
                 </div>
 
                 {/* Estado: Ainda não gerou */}
@@ -868,12 +882,12 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
                                 nome: atleta.name,
                                 sexo: (atleta.gender === 'FEMALE' ? 'F' : 'M') as 'M' | 'F',
                                 idade: atleta.birthDate ? Math.floor((Date.now() - new Date(atleta.birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : 30,
-                                altura: ultimaAvaliacao.measurements.height,
-                                peso: ultimaAvaliacao.measurements.weight,
-                                gorduraPct: ultimaAvaliacao.bf ?? 15,
+                                altura: ultimaAvaliacao?.measurements?.height || 170,
+                                peso: ultimaAvaliacao?.measurements?.weight || 70,
+                                gorduraPct: ultimaAvaliacao?.bf ?? 15,
                                 score: atleta.score,
                                 classificacao: atleta.score >= 90 ? 'ELITE' : atleta.score >= 80 ? 'AVANÇADO' : atleta.score >= 70 ? 'ATLÉTICO' : atleta.score >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE',
-                                medidas: ultimaAvaliacao.measurements as Record<string, number>,
+                                medidas: (ultimaAvaliacao?.measurements as Record<string, number>) || {},
                                 contexto: atleta.contexto as any,
                             })}
                             fontesCientificas={getFontesCientificas('treino')}

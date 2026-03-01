@@ -741,10 +741,19 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
         return atleta.assessments[0];
     }, [atleta]);
 
-    if (!atleta || !ultimaAvaliacao) {
+    if (!atleta) {
         return (
             <div className="flex items-center justify-center h-96">
-                <p className="text-gray-500">Atleta não encontrado ou sem avaliação.</p>
+                <p className="text-gray-500">Atleta não encontrado.</p>
+            </div>
+        );
+    }
+
+    // Em modo read-only, não exige avaliação — os dados já estão no readOnlyData
+    if (!isReadOnly && !ultimaAvaliacao) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <p className="text-gray-500">Atleta sem avaliação registrada. Realize uma avaliação primeiro.</p>
             </div>
         );
     }
@@ -754,16 +763,16 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
     // então esse valor é sempre o mais confiável disponível.
     const scoreEfetivo = useMemo(() => {
         if (atleta.score > 0) return atleta.score;
-        if (ultimaAvaliacao.score > 0) return ultimaAvaliacao.score;
+        if (ultimaAvaliacao?.score && ultimaAvaliacao.score > 0) return ultimaAvaliacao.score;
         return 0;
-    }, [atleta.score, ultimaAvaliacao.score]);
+    }, [atleta.score, ultimaAvaliacao?.score]);
 
     // Ratio efetivo: usa o ratio do store, com fallback no ratio da última avaliação
     // ou no cálculo direto ombros/cintura das medidas.
     const ratioEfetivo = useMemo(() => {
         if (atleta.ratio > 0) return atleta.ratio;
-        if (ultimaAvaliacao.ratio > 0) return ultimaAvaliacao.ratio;
-        const m = ultimaAvaliacao.measurements;
+        if (ultimaAvaliacao?.ratio && ultimaAvaliacao.ratio > 0) return ultimaAvaliacao.ratio;
+        const m = ultimaAvaliacao?.measurements;
         if (m?.shoulders && m?.waist && m.waist > 0) {
             return Math.round((m.shoulders / m.waist) * 100) / 100;
         }
@@ -778,7 +787,7 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
             );
             const rec = recomendarObjetivo({
                 bf: diagnostico.composicaoAtual.gorduraPct,
-                ffmi: (ultimaAvaliacao as any).ffmi ?? 20,
+                ffmi: (ultimaAvaliacao as any)?.ffmi ?? 20,
                 sexo: atleta.gender === 'FEMALE' ? 'F' : 'M',
                 score: diagnostico.analiseEstetica.scoreAtual,
                 nivel: diagnostico.analiseEstetica.classificacaoAtual,
@@ -790,7 +799,7 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
         }
     }, [isReadOnly, diagnostico, atleta, ultimaAvaliacao, ratioEfetivo, recomendacao]);
 
-    const m = ultimaAvaliacao.measurements;
+    const m = ultimaAvaliacao?.measurements;
 
     // Enriquecer "Análise de Contexto" com IA ao montar
     useEffect(() => {
@@ -841,7 +850,7 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                 altura: m.height,
                 idade: atleta.birthDate ? Math.floor((Date.now() - new Date(atleta.birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : 30,
                 sexo: atleta.gender === 'FEMALE' ? 'F' : 'M',
-                gorduraPct: ultimaAvaliacao.bf ?? 15,
+                gorduraPct: ultimaAvaliacao?.bf ?? 15,
                 score: scoreEfetivo,
                 classificacao: scoreEfetivo >= 90 ? 'ELITE' : scoreEfetivo >= 80 ? 'AVANÇADO' : scoreEfetivo >= 70 ? 'ATLÉTICO' : scoreEfetivo >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE',
                 ratio: ratioEfetivo,
@@ -870,7 +879,7 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                     pescoco: m.neck || anyM.pescoco || 40,
                 },
                 // Se a avaliação já tem proporções gravadas, usar diretamente (zero discrepância)
-                proporcoesPreCalculadas: Array.isArray(ultimaAvaliacao.proporcoes) ? ultimaAvaliacao.proporcoes : undefined,
+                proporcoesPreCalculadas: Array.isArray(ultimaAvaliacao?.proporcoes) ? ultimaAvaliacao.proporcoes : undefined,
             };
 
             // Pipeline completo: Potencial → Diagnóstico reanalisado
@@ -891,7 +900,7 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
             const adonisVal = adonisProp?.atual ?? undefined;
             const rec = recomendarObjetivo({
                 bf: resultado.composicaoAtual.gorduraPct,
-                ffmi: ultimaAvaliacao.ffmi ?? 20,
+                ffmi: (ultimaAvaliacao as any)?.ffmi ?? 20,
                 sexo: input.sexo,
                 score: resultado.analiseEstetica.scoreAtual,
                 nivel: resultado.analiseEstetica.classificacaoAtual,
@@ -993,12 +1002,12 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                 nome: atleta.name,
                 sexo: (atleta.gender === 'FEMALE' ? 'F' : 'M') as 'M' | 'F',
                 idade: atleta.birthDate ? Math.floor((Date.now() - new Date(atleta.birthDate).getTime()) / 31557600000) : 30,
-                altura: ultimaAvaliacao.measurements.height,
-                peso: ultimaAvaliacao.measurements.weight,
-                gorduraPct: ultimaAvaliacao.bf ?? 15,
+                altura: ultimaAvaliacao?.measurements?.height || 170,
+                peso: ultimaAvaliacao?.measurements?.weight || 70,
+                gorduraPct: ultimaAvaliacao?.bf ?? 15,
                 score: atleta.score,
                 classificacao: classificacao,
-                medidas: ultimaAvaliacao.measurements as Record<string, number>,
+                medidas: (ultimaAvaliacao?.measurements as Record<string, number>) || {},
                 contexto: atleta.contexto as any,
             };
 
@@ -1176,21 +1185,29 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                                 </div>
                                 <div className="p-6">
                                     {/* Recomendação principal */}
-                                    <div className={`border rounded-xl p-5 mb-6 ${getObjetivoMeta(recomendacao.objetivo).cor}`}>
+                                    <div className={`border rounded-xl p-5 ${isReadOnly ? '' : 'mb-6'} ${getObjetivoMeta(recomendacao.objetivo).cor}`}>
                                         <div className="flex items-start gap-4">
                                             <span className="text-4xl">{getObjetivoMeta(recomendacao.objetivo).emoji}</span>
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-3 mb-2">
-                                                    <p className="text-xl font-bold text-white">{getObjetivoMeta(recomendacao.objetivo).label}</p>
-                                                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${recomendacao.confianca === 'ALTA' ? 'text-emerald-400 border-emerald-400/40 bg-emerald-400/10'
-                                                        : recomendacao.confianca === 'MEDIA' ? 'text-yellow-400 border-yellow-400/40 bg-yellow-400/10'
-                                                            : 'text-gray-400 border-gray-400/40 bg-gray-400/10'
-                                                        }`}>
-                                                        Confiança {recomendacao.confianca}
-                                                    </span>
+                                                    <p className="text-xl font-bold text-white">
+                                                        {isReadOnly && objetivoSelecionado ? getObjetivoMeta(objetivoSelecionado).label : getObjetivoMeta(recomendacao.objetivo).label}
+                                                    </p>
+                                                    {!isReadOnly && (
+                                                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${recomendacao.confianca === 'ALTA' ? 'text-emerald-400 border-emerald-400/40 bg-emerald-400/10'
+                                                            : recomendacao.confianca === 'MEDIA' ? 'text-yellow-400 border-yellow-400/40 bg-yellow-400/10'
+                                                                : 'text-gray-400 border-gray-400/40 bg-gray-400/10'
+                                                            }`}>
+                                                            Confiança {recomendacao.confianca}
+                                                        </span>
+                                                    )}
                                                 </div>
-                                                <p className="text-base text-gray-300 leading-relaxed">{recomendacao.justificativa}</p>
-                                                {recomendacao.alternativa && (
+                                                <p className="text-base text-gray-300 leading-relaxed">
+                                                    {isReadOnly && objetivoSelecionado
+                                                        ? getObjetivoMeta(objetivoSelecionado).descricao
+                                                        : recomendacao.justificativa}
+                                                </p>
+                                                {!isReadOnly && recomendacao.alternativa && (
                                                     <p className="text-sm text-gray-500 mt-2">
                                                         Alternativa: {getObjetivoMeta(recomendacao.alternativa).emoji} {getObjetivoMeta(recomendacao.alternativa).label}
                                                     </p>
@@ -1199,27 +1216,31 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                                         </div>
                                     </div>
 
-                                    {/* Seletor manual */}
-                                    <p className="text-xs uppercase tracking-widest text-gray-500 mb-3 font-semibold">Ou selecione um objetivo diferente:</p>
-                                    <div className="grid grid-cols-3 gap-3">
-                                        {TODOS_OBJETIVOS.map(obj => {
-                                            const meta = getObjetivoMeta(obj);
-                                            const isSelected = objetivoSelecionado === obj;
-                                            return (
-                                                <button
-                                                    key={obj}
-                                                    onClick={() => setObjetivoSelecionado(obj)}
-                                                    className={`flex items-center gap-2 px-4 py-3 rounded-xl border text-sm font-bold transition-all ${isSelected
-                                                        ? meta.cor + ' shadow-md scale-[1.02]'
-                                                        : 'bg-white/[0.02] border-white/10 text-gray-500 hover:bg-white/5'
-                                                        }`}
-                                                >
-                                                    <span>{meta.emoji}</span>
-                                                    <span className="text-left leading-tight">{meta.label}</span>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
+                                    {/* Seletor manual — Ocultar em Read Only */}
+                                    {!isReadOnly && (
+                                        <>
+                                            <p className="text-xs uppercase tracking-widest text-gray-500 mt-6 mb-3 font-semibold">Ou selecione um objetivo diferente:</p>
+                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                                {TODOS_OBJETIVOS.map(obj => {
+                                                    const meta = getObjetivoMeta(obj);
+                                                    const isSelected = objetivoSelecionado === obj;
+                                                    return (
+                                                        <button
+                                                            key={obj}
+                                                            onClick={() => setObjetivoSelecionado(obj)}
+                                                            className={`flex items-center gap-2 px-4 py-3 rounded-xl border text-sm font-bold transition-all ${isSelected
+                                                                ? meta.cor + ' shadow-md scale-[1.02]'
+                                                                : 'bg-white/[0.02] border-white/10 text-gray-500 hover:bg-white/5'
+                                                                }`}
+                                                        >
+                                                            <span>{meta.emoji}</span>
+                                                            <span className="text-left leading-tight">{meta.label}</span>
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -1234,12 +1255,12 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                                 nome: atleta.name,
                                 sexo: (atleta.gender === 'FEMALE' ? 'F' : 'M') as 'M' | 'F',
                                 idade: atleta.birthDate ? Math.floor((Date.now() - new Date(atleta.birthDate).getTime()) / 31557600000) : 30,
-                                altura: ultimaAvaliacao.measurements.height,
-                                peso: ultimaAvaliacao.measurements.weight,
-                                gorduraPct: ultimaAvaliacao.bf ?? 15,
+                                altura: ultimaAvaliacao?.measurements?.height || 170,
+                                peso: ultimaAvaliacao?.measurements?.weight || 70,
+                                gorduraPct: ultimaAvaliacao?.bf ?? 15,
                                 score: atleta.score,
                                 classificacao: atleta.score >= 90 ? 'ELITE' : atleta.score >= 80 ? 'AVANÇADO' : atleta.score >= 70 ? 'ATLÉTICO' : atleta.score >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE',
-                                medidas: ultimaAvaliacao.measurements as Record<string, number>,
+                                medidas: (ultimaAvaliacao?.measurements as Record<string, number>) || {},
                                 contexto: atleta.contexto as any,
                             })}
                             fontesCientificas={getFontesCientificas('diagnostico')}

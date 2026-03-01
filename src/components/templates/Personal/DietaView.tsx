@@ -285,10 +285,19 @@ export const DietaView: React.FC<DietaViewProps> = ({
 
     const nomeAtleta = atleta?.name ?? 'Atleta';
 
-    if (!atleta || !ultimaAvaliacao) {
+    if (!atleta) {
         return (
             <div className="flex items-center justify-center h-96">
-                <p className="text-gray-500">Atleta não encontrado ou sem avaliação.</p>
+                <p className="text-gray-500">Atleta não encontrado.</p>
+            </div>
+        );
+    }
+
+    // Em modo read-only, não exige avaliação — os dados já estão no readOnlyData
+    if (!isReadOnly && !ultimaAvaliacao) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <p className="text-gray-500">Atleta sem avaliação registrada. Realize uma avaliação primeiro.</p>
             </div>
         );
     }
@@ -516,30 +525,32 @@ export const DietaView: React.FC<DietaViewProps> = ({
                     </div>
 
                     {/* Estrela do Norte — Objetivo (Substituindo os 4 cards antigos) */}
-                    <div className={`mt-4 rounded-2xl border p-6 ${getObjetivoMeta(objetivoAtleta).cor}`}>
-                        <div className="flex items-start gap-5">
-                            <span className="text-5xl leading-none mt-1">{getObjetivoMeta(objetivoAtleta).emoji}</span>
-                            <div className="flex-1">
-                                <p className="text-[10px] uppercase tracking-[0.25em] text-gray-500 font-bold mb-1">Estrela do Norte deste Plano</p>
-                                <h3 className="text-2xl font-bold text-white mb-2">{getObjetivoMeta(objetivoAtleta).label}</h3>
-                                <p className="text-base text-gray-300 leading-relaxed mb-4">{getObjetivoMeta(objetivoAtleta).descricao}</p>
-                                <div className="flex flex-wrap gap-3">
-                                    <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
-                                        <Flame size={12} className="text-primary" />
-                                        Fase: {plano?.faseLabel?.split(' — ')[0] || (objetivoAtleta === 'CUT' ? 'CUTTING' : objetivoAtleta === 'BULK' ? 'BULKING' : 'RECOMP')}
-                                    </span>
-                                    <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
-                                        <Activity size={12} className="text-primary" />
-                                        Estratégia: {objetivoAtleta === 'CUT' ? 'Déficit Calórico' : objetivoAtleta === 'BULK' ? 'Superávit Calórico' : 'Balanço Neutro'}
-                                    </span>
-                                    <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
-                                        <TrendingUp size={12} className="text-primary" />
-                                        Proteína Suportada
-                                    </span>
+                    {getObjetivoMeta(objetivoAtleta || 'RECOMP') && (
+                        <div className={`mt-4 rounded-2xl border p-6 ${getObjetivoMeta(objetivoAtleta || 'RECOMP').cor}`}>
+                            <div className="flex items-start gap-5">
+                                <span className="text-5xl leading-none mt-1">{getObjetivoMeta(objetivoAtleta || 'RECOMP').emoji}</span>
+                                <div className="flex-1">
+                                    <p className="text-[10px] uppercase tracking-[0.25em] text-gray-500 font-bold mb-1">Estrela do Norte deste Plano</p>
+                                    <h3 className="text-2xl font-bold text-white mb-2">{getObjetivoMeta(objetivoAtleta || 'RECOMP').label}</h3>
+                                    <p className="text-base text-gray-300 leading-relaxed mb-4">{getObjetivoMeta(objetivoAtleta || 'RECOMP').descricao}</p>
+                                    <div className="flex flex-wrap gap-3">
+                                        <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                                            <Flame size={12} className="text-primary" />
+                                            Fase: {plano?.faseLabel?.split(' — ')[0] || (objetivoAtleta === 'CUT' ? 'CUTTING' : objetivoAtleta === 'BULK' ? 'BULKING' : 'RECOMP')}
+                                        </span>
+                                        <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                                            <Activity size={12} className="text-primary" />
+                                            Estratégia: {objetivoAtleta === 'CUT' ? 'Déficit Calórico' : objetivoAtleta === 'BULK' ? 'Superávit Calórico' : 'Balanço Neutro'}
+                                        </span>
+                                        <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                                            <TrendingUp size={12} className="text-primary" />
+                                            Proteína Suportada
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    )}
                 </div>
 
                 {/* Estado: Ainda não gerou */}
@@ -624,19 +635,19 @@ export const DietaView: React.FC<DietaViewProps> = ({
                                 <div className="grid grid-cols-2 gap-4 text-sm">
                                     <div>
                                         <p className="text-gray-600 text-xs mb-1">Déficit semanal</p>
-                                        <p className="font-bold text-white">~{plano.deficitSemanal.toLocaleString('pt-BR')} kcal</p>
+                                        <p className="font-bold text-white">~{plano?.deficitSemanal?.toLocaleString('pt-BR')} kcal</p>
                                     </div>
                                     <div>
                                         <p className="text-gray-600 text-xs mb-1">Perda de gordura estimada</p>
-                                        <p className="font-bold text-rose-400">~{plano.projecaoMensal.perdaGorduraKg} kg/mês</p>
+                                        <p className="font-bold text-rose-400">~{plano?.projecaoMensal?.perdaGorduraKg} kg/mês</p>
                                     </div>
                                     <div>
                                         <p className="text-gray-600 text-xs mb-1">Peso no mês 1</p>
-                                        <p className="font-bold text-white">{plano.projecaoMensal.pesoInicial} kg → {plano.projecaoMensal.pesoFinal} kg</p>
+                                        <p className="font-bold text-white">{plano?.projecaoMensal?.pesoInicial} kg → {plano?.projecaoMensal?.pesoFinal} kg</p>
                                     </div>
                                     <div>
                                         <p className="text-gray-600 text-xs mb-1">BF estimado</p>
-                                        <p className="font-bold text-white">{plano.projecaoMensal.bfInicial}% → {plano.projecaoMensal.bfFinal}%</p>
+                                        <p className="font-bold text-white">{plano?.projecaoMensal?.bfInicial}% → {plano?.projecaoMensal?.bfFinal}%</p>
                                     </div>
                                 </div>
                             </div>
@@ -703,7 +714,7 @@ export const DietaView: React.FC<DietaViewProps> = ({
                             <div className="mt-6 bg-white/[0.02] rounded-xl border border-white/5 p-5">
                                 <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">🍕 Refeição Livre</p>
                                 <ul className="space-y-2">
-                                    {plano.refeicaoLivreOrientacoes.map((o, i) => (
+                                    {plano?.refeicaoLivreOrientacoes?.map((o, i) => (
                                         <li key={i} className="text-sm text-gray-400 flex items-start gap-2">
                                             <span className="text-primary mt-1">•</span> {o}
                                         </li>
@@ -715,7 +726,7 @@ export const DietaView: React.FC<DietaViewProps> = ({
                         {/* SEÇÃO 4: Cardápio */}
                         <SectionCard icon={LayoutList} title="Exemplo de Cardápio" subtitle="Clique em cada refeição para ver as opções">
                             <div className="divide-y divide-white/5 rounded-xl overflow-hidden border border-white/5">
-                                {plano.cardapio.map((refeicao, idx) => {
+                                {plano?.cardapio?.map((refeicao, idx) => {
                                     const isOpen = cardapioAberto.has(refeicao.nome);
                                     return (
                                         <div key={refeicao.nome}>
@@ -740,11 +751,11 @@ export const DietaView: React.FC<DietaViewProps> = ({
                                             {isOpen && (
                                                 <div className="px-5 pb-5 pt-4 bg-white/[0.01] animate-in fade-in slide-in-from-top-1 duration-200">
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                        {refeicao.opcoes.map((opcao) => (
+                                                        {refeicao.opcoes?.map((opcao) => (
                                                             <div key={opcao.letra} className="bg-white/[0.03] rounded-xl border border-white/[0.05] p-4">
                                                                 <p className="text-xs font-black text-primary/70 uppercase tracking-widest mb-3">Opção {opcao.letra}</p>
                                                                 <ul className="space-y-1.5">
-                                                                    {opcao.itens.map((item, i) => (
+                                                                    {opcao.itens?.map((item, i) => (
                                                                         <li key={i} className="text-sm text-gray-400 flex items-start gap-1.5">
                                                                             <span className="text-gray-600 mt-0.5">•</span> {item}
                                                                         </li>
@@ -937,12 +948,12 @@ export const DietaView: React.FC<DietaViewProps> = ({
                                 nome: atleta.name,
                                 sexo: (atleta.gender === 'FEMALE' ? 'F' : 'M') as 'M' | 'F',
                                 idade: atleta.birthDate ? Math.floor((Date.now() - new Date(atleta.birthDate).getTime()) / 31557600000) : 30,
-                                altura: ultimaAvaliacao.measurements.height,
-                                peso: ultimaAvaliacao.measurements.weight,
-                                gorduraPct: ultimaAvaliacao.bf ?? 15,
+                                altura: ultimaAvaliacao?.measurements?.height || 170,
+                                peso: ultimaAvaliacao?.measurements?.weight || 70,
+                                gorduraPct: ultimaAvaliacao?.bf ?? 15,
                                 score: atleta.score,
                                 classificacao: atleta.score >= 90 ? 'ELITE' : atleta.score >= 80 ? 'AVANÇADO' : atleta.score >= 70 ? 'ATLÉTICO' : atleta.score >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE',
-                                medidas: ultimaAvaliacao.measurements as Record<string, number>,
+                                medidas: (ultimaAvaliacao?.measurements as Record<string, number>) || {},
                                 contexto: atleta.contexto as any,
                             })}
                             fontesCientificas={getFontesCientificas('dieta')}
