@@ -315,16 +315,18 @@ export async function buscarRegistrosDoDia(atletaId: string): Promise<TrackerRap
     const aguaRegs = regs.filter(r => (r as any).tipo === 'agua');
     const totalAgua = aguaRegs.reduce((acc, r) => acc + ((r as any).dados?.quantidade || 0), 0);
 
-    // Primeiro sono do dia
+    // Último sono do dia
     const sonoReg = regs.find(r => (r as any).tipo === 'sono');
-    const sonoHoras = (sonoReg as any)?.dados?.horas || null;
+    const sonoHoras = (sonoReg as any)?.dados?.quantidade || null;
 
     // Último peso
     const pesoReg = regs.find(r => (r as any).tipo === 'peso');
-    const peso = (pesoReg as any)?.dados?.valor || null;
+    const peso = (pesoReg as any)?.dados?.quantidade || null;
 
     // Dor ativa
     const dorReg = regs.find(r => (r as any).tipo === 'dor');
+    const dorIntensidade = (dorReg as any)?.dados?.quantidade || null;
+    const dorLocal = (dorReg as any)?.dados?.local || null;
 
     return [
         {
@@ -355,6 +357,7 @@ export async function buscarRegistrosDoDia(atletaId: string): Promise<TrackerRap
             id: 'dor',
             icone: '🤕',
             label: 'Dor',
+            valor: dorIntensidade ? `${dorIntensidade}/10` : undefined,
             status: dorReg ? 'registrado' : 'pendente',
         },
     ];

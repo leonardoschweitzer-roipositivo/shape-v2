@@ -131,6 +131,45 @@ export function AthletePortal({ atletaId, atletaNome }: AthletePortalProps) {
                 setTodayData(today)
             }
         }
+
+        if (tipo === 'sono') {
+            const horas = prompt('Quantas horas dormiu ontem à noite?', '7')
+            if (horas && !isNaN(Number(horas))) {
+                await registrarTracker(atletaId, 'sono', { quantidade: Number(horas) })
+                if (ctx) {
+                    const today = await montarDadosHoje(ctx)
+                    setTodayData(today)
+                }
+            }
+        }
+
+        if (tipo === 'peso') {
+            const peso = prompt('Qual seu peso hoje? (kg)', '94')
+            if (peso && !isNaN(Number(peso))) {
+                await registrarTracker(atletaId, 'peso', { quantidade: Number(peso) })
+                if (ctx) {
+                    const today = await montarDadosHoje(ctx)
+                    setTodayData(today)
+                }
+            }
+        }
+
+        if (tipo === 'dor') {
+            const local = prompt('Onde está a dor? (ex: ombro direito, lombar)')
+            if (local) {
+                const intensidade = prompt('Intensidade de 1 a 10?', '3')
+                if (intensidade && !isNaN(Number(intensidade))) {
+                    await registrarTracker(atletaId, 'dor', {
+                        quantidade: Number(intensidade),
+                        local,
+                    })
+                    if (ctx) {
+                        const today = await montarDadosHoje(ctx)
+                        setTodayData(today)
+                    }
+                }
+            }
+        }
     }
 
     const handleFalarComCoach = () => {
