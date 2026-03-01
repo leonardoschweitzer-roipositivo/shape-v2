@@ -60,8 +60,11 @@ import { useDataStore } from '@/stores/dataStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useSupabaseSync } from '@/hooks/useSupabaseSync';
 import { PersonalAthlete, MeasurementHistory } from '@/mocks/personal';
+import { buscarDiagnostico, type DiagnosticoDados } from '@/services/calculations/diagnostico';
+import { buscarPlanoTreino, type PlanoTreino } from '@/services/calculations/treino';
+import { buscarPlanoDieta, type PlanoDieta } from '@/services/calculations/dieta';
 
-type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details' | 'terms' | 'privacy' | 'my-record' | 'gamification' | 'athlete-portal' | 'personal-details' | 'student-details' | 'diagnostico' | 'treino-plano' | 'dieta-plano' | 'library' | 'library-golden-ratio' | 'library-metabolism' | 'library-training-volume' | 'library-protein' | 'library-energy-balance' | 'library-training-frequency' | 'library-periodization' | 'library-feminine-proportions';
+type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details' | 'terms' | 'privacy' | 'my-record' | 'gamification' | 'athlete-portal' | 'personal-details' | 'student-details' | 'diagnostico' | 'treino-plano' | 'dieta-plano' | 'consulta-diagnostico' | 'consulta-treino' | 'consulta-dieta' | 'library' | 'library-golden-ratio' | 'library-metabolism' | 'library-training-volume' | 'library-protein' | 'library-energy-balance' | 'library-training-frequency' | 'library-periodization' | 'library-feminine-proportions';
 
 const App: React.FC = () => {
   console.log('🎯 App component rendering...');
@@ -78,6 +81,9 @@ const App: React.FC = () => {
   const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(null);
   const [portalToken, setPortalToken] = useState<string | null>(null);
   const [diagnosticoPlanId, setDiagnosticoPlanId] = useState<string | null>(null);
+  const [consultaDiagData, setConsultaDiagData] = useState<DiagnosticoDados | null>(null);
+  const [consultaTreinoData, setConsultaTreinoData] = useState<PlanoTreino | null>(null);
+  const [consultaDietaData, setConsultaDietaData] = useState<PlanoDieta | null>(null);
 
   // Derived user profile from Auth Store
   const userProfile: ProfileType = (authProfile?.role?.toLowerCase() as ProfileType) || 'atleta';
@@ -497,10 +503,34 @@ const App: React.FC = () => {
         case 'evolution':
           return <PersonalEvolutionView initialAthleteId={selectedAthleteId} />;
         case 'coach':
-          return <PersonalCoachView onStartDiagnostico={(atletaId) => {
-            setSelectedAthleteId(atletaId);
-            setCurrentView('diagnostico');
-          }} />;
+          return <PersonalCoachView
+            onStartDiagnostico={(atletaId) => {
+              setSelectedAthleteId(atletaId);
+              setCurrentView('diagnostico');
+            }}
+            onConsultPlan={async (atletaId, tipo) => {
+              setSelectedAthleteId(atletaId);
+              if (tipo === 'diagnostico') {
+                const data = await buscarDiagnostico(atletaId);
+                if (data) {
+                  setConsultaDiagData(data);
+                  setCurrentView('consulta-diagnostico');
+                }
+              } else if (tipo === 'treino') {
+                const data = await buscarPlanoTreino(atletaId);
+                if (data) {
+                  setConsultaTreinoData(data);
+                  setCurrentView('consulta-treino');
+                }
+              } else if (tipo === 'dieta') {
+                const data = await buscarPlanoDieta(atletaId);
+                if (data) {
+                  setConsultaDietaData(data);
+                  setCurrentView('consulta-dieta');
+                }
+              }
+            }}
+          />;
         case 'diagnostico':
           return selectedAthleteId ? (
             <DiagnosticoView
@@ -529,6 +559,32 @@ const App: React.FC = () => {
               atletaId={selectedAthleteId}
               diagnosticoId={diagnosticoPlanId ?? undefined}
               onBack={() => setCurrentView('treino-plano')}
+            />
+          ) : null;
+        case 'consulta-diagnostico':
+          return selectedAthleteId && consultaDiagData ? (
+            <DiagnosticoView
+              atletaId={selectedAthleteId}
+              onBack={() => { setConsultaDiagData(null); setCurrentView('coach'); }}
+              onNext={() => { }}
+              readOnlyData={consultaDiagData}
+            />
+          ) : null;
+        case 'consulta-treino':
+          return selectedAthleteId && consultaTreinoData ? (
+            <TreinoView
+              atletaId={selectedAthleteId}
+              onBack={() => { setConsultaTreinoData(null); setCurrentView('coach'); }}
+              onNext={() => { }}
+              readOnlyData={consultaTreinoData}
+            />
+          ) : null;
+        case 'consulta-dieta':
+          return selectedAthleteId && consultaDietaData ? (
+            <DietaView
+              atletaId={selectedAthleteId}
+              onBack={() => { setConsultaDietaData(null); setCurrentView('coach'); }}
+              readOnlyData={consultaDietaData}
             />
           ) : null;
         case 'hall':

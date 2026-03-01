@@ -25,10 +25,16 @@ import {
     Check,
     Bot,
     X,
+    FileText,
+    Eye,
+    Clock,
+    Loader2,
 } from 'lucide-react';
 import { PersonalAthlete } from '@/mocks/personal';
 import { useDataStore } from '@/stores/dataStore';
-// EvolutionPlanWizard removido — agora navega para DiagnosticoView via App routing
+import { buscarDiagnostico } from '@/services/calculations/diagnostico';
+import { buscarPlanoTreino } from '@/services/calculations/treino';
+import { buscarPlanoDieta } from '@/services/calculations/dieta';
 
 // ===== TYPES =====
 
@@ -158,12 +164,19 @@ const AthleteRow: React.FC<{
 
 interface PersonalCoachViewProps {
     onStartDiagnostico?: (atletaId: string) => void;
+    onConsultPlan?: (atletaId: string, tipo: 'diagnostico' | 'treino' | 'dieta') => void;
 }
 
-export const PersonalCoachView: React.FC<PersonalCoachViewProps> = ({ onStartDiagnostico }) => {
+export const PersonalCoachView: React.FC<PersonalCoachViewProps> = ({ onStartDiagnostico, onConsultPlan }) => {
     const [selectedAthlete, setSelectedAthlete] = useState<PersonalAthlete | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+    const [savedPlans, setSavedPlans] = useState<{
+        diagnostico: { exists: boolean; createdAt?: string };
+        treino: { exists: boolean; createdAt?: string };
+        dieta: { exists: boolean; createdAt?: string };
+    } | null>(null);
+    const [loadingPlans, setLoadingPlans] = useState(false);
 
     const planBlockRef = useRef<HTMLDivElement>(null);
 
@@ -174,6 +187,38 @@ export const PersonalCoachView: React.FC<PersonalCoachViewProps> = ({ onStartDia
         if (selectedAthlete && planBlockRef.current) {
             planBlockRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
+    }, [selectedAthlete]);
+
+    // Buscar planos salvos ao selecionar atleta
+    useEffect(() => {
+        if (!selectedAthlete) {
+            setSavedPlans(null);
+            return;
+        }
+
+        const loadPlans = async () => {
+            setLoadingPlans(true);
+            try {
+                const [diag, treino, dieta] = await Promise.all([
+                    buscarDiagnostico(selectedAthlete.id),
+                    buscarPlanoTreino(selectedAthlete.id),
+                    buscarPlanoDieta(selectedAthlete.id),
+                ]);
+
+                setSavedPlans({
+                    diagnostico: { exists: !!diag, createdAt: (diag as any)?.geradoEm },
+                    treino: { exists: !!treino },
+                    dieta: { exists: !!dieta },
+                });
+            } catch (err) {
+                console.error('[CoachView] Erro ao buscar planos:', err);
+                setSavedPlans(null);
+            } finally {
+                setLoadingPlans(false);
+            }
+        };
+
+        loadPlans();
     }, [selectedAthlete]);
 
     // Contadores por status
@@ -427,6 +472,132 @@ export const PersonalCoachView: React.FC<PersonalCoachViewProps> = ({ onStartDia
                             </p>
                         )}
                     </div>
+
+                    {/* ══════════════════════════════════════════════════
+                        BLOCO: PLANOS SALVOS
+                        Aparece quando o atleta selecionado tem planos no banco
+                    ══════════════════════════════════════════════════ */}
+                    {selectedAthlete && (
+                        <div className={`bg-[#131B2C] border rounded-2xl p-6 md:p-8 transition-all duration-500 animate-fade-in-up ${savedPlans && (savedPlans.diagnostico.exists || savedPlans.treino.exists || savedPlans.dieta.exists)
+                                ? 'border-white/15'
+                                : 'border-white/10 opacity-70'
+                            }`}>
+                            {/* Header */}
+                            <div className="flex items-start gap-4 mb-6">
+                                <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                                    <FileText size={22} className="text-gray-400" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-bold text-white tracking-tight uppercase">
+                                        Planos Salvos
+                                    </h3>
+                                    <p className="text-xs font-bold uppercase tracking-widest mt-1 text-gray-600">
+                                        Consultar plano de evolução existente
+                                    </p>
+                                </div>
+                            </div>
+
+                            {loadingPlans ? (
+                                <div className="flex items-center justify-center gap-3 py-8">
+                                    <Loader2 size={20} className="text-primary animate-spin" />
+                                    <span className="text-sm text-gray-400">Buscando planos salvos...</span>
+                                </div>
+                            ) : savedPlans && (savedPlans.diagnostico.exists || savedPlans.treino.exists || savedPlans.dieta.exists) ? (
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    {/* Card Diagnóstico */}
+                                    <div className={`p-4 rounded-xl border transition-all ${savedPlans.diagnostico.exists
+                                            ? 'bg-white/5 border-white/10 hover:border-primary/30 hover:bg-primary/5'
+                                            : 'bg-white/[0.02] border-white/5 opacity-50'
+                                        }`}>
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${savedPlans.diagnostico.exists ? 'bg-primary/10 border border-primary/20' : 'bg-white/5 border border-white/10'
+                                                }`}>
+                                                <Stethoscope size={16} className={savedPlans.diagnostico.exists ? 'text-primary' : 'text-gray-600'} />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold text-white uppercase tracking-wide">Diagnóstico</p>
+                                                {savedPlans.diagnostico.exists && savedPlans.diagnostico.createdAt && (
+                                                    <p className="text-[10px] text-gray-500 flex items-center gap-1 mt-0.5">
+                                                        <Clock size={10} />
+                                                        {new Date(savedPlans.diagnostico.createdAt).toLocaleDateString('pt-BR')}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                        {savedPlans.diagnostico.exists ? (
+                                            <button
+                                                onClick={() => onConsultPlan?.(selectedAthlete.id, 'diagnostico')}
+                                                className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-white/5 border border-white/10 hover:bg-primary/10 hover:border-primary/30 text-gray-300 hover:text-primary text-xs font-bold uppercase tracking-wider transition-all"
+                                            >
+                                                <Eye size={14} />
+                                                Consultar
+                                            </button>
+                                        ) : (
+                                            <p className="text-xs text-gray-600 text-center py-2">Não gerado</p>
+                                        )}
+                                    </div>
+
+                                    {/* Card Treino */}
+                                    <div className={`p-4 rounded-xl border transition-all ${savedPlans.treino.exists
+                                            ? 'bg-white/5 border-white/10 hover:border-primary/30 hover:bg-primary/5'
+                                            : 'bg-white/[0.02] border-white/5 opacity-50'
+                                        }`}>
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${savedPlans.treino.exists ? 'bg-primary/10 border border-primary/20' : 'bg-white/5 border border-white/10'
+                                                }`}>
+                                                <Dumbbell size={16} className={savedPlans.treino.exists ? 'text-primary' : 'text-gray-600'} />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold text-white uppercase tracking-wide">Plano de Treino</p>
+                                            </div>
+                                        </div>
+                                        {savedPlans.treino.exists ? (
+                                            <button
+                                                onClick={() => onConsultPlan?.(selectedAthlete.id, 'treino')}
+                                                className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-white/5 border border-white/10 hover:bg-primary/10 hover:border-primary/30 text-gray-300 hover:text-primary text-xs font-bold uppercase tracking-wider transition-all"
+                                            >
+                                                <Eye size={14} />
+                                                Consultar
+                                            </button>
+                                        ) : (
+                                            <p className="text-xs text-gray-600 text-center py-2">Não gerado</p>
+                                        )}
+                                    </div>
+
+                                    {/* Card Dieta */}
+                                    <div className={`p-4 rounded-xl border transition-all ${savedPlans.dieta.exists
+                                            ? 'bg-white/5 border-white/10 hover:border-primary/30 hover:bg-primary/5'
+                                            : 'bg-white/[0.02] border-white/5 opacity-50'
+                                        }`}>
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${savedPlans.dieta.exists ? 'bg-primary/10 border border-primary/20' : 'bg-white/5 border border-white/10'
+                                                }`}>
+                                                <Salad size={16} className={savedPlans.dieta.exists ? 'text-primary' : 'text-gray-600'} />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold text-white uppercase tracking-wide">Plano de Dieta</p>
+                                            </div>
+                                        </div>
+                                        {savedPlans.dieta.exists ? (
+                                            <button
+                                                onClick={() => onConsultPlan?.(selectedAthlete.id, 'dieta')}
+                                                className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-white/5 border border-white/10 hover:bg-primary/10 hover:border-primary/30 text-gray-300 hover:text-primary text-xs font-bold uppercase tracking-wider transition-all"
+                                            >
+                                                <Eye size={14} />
+                                                Consultar
+                                            </button>
+                                        ) : (
+                                            <p className="text-xs text-gray-600 text-center py-2">Não gerado</p>
+                                        )}
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className="text-sm text-gray-500 text-center py-6">
+                                    Nenhum plano de evolução gerado ainda para este aluno.
+                                </p>
+                            )}
+                        </div>
+                    )}
 
                 </div>
             </div>

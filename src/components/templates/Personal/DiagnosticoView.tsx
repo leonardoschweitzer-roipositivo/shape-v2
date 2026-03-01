@@ -63,6 +63,7 @@ interface DiagnosticoViewProps {
     atletaId: string;
     onBack: () => void;
     onNext: (diagnosticoId?: string) => void;
+    readOnlyData?: DiagnosticoDados;
 }
 
 type DiagnosticoState = 'idle' | 'generating' | 'ready' | 'saving' | 'saved';
@@ -701,12 +702,14 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
     atletaId,
     onBack,
     onNext,
+    readOnlyData,
 }) => {
     const { personalAthletes } = useDataStore();
     const atleta = useMemo(() => personalAthletes.find(a => a.id === atletaId), [personalAthletes, atletaId]);
 
-    const [diagnostico, setDiagnostico] = useState<DiagnosticoDados | null>(null);
-    const [estado, setEstado] = useState<DiagnosticoState>('idle');
+    const isReadOnly = !!readOnlyData;
+    const [diagnostico, setDiagnostico] = useState<DiagnosticoDados | null>(readOnlyData ?? null);
+    const [estado, setEstado] = useState<DiagnosticoState>(readOnlyData ? 'saved' : 'idle');
     const [recomendacao, setRecomendacao] = useState<RecomendacaoObjetivo | null>(null);
     const [objetivoSelecionado, setObjetivoSelecionado] = useState<ObjetivoVitruvio | null>(null);
     const [toastStatus, setToastStatus] = useState<'success' | 'error' | null>(null);
@@ -815,11 +818,14 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
         // 1. Salvar diagnóstico
         const result = await salvarDiagnostico(atletaId, personalId, diagnostico);
         if (!result) {
-            console.warn('[Diagnostico] Tabela não existe ainda — salvo localmente.');
+            console.error('[Diagnostico] ❌ Erro ao salvar no banco.');
             setToastStatus('error');
-        } else {
-            setToastStatus('success');
+            setEstado('ready'); // Volta para permitir nova tentativa
+            setTimeout(() => setToastStatus(null), 4000);
+            return;
         }
+
+        setToastStatus('success');
 
         // 2. Persistir objetivo recomendado em fichas
         if (objetivoSelecionado) {
@@ -835,7 +841,6 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
         }
 
         setEstado('saved');
-        // Limpa toast após 3s
         setTimeout(() => setToastStatus(null), 3000);
     };
 
@@ -846,8 +851,8 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                 {/* Toast inline */}
                 {toastStatus && (
                     <div className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-2xl border text-sm font-bold uppercase tracking-wider animate-in fade-in slide-in-from-top-4 duration-300 ${toastStatus === 'success'
-                            ? 'bg-emerald-900/90 border-emerald-500/40 text-emerald-300'
-                            : 'bg-red-900/90 border-red-500/40 text-red-300'
+                        ? 'bg-emerald-900/90 border-emerald-500/40 text-emerald-300'
+                        : 'bg-red-900/90 border-red-500/40 text-red-300'
                         }`}>
                         {toastStatus === 'success'
                             ? <CheckCircle size={18} className="text-emerald-400" />
@@ -1048,32 +1053,34 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                             Voltar
                         </button>
 
-                        <div className="flex items-center gap-4">
-                            {estado === 'ready' && (
-                                <button
-                                    onClick={handleSalvar}
-                                    className="flex items-center gap-3 px-8 py-3.5 bg-emerald-600 text-white font-bold text-sm uppercase tracking-wider rounded-xl hover:bg-emerald-500 hover:shadow-[0_0_20px_rgba(16,185,129,0.2)] transition-all"
-                                >
-                                    <Save size={18} />
-                                    Confirmar e Salvar
-                                </button>
-                            )}
-                            {estado === 'saving' && (
-                                <button disabled className="flex items-center gap-3 px-8 py-3.5 bg-gray-800 text-gray-500 font-bold text-sm uppercase tracking-wider rounded-xl">
-                                    <Loader2 size={18} className="animate-spin" />
-                                    Salvando...
-                                </button>
-                            )}
-                            {estado === 'saved' && (
-                                <button
-                                    onClick={() => onNext(undefined)}
-                                    className="flex items-center gap-3 px-8 py-3.5 bg-primary text-[#0A0F1C] font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(0,201,167,0.3)] transition-all"
-                                >
-                                    Próximo: Plano de Treino
-                                    <ArrowRight size={18} />
-                                </button>
-                            )}
-                        </div>
+                        {!isReadOnly && (
+                            <div className="flex items-center gap-4">
+                                {estado === 'ready' && (
+                                    <button
+                                        onClick={handleSalvar}
+                                        className="flex items-center gap-3 px-8 py-3.5 bg-emerald-600 text-white font-bold text-sm uppercase tracking-wider rounded-xl hover:bg-emerald-500 hover:shadow-[0_0_20px_rgba(16,185,129,0.2)] transition-all"
+                                    >
+                                        <Save size={18} />
+                                        Confirmar e Salvar
+                                    </button>
+                                )}
+                                {estado === 'saving' && (
+                                    <button disabled className="flex items-center gap-3 px-8 py-3.5 bg-gray-800 text-gray-500 font-bold text-sm uppercase tracking-wider rounded-xl">
+                                        <Loader2 size={18} className="animate-spin" />
+                                        Salvando...
+                                    </button>
+                                )}
+                                {estado === 'saved' && (
+                                    <button
+                                        onClick={() => onNext(undefined)}
+                                        className="flex items-center gap-3 px-8 py-3.5 bg-primary text-[#0A0F1C] font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(0,201,167,0.3)] transition-all"
+                                    >
+                                        Próximo: Plano de Treino
+                                        <ArrowRight size={18} />
+                                    </button>
+                                )}
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

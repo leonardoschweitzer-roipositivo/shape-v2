@@ -221,28 +221,7 @@ export const PersonalAthletesList: React.FC<PersonalAthletesListProps> = ({
                                                     <Eye size={16} className="text-gray-400 group-hover:text-primary transition-colors" />
                                                     <span className="text-[9px] text-gray-500 group-hover:text-primary transition-colors font-medium">Ficha</span>
                                                 </button>
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        onViewEvolution(athlete.id);
-                                                    }}
-                                                    className="flex flex-col items-center gap-0.5 p-1.5 hover:bg-white/10 rounded-lg transition-colors group"
-                                                    title="Visualizar Evolução"
-                                                >
-                                                    <TrendingUp size={16} className="text-gray-400 group-hover:text-primary transition-colors" />
-                                                    <span className="text-[9px] text-gray-500 group-hover:text-primary transition-colors font-medium">Evolução</span>
-                                                </button>
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        onRegisterMeasurement(athlete.id);
-                                                    }}
-                                                    className="flex flex-col items-center gap-0.5 p-1.5 hover:bg-white/10 rounded-lg transition-colors group"
-                                                    title="Fazer Avaliação"
-                                                >
-                                                    <ClipboardList size={16} className="text-gray-400 group-hover:text-primary transition-colors" />
-                                                    <span className="text-[9px] text-gray-500 group-hover:text-primary transition-colors font-medium">Avaliar</span>
-                                                </button>
+
                                                 {athlete.assessments && athlete.assessments.length > 0 && (
                                                     <button
                                                         onClick={(e) => {

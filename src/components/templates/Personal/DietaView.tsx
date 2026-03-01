@@ -65,6 +65,7 @@ interface DietaViewProps {
     atletaId: string;
     onBack: () => void;
     diagnosticoId?: string;
+    readOnlyData?: PlanoDieta;
 }
 
 type DietaState = 'idle' | 'generating' | 'ready' | 'saving' | 'saved';
@@ -219,13 +220,15 @@ export const DietaView: React.FC<DietaViewProps> = ({
     atletaId,
     onBack,
     diagnosticoId,
+    readOnlyData,
 }) => {
     const { personalAthletes } = useDataStore();
     const atleta = useMemo(() => personalAthletes.find(a => a.id === atletaId), [personalAthletes, atletaId]);
     const ultimaAvaliacao = useMemo(() => atleta?.assessments[0] ?? null, [atleta]);
 
-    const [estado, setEstado] = useState<DietaState>('idle');
-    const [plano, setPlano] = useState<PlanoDieta | null>(null);
+    const isReadOnly = !!readOnlyData;
+    const [estado, setEstado] = useState<DietaState>(readOnlyData ? 'saved' : 'idle');
+    const [plano, setPlano] = useState<PlanoDieta | null>(readOnlyData ?? null);
     const [potencial, setPotencial] = useState<PotencialAtleta | null>(null);
     const [diagnostico, setDiagnostico] = useState<DiagnosticoDados | null>(null);
     const [showDescanso, setShowDescanso] = useState(false);
@@ -332,13 +335,15 @@ export const DietaView: React.FC<DietaViewProps> = ({
         const result = await salvarPlanoDieta(atletaId, personalId, plano, diagnosticoId);
 
         if (!result) {
-            console.warn('[Dieta] Tabela não existe ainda — salvo localmente.');
+            console.error('[Dieta] ❌ Erro ao salvar no banco.');
             setToastStatus('error');
-        } else {
-            console.info('[Dieta] ✅ Plano salvo:', result.id);
-            setToastStatus('success');
+            setEstado('ready');
+            setTimeout(() => setToastStatus(null), 4000);
+            return;
         }
 
+        console.info('[Dieta] ✅ Plano salvo:', result.id);
+        setToastStatus('success');
         setEstado('saved');
         setTimeout(() => setToastStatus(null), 3000);
     };
@@ -350,8 +355,8 @@ export const DietaView: React.FC<DietaViewProps> = ({
                 {/* Toast inline */}
                 {toastStatus && (
                     <div className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-2xl border text-sm font-bold uppercase tracking-wider animate-in fade-in slide-in-from-top-4 duration-300 ${toastStatus === 'success'
-                            ? 'bg-emerald-900/90 border-emerald-500/40 text-emerald-300'
-                            : 'bg-red-900/90 border-red-500/40 text-red-300'
+                        ? 'bg-emerald-900/90 border-emerald-500/40 text-emerald-300'
+                        : 'bg-red-900/90 border-red-500/40 text-red-300'
                         }`}>
                         {toastStatus === 'success'
                             ? <CheckCircle size={18} className="text-emerald-400" />
@@ -840,35 +845,37 @@ export const DietaView: React.FC<DietaViewProps> = ({
                                 onClick={onBack}
                                 className="flex items-center gap-2 px-6 py-3 text-sm font-bold uppercase tracking-wider text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all"
                             >
-                                <ArrowLeft size={18} /> Voltar: Treino
+                                <ArrowLeft size={18} /> Voltar
                             </button>
 
-                            <div className="flex items-center gap-4">
-                                {estado === 'ready' && (
-                                    <button
-                                        onClick={handleSalvar}
-                                        className="flex items-center gap-3 px-8 py-3.5 bg-emerald-600 text-white font-bold text-sm uppercase tracking-wider rounded-xl hover:bg-emerald-500 hover:shadow-[0_0_20px_rgba(16,185,129,0.2)] transition-all"
-                                    >
-                                        <Save size={18} /> Confirmar e Salvar
-                                    </button>
-                                )}
-                                {estado === 'saving' && (
-                                    <button disabled className="flex items-center gap-3 px-8 py-3.5 bg-gray-800 text-gray-500 font-bold text-sm uppercase tracking-wider rounded-xl">
-                                        <Loader2 size={18} className="animate-spin" /> Salvando...
-                                    </button>
-                                )}
-                                {estado === 'saved' && (
-                                    <div className="flex flex-col items-end gap-1">
+                            {!isReadOnly && (
+                                <div className="flex items-center gap-4">
+                                    {estado === 'ready' && (
                                         <button
-                                            onClick={onBack}
-                                            className="flex items-center gap-3 px-8 py-3.5 bg-primary text-[#0A0F1C] font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(0,201,167,0.3)] transition-all"
+                                            onClick={handleSalvar}
+                                            className="flex items-center gap-3 px-8 py-3.5 bg-emerald-600 text-white font-bold text-sm uppercase tracking-wider rounded-xl hover:bg-emerald-500 hover:shadow-[0_0_20px_rgba(16,185,129,0.2)] transition-all"
                                         >
-                                            <CheckCircle size={18} /> Concluir Plano
+                                            <Save size={18} /> Confirmar e Salvar
                                         </button>
-                                        <p className="text-[10px] text-gray-600">Diagnóstico ✓ · Treino ✓ · Dieta ✓</p>
-                                    </div>
-                                )}
-                            </div>
+                                    )}
+                                    {estado === 'saving' && (
+                                        <button disabled className="flex items-center gap-3 px-8 py-3.5 bg-gray-800 text-gray-500 font-bold text-sm uppercase tracking-wider rounded-xl">
+                                            <Loader2 size={18} className="animate-spin" /> Salvando...
+                                        </button>
+                                    )}
+                                    {estado === 'saved' && (
+                                        <div className="flex flex-col items-end gap-1">
+                                            <button
+                                                onClick={onBack}
+                                                className="flex items-center gap-3 px-8 py-3.5 bg-primary text-[#0A0F1C] font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(0,201,167,0.3)] transition-all"
+                                            >
+                                                <CheckCircle size={18} /> Concluir Plano
+                                            </button>
+                                            <p className="text-[10px] text-gray-600">Diagnóstico ✓ · Treino ✓ · Dieta ✓</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </>
                 )}

@@ -68,6 +68,7 @@ interface TreinoViewProps {
     onBack: () => void;
     onNext: () => void;
     diagnosticoId?: string;
+    readOnlyData?: PlanoTreino;
 }
 
 type TreinoState = 'idle' | 'generating' | 'ready' | 'saving' | 'saved';
@@ -481,14 +482,16 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
     onBack,
     onNext,
     diagnosticoId,
+    readOnlyData,
 }) => {
     const { personalAthletes } = useDataStore();
     const atleta = useMemo(() => personalAthletes.find(a => a.id === atletaId), [personalAthletes, atletaId]);
 
-    const [plano, setPlano] = useState<PlanoTreino | null>(null);
+    const isReadOnly = !!readOnlyData;
+    const [plano, setPlano] = useState<PlanoTreino | null>(readOnlyData ?? null);
     const [diagnostico, setDiagnostico] = useState<DiagnosticoDados | null>(null);
     const [potencial, setPotencial] = useState<PotencialAtleta | null>(null);
-    const [estado, setEstado] = useState<TreinoState>('idle');
+    const [estado, setEstado] = useState<TreinoState>(readOnlyData ? 'saved' : 'idle');
     const [objetivoAtleta, setObjetivoAtleta] = useState<ObjetivoVitruvio>('RECOMP');
     const [toastStatus, setToastStatus] = useState<'success' | 'error' | null>(null);
 
@@ -589,13 +592,15 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
         const result = await salvarPlanoTreino(atletaId, personalId, plano, diagnosticoId);
 
         if (!result) {
-            console.warn('[Treino] Tabela não existe ainda — salvo localmente.');
+            console.error('[Treino] ❌ Erro ao salvar no banco.');
             setToastStatus('error');
-        } else {
-            console.info('[Treino] ✅ Plano salvo:', result.id);
-            setToastStatus('success');
+            setEstado('ready');
+            setTimeout(() => setToastStatus(null), 4000);
+            return;
         }
 
+        console.info('[Treino] ✅ Plano salvo:', result.id);
+        setToastStatus('success');
         setEstado('saved');
         setTimeout(() => setToastStatus(null), 3000);
     };
@@ -607,8 +612,8 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
                 {/* Toast inline */}
                 {toastStatus && (
                     <div className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-2xl border text-sm font-bold uppercase tracking-wider animate-in fade-in slide-in-from-top-4 duration-300 ${toastStatus === 'success'
-                            ? 'bg-emerald-900/90 border-emerald-500/40 text-emerald-300'
-                            : 'bg-red-900/90 border-red-500/40 text-red-300'
+                        ? 'bg-emerald-900/90 border-emerald-500/40 text-emerald-300'
+                        : 'bg-red-900/90 border-red-500/40 text-red-300'
                         }`}>
                         {toastStatus === 'success'
                             ? <CheckCircle size={18} className="text-emerald-400" />
@@ -706,7 +711,7 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
                 )}
 
                 {/* Conteúdo Gerado — cards soltos, igual Dieta/Diagnóstico */}
-                {plano && diagnostico && (estado === 'ready' || estado === 'saving' || estado === 'saved') && (
+                {plano && (isReadOnly || diagnostico) && (estado === 'ready' || estado === 'saving' || estado === 'saved') && (
                     <div className="animate-in fade-in duration-500 flex flex-col gap-0">
 
                         {/* ★ Estrela do Norte — Objetivo */}
@@ -738,7 +743,7 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
                             </div>
                         </div>
 
-                        <SecaoResumoDiagnostico diagnostico={diagnostico} potencial={potencial ?? undefined} />
+                        {diagnostico && <SecaoResumoDiagnostico diagnostico={diagnostico} potencial={potencial ?? undefined} />}
                         <SecaoVisaoAnual plano={plano} />
                         <SecaoTrimestreAtual plano={plano} />
                         <SecaoDivisao plano={plano} />
@@ -781,25 +786,27 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
                                 className="flex items-center gap-2 px-6 py-3 text-sm font-bold uppercase tracking-wider text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all"
                             >
                                 <ArrowLeft size={18} />
-                                Voltar: Diagnóstico
+                                Voltar
                             </button>
-                            <div className="flex items-center gap-4">
-                                {estado === 'ready' && (
-                                    <button onClick={handleSalvar} className="flex items-center gap-3 px-8 py-3.5 bg-emerald-600 text-white font-bold text-sm uppercase tracking-wider rounded-xl hover:bg-emerald-500 transition-all">
-                                        <Save size={18} /> Confirmar e Salvar
-                                    </button>
-                                )}
-                                {estado === 'saving' && (
-                                    <button disabled className="flex items-center gap-3 px-8 py-3.5 bg-gray-800 text-gray-500 font-bold text-sm uppercase tracking-wider rounded-xl">
-                                        <Loader2 size={18} className="animate-spin" /> Salvando...
-                                    </button>
-                                )}
-                                {estado === 'saved' && (
-                                    <button onClick={onNext} className="flex items-center gap-3 px-8 py-3.5 bg-primary text-[#0A0F1C] font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(0,201,167,0.3)] transition-all">
-                                        Próximo: Plano de Dieta <ArrowRight size={18} />
-                                    </button>
-                                )}
-                            </div>
+                            {!isReadOnly && (
+                                <div className="flex items-center gap-4">
+                                    {estado === 'ready' && (
+                                        <button onClick={handleSalvar} className="flex items-center gap-3 px-8 py-3.5 bg-emerald-600 text-white font-bold text-sm uppercase tracking-wider rounded-xl hover:bg-emerald-500 transition-all">
+                                            <Save size={18} /> Confirmar e Salvar
+                                        </button>
+                                    )}
+                                    {estado === 'saving' && (
+                                        <button disabled className="flex items-center gap-3 px-8 py-3.5 bg-gray-800 text-gray-500 font-bold text-sm uppercase tracking-wider rounded-xl">
+                                            <Loader2 size={18} className="animate-spin" /> Salvando...
+                                        </button>
+                                    )}
+                                    {estado === 'saved' && (
+                                        <button onClick={onNext} className="flex items-center gap-3 px-8 py-3.5 bg-primary text-[#0A0F1C] font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(0,201,167,0.3)] transition-all">
+                                            Próximo: Plano de Dieta <ArrowRight size={18} />
+                                        </button>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
