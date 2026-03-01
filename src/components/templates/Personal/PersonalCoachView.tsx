@@ -274,7 +274,7 @@ export const PersonalCoachView: React.FC<PersonalCoachViewProps> = ({ onStartDia
                     {/* Header */}
                     <div className="flex flex-col animate-fade-in-up">
                         <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight uppercase">
-                            VITRÚVIO IA
+                            MONTAR PLANO COM IA
                         </h2>
                         <p className="text-gray-400 mt-2 font-light">
                             Selecione um aluno e monte o plano de evolução com inteligência artificial.
@@ -479,8 +479,8 @@ export const PersonalCoachView: React.FC<PersonalCoachViewProps> = ({ onStartDia
                     ══════════════════════════════════════════════════ */}
                     {selectedAthlete && (
                         <div className={`bg-[#131B2C] border rounded-2xl p-6 md:p-8 transition-all duration-500 animate-fade-in-up ${savedPlans && (savedPlans.diagnostico.exists || savedPlans.treino.exists || savedPlans.dieta.exists)
-                                ? 'border-white/15'
-                                : 'border-white/10 opacity-70'
+                            ? 'border-white/15'
+                            : 'border-white/10 opacity-70'
                             }`}>
                             {/* Header */}
                             <div className="flex items-start gap-4 mb-6">
@@ -506,8 +506,8 @@ export const PersonalCoachView: React.FC<PersonalCoachViewProps> = ({ onStartDia
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     {/* Card Diagnóstico */}
                                     <div className={`p-4 rounded-xl border transition-all ${savedPlans.diagnostico.exists
-                                            ? 'bg-white/5 border-white/10 hover:border-primary/30 hover:bg-primary/5'
-                                            : 'bg-white/[0.02] border-white/5 opacity-50'
+                                        ? 'bg-white/5 border-white/10 hover:border-primary/30 hover:bg-primary/5'
+                                        : 'bg-white/[0.02] border-white/5 opacity-50'
                                         }`}>
                                         <div className="flex items-center gap-3 mb-3">
                                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${savedPlans.diagnostico.exists ? 'bg-primary/10 border border-primary/20' : 'bg-white/5 border border-white/10'
@@ -539,8 +539,8 @@ export const PersonalCoachView: React.FC<PersonalCoachViewProps> = ({ onStartDia
 
                                     {/* Card Treino */}
                                     <div className={`p-4 rounded-xl border transition-all ${savedPlans.treino.exists
-                                            ? 'bg-white/5 border-white/10 hover:border-primary/30 hover:bg-primary/5'
-                                            : 'bg-white/[0.02] border-white/5 opacity-50'
+                                        ? 'bg-white/5 border-white/10 hover:border-primary/30 hover:bg-primary/5'
+                                        : 'bg-white/[0.02] border-white/5 opacity-50'
                                         }`}>
                                         <div className="flex items-center gap-3 mb-3">
                                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${savedPlans.treino.exists ? 'bg-primary/10 border border-primary/20' : 'bg-white/5 border border-white/10'
@@ -566,8 +566,8 @@ export const PersonalCoachView: React.FC<PersonalCoachViewProps> = ({ onStartDia
 
                                     {/* Card Dieta */}
                                     <div className={`p-4 rounded-xl border transition-all ${savedPlans.dieta.exists
-                                            ? 'bg-white/5 border-white/10 hover:border-primary/30 hover:bg-primary/5'
-                                            : 'bg-white/[0.02] border-white/5 opacity-50'
+                                        ? 'bg-white/5 border-white/10 hover:border-primary/30 hover:bg-primary/5'
+                                        : 'bg-white/[0.02] border-white/5 opacity-50'
                                         }`}>
                                         <div className="flex items-center gap-3 mb-3">
                                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${savedPlans.dieta.exists ? 'bg-primary/10 border border-primary/20' : 'bg-white/5 border border-white/10'

@@ -98,8 +98,8 @@ export function mapAtletaToPersonalAthlete(
         mappedAssessments.push({
             id: m.id,
             date: m.data || m.created_at || new Date().toISOString(),
-            score: 0,
-            ratio: 0,
+            score: Number(m.score) || 0,
+            ratio: Number(m.ratio) || 0,
             bf: Number(m.gordura_corporal) || 0,
             ffmi: 0,
             measurements: {

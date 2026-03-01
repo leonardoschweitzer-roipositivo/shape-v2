@@ -200,8 +200,32 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
         if (!confirm('Tem certeza que deseja excluir esta avaliação? Esta ação não pode ser desfeita.')) return;
 
         try {
-            const { error } = await supabase.from('medidas').delete().eq('id', assessmentId);
-            if (error) throw error;
+            const assToDelete = athlete.assessments?.find(a => a.id === assessmentId);
+
+            // Podemos ter o ID vindo da tabela 'assessments' ou 'medidas' (fallback)
+            const deletes = [
+                supabase.from('assessments').delete().eq('id', assessmentId),
+                supabase.from('medidas').delete().eq('id', assessmentId)
+            ];
+
+            // Para garantir a limpeza das vias duplicadas (fallback backward compat em medidas),
+            // tentamos excluir também pelos dados coincidentes
+            if (assToDelete) {
+                const dateStr = new Date(assToDelete.date).toISOString().split('T')[0];
+                const peso = assToDelete.measurements?.weight;
+
+                deletes.push(
+                    supabase.from('medidas').delete()
+                        .eq('atleta_id', athlete.id)
+                        .eq('data', dateStr)
+                        .eq('peso', peso || 0)
+                );
+            }
+
+            const results = await Promise.all(deletes);
+            results.forEach(res => {
+                if (res.error) throw res.error;
+            });
 
             // Recarregar dados do store
             const { loadFromSupabase } = useDataStore.getState();
@@ -846,8 +870,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                     <History size={32} />
                                 </div>
                                 <h4 className="text-white font-bold uppercase tracking-wider mb-2">Nenhum Plano de Evolução</h4>
-                                <p className="text-gray-500 text-sm max-w-xs mx-auto mb-6">Você ainda não gerou nenhum plano de evolução para este atleta usando a IA.</p>
-                                <Button variant="primary" onClick={onNewAssessment}>Nova Avaliação IA</Button>
+                                <p className="text-gray-500 text-sm max-w-xs mx-auto">Você ainda não gerou nenhum plano de evolução para este atleta usando a IA.</p>
                             </div>
                         )}
                     </div>

@@ -86,11 +86,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
         ];
       case 'personal':
         return [
-          { icon: LayoutDashboard, label: 'Dashboard', id: 'dashboard' },
+          { icon: LayoutDashboard, label: 'Início', id: 'dashboard' },
           { icon: Users, label: 'Meus Alunos', id: 'students' },
           { icon: Activity, label: 'Avaliação IA', id: 'assessment' },
+          { icon: Bot, label: 'Montar Plano', id: 'coach', isPro: true },
           { icon: TrendingUp, label: 'Evolução', id: 'evolution' },
-          { icon: Bot, label: 'Vitruvius IA', id: 'coach', isPro: true },
+          { type: 'divider' as const },
           { icon: Dumbbell, label: 'Hall dos Deuses', id: 'hall' },
           { icon: Trophy, label: 'Ranking Personais', id: 'trainers-ranking' },
         ];
@@ -100,9 +101,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
           { icon: LayoutDashboard, label: 'Início', id: 'dashboard' },
           { icon: Users, label: 'Minha Ficha', id: 'my-record' },
           { icon: Activity, label: 'Avaliação', id: 'assessment' },
+          { icon: Bot, label: 'Montar Plano', id: 'coach', isPro: true },
           { icon: TrendingUp, label: 'Evolução', id: 'evolution' },
-          { icon: Bot, label: 'Vitruvius IA', id: 'coach', isPro: true },
-          // { icon: Award, label: 'Gamificação', id: 'gamification' }, // DISABLED - Feature para depois
+          { type: 'divider' as const },
           { icon: Dumbbell, label: 'Hall dos Deuses', id: 'hall' },
           { icon: Trophy, label: 'Ranking Personais', id: 'trainers-ranking' },
         ];
@@ -146,15 +147,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
               Menu {userProfile === 'atleta' ? 'Principal' : userProfile.charAt(0).toUpperCase() + userProfile.slice(1)}
             </p>
           )}
-          {mainNavItems.map((item, index) => (
-            <NavItem
-              key={index}
-              {...item}
-              isActive={currentView === item.id}
-              onClick={() => onNavigate && item.id && onNavigate(item.id)}
-              isSidebarCollapsed={isSidebarCollapsed}
-            />
-          ))}
+          {mainNavItems.map((item, index) => {
+            if ('type' in item && item.type === 'divider') {
+              return <div key={`divider-${index}`} className="h-px bg-white/10 my-2 mx-2" />;
+            }
+            const navItem = item as { icon: React.ElementType, label: string, id: string, isPro?: boolean };
+            return (
+              <NavItem
+                key={index}
+                {...navItem}
+                isActive={currentView === navItem.id}
+                onClick={() => onNavigate && navItem.id && onNavigate(navItem.id)}
+                isSidebarCollapsed={isSidebarCollapsed}
+              />
+            );
+          })}
         </nav>
       </div>
 
