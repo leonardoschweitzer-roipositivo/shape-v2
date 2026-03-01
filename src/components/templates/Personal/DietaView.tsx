@@ -509,7 +509,7 @@ export const DietaView: React.FC<DietaViewProps> = ({
                         </div>
                         <div className="bg-white/[0.03] p-4 rounded-xl border border-white/5">
                             <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">BF Atual</p>
-                            <p className="text-2xl font-bold text-white">{ultimaAvaliacao.bf ?? '--'}<span className="text-sm text-gray-500">%</span></p>
+                            <p className="text-2xl font-bold text-white">{typeof ultimaAvaliacao.bf === 'number' ? ultimaAvaliacao.bf.toFixed(1) : ultimaAvaliacao.bf ?? '--'}<span className="text-sm text-gray-500">%</span></p>
                         </div>
                         <div className="bg-white/[0.03] p-4 rounded-xl border border-white/5">
                             <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">Nível</p>

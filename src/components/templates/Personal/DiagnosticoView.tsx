@@ -278,7 +278,7 @@ const SecaoComposicao: React.FC<{ dados: DiagnosticoDados; insightIA?: string; i
                 </div>
                 <div className="bg-[#0D1525] border border-white/5 rounded-xl p-5 text-center">
                     <p className="text-xs uppercase tracking-widest text-gray-500 mb-2">Gordura Corporal</p>
-                    <p className="text-3xl font-bold text-white">{composicaoAtual.gorduraPct}<span className="text-sm text-gray-500">%</span></p>
+                    <p className="text-3xl font-bold text-white">{Number(composicaoAtual.gorduraPct).toFixed(1)}<span className="text-sm text-gray-500">%</span></p>
                     <div className="mt-4">
                         <ProgressBar pct={composicaoAtual.gorduraPct * 3} color="bg-red-500/60" />
                         <p className="text-xs text-gray-600 mt-1">Meta: {metasComposicao.gordura12Meses}%</p>
@@ -304,7 +304,7 @@ const SecaoComposicao: React.FC<{ dados: DiagnosticoDados; insightIA?: string; i
                             <tr key={p.mes} className="border-b border-white/5">
                                 <td className="py-3 text-gray-300 font-medium">{p.mes === 0 ? 'Atual' : `Mês ${p.mes}`}</td>
                                 <td className="py-3 text-right text-gray-400">{p.peso} kg</td>
-                                <td className="py-3 text-right text-gray-400">{p.gorduraPct}%</td>
+                                <td className="py-3 text-right text-gray-400">{Number(p.gorduraPct).toFixed(1)}%</td>
                                 <td className="py-3 text-right text-emerald-400">{p.massaMagra} kg</td>
                                 <td className="py-3 text-right text-red-400">{p.massaGorda} kg</td>
                             </tr>
@@ -313,7 +313,7 @@ const SecaoComposicao: React.FC<{ dados: DiagnosticoDados; insightIA?: string; i
                 </table>
             </div>
 
-            <InsightBox isLoading={isLoading} text={insightIA || `Atualmente com ${composicaoAtual.peso}kg — sendo ${composicaoAtual.massaMagra}kg de massa magra e ${composicaoAtual.massaGorda}kg de gordura (${composicaoAtual.gorduraPct}%). ${composicaoAtual.gorduraPct > 20 ? 'A prioridade é reduzir gordura corporal via déficit calórico moderado combinado com treino de força para preservar massa magra.' : composicaoAtual.gorduraPct > 15 ? 'Faixa de transição — é possível buscar recomposição corporal simultânea (perder gordura e ganhar músculo) com alimentação estratégica.' : 'BF em faixa atlética. O foco deve ser ganho gradual de massa magra com surplus calórico controlado (+200-300 kcal).'} Meta 12M: ${metasComposicao.gordura12Meses}% de gordura, peso projetado de ${metasComposicao.peso12Meses}kg. A mudança visual será significativa mesmo que a balança não mude drasticamente.`} />
+            <InsightBox isLoading={isLoading} text={insightIA || `Atualmente com ${composicaoAtual.peso}kg — sendo ${composicaoAtual.massaMagra}kg de massa magra e ${composicaoAtual.massaGorda}kg de gordura (${Number(composicaoAtual.gorduraPct).toFixed(1)}%). ${composicaoAtual.gorduraPct > 20 ? 'A prioridade é reduzir gordura corporal via déficit calórico moderado combinado com treino de força para preservar massa magra.' : composicaoAtual.gorduraPct > 15 ? 'Faixa de transição — é possível buscar recomposição corporal simultânea (perder gordura e ganhar músculo) com alimentação estratégica.' : 'BF em faixa atlética. O foco deve ser ganho gradual de massa magra com surplus calórico controlado (+200-300 kcal).'} Meta 12M: ${metasComposicao.gordura12Meses}% de gordura, peso projetado de ${metasComposicao.peso12Meses}kg. A mudança visual será significativa mesmo que a balança não mude drasticamente.`} />
 
             <RefsBox refs={[
                 'Jackson, A.S. & Pollock, M.L. (1978). <span class="text-gray-500 italic">"Generalized equations for predicting body density of men."</span> Br J Nutr, 40(3), 497-504.',

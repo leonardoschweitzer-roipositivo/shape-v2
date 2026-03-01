@@ -196,36 +196,36 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
         fetchPlans();
     }, [fetchPlans]);
 
-    const handleDeleteAssessment = async (assessmentId: string) => {
+    const handleDeleteAssessment = async (assessmentId: string, source?: string) => {
         if (!confirm('Tem certeza que deseja excluir esta avaliação? Esta ação não pode ser desfeita.')) return;
 
         try {
-            const assToDelete = athlete.assessments?.find(a => a.id === assessmentId);
+            console.info('[AthleteDetails] 🗑️ Excluindo avaliação:', assessmentId, 'source:', source);
 
-            // Podemos ter o ID vindo da tabela 'assessments' ou 'medidas' (fallback)
-            const deletes = [
-                supabase.from('assessments').delete().eq('id', assessmentId),
-                supabase.from('medidas').delete().eq('id', assessmentId)
-            ];
-
-            // Para garantir a limpeza das vias duplicadas (fallback backward compat em medidas),
-            // tentamos excluir também pelos dados coincidentes
-            if (assToDelete) {
-                const dateStr = new Date(assToDelete.date).toISOString().split('T')[0];
-                const peso = assToDelete.measurements?.weight;
-
-                deletes.push(
-                    supabase.from('medidas').delete()
-                        .eq('atleta_id', athlete.id)
-                        .eq('data', dateStr)
-                        .eq('peso', peso || 0)
-                );
+            if (source === 'medidas') {
+                // Assessment virtual gerado a partir de medidas brutas.
+                // NÃO excluímos a medida pois ela é dado base do atleta.
+                // Apenas notificamos o usuário.
+                alert('Esta avaliação foi gerada automaticamente a partir das medidas do atleta e não pode ser excluída individualmente. Para removê-la, exclua as medidas correspondentes na ficha do atleta.');
+                return;
             }
 
-            const results = await Promise.all(deletes);
-            results.forEach(res => {
-                if (res.error) throw res.error;
-            });
+            // Excluir APENAS o registro da tabela assessments.
+            // As medidas (tabela medidas) são dados base do atleta e NÃO devem ser excluídas junto.
+            const { error, count } = await supabase
+                .from('assessments')
+                .delete({ count: 'exact' })
+                .eq('id', assessmentId);
+
+            if (error) throw error;
+
+            if (count === 0) {
+                console.warn('[AthleteDetails] ⚠️ Nenhum registro deletado — ID não encontrado em assessments:', assessmentId);
+                alert('Avaliação não encontrada. Pode já ter sido excluída.');
+                return;
+            }
+
+            console.info('[AthleteDetails] ✅ Avaliação excluída:', assessmentId);
 
             // Recarregar dados do store
             const { loadFromSupabase } = useDataStore.getState();
@@ -233,7 +233,6 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
             if (personalId) {
                 await loadFromSupabase(personalId);
             }
-            console.info('[AthleteDetails] ✅ Avaliação excluída:', assessmentId);
         } catch (err) {
             console.error('[AthleteDetails] ❌ Erro ao excluir avaliação:', err);
             alert('Erro ao excluir a avaliação.');
@@ -800,7 +799,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                                             Consultar
                                                         </button>
                                                         <button
-                                                            onClick={() => handleDeleteAssessment(ass.id)}
+                                                            onClick={() => handleDeleteAssessment(ass.id, (ass as any)._source)}
                                                             className="p-2 hover:bg-red-500/20 rounded-lg text-gray-500 hover:text-red-400 transition-all flex items-center gap-2 text-[10px] font-bold uppercase"
                                                         >
                                                             <Trash2 size={16} />

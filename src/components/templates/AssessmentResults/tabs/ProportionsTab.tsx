@@ -282,8 +282,8 @@ export const ProportionsTab: React.FC<ProportionsTabProps> = ({
                                     <ProportionCard {...item.card} />
                                 </div>
 
-                                {/* Right: AI Analysis Card (Matched Height) */}
-                                <div className="w-full lg:w-80 flex-shrink-0">
+                                {/* Right: AI Analysis Card — mesma altura do card esquerdo, scroll interno */}
+                                <div className="w-full lg:w-80 flex-shrink-0 self-stretch overflow-hidden">
                                     {iaLoading ? (
                                         <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 h-full flex items-center gap-3">
                                             <Loader2 size={18} className="text-primary animate-spin" />
