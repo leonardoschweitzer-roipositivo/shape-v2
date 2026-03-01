@@ -35,22 +35,21 @@ function MacroBar({ label, atual, meta, percentual, unidade, color }: MacroBarPr
 
     return (
         <div>
-            <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs font-medium text-gray-400">{label}</span>
-                <span className="text-xs text-gray-500">{percentual}%</span>
+            <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">{label}</span>
+                <span className="text-[10px] text-gray-500 font-mono">{percentual}%</span>
             </div>
 
-            <div className="flex items-end gap-2 mb-2">
-                <span className="text-lg font-bold text-white">
+            <div className="flex items-baseline gap-1 mb-1.5">
+                <span className="text-base font-black text-white">
                     {atual.toLocaleString('pt-BR')}
-                    <span className="text-sm text-gray-500 font-normal">{unidade}</span>
                 </span>
-                <span className="text-xs text-gray-600 pb-0.5">
+                <span className="text-[10px] text-gray-600">
                     / {meta.toLocaleString('pt-BR')}{unidade}
                 </span>
             </div>
 
-            <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+            <div className="h-1 bg-white/5 rounded-full overflow-hidden">
                 <div
                     className={`h-full ${barColor} transition-all duration-500 ease-out`}
                     style={{ width: `${displayPercentual}%` }}
@@ -72,7 +71,7 @@ export function CardDieta({ dieta, onRegistrarRefeicao }: CardDietaProps) {
                 </div>
             </div>
 
-            <div className="space-y-5 mb-5">
+            <div className="grid grid-cols-2 gap-4 mb-5">
                 <MacroBar
                     label="Calorias"
                     atual={dieta.consumidoCalorias}
