@@ -10,7 +10,7 @@
  * @see docs/specs/plano-evolucao-etapa-1-diagnostico.md
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
     ArrowLeft,
     ArrowRight,
@@ -55,6 +55,9 @@ import { supabase } from '@/services/supabase';
 import { ScoreWidget } from '@/components/organisms/AssessmentCards/ScoreWidget';
 import { colors } from '@/tokens';
 import { type ContextoAtleta } from './AthleteContextSection';
+import { gerarConteudoIA } from '@/services/vitruviusAI';
+import { type PerfilAtletaIA, perfilParaTexto, getFontesCientificas } from '@/services/vitruviusContext';
+import { buildAnaliseContextoPrompt } from '@/services/vitruviusPrompts';
 
 // ═══════════════════════════════════════════════════════════
 // TYPES
@@ -126,14 +129,25 @@ const MetricCard: React.FC<{
 );
 
 /** Box de insight do Vitrúvio */
-const InsightBox: React.FC<{ text: string; title?: string }> = ({ text, title = 'Análise Vitrúvio IA' }) => (
+const InsightBox: React.FC<{ text: string; title?: string; isLoading?: boolean }> = ({ text, title = 'Análise Vitrúvio IA', isLoading }) => (
     <div className="bg-primary/5 border border-primary/20 rounded-xl p-6 mt-4">
         <div className="flex items-start gap-4">
-            <Bot size={26} className="text-primary mt-0.5 shrink-0" />
-            <div>
+            <Bot size={26} className={`text-primary mt-0.5 shrink-0 ${isLoading ? 'animate-pulse' : ''}`} />
+            <div className="flex-1">
                 <p className="text-base font-bold text-primary mb-2 uppercase tracking-wider">{title}</p>
-                <p className="text-lg text-gray-300 leading-relaxed">"{text}"</p>
-                <p className="text-xs text-gray-600 mt-3 text-right">— VITRÚVIO IA</p>
+                {isLoading ? (
+                    <div className="space-y-2">
+                        <div className="h-4 bg-primary/10 rounded animate-pulse w-full" />
+                        <div className="h-4 bg-primary/10 rounded animate-pulse w-5/6" />
+                        <div className="h-4 bg-primary/10 rounded animate-pulse w-4/6" />
+                        <p className="text-xs text-primary/60 mt-3 animate-pulse">Vitrúvio IA analisando dados do atleta...</p>
+                    </div>
+                ) : (
+                    <>
+                        <p className="text-lg text-gray-300 leading-relaxed">"{text}"</p>
+                        <p className="text-xs text-gray-600 mt-3 text-right">— VITRÚVIO IA</p>
+                    </>
+                )}
             </div>
         </div>
     </div>
@@ -187,7 +201,7 @@ const SectionCard: React.FC<{
 // ═══════════════════════════════════════════════════════════
 
 /** Seção 1: Taxas Metabólicas */
-const SecaoTaxas: React.FC<{ dados: DiagnosticoDados; insightIA?: string }> = ({ dados, insightIA }) => {
+const SecaoTaxas: React.FC<{ dados: DiagnosticoDados; insightIA?: string; isLoading?: boolean }> = ({ dados, insightIA, isLoading }) => {
     const { taxas } = dados;
     const tmbPct = Math.round((taxas.tmbAjustada / taxas.tdee) * 100);
     const neatPct = Math.round((taxas.neat / taxas.tdee) * 100);
@@ -226,7 +240,7 @@ const SecaoTaxas: React.FC<{ dados: DiagnosticoDados; insightIA?: string }> = ({
                 </div>
             )}
 
-            <InsightBox text={insightIA || `Seu TDEE total é de ${taxas.tdee} kcal/dia, composto por TMB (${taxas.tmbAjustada} kcal — o mínimo para funções vitais), NEAT (${taxas.neat} kcal — atividades do dia a dia) e EAT (${taxas.eat} kcal — exercícios). ${taxas.neat < 400 ? 'O NEAT está baixo — incluir caminhadas de 20-30min pode elevar o gasto em ~150-200 kcal/dia, acelerando resultados sem esforço extra no treino.' : 'Seu NEAT está em bom nível, mas pode ser otimizado com deslocamentos ativos e atividades diárias.'} ${taxas.fatoresConsiderados.length > 0 ? `Foram considerados ajustes por: ${taxas.fatoresConsiderados.join(', ').toLowerCase()}.` : ''} Para recomposição corporal, o déficit ideal é de 300-500 kcal abaixo do TDEE.`} />
+            <InsightBox isLoading={isLoading} text={insightIA || `Seu TDEE total é de ${taxas.tdee} kcal/dia, composto por TMB (${taxas.tmbAjustada} kcal — o mínimo para funções vitais), NEAT (${taxas.neat} kcal — atividades do dia a dia) e EAT (${taxas.eat} kcal — exercícios). ${taxas.neat < 400 ? 'O NEAT está baixo — incluir caminhadas de 20-30min pode elevar o gasto em ~150-200 kcal/dia, acelerando resultados sem esforço extra no treino.' : 'Seu NEAT está em bom nível, mas pode ser otimizado com deslocamentos ativos e atividades diárias.'} ${taxas.fatoresConsiderados.length > 0 ? `Foram considerados ajustes por: ${taxas.fatoresConsiderados.join(', ').toLowerCase()}.` : ''} Para recomposição corporal, o déficit ideal é de 300-500 kcal abaixo do TDEE.`} />
 
             <RefsBox refs={[
                 'Harris, J.A. & Benedict, F.G. (1918). <span class="text-gray-500 italic">"A biometric study of human basal metabolism."</span> Proc Natl Acad Sci, 4(12), 370-373.',
@@ -238,7 +252,7 @@ const SecaoTaxas: React.FC<{ dados: DiagnosticoDados; insightIA?: string }> = ({
 };
 
 /** Seção 2: Composição Corporal */
-const SecaoComposicao: React.FC<{ dados: DiagnosticoDados; insightIA?: string }> = ({ dados, insightIA }) => {
+const SecaoComposicao: React.FC<{ dados: DiagnosticoDados; insightIA?: string; isLoading?: boolean }> = ({ dados, insightIA, isLoading }) => {
     const { composicaoAtual, metasComposicao } = dados;
     const projecao = metasComposicao.projecaoMensal;
 
@@ -297,7 +311,7 @@ const SecaoComposicao: React.FC<{ dados: DiagnosticoDados; insightIA?: string }>
                 </table>
             </div>
 
-            <InsightBox text={insightIA || `Atualmente com ${composicaoAtual.peso}kg — sendo ${composicaoAtual.massaMagra}kg de massa magra e ${composicaoAtual.massaGorda}kg de gordura (${composicaoAtual.gorduraPct}%). ${composicaoAtual.gorduraPct > 20 ? 'A prioridade é reduzir gordura corporal via déficit calórico moderado combinado com treino de força para preservar massa magra.' : composicaoAtual.gorduraPct > 15 ? 'Faixa de transição — é possível buscar recomposição corporal simultânea (perder gordura e ganhar músculo) com alimentação estratégica.' : 'BF em faixa atlética. O foco deve ser ganho gradual de massa magra com surplus calórico controlado (+200-300 kcal).'} Meta 12M: ${metasComposicao.gordura12Meses}% de gordura, peso projetado de ${metasComposicao.peso12Meses}kg. A mudança visual será significativa mesmo que a balança não mude drasticamente.`} />
+            <InsightBox isLoading={isLoading} text={insightIA || `Atualmente com ${composicaoAtual.peso}kg — sendo ${composicaoAtual.massaMagra}kg de massa magra e ${composicaoAtual.massaGorda}kg de gordura (${composicaoAtual.gorduraPct}%). ${composicaoAtual.gorduraPct > 20 ? 'A prioridade é reduzir gordura corporal via déficit calórico moderado combinado com treino de força para preservar massa magra.' : composicaoAtual.gorduraPct > 15 ? 'Faixa de transição — é possível buscar recomposição corporal simultânea (perder gordura e ganhar músculo) com alimentação estratégica.' : 'BF em faixa atlética. O foco deve ser ganho gradual de massa magra com surplus calórico controlado (+200-300 kcal).'} Meta 12M: ${metasComposicao.gordura12Meses}% de gordura, peso projetado de ${metasComposicao.peso12Meses}kg. A mudança visual será significativa mesmo que a balança não mude drasticamente.`} />
 
             <RefsBox refs={[
                 'Jackson, A.S. & Pollock, M.L. (1978). <span class="text-gray-500 italic">"Generalized equations for predicting body density of men."</span> Br J Nutr, 40(3), 497-504.',
@@ -309,7 +323,7 @@ const SecaoComposicao: React.FC<{ dados: DiagnosticoDados; insightIA?: string }>
 };
 
 /** Seção 3: Proporções Áureas */
-const SecaoEstetica: React.FC<{ dados: DiagnosticoDados; insightIA?: string }> = ({ dados, insightIA }) => {
+const SecaoEstetica: React.FC<{ dados: DiagnosticoDados; insightIA?: string; isLoading?: boolean }> = ({ dados, insightIA, isLoading }) => {
     const { analiseEstetica, prioridades } = dados;
 
     // Mapa de prioridades para badges
@@ -439,7 +453,7 @@ const SecaoEstetica: React.FC<{ dados: DiagnosticoDados; insightIA?: string }> =
                 const acimaMeta = analiseEstetica.proporcoes.filter(p => p.pct >= 97).length;
                 const abaixo50 = analiseEstetica.proporcoes.filter(p => p.pct < 50).length;
 
-                return <InsightBox text={insightIA || (
+                return <InsightBox isLoading={isLoading} text={insightIA || (
                     `Média geral das proporções: ${mediaGeral}%. ` +
                     `${acimaMeta > 0 ? `${acimaMeta} proporção(ões) já atingiram ou superaram a meta (${melhores.map(m => m.grupo).join(', ')}).` : `Nenhuma proporção atingiu a meta ainda.`} ` +
                     `${abaixo50 > 0 ? `${abaixo50} proporção(ões) estão abaixo de 50% e precisam de atenção prioritária: ${piores.map(p => `${p.grupo} (${p.pct}%)`).join(', ')}.` : 'Todas as proporções estão acima de 50% — boa base construída.'} ` +
@@ -459,7 +473,7 @@ const SecaoEstetica: React.FC<{ dados: DiagnosticoDados; insightIA?: string }> =
 };
 
 /** Seção 4: Pontos Fortes e Fracos */
-const SecaoPrioridades: React.FC<{ dados: DiagnosticoDados; insightIA?: string }> = ({ dados, insightIA }) => {
+const SecaoPrioridades: React.FC<{ dados: DiagnosticoDados; insightIA?: string; isLoading?: boolean }> = ({ dados, insightIA, isLoading }) => {
     const { analiseEstetica, prioridades } = dados;
     const proporcoes = analiseEstetica.proporcoes;
     const fortes = [...proporcoes].sort((a, b) => b.pct - a.pct).slice(0, 3);
@@ -499,7 +513,7 @@ const SecaoPrioridades: React.FC<{ dados: DiagnosticoDados; insightIA?: string }
                 const prioAltas = prioridades.filter(p => p.nivel === 'ALTA');
                 const assimetrias = analiseEstetica.simetria.itens.filter(s => s.diffPct >= 4);
 
-                return <InsightBox text={insightIA || (
+                return <InsightBox isLoading={isLoading} text={insightIA || (
                     `Destaques positivos: ${fortes3.map(f => `${f.grupo} (${f.pct}%)`).join(', ')} — esses grupos devem ser mantidos com volume de manutenção. ` +
                     `Pontos a desenvolver: ${fracos3.map(f => `${f.grupo} (${f.pct}%)`).join(', ')} — receberão volume extra e prioridade no plano de treino. ` +
                     `${prioAltas.length > 0 ? `${prioAltas.length} grupo(s) marcado(s) como prioridade ALTA: ${prioAltas.map(p => p.grupo).join(', ')}.` : 'Nenhum grupo em prioridade crítica.'} ` +
@@ -714,6 +728,9 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
     const [recomendacao, setRecomendacao] = useState<RecomendacaoObjetivo | null>(null);
     const [objetivoSelecionado, setObjetivoSelecionado] = useState<ObjetivoVitruvio | null>(null);
     const [toastStatus, setToastStatus] = useState<'success' | 'error' | null>(null);
+    const [iaEnriching, setIaEnriching] = useState(false);
+    const [analiseContextoIA, setAnaliseContextoIA] = useState<string | null>(null);
+    const [contextLoading, setContextLoading] = useState(true);
 
     // Pegar dados da última avaliação
     const ultimaAvaliacao = useMemo(() => {
@@ -730,6 +747,41 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
     }
 
     const m = ultimaAvaliacao.measurements;
+
+    // Enriquecer "Análise de Contexto" com IA ao montar
+    useEffect(() => {
+        if (!atleta || isReadOnly) {
+            setContextLoading(false);
+            return;
+        }
+
+        const perfil: PerfilAtletaIA = {
+            nome: atleta.name,
+            sexo: atleta.gender === 'FEMALE' ? 'F' : 'M',
+            idade: atleta.birthDate ? Math.floor((Date.now() - new Date(atleta.birthDate).getTime()) / 31557600000) : 30,
+            altura: m.height,
+            peso: m.weight,
+            gorduraPct: ultimaAvaliacao.bf ?? 15,
+            score: atleta.score,
+            classificacao: atleta.score >= 90 ? 'ELITE' : atleta.score >= 80 ? 'AVANÇADO' : atleta.score >= 70 ? 'ATLÉTICO' : atleta.score >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE',
+            medidas: m as Record<string, number>,
+            contexto: atleta.contexto as any,
+        };
+
+        const perfilTexto = perfilParaTexto(perfil);
+        const fontesTexto = getFontesCientificas('diagnostico');
+        const prompt = buildAnaliseContextoPrompt(perfilTexto, fontesTexto);
+
+        gerarConteudoIA<{ analiseContexto: string }>(prompt)
+            .then(result => {
+                if (result?.analiseContexto) {
+                    console.info('[DiagnosticoView] 🤖 Análise de contexto IA gerada');
+                    setAnaliseContextoIA(result.analiseContexto);
+                }
+            })
+            .catch(err => console.error('[DiagnosticoView] Erro contexto IA:', err))
+            .finally(() => setContextLoading(false));
+    }, [atletaId]);
 
     /** Gera diagnóstico a partir dos dados reais do atleta */
     const handleGerar = () => {
@@ -808,6 +860,7 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
             setEstado('ready');
 
             // Enriquecer com IA em background (não bloqueia UI)
+            setIaEnriching(true);
             const perfil = {
                 nome: atleta.name,
                 sexo: input.sexo,
@@ -820,12 +873,27 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                 medidas: input.medidas as Record<string, number>,
                 contexto: atleta.contexto as any,
             };
-            enriquecerDiagnosticoComIA(resultado, perfil).then(enriquecido => {
-                if (enriquecido !== resultado) {
-                    console.info('[DiagnosticoView] 🤖 Diagnóstico enriquecido com IA');
-                    setDiagnostico(enriquecido);
-                }
-            });
+            console.info('[DiagnosticoView] 🚀 Iniciando enriquecimento IA...');
+            enriquecerDiagnosticoComIA(resultado, perfil)
+                .then(enriquecido => {
+                    if (enriquecido !== resultado) {
+                        console.info('[DiagnosticoView] 🤖 Diagnóstico enriquecido com IA!', {
+                            temInsights: !!enriquecido.insightsPorSecao,
+                            secoes: enriquecido.insightsPorSecao ? Object.keys(enriquecido.insightsPorSecao) : [],
+                            temRecomendacoes: !!enriquecido.recomendacoesIA?.length,
+                            resumoVitruvio: enriquecido.resumoVitruvio?.substring(0, 80) + '...',
+                        });
+                        setDiagnostico(enriquecido);
+                    } else {
+                        console.warn('[DiagnosticoView] ⚠️ IA retornou mesmo objeto (falha?)');
+                    }
+                })
+                .catch(err => {
+                    console.error('[DiagnosticoView] ❌ Erro no enriquecimento IA:', err);
+                })
+                .finally(() => {
+                    setIaEnriching(false);
+                });
         }, 1500);
     };
 
@@ -937,9 +1005,19 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                                         </div>
                                     </div>
                                     <div className="flex-1 flex flex-col justify-center">
-                                        <p className="text-lg text-gray-300 leading-relaxed italic">
-                                            "{generateGeneralAnalysis(atleta.contexto, atleta.score)}"
-                                        </p>
+                                        {contextLoading ? (
+                                            <div className="space-y-2">
+                                                <div className="h-4 bg-primary/10 rounded animate-pulse w-full" />
+                                                <div className="h-4 bg-primary/10 rounded animate-pulse w-5/6" />
+                                                <div className="h-4 bg-primary/10 rounded animate-pulse w-4/6" />
+                                                <div className="h-4 bg-primary/10 rounded animate-pulse w-3/6" />
+                                                <p className="text-xs text-primary/60 mt-3 animate-pulse">Vitrúvio IA analisando contexto do atleta...</p>
+                                            </div>
+                                        ) : (
+                                            <p className="text-lg text-gray-300 leading-relaxed italic">
+                                                "{analiseContextoIA || generateGeneralAnalysis(atleta.contexto, atleta.score)}"
+                                            </p>
+                                        )}
                                     </div>
                                     <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between">
                                         <span className="text-[10px] text-gray-600 font-medium uppercase tracking-widest">IA Engine v2.0</span>
@@ -993,10 +1071,10 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                 {/* Estado: Diagnóstico gerado */}
                 {diagnostico && (estado === 'ready' || estado === 'saving' || estado === 'saved') && (
                     <>
-                        <SecaoTaxas dados={diagnostico} insightIA={diagnostico.insightsPorSecao?.taxas} />
-                        <SecaoComposicao dados={diagnostico} insightIA={diagnostico.insightsPorSecao?.composicao} />
-                        <SecaoEstetica dados={diagnostico} insightIA={diagnostico.insightsPorSecao?.proporcoes} />
-                        <SecaoPrioridades dados={diagnostico} insightIA={diagnostico.insightsPorSecao?.prioridades} />
+                        <SecaoTaxas dados={diagnostico} insightIA={diagnostico.insightsPorSecao?.taxas} isLoading={iaEnriching} />
+                        <SecaoComposicao dados={diagnostico} insightIA={diagnostico.insightsPorSecao?.composicao} isLoading={iaEnriching} />
+                        <SecaoEstetica dados={diagnostico} insightIA={diagnostico.insightsPorSecao?.proporcoes} isLoading={iaEnriching} />
+                        <SecaoPrioridades dados={diagnostico} insightIA={diagnostico.insightsPorSecao?.prioridades} isLoading={iaEnriching} />
                         <SecaoMetas dados={diagnostico} nomeAtleta={atleta.name} medidas={(diagnostico as any)?._medidas} />
 
                         {/* Card de recomendação de objetivo */}

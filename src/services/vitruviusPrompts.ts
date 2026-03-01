@@ -28,6 +28,47 @@ const SYSTEM_BASE = `Você é o **Vitrúvio**, inteligência artificial especial
 5. Sempre retorne JSON válido no formato especificado`;
 
 // ═══════════════════════════════════════════════════════════
+// PROMPT: ANÁLISE DE CONTEXTO (CARD INICIAL)
+// ═══════════════════════════════════════════════════════════
+
+export function buildAnaliseContextoPrompt(
+    perfilAtleta: string,
+    fontesCientificas: string
+): string {
+    return `${SYSTEM_BASE}
+
+## Tarefa
+Você recebeu o PERFIL COMPLETO de um atleta que está prestes a iniciar um Diagnóstico.
+Sua tarefa é gerar uma **análise de contexto personalizada** — uma narrativa de 3-5 frases que:
+1. Identifique o nível atual do atleta e o que isso significa
+2. Destaque fatores relevantes do contexto (lesões, saúde, lifestyle, histórico de treino)
+3. Antecipe o foco do diagnóstico com base nesses dados
+4. Seja motivadora mas realista
+
+## Perfil do Atleta
+${perfilAtleta}
+
+## Fontes Científicas Relevantes
+${fontesCientificas}
+
+## Regras
+- Mencione o NOME do atleta
+- Use dados REAIS do perfil (score, BF%, lesões, etc.)
+- Se tem lesões ou problemas de saúde, destaque como isso impacta a estratégia
+- Se tem histórico de treino longo, valorize a experiência
+- NÃO use frases genéricas — cada análise deve ser ÚNICA para este atleta
+
+## Formato de Resposta (JSON)
+\`\`\`json
+{
+    "analiseContexto": "string — 3-5 frases personalizadas"
+}
+\`\`\`
+
+Retorne APENAS o JSON, sem markdown, sem explicações extras.`;
+}
+
+// ═══════════════════════════════════════════════════════════
 // PROMPT: DIAGNÓSTICO
 // ═══════════════════════════════════════════════════════════
 
