@@ -4,6 +4,8 @@ export interface HeaderAtletaProps {
     altura: number
     peso?: number
     fotoUrl?: string
+    personalNome?: string
+    personalRanking?: number
 }
 
 export interface CardPersonalProps {

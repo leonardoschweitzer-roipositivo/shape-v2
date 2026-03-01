@@ -26,7 +26,6 @@ import { SelfMeasurements } from './SelfMeasurements';
 import { AthletePortal } from '../AthletePortal';
 import {
     HeaderIdentidade,
-    CardPersonal,
     CardScoreMeta,
     CardRanking,
     CardConsistencia,
@@ -278,14 +277,8 @@ function HomeAtletaV2({ athleteData, onGoToPortal, onGoToMeasurements }: HomeAtl
                     altura={altura}
                     peso={peso}
                     fotoUrl={undefined}
+                    personalNome={athleteData.personalNome}
                 />
-
-                {athleteData.personalNome && (
-                    <CardPersonal
-                        nome={athleteData.personalNome}
-                        exibirRanking={false}
-                    />
-                )}
 
                 {/* CTA Primeiro Acesso */}
                 <div className="mx-4 mt-8 bg-gradient-to-br from-[#0C1220] to-[#0A0F1C] rounded-2xl p-8 border border-white/5 text-center shadow-xl">
@@ -320,24 +313,16 @@ function HomeAtletaV2({ athleteData, onGoToPortal, onGoToMeasurements }: HomeAtl
     // ---- Estado: Com avaliação — HOME COMPLETA v2.0 ----
     return (
         <div className="min-h-screen bg-[#060B18] text-white pb-4">
-            {/* 1. Header */}
+            {/* 1. Header Integrado com Personal */}
             <HeaderIdentidade
                 nome={athleteData.nome}
                 sexo={sexoLabel}
                 altura={altura}
                 peso={peso}
                 fotoUrl={undefined}
+                personalNome={athleteData.personalNome}
+                personalRanking={3}
             />
-
-            {/* 2. Card Personal */}
-            {athleteData.personalNome && (
-                <CardPersonal
-                    nome={athleteData.personalNome}
-                    rankingCidade={3}
-                    cidadeSigla="SP"
-                    exibirRanking={true}
-                />
-            )}
 
             {/* 3. Card Score + Meta */}
             <CardScoreMeta
