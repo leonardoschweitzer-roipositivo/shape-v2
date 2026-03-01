@@ -2,58 +2,169 @@
  * AthletePortal - Container principal do Portal do Atleta
  * 
  * Gerencia a navegação entre as 4 telas: HOJE, COACH, PROGRESSO, PERFIL
+ * Agora conectado a dados reais via portalDataService
  */
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { BottomNavigation } from '../components/organisms/BottomNavigation'
 import { TodayScreen, CoachScreen, ProgressScreen, ProfileScreen } from './athlete'
 import { AthletePortalTab } from '../types/athlete-portal'
-import { mockTodayData } from '../mocks/athletePortalMockData'
-import { mockChatMessages } from '../mocks/chatMockData'
-import { mockScoreGeral, mockGraficoEvolucao, mockProporcoesResumo, mockHistoricoAvaliacoes } from '../mocks/progressMockData'
-import { mockProfileData, mockDadosBasicos, mockMeuPersonal } from '../mocks/profileMockData'
+import type { TodayScreenData, ScoreGeral, GraficoEvolucaoData, ProporcaoResumo, ChatMessage, MeuPersonal, DadosBasicos } from '../types/athlete-portal'
+import { Loader2 } from 'lucide-react'
+import {
+    carregarContextoPortal,
+    montarDadosHoje,
+    derivarProximoTreino,
+    buscarScoreGeral,
+    buscarGraficoEvolucao,
+    buscarProporcoes,
+    buscarHistoricoAvaliacoes,
+    buscarMensagensChat,
+    salvarMensagemChat,
+    registrarTracker,
+    completarTreino,
+    pularTreino,
+    extrairDadosBasicos,
+    buscarDadosPersonal,
+    type PortalContext,
+    type ProximoTreino,
+} from '../services/portalDataService'
 
-export function AthletePortal() {
+interface AthletePortalProps {
+    atletaId: string;
+    atletaNome?: string;
+}
+
+export function AthletePortal({ atletaId, atletaNome }: AthletePortalProps) {
     const [activeTab, setActiveTab] = useState<AthletePortalTab>('hoje')
+    const [loading, setLoading] = useState(true)
+    const [ctx, setCtx] = useState<PortalContext | null>(null)
+
+    // Data states for each tab
+    const [todayData, setTodayData] = useState<TodayScreenData | null>(null)
+    const [scoreGeral, setScoreGeral] = useState<ScoreGeral | null>(null)
+    const [graficoEvolucao, setGraficoEvolucao] = useState<GraficoEvolucaoData | null>(null)
+    const [proporcoes, setProporcoes] = useState<ProporcaoResumo[]>([])
+    const [historicoAvaliacoes, setHistoricoAvaliacoes] = useState<any[]>([])
+    const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
+    const [dadosBasicos, setDadosBasicos] = useState<DadosBasicos | null>(null)
+    const [personal, setPersonal] = useState<MeuPersonal | null>(null)
+    const [proximoTreino, setProximoTreino] = useState<ProximoTreino | null>(null)
+
+    // Load initial data
+    useEffect(() => {
+        async function load() {
+            setLoading(true)
+            try {
+                const context = await carregarContextoPortal(atletaId)
+                if (!context) {
+                    console.error('[AthletePortal] Erro ao carregar contexto')
+                    setLoading(false)
+                    return
+                }
+                setCtx(context)
+
+                // Load all tabs data in parallel
+                const [today, score, grafico, props, historico, msgs, personalData] = await Promise.all([
+                    montarDadosHoje(context),
+                    buscarScoreGeral(atletaId),
+                    buscarGraficoEvolucao(atletaId),
+                    buscarProporcoes(atletaId),
+                    buscarHistoricoAvaliacoes(atletaId),
+                    buscarMensagensChat(atletaId),
+                    buscarDadosPersonal(context.personalId),
+                ])
+
+                setTodayData(today)
+                setScoreGeral(score)
+                setGraficoEvolucao(grafico)
+                setProporcoes(props)
+                setHistoricoAvaliacoes(historico)
+                setChatMessages(msgs)
+                setDadosBasicos(extrairDadosBasicos(context))
+                setPersonal(personalData)
+                setProximoTreino(derivarProximoTreino(context.planoTreino))
+            } catch (err) {
+                console.error('[AthletePortal] Erro geral:', err)
+            }
+            setLoading(false)
+        }
+        load()
+    }, [atletaId])
 
     // Handlers para a tela HOJE
     const handleVerTreino = () => {
         console.log('Ver treino completo')
-        // TODO: Abrir modal com detalhes do treino
     }
 
-    const handleCompletarTreino = () => {
-        console.log('Completar treino')
-        // TODO: Abrir modal de feedback de treino
+    const handleCompletarTreino = async () => {
+        await completarTreino(atletaId, { intensidade: 3, duracao: 60, reportouDor: false })
+        // Refresh today data
+        if (ctx) {
+            const today = await montarDadosHoje(ctx)
+            setTodayData(today)
+        }
     }
 
-    const handlePularTreino = () => {
-        console.log('Pular treino')
-        // TODO: Confirmar e marcar como pulado
+    const handlePularTreino = async () => {
+        await pularTreino(atletaId)
+        if (ctx) {
+            const today = await montarDadosHoje(ctx)
+            setTodayData(today)
+        }
     }
 
     const handleRegistrarRefeicao = () => {
         console.log('Registrar refeição')
-        // TODO: Abrir modal de registro de refeição
     }
 
-    const handleTrackerClick = (tipo: string) => {
-        console.log('Tracker clicado:', tipo)
-        // TODO: Abrir modal específico do tracker
+    const handleTrackerClick = async (tipo: string) => {
+        if (tipo === 'agua') {
+            await registrarTracker(atletaId, 'agua', { quantidade: 250 }) // 250ml
+            if (ctx) {
+                const today = await montarDadosHoje(ctx)
+                setTodayData(today)
+            }
+        }
     }
 
     const handleFalarComCoach = () => {
-        console.log('Falar com coach')
-        // Navegar para aba de coach
         setActiveTab('coach')
+    }
+
+    // Handler para chat
+    const handleSendMessage = async (message: string): Promise<string> => {
+        // Save user message
+        await salvarMensagemChat(atletaId, 'user', message)
+
+        // Generate response (template-based for now)
+        const response = gerarRespostaCoach(message, ctx)
+
+        // Save assistant message
+        await salvarMensagemChat(atletaId, 'assistant', response)
+
+        return response
+    }
+
+    // Loading state
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-[#060B18] flex items-center justify-center">
+                <div className="text-center space-y-4">
+                    <Loader2 className="text-indigo-400 mx-auto animate-spin" size={40} />
+                    <p className="text-gray-500 text-sm">Carregando seu portal...</p>
+                </div>
+            </div>
+        )
     }
 
     const renderActiveScreen = () => {
         switch (activeTab) {
             case 'hoje':
-                return (
+                return todayData ? (
                     <TodayScreen
-                        data={mockTodayData}
+                        data={todayData}
+                        proximoTreino={proximoTreino}
                         onVerTreino={handleVerTreino}
                         onCompletarTreino={handleCompletarTreino}
                         onPularTreino={handlePularTreino}
@@ -61,37 +172,41 @@ export function AthletePortal() {
                         onTrackerClick={handleTrackerClick}
                         onFalarComCoach={handleFalarComCoach}
                     />
-                )
+                ) : null
 
             case 'coach':
                 return (
-                    <CoachScreen initialMessages={mockChatMessages} />
+                    <CoachScreen
+                        initialMessages={chatMessages}
+                        onSendMessage={handleSendMessage}
+                    />
                 )
 
             case 'progresso':
-                return (
+                return scoreGeral && graficoEvolucao ? (
                     <ProgressScreen
-                        scoreGeral={mockScoreGeral}
-                        graficoEvolucao={mockGraficoEvolucao}
-                        proporcoes={mockProporcoesResumo}
-                        historicoAvaliacoes={mockHistoricoAvaliacoes}
+                        scoreGeral={scoreGeral}
+                        graficoEvolucao={graficoEvolucao}
+                        proporcoes={proporcoes}
+                        historicoAvaliacoes={historicoAvaliacoes}
                         onVerDetalhesAvaliacao={(id) => console.log('Ver avaliação:', id)}
                     />
-                )
+                ) : null
 
             case 'perfil':
-                return (
+                return dadosBasicos ? (
                     <ProfileScreen
-                        nome={mockProfileData.nome}
-                        email={mockProfileData.email}
-                        fotoUrl={mockProfileData.fotoUrl}
-                        dadosBasicos={mockDadosBasicos}
-                        personal={mockMeuPersonal}
-                        onSettings={() => console.log('Abrir configurações')}
-                        onHelp={() => console.log('Abrir ajuda')}
-                        onLogout={() => console.log('Logout')}
+                        nome={ctx?.atletaNome || atletaNome || 'Atleta'}
+                        email=""
+                        dadosBasicos={dadosBasicos}
+                        personal={personal}
+                        onSettings={() => console.log('Configurações')}
+                        onHelp={() => console.log('Ajuda')}
+                        onLogout={() => {
+                            window.location.href = '/'
+                        }}
                     />
-                )
+                ) : null
 
             default:
                 return null
@@ -100,14 +215,50 @@ export function AthletePortal() {
 
     return (
         <div className="relative">
-            {/* Active Screen */}
             {renderActiveScreen()}
-
-            {/* Bottom Navigation */}
             <BottomNavigation
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
             />
         </div>
     )
+}
+
+// ==========================================
+// RESPOSTAS CONTEXTUAIS DO COACH
+// ==========================================
+
+function gerarRespostaCoach(message: string, ctx: PortalContext | null): string {
+    const lower = message.toLowerCase()
+
+    if (lower.includes('refeição') || lower.includes('comer') || lower.includes('comi')) {
+        return 'Ótimo! Registrar refeições é essencial para acompanhar seus macros. Pode descrever o que comeu (ex: "200g de frango, arroz e salada") que vou registrar para você! 🍽️'
+    }
+
+    if (lower.includes('treino') || lower.includes('treinar') || lower.includes('acabei')) {
+        const treino = ctx?.planoTreino ? 'Boa! Como foi?' : 'Registrarei seu treino.';
+        return `${treino} Me conta:\n\n1. Como se sentiu? (😫 Difícil / 💪 Bom / 🔥 Ótimo)\n2. Quanto tempo durou?\n3. Alguma dor ou desconforto?`
+    }
+
+    if (lower.includes('água') || lower.includes('bebi')) {
+        return 'Registrado! 💧 Hidratação é fundamental para performance e recuperação muscular. Continue bebendo água ao longo do dia!'
+    }
+
+    if (lower.includes('dor') || lower.includes('lesão') || lower.includes('machucado')) {
+        return '🤕 Vou registrar isso. Me conta:\n\nIntensidade (1-10)?\nOnde exatamente?\nQuando começou?\n\n⚠️ Se for uma dor forte, procure orientação do seu Personal antes do próximo treino.'
+    }
+
+    if (lower.includes('proteína') || lower.includes('proteina') || lower.includes('macro')) {
+        if (ctx?.planoDieta) {
+            return '📊 Verificando seus macros de hoje...\n\nPara atingir sua meta, sugiro:\n✅ Shake com 2 scoops de whey (~50g proteína)\n✅ Peito de frango (200g) (~50g proteína)\n✅ Ovos (4 unidades) (~24g proteína)'
+        }
+        return 'Seu personal ainda não gerou um plano de dieta. Peça a ele para criar um plano personalizado no Vitrúvio IA!'
+    }
+
+    if (lower.includes('cansado') || lower.includes('desanimado') || lower.includes('motivação')) {
+        return 'Entendo que às vezes bate o cansaço, mas lembre-se: consistência supera intensidade! 🔥\n\nCada dia de treino te aproxima do seu objetivo. Pequenos progressos diários = grandes resultados em 12 meses! 💪'
+    }
+
+    // Default
+    return `Entendi! Com base no seu perfil, aqui vão minhas dicas:\n\n✅ Mantenha a consistência no treino\n✅ Foque em atingir sua meta de proteína diária\n✅ Durma bem (7-8h por noite)\n\nPrecisa de algo mais específico? Pode perguntar sobre treino, dieta, suplementação ou técnica! 💪`
 }

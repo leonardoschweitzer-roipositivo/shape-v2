@@ -25,9 +25,9 @@ export function HeaderHoje({ nomeAtleta, dataFormatada, streak }: HeaderHojeProp
     const primeiroNome = nomeAtleta.split(' ')[0]
 
     return (
-        <div className="flex items-center justify-between px-4 py-3 bg-gray-900/50">
+        <div className="flex items-center justify-between px-6 py-4 bg-[#060B18] border-b border-white/5">
             <div>
-                <h1 className="text-lg font-semibold text-white">
+                <h1 className="text-lg font-black text-white tracking-tight">
                     {saudacao}, {primeiroNome}! 👋
                 </h1>
             </div>

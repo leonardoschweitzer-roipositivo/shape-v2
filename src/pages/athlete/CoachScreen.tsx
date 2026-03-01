@@ -65,9 +65,9 @@ export function CoachScreen({ initialMessages = [], onSendMessage }: CoachScreen
     }
 
     return (
-        <div className="h-screen bg-gray-900 flex flex-col pb-16">
+        <div className="h-screen bg-[#060B18] flex flex-col pb-16">
             {/* Header */}
-            <div className="bg-gray-900/50 border-b border-gray-800 px-4 py-3 flex items-center gap-3">
+            <div className="bg-[#060B18] border-b border-white/5 px-4 py-3 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center">
                     <span className="text-xl">🤖</span>
                 </div>

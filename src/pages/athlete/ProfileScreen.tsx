@@ -33,7 +33,7 @@ export function ProfileScreen({
     onLogout
 }: ProfileScreenProps) {
     return (
-        <div className="min-h-screen bg-gray-900 pb-20">
+        <div className="min-h-screen bg-[#060B18] pb-20">
             {/* Header com foto e nome */}
             <ProfileHeader
                 nome={nome}

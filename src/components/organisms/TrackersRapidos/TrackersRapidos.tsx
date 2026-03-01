@@ -14,7 +14,7 @@ interface TrackersRapidosProps {
 
 export function TrackersRapidos({ trackers, onTrackerClick }: TrackersRapidosProps) {
     return (
-        <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700">
+        <div className="bg-[#0C1220] rounded-2xl p-6 border border-white/5">
             <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">
                 ⚡ RÁPIDO
             </h3>
@@ -30,8 +30,8 @@ export function TrackersRapidos({ trackers, onTrackerClick }: TrackersRapidosPro
                             className={`
                 flex flex-col items-center gap-2 p-3 rounded-lg transition-all
                 ${isPendente
-                                    ? 'bg-gray-700/50 border border-gray-600 hover:bg-gray-700 hover:border-gray-500'
-                                    : 'bg-teal-500/10 border border-teal-500/30'
+                                    ? 'bg-white/5 border border-white/10 hover:bg-white/10'
+                                    : 'bg-indigo-500/10 border border-indigo-500/30'
                                 }
               `}
                         >
@@ -41,7 +41,7 @@ export function TrackersRapidos({ trackers, onTrackerClick }: TrackersRapidosPro
                             </span>
 
                             {/* Label */}
-                            <span className={`text-xs font-medium ${isPendente ? 'text-gray-400' : 'text-teal-400'
+                            <span className={`text-xs font-medium ${isPendente ? 'text-gray-400' : 'text-indigo-400'
                                 }`}>
                                 {tracker.label}
                             </span>

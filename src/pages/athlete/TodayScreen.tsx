@@ -11,9 +11,11 @@ import { CardDieta } from '../../components/organisms/CardDieta'
 import { TrackersRapidos } from '../../components/organisms/TrackersRapidos'
 import { DicaCoach } from '../../components/molecules/DicaCoach'
 import { TodayScreenData, TrackerRapido } from '../../types/athlete-portal'
+import type { ProximoTreino } from '../../services/portalDataService'
 
 interface TodayScreenProps {
     data: TodayScreenData
+    proximoTreino?: ProximoTreino | null
     onVerTreino: () => void
     onCompletarTreino: () => void
     onPularTreino: () => void
@@ -24,6 +26,7 @@ interface TodayScreenProps {
 
 export function TodayScreen({
     data,
+    proximoTreino,
     onVerTreino,
     onCompletarTreino,
     onPularTreino,
@@ -32,7 +35,7 @@ export function TodayScreen({
     onFalarComCoach
 }: TodayScreenProps) {
     return (
-        <div className="min-h-screen bg-gray-900 pb-20">
+        <div className="min-h-screen bg-[#060B18] pb-20">
             {/* Header */}
             <HeaderHoje
                 nomeAtleta={data.atleta.nome}
@@ -45,6 +48,7 @@ export function TodayScreen({
                 {/* Card de Treino */}
                 <CardTreino
                     treino={data.treino}
+                    proximoTreino={proximoTreino}
                     onVerTreino={onVerTreino}
                     onCompletei={onCompletarTreino}
                     onPular={onPularTreino}

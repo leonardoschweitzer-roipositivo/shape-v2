@@ -50,7 +50,7 @@ function MacroBar({ label, atual, meta, percentual, unidade, color }: MacroBarPr
                 </span>
             </div>
 
-            <div className="h-1.5 bg-gray-700 rounded-full overflow-hidden">
+            <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
                 <div
                     className={`h-full ${barColor} transition-all duration-500 ease-out`}
                     style={{ width: `${displayPercentual}%` }}
@@ -62,13 +62,13 @@ function MacroBar({ label, atual, meta, percentual, unidade, color }: MacroBarPr
 
 export function CardDieta({ dieta, onRegistrarRefeicao }: CardDietaProps) {
     return (
-        <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700">
+        <div className="bg-[#0C1220] rounded-2xl p-6 border border-white/5">
             <div className="flex items-center gap-3 mb-5">
                 <div className="w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center">
                     <UtensilsCrossed size={20} className="text-teal-400" />
                 </div>
                 <div>
-                    <h3 className="text-base font-semibold text-white">DIETA DE HOJE</h3>
+                    <h3 className="text-base font-bold text-white uppercase tracking-wide">DIETA DE HOJE</h3>
                 </div>
             </div>
 
@@ -112,7 +112,7 @@ export function CardDieta({ dieta, onRegistrarRefeicao }: CardDietaProps) {
 
             <button
                 onClick={onRegistrarRefeicao}
-                className="w-full py-3 px-4 bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/30 rounded-lg text-sm font-semibold text-teal-400 transition-colors flex items-center justify-center gap-2"
+                className="w-full py-3 px-4 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 rounded-xl text-sm font-bold text-indigo-400 transition-colors flex items-center justify-center gap-2"
             >
                 <Plus size={18} />
                 REGISTRAR REFEIÇÃO

@@ -742,7 +742,7 @@ const App: React.FC = () => {
       // case 'gamification': // DISABLED - Feature para depois
       //   return <GamificationPage />;
       case 'athlete-portal':
-        return <AthletePortal />;
+        return <AthletePortal atletaId={selectedAthleteId || ''} />;
       case 'dashboard':
       default:
         return <DashboardView userProfile={userProfile} />;

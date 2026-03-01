@@ -13,13 +13,14 @@ import {
 } from 'lucide-react';
 import { portalService, PortalAthleteData } from '@/services/portalService';
 import { SelfMeasurements } from './SelfMeasurements';
+import { AthletePortal } from '../AthletePortal';
 
 interface PortalLandingProps {
     token: string;
     onClose: () => void;
 }
 
-type PortalView = 'home' | 'measurements' | 'history';
+type PortalView = 'home' | 'measurements' | 'history' | 'portal';
 
 export function PortalLanding({ token, onClose }: PortalLandingProps) {
     const [loading, setLoading] = useState(true);
@@ -77,6 +78,16 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
                     </button>
                 </div>
             </div>
+        );
+    }
+
+    // Portal completo (4 tabs)
+    if (view === 'portal') {
+        return (
+            <AthletePortal
+                atletaId={athleteData.id}
+                atletaNome={athleteData.nome}
+            />
         );
     }
 
@@ -230,6 +241,25 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
                             </span>
                         </div>
                         <ArrowRight className="text-gray-600 group-hover:text-indigo-400 transition-colors" size={18} />
+                    </button>
+
+                    {/* Entrar no Portal Completo */}
+                    <button
+                        onClick={() => setView('portal')}
+                        className="w-full group flex items-center gap-4 p-5 bg-gradient-to-r from-emerald-500/10 to-teal-500/5 border border-emerald-500/20 rounded-2xl hover:border-emerald-500/40 hover:bg-emerald-500/15 transition-all text-left"
+                    >
+                        <div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center group-hover:bg-emerald-500/30 transition-colors">
+                            <Activity className="text-emerald-400" size={22} />
+                        </div>
+                        <div className="flex-1 space-y-1">
+                            <span className="text-white font-bold text-sm uppercase tracking-wide block">
+                                Meu Portal Completo
+                            </span>
+                            <span className="text-gray-500 text-xs">
+                                Treino, dieta, progresso e chat com Coach IA
+                            </span>
+                        </div>
+                        <ArrowRight className="text-gray-600 group-hover:text-emerald-400 transition-colors" size={18} />
                     </button>
 
                     {/* Ver Histórico */}
