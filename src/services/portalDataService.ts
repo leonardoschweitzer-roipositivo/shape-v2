@@ -415,7 +415,33 @@ export async function montarDadosHoje(ctx: PortalContext): Promise<TodayScreenDa
     const trackers = await buscarRegistrosDoDia(ctx.atletaId);
     const dicaCoach = gerarDicaCoach(dieta, treino, trackers);
 
-    const hoje = new Date();
+    // Buscar refeições do dia para somar macros consumidos
+    const hoje = new Date().toISOString().split('T')[0];
+    const { data: refeicoes } = await supabase
+        .from('registros_diarios')
+        .select('dados')
+        .eq('atleta_id', ctx.atletaId)
+        .eq('data', hoje)
+        .eq('tipo', 'refeicao');
+
+    if (refeicoes && refeicoes.length > 0) {
+        for (const ref of refeicoes) {
+            const d = (ref as any).dados;
+            if (d) {
+                dieta.consumidoCalorias += d.calorias || 0;
+                dieta.consumidoProteina += d.proteina || 0;
+                dieta.consumidoCarbos += d.carboidrato || 0;
+                dieta.consumidoGordura += d.gordura || 0;
+            }
+        }
+        // Recalcular percentuais
+        dieta.percentualCalorias = dieta.metaCalorias > 0 ? Math.round((dieta.consumidoCalorias / dieta.metaCalorias) * 100) : 0;
+        dieta.percentualProteina = dieta.metaProteina > 0 ? Math.round((dieta.consumidoProteina / dieta.metaProteina) * 100) : 0;
+        dieta.percentualCarbos = dieta.metaCarbos > 0 ? Math.round((dieta.consumidoCarbos / dieta.metaCarbos) * 100) : 0;
+        dieta.percentualGordura = dieta.metaGordura > 0 ? Math.round((dieta.consumidoGordura / dieta.metaGordura) * 100) : 0;
+    }
+
+    const hojeDate = new Date();
     const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
     const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
@@ -428,7 +454,7 @@ export async function montarDadosHoje(ctx: PortalContext): Promise<TodayScreenDa
         dieta,
         trackers,
         dicaCoach,
-        dataFormatada: `${diasSemana[hoje.getDay()]}, ${hoje.getDate().toString().padStart(2, '0')} ${meses[hoje.getMonth()]}`,
+        dataFormatada: `${diasSemana[hojeDate.getDay()]}, ${hojeDate.getDate().toString().padStart(2, '0')} ${meses[hojeDate.getMonth()]}`,
     };
 }
 

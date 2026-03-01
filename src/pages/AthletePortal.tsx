@@ -11,6 +11,7 @@ import { TodayScreen, CoachScreen, ProgressScreen, ProfileScreen } from './athle
 import { AthletePortalTab } from '../types/athlete-portal'
 import type { TodayScreenData, ScoreGeral, GraficoEvolucaoData, ProporcaoResumo, ChatMessage, MeuPersonal, DadosBasicos } from '../types/athlete-portal'
 import { Loader2 } from 'lucide-react'
+import { RegistrarRefeicaoModal } from '../components/organisms/RegistrarRefeicaoModal'
 import {
     carregarContextoPortal,
     montarDadosHoje,
@@ -51,6 +52,7 @@ export function AthletePortal({ atletaId, atletaNome }: AthletePortalProps) {
     const [personal, setPersonal] = useState<MeuPersonal | null>(null)
     const [proximoTreino, setProximoTreino] = useState<ProximoTreino | null>(null)
     const [lastPeso, setLastPeso] = useState<number | undefined>(undefined)
+    const [showRefeicaoModal, setShowRefeicaoModal] = useState(false)
 
     // Load initial data
     useEffect(() => {
@@ -120,7 +122,44 @@ export function AthletePortal({ atletaId, atletaNome }: AthletePortalProps) {
     }
 
     const handleRegistrarRefeicao = () => {
-        console.log('Registrar refeição')
+        setShowRefeicaoModal(true)
+    }
+
+    const handleSalvarRefeicao = async (macros: { calorias: number; proteina: number; carboidrato: number; gordura: number; descricao: string }) => {
+        // Salvar no Supabase
+        await registrarTracker(atletaId, 'refeicao', {
+            descricao: macros.descricao,
+            calorias: macros.calorias,
+            proteina: macros.proteina,
+            carboidrato: macros.carboidrato,
+            gordura: macros.gordura,
+        })
+
+        // Atualizar macros consumidos na tela HOJE
+        if (todayData) {
+            setTodayData({
+                ...todayData,
+                dieta: {
+                    ...todayData.dieta,
+                    consumidoCalorias: todayData.dieta.consumidoCalorias + macros.calorias,
+                    consumidoProteina: todayData.dieta.consumidoProteina + macros.proteina,
+                    consumidoCarbos: todayData.dieta.consumidoCarbos + macros.carboidrato,
+                    consumidoGordura: todayData.dieta.consumidoGordura + macros.gordura,
+                    percentualCalorias: todayData.dieta.metaCalorias > 0
+                        ? Math.round(((todayData.dieta.consumidoCalorias + macros.calorias) / todayData.dieta.metaCalorias) * 100)
+                        : 0,
+                    percentualProteina: todayData.dieta.metaProteina > 0
+                        ? Math.round(((todayData.dieta.consumidoProteina + macros.proteina) / todayData.dieta.metaProteina) * 100)
+                        : 0,
+                    percentualCarbos: todayData.dieta.metaCarbos > 0
+                        ? Math.round(((todayData.dieta.consumidoCarbos + macros.carboidrato) / todayData.dieta.metaCarbos) * 100)
+                        : 0,
+                    percentualGordura: todayData.dieta.metaGordura > 0
+                        ? Math.round(((todayData.dieta.consumidoGordura + macros.gordura) / todayData.dieta.metaGordura) * 100)
+                        : 0,
+                },
+            })
+        }
     }
 
     const handleTrackerClick = async (tipo: string) => {
@@ -267,6 +306,11 @@ export function AthletePortal({ atletaId, atletaNome }: AthletePortalProps) {
             <BottomNavigation
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
+            />
+            <RegistrarRefeicaoModal
+                isOpen={showRefeicaoModal}
+                onClose={() => setShowRefeicaoModal(false)}
+                onSave={handleSalvarRefeicao}
             />
         </div>
     )
