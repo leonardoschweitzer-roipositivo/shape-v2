@@ -102,12 +102,12 @@ export function mapAtletaToPersonalAthlete(
         };
     });
 
-    // Fallback: Removido o push para mappedAssessments.
-    // As medidas brutas não devem aparecer como "avaliações" no histórico,
-    // pois isso causa confusão ao tentar excluir. Elas já aparecem no bloco de Medidas.
+    // Fallback: Não incorporamos medidas brutas no histórico de avaliações.
+    // O histórico deve ser o reflexo fiel da tabela 'assessments'.
     if (mappedAssessments.length === 0 && medidas.length > 0) {
-        console.info(`[Mapper] 📊 Usando medidas como base para o resumo de: ${atleta.nome} (Histórico permanece limpo)`);
+        console.info(`[Mapper] 📊 Atleta ${atleta.nome} possui medidas brutas, mas o histórico de avaliações permanece limpo.`);
     }
+
 
     // Determinar status
     let status: 'active' | 'inactive' | 'attention' = 'active';

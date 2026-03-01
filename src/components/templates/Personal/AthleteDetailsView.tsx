@@ -380,29 +380,46 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
 
             // 3. Atualizar as Medidas Correntes e Dobras Cutâneas
             if (latestAssessment) {
-                await medidasService.atualizar(latestAssessment.id, {
-                    peso: latestAssessment.measurements.weight,
-                    pescoco: latestAssessment.measurements.neck,
-                    ombros: latestAssessment.measurements.shoulders,
-                    peitoral: latestAssessment.measurements.chest,
-                    cintura: latestAssessment.measurements.waist,
-                    quadril: latestAssessment.measurements.hips,
-                    braco_direito: latestAssessment.measurements.armRight,
-                    braco_esquerdo: latestAssessment.measurements.armLeft,
-                    antebraco_direito: latestAssessment.measurements.forearmRight,
-                    antebraco_esquerdo: latestAssessment.measurements.forearmLeft,
-                    coxa_direita: latestAssessment.measurements.thighRight,
-                    coxa_esquerda: latestAssessment.measurements.thighLeft,
-                    panturrilha_direita: latestAssessment.measurements.calfRight,
-                    panturrilha_esquerda: latestAssessment.measurements.calfLeft,
-                    dobra_tricipital: latestAssessment.skinfolds.tricep,
-                    dobra_subescapular: latestAssessment.skinfolds.subscapular,
-                    dobra_peitoral: latestAssessment.skinfolds.chest,
-                    dobra_axilar_media: latestAssessment.skinfolds.axillary,
-                    dobra_suprailiaca: latestAssessment.skinfolds.suprailiac,
-                    dobra_abdominal: latestAssessment.skinfolds.abdominal,
-                    dobra_coxa: latestAssessment.skinfolds.thigh,
-                });
+                if (latestAssessment._source === 'medidas') {
+                    // Atualiza registro na tabela 'medidas' (medidas brutas)
+                    await medidasService.atualizar(latestAssessment.id, {
+                        peso: latestAssessment.measurements.weight,
+                        pescoco: latestAssessment.measurements.neck,
+                        ombros: latestAssessment.measurements.shoulders,
+                        peitoral: latestAssessment.measurements.chest,
+                        cintura: latestAssessment.measurements.waist,
+                        quadril: latestAssessment.measurements.hips,
+                        braco_direito: latestAssessment.measurements.armRight,
+                        braco_esquerdo: latestAssessment.measurements.armLeft,
+                        antebraco_direito: latestAssessment.measurements.forearmRight,
+                        antebraco_esquerdo: latestAssessment.measurements.forearmLeft,
+                        coxa_direita: latestAssessment.measurements.thighRight,
+                        coxa_esquerda: latestAssessment.measurements.thighLeft,
+                        panturrilha_direita: latestAssessment.measurements.calfRight,
+                        panturrilha_esquerda: latestAssessment.measurements.calfLeft,
+                        dobra_tricipital: latestAssessment.skinfolds.tricep,
+                        dobra_subescapular: latestAssessment.skinfolds.subscapular,
+                        dobra_peitoral: latestAssessment.skinfolds.chest,
+                        dobra_axilar_media: latestAssessment.skinfolds.axillary,
+                        dobra_suprailiaca: latestAssessment.skinfolds.suprailiac,
+                        dobra_abdominal: latestAssessment.skinfolds.abdominal,
+                        dobra_coxa: latestAssessment.skinfolds.thigh,
+                    });
+                } else if (latestAssessment._source === 'assessments') {
+                    // Atualiza registro na tabela 'assessments' (IA Assessment)
+                    // Note: Update weight and internal measurements JSONB
+                    await supabase
+                        .from('assessments')
+                        .update({
+                            weight: latestAssessment.measurements.weight,
+                            height: latestAssessment.measurements.height,
+                            measurements: {
+                                linear: latestAssessment.measurements,
+                                skinfolds: latestAssessment.skinfolds,
+                            }
+                        })
+                        .eq('id', latestAssessment.id);
+                }
             }
         } catch (error) {
             console.error('Falha ao atualizar dados do atleta no banco:', error);
