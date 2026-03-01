@@ -16,6 +16,10 @@ import type { ProximoTreino } from '../../services/portalDataService'
 interface TodayScreenProps {
     data: TodayScreenData
     proximoTreino?: ProximoTreino | null
+    sexo?: string
+    altura?: number
+    peso?: number
+    personalNome?: string
     onVerTreino: () => void
     onCompletarTreino: () => void
     onPularTreino: () => void
@@ -27,6 +31,10 @@ interface TodayScreenProps {
 export function TodayScreen({
     data,
     proximoTreino,
+    sexo,
+    altura,
+    peso,
+    personalNome,
     onVerTreino,
     onCompletarTreino,
     onPularTreino,
@@ -41,6 +49,10 @@ export function TodayScreen({
                 nomeAtleta={data.atleta.nome}
                 dataFormatada={data.dataFormatada}
                 streak={data.atleta.streak}
+                sexo={sexo}
+                altura={altura}
+                peso={peso}
+                personalNome={personalNome}
             />
 
             {/* Content */}

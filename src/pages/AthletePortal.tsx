@@ -50,6 +50,7 @@ export function AthletePortal({ atletaId, atletaNome }: AthletePortalProps) {
     const [dadosBasicos, setDadosBasicos] = useState<DadosBasicos | null>(null)
     const [personal, setPersonal] = useState<MeuPersonal | null>(null)
     const [proximoTreino, setProximoTreino] = useState<ProximoTreino | null>(null)
+    const [lastPeso, setLastPeso] = useState<number | undefined>(undefined)
 
     // Load initial data
     useEffect(() => {
@@ -84,6 +85,10 @@ export function AthletePortal({ atletaId, atletaNome }: AthletePortalProps) {
                 setDadosBasicos(extrairDadosBasicos(context))
                 setPersonal(personalData)
                 setProximoTreino(derivarProximoTreino(context.planoTreino))
+                // Get last weight from grafico data
+                if (grafico.dados.length > 0) {
+                    setLastPeso(grafico.dados[grafico.dados.length - 1].valor)
+                }
             } catch (err) {
                 console.error('[AthletePortal] Erro geral:', err)
             }
@@ -165,6 +170,10 @@ export function AthletePortal({ atletaId, atletaNome }: AthletePortalProps) {
                     <TodayScreen
                         data={todayData}
                         proximoTreino={proximoTreino}
+                        sexo={ctx?.ficha?.sexo}
+                        altura={ctx?.ficha?.altura}
+                        peso={lastPeso}
+                        personalNome={ctx?.personalNome}
                         onVerTreino={handleVerTreino}
                         onCompletarTreino={handleCompletarTreino}
                         onPularTreino={handlePularTreino}

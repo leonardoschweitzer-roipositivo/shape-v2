@@ -130,26 +130,17 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
                 <div className="absolute inset-0 bg-gradient-to-b from-indigo-600/20 via-indigo-900/10 to-transparent" />
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent" />
 
-                <div className="relative max-w-2xl mx-auto px-6 pt-12 pb-8">
-                    {/* Logo */}
-                    <div className="flex items-center gap-2 mb-8">
-                        <div className="w-8 h-8 bg-indigo-500/30 rounded-lg flex items-center justify-center">
-                            <span className="text-indigo-300 font-black text-sm">V</span>
+                <div className="relative max-w-2xl mx-auto px-6 pt-10 pb-8">
+                    {/* Avatar + Name + Vitru Logo */}
+                    <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl shadow-indigo-500/20 flex-shrink-0">
+                            <User className="text-white" size={24} />
                         </div>
-                        <span className="text-white font-black text-sm tracking-widest">VITRU</span>
-                        <span className="text-indigo-400 font-black text-xs tracking-widest italic">IA</span>
-                    </div>
-
-                    {/* Avatar + Name */}
-                    <div className="flex items-center gap-5">
-                        <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl shadow-indigo-500/20">
-                            <User className="text-white" size={28} />
-                        </div>
-                        <div className="space-y-1">
-                            <h1 className="text-2xl font-black text-white tracking-tight uppercase">
+                        <div className="flex-1 space-y-1">
+                            <h1 className="text-xl font-black text-white tracking-tight uppercase">
                                 {athleteData.nome}
                             </h1>
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
                                 <span className="text-[10px] font-bold tracking-wider text-gray-500 uppercase">
                                     {sexoLabel}
                                 </span>
@@ -169,6 +160,16 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
                                         </span>
                                     </>
                                 )}
+                            </div>
+                        </div>
+                        {/* Vitru Logo */}
+                        <div className="flex flex-col items-center gap-0.5 flex-shrink-0">
+                            <div className="w-8 h-8 bg-indigo-500/20 rounded-lg flex items-center justify-center">
+                                <span className="text-indigo-300 font-black text-sm">V</span>
+                            </div>
+                            <div className="flex items-center gap-0.5">
+                                <span className="text-white font-black text-[8px] tracking-widest">VITRU</span>
+                                <span className="text-indigo-400 font-black text-[7px] tracking-widest italic">IA</span>
                             </div>
                         </div>
                     </div>
@@ -224,25 +225,6 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
                         O que deseja fazer?
                     </h2>
 
-                    {/* Registrar Medidas */}
-                    <button
-                        onClick={() => setView('measurements')}
-                        className="w-full group flex items-center gap-4 p-5 bg-gradient-to-r from-indigo-500/10 to-emerald-500/5 border border-indigo-500/20 rounded-2xl hover:border-indigo-500/40 hover:bg-indigo-500/15 transition-all text-left"
-                    >
-                        <div className="w-12 h-12 bg-indigo-500/20 rounded-xl flex items-center justify-center group-hover:bg-indigo-500/30 transition-colors">
-                            <Ruler className="text-indigo-400" size={22} />
-                        </div>
-                        <div className="flex-1 space-y-1">
-                            <span className="text-white font-bold text-sm uppercase tracking-wide block">
-                                Registrar Minhas Medidas
-                            </span>
-                            <span className="text-gray-500 text-xs">
-                                Preencha suas medidas corporais atuais com uma fita métrica
-                            </span>
-                        </div>
-                        <ArrowRight className="text-gray-600 group-hover:text-indigo-400 transition-colors" size={18} />
-                    </button>
-
                     {/* Entrar no Portal Completo */}
                     <button
                         onClick={() => setView('portal')}
@@ -260,6 +242,25 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
                             </span>
                         </div>
                         <ArrowRight className="text-gray-600 group-hover:text-emerald-400 transition-colors" size={18} />
+                    </button>
+
+                    {/* Registrar Medidas */}
+                    <button
+                        onClick={() => setView('measurements')}
+                        className="w-full group flex items-center gap-4 p-5 bg-gradient-to-r from-indigo-500/10 to-emerald-500/5 border border-indigo-500/20 rounded-2xl hover:border-indigo-500/40 hover:bg-indigo-500/15 transition-all text-left"
+                    >
+                        <div className="w-12 h-12 bg-indigo-500/20 rounded-xl flex items-center justify-center group-hover:bg-indigo-500/30 transition-colors">
+                            <Ruler className="text-indigo-400" size={22} />
+                        </div>
+                        <div className="flex-1 space-y-1">
+                            <span className="text-white font-bold text-sm uppercase tracking-wide block">
+                                Registrar Minhas Medidas
+                            </span>
+                            <span className="text-gray-500 text-xs">
+                                Preencha suas medidas corporais atuais com uma fita métrica
+                            </span>
+                        </div>
+                        <ArrowRight className="text-gray-600 group-hover:text-indigo-400 transition-colors" size={18} />
                     </button>
 
                     {/* Ver Histórico */}
