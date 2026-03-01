@@ -1157,7 +1157,7 @@ VITE_SUPABASE_URL=https://xxxxx.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIs...
 
 # === GEMINI (Google AI) ===
-GEMINI_API_KEY=AIzaSy...
+VITE_GEMINI_API_KEY=sua_chave_aqui
 ```
 
 > **Nota:** Como a aplicação é uma SPA, todas as variáveis de ambiente acessíveis no browser devem ter o prefixo `VITE_`. A API key do Gemini é injetada via `vite.config.ts` no `define`.

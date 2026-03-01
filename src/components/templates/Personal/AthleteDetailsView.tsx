@@ -20,7 +20,13 @@ import {
     Archive,
     Trash2,
     Phone,
-    Settings
+    Settings,
+    ClipboardList,
+    History,
+    Sparkles,
+    Dumbbell,
+    UtensilsCrossed,
+    Loader2
 } from 'lucide-react';
 import { PersonalAthlete } from '@/mocks/personal';
 import { Button } from '@/components/atoms/Button/Button';
@@ -29,6 +35,7 @@ import { HeroContent } from '@/features/dashboard/types';
 import { useDataStore } from '@/stores/dataStore';
 import { atletaService } from '@/services/atleta.service';
 import { medidasService } from '@/services/medidas.service';
+import { supabase } from '@/services/supabase';
 import { AthleteContextSection } from './AthleteContextSection';
 import type { ContextoAtleta } from './AthleteContextSection';
 
@@ -89,20 +96,27 @@ const MeasurementItem = ({ label, value, unit, isEditing, onChange }: { label: s
     </div>
 );
 
-const Accordion = ({ title, icon: Icon, children, isOpen, onToggle }: { title: string, icon: any, children: React.ReactNode, isOpen: boolean, onToggle: () => void }) => (
+const Accordion = ({ title, icon: Icon, children, isOpen, onToggle, rightElement }: { title: string, icon: any, children: React.ReactNode, isOpen: boolean, onToggle: () => void, rightElement?: React.ReactNode }) => (
     <div className="border border-white/10 rounded-2xl overflow-hidden bg-[#131B2C] shadow-lg transition-all">
-        <button
-            onClick={onToggle}
-            className="w-full flex items-center justify-between p-6 hover:bg-white/[0.02] transition-colors group"
-        >
-            <div className="flex items-center gap-4">
-                <div className={`p-2 rounded-lg transition-all ${isOpen ? 'bg-primary text-[#0A0F1C]' : 'bg-white/5 text-gray-400'}`}>
-                    <Icon size={20} />
+        <div className="flex items-center w-full hover:bg-white/[0.02] transition-colors group">
+            <button
+                onClick={onToggle}
+                className="flex-1 flex items-center justify-between p-6 text-left"
+            >
+                <div className="flex items-center gap-4">
+                    <div className={`p-2 rounded-lg transition-all ${isOpen ? 'bg-primary text-[#0A0F1C]' : 'bg-white/5 text-gray-400'}`}>
+                        <Icon size={20} />
+                    </div>
+                    <h3 className="text-lg font-bold text-white uppercase tracking-wide">{title}</h3>
                 </div>
-                <h3 className="text-lg font-bold text-white uppercase tracking-wide">{title}</h3>
+            </button>
+            <div className="flex items-center gap-4 pr-6">
+                {rightElement}
+                <button onClick={onToggle} className="p-2">
+                    {isOpen ? <ChevronUp className="text-primary" /> : <ChevronDown className="text-gray-500 group-hover:text-white" />}
+                </button>
             </div>
-            {isOpen ? <ChevronUp className="text-primary" /> : <ChevronDown className="text-gray-500 group-hover:text-white" />}
-        </button>
+        </div>
         {isOpen && (
             <div className="p-6 pt-0 border-t border-white/5 animate-fade-in">
                 {children}
@@ -151,6 +165,53 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
     const [openAccordion, setOpenAccordion] = useState<string | null>('basics');
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [evolutionPlans, setEvolutionPlans] = useState<any[]>([]);
+    const [loadingPlans, setLoadingPlans] = useState(false);
+
+    // Fetch evolution plans (diagnosticos + relacionados)
+    const fetchPlans = React.useCallback(async () => {
+        setLoadingPlans(true);
+        try {
+            const { data: diagnosticos, error } = await supabase
+                .from('diagnosticos')
+                .select(`
+                    *,
+                    planos_treino (id, status, created_at),
+                    planos_dieta (id, status, created_at)
+                `)
+                .eq('atleta_id', athlete.id)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            setEvolutionPlans(diagnosticos || []);
+        } catch (err) {
+            console.error('Erro ao buscar planos de evolução:', err);
+        } finally {
+            setLoadingPlans(false);
+        }
+    }, [athlete.id]);
+
+    React.useEffect(() => {
+        fetchPlans();
+    }, [fetchPlans]);
+
+    const handleDeletePlano = async (planoId: string) => {
+        if (!confirm('Tem certeza que deseja excluir este Plano de Evolução e todos os dados relacionados?')) return;
+
+        try {
+            // A exclusão do diagnóstico deve disparar cascade nas tabelas de treino/dieta se as FKs estiverem corretas
+            // Senão fazemos manual:
+            await supabase.from('planos_treino').delete().eq('diagnostico_id', planoId);
+            await supabase.from('planos_dieta').delete().eq('diagnostico_id', planoId);
+            const { error } = await supabase.from('diagnosticos').delete().eq('id', planoId);
+
+            if (error) throw error;
+            fetchPlans();
+        } catch (err) {
+            console.error('Erro ao excluir plano:', err);
+            alert('Erro ao excluir o plano.');
+        }
+    };
 
     // Initial draft from the athlete
     const [draftAthlete, setDraftAthlete] = useState<PersonalAthlete>(athlete);
@@ -460,14 +521,22 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                     </div>
 
                     {/* Section 1.5: Contexto do Atleta */}
-                    <AthleteContextSection
-                        athleteId={draftAthlete.id}
-                        contexto={draftAthlete.contexto || null}
-                        onContextoUpdated={(updatedContexto: ContextoAtleta) => {
-                            setDraftAthlete(prev => ({ ...prev, contexto: updatedContexto }));
-                            updateAthlete({ ...draftAthlete, contexto: updatedContexto });
-                        }}
-                    />
+                    <Accordion
+                        title="Contexto"
+                        icon={ClipboardList}
+                        isOpen={openAccordion === 'context'}
+                        onToggle={() => toggleAccordion('context')}
+                    >
+                        <AthleteContextSection
+                            athleteId={draftAthlete.id}
+                            contexto={draftAthlete.contexto || null}
+                            isInsideAccordion
+                            onContextoUpdated={(updatedContexto: ContextoAtleta) => {
+                                setDraftAthlete(prev => ({ ...prev, contexto: updatedContexto }));
+                                updateAthlete({ ...draftAthlete, contexto: updatedContexto });
+                            }}
+                        />
+                    </Accordion>
 
                     {/* Section 2: Últimas Medidas (Accordions) */}
                     <div className="pt-6">
@@ -655,6 +724,103 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                 </table>
                             </div>
                         </div>
+                    </div>
+
+                    {/* Section 4: Histórico de Planos de Evolução */}
+                    <div className="pt-6">
+                        <SectionHeader
+                            icon={History}
+                            title="Histórico de Planos de Evolução"
+                            subtitle="Estratégias de treino e dieta geradas pelo Vitrúvio IA"
+                            rightElement={
+                                <span className="text-gray-500 text-sm font-medium">
+                                    {evolutionPlans.length} planos encontrados
+                                </span>
+                            }
+                        />
+
+                        {loadingPlans ? (
+                            <div className="flex items-center justify-center p-12 bg-[#131B2C] border border-white/10 rounded-2xl">
+                                <Loader2 className="text-primary animate-spin" size={24} />
+                            </div>
+                        ) : evolutionPlans.length > 0 ? (
+                            <div className="bg-[#131B2C] border border-white/10 rounded-2xl overflow-hidden shadow-xl">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="bg-white/5 border-b border-white/10">
+                                            <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Data de Criação</th>
+                                            <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Diagnóstico (ID)</th>
+                                            <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">Status</th>
+                                            <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">Componentes</th>
+                                            <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-white/5">
+                                        {evolutionPlans.map((plano) => (
+                                            <tr key={plano.id} className="hover:bg-white/[0.02] transition-colors group">
+                                                <td className="px-6 py-4">
+                                                    <span className="text-sm font-medium text-white">
+                                                        {new Date(plano.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className="text-xs text-gray-500 font-mono">#{plano.id.split('-')[0]}</span>
+                                                </td>
+                                                <td className="px-6 py-4 text-center">
+                                                    <span className="px-2 py-0.5 rounded text-[8px] font-bold uppercase bg-green-500/10 text-green-500 border border-green-500/20">
+                                                        {plano.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        {plano.planos_treino?.length > 0 && (
+                                                            <div className="w-6 h-6 rounded flex items-center justify-center bg-blue-500/20 text-blue-400" title="Possui Plano de Treino">
+                                                                <Dumbbell size={12} />
+                                                            </div>
+                                                        )}
+                                                        {plano.planos_dieta?.length > 0 && (
+                                                            <div className="w-6 h-6 rounded flex items-center justify-center bg-amber-500/20 text-amber-400" title="Possui Plano de Dieta">
+                                                                <UtensilsCrossed size={12} />
+                                                            </div>
+                                                        )}
+                                                        <div className="w-6 h-6 rounded flex items-center justify-center bg-primary/20 text-primary" title="Plano IA">
+                                                            <Sparkles size={12} />
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <button
+                                                            onClick={() => console.log('Acessar plano:', plano.id)}
+                                                            className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-all flex items-center gap-2 text-[10px] font-bold uppercase"
+                                                        >
+                                                            <Eye size={16} />
+                                                            Visualizar
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeletePlano(plano.id)}
+                                                            className="p-2 hover:bg-red-500/20 rounded-lg text-gray-500 hover:text-red-400 transition-all flex items-center gap-2 text-[10px] font-bold uppercase"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                            Excluir
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <div className="bg-[#131B2C] border border-dashed border-white/10 rounded-2xl p-12 text-center">
+                                <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4 text-gray-600">
+                                    <History size={32} />
+                                </div>
+                                <h4 className="text-white font-bold uppercase tracking-wider mb-2">Nenhum Plano de Evolução</h4>
+                                <p className="text-gray-500 text-sm max-w-xs mx-auto mb-6">Você ainda não gerou nenhum plano de evolução para este atleta usando a IA.</p>
+                                <Button variant="primary" onClick={onNewAssessment}>Nova Avaliação IA</Button>
+                            </div>
+                        )}
                     </div>
 
                     {/* Ações do Atleta */}

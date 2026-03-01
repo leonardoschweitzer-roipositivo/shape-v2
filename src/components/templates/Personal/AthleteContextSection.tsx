@@ -55,6 +55,7 @@ interface AthleteContextSectionProps {
     athleteId: string;
     contexto: ContextoAtleta | null;
     onContextoUpdated?: (contexto: ContextoAtleta) => void;
+    isInsideAccordion?: boolean;
 }
 
 // ===== CONFIG =====
@@ -193,8 +194,8 @@ const ContextField: React.FC<ContextFieldProps> = ({
                         onClick={toggleMic}
                         title={speech.isListening ? 'Parar gravação' : 'Ditar por voz'}
                         className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${speech.isListening
-                                ? 'bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.2)]'
-                                : 'bg-white/5 text-gray-500 hover:text-primary hover:bg-primary/10 border border-transparent hover:border-primary/20'
+                            ? 'bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.2)]'
+                            : 'bg-white/5 text-gray-500 hover:text-primary hover:bg-primary/10 border border-transparent hover:border-primary/20'
                             }`}
                     >
                         {speech.isListening ? <MicOff size={14} /> : <Mic size={14} />}
@@ -292,62 +293,97 @@ export const AthleteContextSection: React.FC<AthleteContextSectionProps> = ({
     ).length;
 
     return (
-        <div className="pt-6">
+        <div className={isInsideAccordion ? "" : "pt-6"}>
             {/* Section Header */}
-            <div className="flex items-center justify-between mb-8 group">
-                <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-primary group-hover:border-primary/50 transition-all shadow-lg backdrop-blur-sm">
-                        <ClipboardList size={24} />
-                    </div>
-                    <div>
-                        <h2 className="text-2xl font-bold text-white uppercase tracking-tight leading-none mb-1">
-                            Contexto
-                        </h2>
-                        <p className="text-gray-500 text-sm font-medium">
-                            Informações de saúde, estilo de vida e histórico do atleta
-                            {filledCount > 0 && (
-                                <span className="ml-2 text-primary/70">
-                                    ({filledCount}/{CONTEXT_FIELDS.length} preenchidos)
-                                </span>
-                            )}
-                        </p>
-                    </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex items-center gap-2">
+            {isInsideAccordion ? (
+                <div className="flex justify-end gap-2 mb-4">
                     {isEditing ? (
                         <>
                             <button
                                 onClick={handleCancel}
                                 disabled={isSaving}
-                                className="flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 transition-all font-bold text-xs uppercase tracking-wider disabled:opacity-50"
+                                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 transition-all font-bold text-[10px] uppercase tracking-wider disabled:opacity-50"
                             >
-                                <X size={16} />
+                                <X size={14} />
                                 Cancelar
                             </button>
                             <button
                                 onClick={handleSave}
                                 disabled={isSaving}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all font-bold text-xs uppercase tracking-wider
-                                    bg-primary text-[#0A0F1C] border-primary shadow-[0_0_15px_rgba(0,201,167,0.3)]
-                                    ${isSaving ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-[0_0_25px_rgba(0,201,167,0.4)]'}`}
+                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all font-bold text-[10px] uppercase tracking-wider
+                                bg-primary text-[#0A0F1C] border-primary shadow-[0_0_15px_rgba(0,201,167,0.3)]
+                                ${isSaving ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-[0_0_25px_rgba(0,201,167,0.4)]'}`}
                             >
-                                {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
-                                {isSaving ? 'Salvando...' : 'Salvar Contexto'}
+                                {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                                {isSaving ? 'Salvando...' : 'Salvar'}
                             </button>
                         </>
                     ) : (
                         <button
                             onClick={() => setIsEditing(true)}
-                            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 bg-white/5 text-gray-400 hover:text-white hover:border-white/30 transition-all font-bold text-xs uppercase tracking-wider"
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 text-gray-400 hover:text-white hover:border-white/30 transition-all font-bold text-[10px] uppercase tracking-wider"
                         >
-                            <Edit3 size={16} />
+                            <Edit3 size={14} />
                             Editar Contexto
                         </button>
                     )}
                 </div>
-            </div>
+            ) : (
+                <div className="flex items-center justify-between mb-8 group">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-primary group-hover:border-primary/50 transition-all shadow-lg backdrop-blur-sm">
+                            <ClipboardList size={24} />
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-bold text-white uppercase tracking-tight leading-none mb-1">
+                                Contexto
+                            </h2>
+                            <p className="text-gray-500 text-sm font-medium">
+                                Informações de saúde, estilo de vida e histórico do atleta
+                                {filledCount > 0 && (
+                                    <span className="ml-2 text-primary/70">
+                                        ({filledCount}/{CONTEXT_FIELDS.length} preenchidos)
+                                    </span>
+                                )}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-2">
+                        {isEditing ? (
+                            <>
+                                <button
+                                    onClick={handleCancel}
+                                    disabled={isSaving}
+                                    className="flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 transition-all font-bold text-xs uppercase tracking-wider disabled:opacity-50"
+                                >
+                                    <X size={16} />
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={handleSave}
+                                    disabled={isSaving}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all font-bold text-xs uppercase tracking-wider
+                                    bg-primary text-[#0A0F1C] border-primary shadow-[0_0_15px_rgba(0,201,167,0.3)]
+                                    ${isSaving ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-[0_0_25px_rgba(0,201,167,0.4)]'}`}
+                                >
+                                    {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+                                    {isSaving ? 'Salvando...' : 'Salvar Contexto'}
+                                </button>
+                            </>
+                        ) : (
+                            <button
+                                onClick={() => setIsEditing(true)}
+                                className="flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 bg-white/5 text-gray-400 hover:text-white hover:border-white/30 transition-all font-bold text-xs uppercase tracking-wider"
+                            >
+                                <Edit3 size={16} />
+                                Editar Contexto
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* Context Fields Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
