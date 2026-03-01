@@ -596,14 +596,15 @@ export const gerarPlanoTreino = (
  */
 export async function enriquecerTreinoComIA(
     plano: PlanoTreino,
-    perfil: PerfilAtletaIA
+    perfil: PerfilAtletaIA,
+    diretrizesAdicionais?: string
 ): Promise<PlanoTreino> {
     try {
         const perfilTexto = perfilParaTexto(perfil);
         const dadosTexto = treinoParaTexto(plano);
         const fontesTexto = getFontesCientificas('treino');
 
-        const prompt = buildTreinoPrompt(perfilTexto, dadosTexto, fontesTexto);
+        const prompt = buildTreinoPrompt(perfilTexto, dadosTexto, fontesTexto, diretrizesAdicionais);
         const resultado = await gerarConteudoIA<{
             exerciciosPorBloco: Record<string, Array<{
                 blocoGrupo: string;
@@ -636,13 +637,17 @@ export async function enriquecerTreinoComIA(
             if (resultado.exerciciosPorBloco) {
                 for (const treino of planoEnriquecido.treinos) {
                     const blocoIA = resultado.exerciciosPorBloco[treino.id];
-                    if (blocoIA) {
-                        for (const bloco of treino.blocos) {
-                            const match = blocoIA.find(b => b.blocoGrupo === bloco.nomeGrupo);
-                            if (match?.exercicios?.length) {
-                                bloco.exercicios = match.exercicios;
-                            }
-                        }
+                    if (blocoIA && blocoIA.length > 0) {
+                        treino.blocos = blocoIA.map(bIA => {
+                            const original = treino.blocos.find(b => b.nomeGrupo === bIA.blocoGrupo);
+                            const exerciciosValidos = bIA.exercicios || [];
+                            return {
+                                nomeGrupo: bIA.blocoGrupo,
+                                isPrioridade: original?.isPrioridade || false,
+                                seriesTotal: exerciciosValidos.reduce((acc, ex) => acc + ex.series, 0),
+                                exercicios: exerciciosValidos
+                            };
+                        }).filter(b => b.exercicios.length > 0);
                     }
                 }
             }

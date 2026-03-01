@@ -56,8 +56,10 @@ import { ScoreWidget } from '@/components/organisms/AssessmentCards/ScoreWidget'
 import { colors } from '@/tokens';
 import { type ContextoAtleta } from './AthleteContextSection';
 import { gerarConteudoIA } from '@/services/vitruviusAI';
-import { type PerfilAtletaIA, perfilParaTexto, getFontesCientificas } from '@/services/vitruviusContext';
+import { type PerfilAtletaIA, perfilParaTexto, getFontesCientificas, diagnosticoParaTexto } from '@/services/vitruviusContext';
 import { buildAnaliseContextoPrompt } from '@/services/vitruviusPrompts';
+import { ChatPlanoEvolucao } from '@/components/organisms/ChatPlanoEvolucao/ChatPlanoEvolucao';
+import { extrairDiretrizesDoChat } from '@/services/vitruviusAI';
 
 // ═══════════════════════════════════════════════════════════
 // TYPES
@@ -731,6 +733,7 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
     const [iaEnriching, setIaEnriching] = useState(false);
     const [analiseContextoIA, setAnaliseContextoIA] = useState<string | null>(null);
     const [contextLoading, setContextLoading] = useState(true);
+    const [isApplying, setIsApplying] = useState(false);
 
     // Pegar dados da última avaliação
     const ultimaAvaliacao = useMemo(() => {
@@ -931,6 +934,47 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
 
         setEstado('saved');
         setTimeout(() => setToastStatus(null), 3000);
+    };
+
+    /** Extrai diretrizes do chat e reprocessa o diagnostico com IA */
+    const handleAplicarAjustes = async () => {
+        if (!diagnostico || !ultimaAvaliacao) return;
+        setIsApplying(true);
+        setIaEnriching(true);
+
+        try {
+            const classificacao = atleta.score >= 90 ? 'ELITE'
+                : atleta.score >= 80 ? 'AVANÇADO'
+                    : atleta.score >= 70 ? 'ATLÉTICO'
+                        : atleta.score >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE';
+
+            const perfil = {
+                nome: atleta.name,
+                sexo: (atleta.gender === 'FEMALE' ? 'F' : 'M') as 'M' | 'F',
+                idade: atleta.birthDate ? Math.floor((Date.now() - new Date(atleta.birthDate).getTime()) / 31557600000) : 30,
+                altura: ultimaAvaliacao.measurements.height,
+                peso: ultimaAvaliacao.measurements.weight,
+                gorduraPct: ultimaAvaliacao.bf ?? 15,
+                score: atleta.score,
+                classificacao: classificacao,
+                medidas: ultimaAvaliacao.measurements as Record<string, number>,
+                contexto: atleta.contexto as any,
+            };
+
+            const diretrizes = await extrairDiretrizesDoChat(atletaId, 'diagnostico');
+            if (diretrizes) {
+                console.info('[DiagnosticoView] 🚀 Aplicando diretrizes do chat...');
+                const enriquecido = await enriquecerDiagnosticoComIA(diagnostico, perfil, diretrizes);
+                setDiagnostico(enriquecido);
+            } else {
+                console.warn('[DiagnosticoView] ⚠️ Nenhuma diretriz extraída do chat.');
+            }
+        } catch (err) {
+            console.error('[DiagnosticoView] ❌ Erro ao aplicar ajustes:', err);
+        } finally {
+            setIsApplying(false);
+            setIaEnriching(false);
+        }
     };
 
     return (
@@ -1138,6 +1182,29 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                                 </div>
                             </div>
                         )}
+
+                        {/* Chat Vitrúvio IA — Debater plano */}
+                        <ChatPlanoEvolucao
+                            tipo="diagnostico"
+                            atletaId={atletaId}
+                            nomeAtleta={atleta.name}
+                            planoTexto={diagnosticoParaTexto(diagnostico)}
+                            perfilTexto={perfilParaTexto({
+                                nome: atleta.name,
+                                sexo: (atleta.gender === 'FEMALE' ? 'F' : 'M') as 'M' | 'F',
+                                idade: atleta.birthDate ? Math.floor((Date.now() - new Date(atleta.birthDate).getTime()) / 31557600000) : 30,
+                                altura: ultimaAvaliacao.measurements.height,
+                                peso: ultimaAvaliacao.measurements.weight,
+                                gorduraPct: ultimaAvaliacao.bf ?? 15,
+                                score: atleta.score,
+                                classificacao: atleta.score >= 90 ? 'ELITE' : atleta.score >= 80 ? 'AVANÇADO' : atleta.score >= 70 ? 'ATLÉTICO' : atleta.score >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE',
+                                medidas: ultimaAvaliacao.measurements as Record<string, number>,
+                                contexto: atleta.contexto as any,
+                            })}
+                            fontesCientificas={getFontesCientificas('diagnostico')}
+                            onAplicarAjustes={handleAplicarAjustes}
+                            isApplying={isApplying}
+                        />
                     </>
                 )}
 

@@ -59,6 +59,9 @@ import {
     getObjetivoMeta,
     type ObjetivoVitruvio,
 } from '@/services/calculations/objetivos';
+import { ChatPlanoEvolucao } from '@/components/organisms/ChatPlanoEvolucao/ChatPlanoEvolucao';
+import { perfilParaTexto, treinoParaTexto, getFontesCientificas } from '@/services/vitruviusContext';
+import { extrairDiretrizesDoChat } from '@/services/vitruviusAI';
 
 // ═══════════════════════════════════════════════════════════
 // TYPES
@@ -503,6 +506,7 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
     const [objetivoAtleta, setObjetivoAtleta] = useState<ObjetivoVitruvio>('RECOMP');
     const [toastStatus, setToastStatus] = useState<'success' | 'error' | null>(null);
     const [iaEnriching, setIaEnriching] = useState(false);
+    const [isApplying, setIsApplying] = useState(false);
 
     // Pegar dados da última avaliação (mesmo que DiagnosticoView)
     const ultimaAvaliacao = useMemo(() => {
@@ -642,6 +646,47 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
         setToastStatus('success');
         setEstado('saved');
         setTimeout(() => setToastStatus(null), 3000);
+    };
+
+    /** Extrai diretrizes do chat e reprocessa o plano com IA */
+    const handleAplicarAjustes = async () => {
+        if (!plano || !potencial) return;
+        setIsApplying(true);
+        setIaEnriching(true);
+
+        try {
+            const classificacao = atleta.score >= 90 ? 'ELITE'
+                : atleta.score >= 80 ? 'AVANÇADO'
+                    : atleta.score >= 70 ? 'ATLÉTICO'
+                        : atleta.score >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE';
+
+            const perfil = {
+                nome: atleta.name,
+                sexo: (atleta.gender === 'FEMALE' ? 'F' : 'M') as 'M' | 'F',
+                idade: atleta.birthDate ? Math.floor((Date.now() - new Date(atleta.birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : 30,
+                altura: ultimaAvaliacao.measurements.height,
+                peso: ultimaAvaliacao.measurements.weight,
+                gorduraPct: ultimaAvaliacao.bf ?? 15,
+                score: atleta.score,
+                classificacao: classificacao,
+                medidas: ultimaAvaliacao.measurements as Record<string, number>,
+                contexto: atleta.contexto as any,
+            };
+
+            const diretrizes = await extrairDiretrizesDoChat(atletaId, 'treino');
+            if (diretrizes) {
+                console.info('[TreinoView] 🚀 Aplicando diretrizes do chat...');
+                const enriquecido = await enriquecerTreinoComIA(plano, perfil, diretrizes);
+                setPlano(enriquecido);
+            } else {
+                console.warn('[TreinoView] ⚠️ Nenhuma diretriz extraída do chat.');
+            }
+        } catch (err) {
+            console.error('[TreinoView] ❌ Erro ao aplicar ajustes:', err);
+        } finally {
+            setIsApplying(false);
+            setIaEnriching(false);
+        }
     };
 
     return (
@@ -817,6 +862,29 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
                             </div>
                             <InsightBox isLoading={iaEnriching} text={plano.observacoes.mensagemFinal} title="Mensagem do Vitrúvio" />
                         </SectionCard>
+
+                        {/* Chat Vitrúvio IA — Debater plano */}
+                        <ChatPlanoEvolucao
+                            tipo="treino"
+                            atletaId={atletaId}
+                            nomeAtleta={atleta.name}
+                            planoTexto={treinoParaTexto(plano)}
+                            perfilTexto={perfilParaTexto({
+                                nome: atleta.name,
+                                sexo: (atleta.gender === 'FEMALE' ? 'F' : 'M') as 'M' | 'F',
+                                idade: atleta.birthDate ? Math.floor((Date.now() - new Date(atleta.birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : 30,
+                                altura: ultimaAvaliacao.measurements.height,
+                                peso: ultimaAvaliacao.measurements.weight,
+                                gorduraPct: ultimaAvaliacao.bf ?? 15,
+                                score: atleta.score,
+                                classificacao: atleta.score >= 90 ? 'ELITE' : atleta.score >= 80 ? 'AVANÇADO' : atleta.score >= 70 ? 'ATLÉTICO' : atleta.score >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE',
+                                medidas: ultimaAvaliacao.measurements as Record<string, number>,
+                                contexto: atleta.contexto as any,
+                            })}
+                            fontesCientificas={getFontesCientificas('treino')}
+                            onAplicarAjustes={handleAplicarAjustes}
+                            isApplying={isApplying}
+                        />
 
                         {/* Navegação bottom */}
                         <div className="flex items-center justify-between pt-10 border-t border-white/10">

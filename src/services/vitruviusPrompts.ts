@@ -75,7 +75,8 @@ Retorne APENAS o JSON, sem markdown, sem explicações extras.`;
 export function buildDiagnosticoPrompt(
     perfilAtleta: string,
     dadosCalculados: string,
-    fontesCientificas: string
+    fontesCientificas: string,
+    diretrizesAdicionais?: string
 ): string {
     return `${SYSTEM_BASE}
 
@@ -103,6 +104,21 @@ ${fontesCientificas}
 - Se o atleta tem lesões, destaque adaptações necessárias
 - Se usa medicações (ex: GLP-1, TRT), contextualize o impacto nas metas
 - Use valores numéricos reais nos insights (kcal, %, kg, cm)
+- Reaja a dores e lesões com empatia e cautela, sugerindo adaptações
+- Não forneça dicas médicas ou prescrições caso esbarre em diagnóstico clínico.
+
+## RELAÇÃO COM O PERSONAL TRAINER (SE APLICÁVEL)
+Ao debater planos com o Personal, você atua como um CONSULTOR TÉCNICO E APOIADOR.
+- O Personal é a autoridade máxima. Ele conhece o aluno no mundo real.
+- Você deve acatar as diretrizes e alterações que ele solicitar estruturalmente.
+${diretrizesAdicionais ? `
+## ⚠️ DIRETRIZES DO PERSONAL (OBRIGATÓRIO APLICAR)
+O Personal debateu algumas alterações que DEVEM ser refletidas nestes resumos/insights:
+"""
+${diretrizesAdicionais}
+"""
+ATENÇÃO: VOCÊ NÃO DEVE ALTERAR números matemáticos base (TMB, TDEE, NEAT, EAT, valores de proporções/simetria iniciais, ou metas de longo prazo). Apenas adeque a narrativa e os insights qualitativos a essas diretrizes.
+` : ''}
 
 ## Formato de Resposta (JSON)
 \`\`\`json
@@ -128,7 +144,8 @@ Retorne APENAS o JSON, sem markdown, sem explicações extras.`;
 export function buildTreinoPrompt(
     perfilAtleta: string,
     dadosCalculados: string,
-    fontesCientificas: string
+    fontesCientificas: string,
+    diretrizesAdicionais?: string
 ): string {
     return `${SYSTEM_BASE}
 
@@ -155,8 +172,17 @@ ${fontesCientificas}
 - Se há lesão lombar: evitar stiff com barra, agachamento livre pesado. Usar leg press, hip thrust
 - Se há lesão de joelho: evitar extensora com carga alta, agachamento profundo. Usar leg press 45°, hack machine
 - Sempre começar com exercício composto multiarticular
-- Exercícios de isolamento ao final
 - Adaptar para equipamentos comuns de academia
+${diretrizesAdicionais ? `
+## ⚠️ DIRETRIZES DO PERSONAL DO CHAT (AUTORIDADE MÁXIMA)
+O Personal solicitou alterações no plano de treino. APLIQUE IMEDIATAMENTE as seguintes mudanças:
+"""
+${diretrizesAdicionais}
+"""
+ATENÇÃO: Se o Personal solicitou a **remoção**, **adição** ou **alteração** de exercícios, grupos musculares, blocos inteiros, ou mudança na quantidade de séries, VOCÊ DEVE OBEDECER CEGAMENTE, sobrepondo-se às restrições originais. Você tem permissão para quebrar o "esqueleto" original do plano para acomodar o pedido do Personal.
+` : `
+ATENÇÃO - RESTRIÇÃO MATEMÁTICA: Você DEVE respeitar o número EXATO de séries por grupo muscular em cada bloco calculado na entrada. Você PODE trocar exercícios, ordem, descrições, técnicas ou rep ranges, desde que não quebre o esqueleto das séries e divisões estabelecidos no plano.
+`}
 
 ## Formato de Resposta (JSON)
 \`\`\`json
@@ -195,7 +221,8 @@ Retorne APENAS o JSON, sem markdown, sem explicações extras.`;
 export function buildDietaPrompt(
     perfilAtleta: string,
     dadosCalculados: string,
-    fontesCientificas: string
+    fontesCientificas: string,
+    diretrizesAdicionais?: string
 ): string {
     return `${SYSTEM_BASE}
 
@@ -223,6 +250,16 @@ ${fontesCientificas}
 - Usar alimentos acessíveis no Brasil
 - Se usa GLP-1: priorizar alimentos de alto volume e baixa densidade calórica
 - Se objetivo é BULK: incluir alimentos calóricos densos
+${diretrizesAdicionais ? `
+## ⚠️ DIRETRIZES DO PERSONAL DO CHAT (AUTORIDADE MÁXIMA)
+O Personal solicitou alterações no plano de dieta. APLIQUE IMEDIATAMENTE as seguintes mudanças no cardápio/macros:
+"""
+${diretrizesAdicionais}
+"""
+ATENÇÃO: Se o Personal solicitou a alteração de estrutura de refeições, metas de calorias, metas de macronutrientes, superávit/déficit ou adição/remoção específica de alimentos, VOCÊ DEVE OBEDECER CEGAMENTE, sobrepondo-se às restrições originais. Calibre as opções e os totais para se ajustarem ao que o Personal pediu.
+` : `
+ATENÇÃO - RESTRIÇÃO MATEMÁTICA: O TDEE, o déficit e as metas de MACRONUTRIENTES da dieta informada na entrada NÃO PODEM SER ALTERADOS. Garanta que a sua escolha de alimentos continue respeitando essas bases matemáticas (±10% tolerância).
+`}
 
 ## Formato de Resposta (JSON)
 \`\`\`json

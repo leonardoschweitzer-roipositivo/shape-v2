@@ -597,14 +597,15 @@ export function gerarPlanoDieta(
  */
 export async function enriquecerDietaComIA(
     planoDieta: PlanoDieta,
-    perfil: PerfilAtletaIA
+    perfil: PerfilAtletaIA,
+    diretrizesAdicionais?: string
 ): Promise<PlanoDieta> {
     try {
         const perfilTexto = perfilParaTexto(perfil);
         const dadosTexto = dietaParaTexto(planoDieta);
         const fontesTexto = getFontesCientificas('dieta');
 
-        const prompt = buildDietaPrompt(perfilTexto, dadosTexto, fontesTexto);
+        const prompt = buildDietaPrompt(perfilTexto, dadosTexto, fontesTexto, diretrizesAdicionais);
         const resultado = await gerarConteudoIA<{
             cardapioTreino?: CardapioRefeicao[];
             cardapioDescanso?: CardapioRefeicao[];

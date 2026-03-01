@@ -254,11 +254,151 @@ export async function enviarMensagemIA(
     }
 }
 
+// ==========================================
+// CHAT PARA REVISÃO DE PLANO (PERSONAL ↔ VITRÚVIO)
+// ==========================================
+
+function buildPlanoReviewPrompt(
+    tipo: 'treino' | 'dieta' | 'diagnostico',
+    nomeAtleta: string,
+    planoTexto: string,
+    perfilTexto: string,
+    fontesCientificas: string,
+): string {
+    const tipoLabel = tipo === 'treino' ? 'Treino' : tipo === 'dieta' ? 'Dieta' : 'Diagnóstico'
+    return `Você é o **Vitrúvio IA**, consultor científico de treinamento e nutrição esportiva do app VITRU IA.
+
+## Contexto desta Conversa
+Você está conversando com o **Personal Trainer** responsável pelo atleta. Essa é uma conversa entre profissionais.
+O Personal acabou de receber o ${tipo === 'diagnostico' ? 'Diagnóstico' : 'Plano de ' + tipoLabel} que você gerou e pode querer debater, ajustar ou questionar qualquer aspecto.
+
+## Sua Postura Profissional
+- Trate o Personal como **colega profissional** — linguagem técnica é bem-vinda
+- Sempre **fundamente** recomendações com evidências científicas quando possível
+- Se o Personal discordar, apresente **alternativas válidas** com prós/contras
+- Nunca diga "você deveria fazer", diga "a evidência sugere que..." ou "uma alternativa seria..."
+- Respeite que o Personal conhece o aluno pessoalmente — ele tem informações que você não tem
+- Seja conciso mas completo — máximo 3-4 parágrafos por resposta
+- Use formatação com **negrito** para dados importantes
+- Responda em português brasileiro
+- Use emojis com moderação (1-2 por mensagem)
+
+## Perfil do Atleta
+${perfilTexto}
+
+## ${tipo === 'diagnostico' ? 'Diagnóstico' : 'Plano de ' + tipoLabel} Gerado
+${planoTexto}
+
+## Fontes Científicas Disponíveis
+${fontesCientificas}
+
+## Regras
+1. NÃO prescreva medicamentos ou dosagens de suplementos
+2. Para dores severas, recomende avaliação de profissional de saúde
+3. Se não tiver certeza, diga "essa decisão é melhor com o Personal que conhece o aluno"
+4. Quando sugerir trocas de exercício, sempre explique a razão biomecânica
+5. Quando discutir macros/calorias, cite as faixas aceitas na literatura`
+}
+
+/**
+ * Envia mensagem para o Vitrúvio no contexto de revisão de plano (Personal ↔ IA)
+ * Usa session key separada para não conflitar com o chat do atleta.
+ */
+export async function enviarMensagemPlanoReview(
+    atletaId: string,
+    tipo: 'treino' | 'dieta' | 'diagnostico',
+    mensagem: string,
+    nomeAtleta: string,
+    planoTexto: string,
+    perfilTexto: string,
+    fontesCientificas: string,
+    historicoMensagens?: Array<{ role: 'user' | 'model'; content: string }>
+): Promise<string> {
+    const aiModel = getModel()
+    const sessionKey = `plano-${tipo}-${atletaId}`
+
+    if (!aiModel) {
+        return `No momento estou offline, mas posso ajudar quando a conexão for restabelecida. Enquanto isso, analise o plano e anote suas dúvidas! 📝`
+    }
+
+    try {
+        let chat = chatSessions.get(sessionKey)
+
+        if (!chat) {
+            const systemPrompt = buildPlanoReviewPrompt(tipo, nomeAtleta, planoTexto, perfilTexto, fontesCientificas)
+
+            const history: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = []
+
+            history.push({
+                role: 'user',
+                parts: [{ text: `[SISTEMA] ${systemPrompt}` }],
+            })
+            history.push({
+                role: 'model',
+                parts: [{ text: `Entendido! Estou pronto para debater o ${tipo === 'diagnostico' ? 'diagnóstico' : 'plano de ' + (tipo === 'treino' ? 'treino' : 'dieta')} do(a) ${nomeAtleta} com você. Pode questionar qualquer aspecto! 💪` }],
+            })
+
+            if (historicoMensagens && historicoMensagens.length > 0) {
+                const ultimas = historicoMensagens.slice(-20)
+                for (const msg of ultimas) {
+                    history.push({
+                        role: msg.role === 'user' ? 'user' : 'model',
+                        parts: [{ text: msg.content }],
+                    })
+                }
+            }
+
+            chat = aiModel.startChat({ history })
+            chatSessions.set(sessionKey, chat)
+        }
+
+        const result = await chat.sendMessage(mensagem)
+        const response = result.response.text()
+
+        return response || 'Desculpe, não consegui processar sua mensagem. Tente novamente!'
+
+    } catch (error) {
+        console.error('[VitruviusAI] Erro no chat de revisão:', error)
+        chatSessions.delete(sessionKey)
+        return 'Ocorreu um erro na comunicação com a IA. Tente novamente em instantes.'
+    }
+}
+
 /**
  * Limpa sessão de chat (ex: ao trocar de aba ou recarregar)
  */
 export function limparSessaoChat(atletaId: string) {
     chatSessions.delete(atletaId)
+    // Também limpar sessões de revisão de plano
+    chatSessions.delete(`plano-treino-${atletaId}`)
+    chatSessions.delete(`plano-dieta-${atletaId}`)
+    chatSessions.delete(`plano-diagnostico-${atletaId}`)
+}
+
+/**
+ * Extrai as diretrizes conversadas com o IA para aplicar no plano
+ */
+export async function extrairDiretrizesDoChat(
+    atletaId: string,
+    tipo: 'treino' | 'dieta' | 'diagnostico'
+): Promise<string> {
+    const aiModel = getModel();
+    const sessionKey = `plano-${tipo}-${atletaId}`;
+    let chat = chatSessions.get(sessionKey);
+
+    if (!aiModel || !chat) {
+        return '';
+    }
+
+    try {
+        const result = await chat.sendMessage(
+            "RESUMO DE DIRETRIZES: Por favor, analise a nossa conversa acima e extraia um resumo claro, direto e objetivo de TODAS AS ALTERAÇÕES que combinamos de fazer no plano. Não inclua texto explicativo, responda apenas com a lista de diretrizes (ex: 'Substituir exercício X por Y', 'Adicionar alimento Z'). Se não combinamos nenhuma alteração estrutural, explique brevemente que não houve mudanças."
+        );
+        return result.response.text();
+    } catch (error) {
+        console.error('[VitruviusAI] Erro ao extrair diretrizes:', error);
+        return '';
+    }
 }
 
 /**

@@ -734,14 +734,15 @@ export function gerarDiagnosticoCompleto(
  */
 export async function enriquecerDiagnosticoComIA(
     diagnostico: DiagnosticoDados,
-    perfil: PerfilAtletaIA
+    perfil: PerfilAtletaIA,
+    diretrizesAdicionais?: string
 ): Promise<DiagnosticoDados> {
     try {
         const perfilTexto = perfilParaTexto(perfil);
         const dadosTexto = diagnosticoParaTexto(diagnostico);
         const fontesTexto = getFontesCientificas('diagnostico');
 
-        const prompt = buildDiagnosticoPrompt(perfilTexto, dadosTexto, fontesTexto);
+        const prompt = buildDiagnosticoPrompt(perfilTexto, dadosTexto, fontesTexto, diretrizesAdicionais);
         const resultado = await gerarConteudoIA<{
             resumoVitruvio: string;
             insightsPorSecao?: {
