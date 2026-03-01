@@ -12,6 +12,7 @@ import { AthletePortalTab } from '../types/athlete-portal'
 import type { TodayScreenData, ScoreGeral, GraficoEvolucaoData, ProporcaoResumo, ChatMessage, MeuPersonal, DadosBasicos } from '../types/athlete-portal'
 import { Loader2 } from 'lucide-react'
 import { RegistrarRefeicaoModal } from '../components/organisms/RegistrarRefeicaoModal'
+import { enviarMensagemIA, type AtletaContextoIA } from '../services/vitruviusAI'
 import {
     carregarContextoPortal,
     montarDadosHoje,
@@ -215,13 +216,41 @@ export function AthletePortal({ atletaId, atletaNome }: AthletePortalProps) {
         setActiveTab('coach')
     }
 
-    // Handler para chat
+    // Handler para chat — agora com IA real (Gemini)
     const handleSendMessage = async (message: string): Promise<string> => {
         // Save user message
         await salvarMensagemChat(atletaId, 'user', message)
 
-        // Generate response (template-based for now)
-        const response = gerarRespostaCoach(message, ctx)
+        // Montar contexto do atleta para a IA
+        const contextoIA: AtletaContextoIA = {
+            nome: ctx?.atletaNome || atletaNome || 'Atleta',
+            sexo: ctx?.ficha?.sexo,
+            altura: ctx?.ficha?.altura,
+            peso: lastPeso || ctx?.ficha?.peso,
+            gorduraPct: ctx?.ficha?.gordura_percentual,
+            score: undefined, // TODO: pegar do scoreGeral
+            objetivo: ctx?.ficha?.objetivo,
+            personalNome: ctx?.personalNome,
+            // Dados de hoje
+            treinoHoje: todayData?.treino?.titulo,
+            treinoStatus: todayData?.treino?.status,
+            caloriasConsumidas: todayData?.dieta?.consumidoCalorias,
+            caloriasMeta: todayData?.dieta?.metaCalorias,
+            proteinaConsumida: todayData?.dieta?.consumidoProteina,
+            proteinaMeta: todayData?.dieta?.metaProteina,
+            aguaLitros: todayData?.trackers?.find(t => t.id === 'agua')?.valor ? Number(todayData.trackers.find(t => t.id === 'agua')?.valor) : undefined,
+            sonoHoras: todayData?.trackers?.find(t => t.id === 'sono')?.valor ? Number(todayData.trackers.find(t => t.id === 'sono')?.valor) : undefined,
+            dorLocal: todayData?.trackers?.find(t => t.id === 'dor')?.valor as string | undefined,
+        }
+
+        // Montar histórico de mensagens para contexto
+        const historico = chatMessages.map(m => ({
+            role: m.role as 'user' | 'model',
+            content: m.content,
+        }))
+
+        // Enviar para IA (Gemini ou fallback)
+        const response = await enviarMensagemIA(atletaId, message, contextoIA, historico)
 
         // Save assistant message
         await salvarMensagemChat(atletaId, 'assistant', response)
@@ -316,41 +345,4 @@ export function AthletePortal({ atletaId, atletaNome }: AthletePortalProps) {
     )
 }
 
-// ==========================================
-// RESPOSTAS CONTEXTUAIS DO COACH
-// ==========================================
-
-function gerarRespostaCoach(message: string, ctx: PortalContext | null): string {
-    const lower = message.toLowerCase()
-
-    if (lower.includes('refeição') || lower.includes('comer') || lower.includes('comi')) {
-        return 'Ótimo! Registrar refeições é essencial para acompanhar seus macros. Pode descrever o que comeu (ex: "200g de frango, arroz e salada") que vou registrar para você! 🍽️'
-    }
-
-    if (lower.includes('treino') || lower.includes('treinar') || lower.includes('acabei')) {
-        const treino = ctx?.planoTreino ? 'Boa! Como foi?' : 'Registrarei seu treino.';
-        return `${treino} Me conta:\n\n1. Como se sentiu? (😫 Difícil / 💪 Bom / 🔥 Ótimo)\n2. Quanto tempo durou?\n3. Alguma dor ou desconforto?`
-    }
-
-    if (lower.includes('água') || lower.includes('bebi')) {
-        return 'Registrado! 💧 Hidratação é fundamental para performance e recuperação muscular. Continue bebendo água ao longo do dia!'
-    }
-
-    if (lower.includes('dor') || lower.includes('lesão') || lower.includes('machucado')) {
-        return '🤕 Vou registrar isso. Me conta:\n\nIntensidade (1-10)?\nOnde exatamente?\nQuando começou?\n\n⚠️ Se for uma dor forte, procure orientação do seu Personal antes do próximo treino.'
-    }
-
-    if (lower.includes('proteína') || lower.includes('proteina') || lower.includes('macro')) {
-        if (ctx?.planoDieta) {
-            return '📊 Verificando seus macros de hoje...\n\nPara atingir sua meta, sugiro:\n✅ Shake com 2 scoops de whey (~50g proteína)\n✅ Peito de frango (200g) (~50g proteína)\n✅ Ovos (4 unidades) (~24g proteína)'
-        }
-        return 'Seu personal ainda não gerou um plano de dieta. Peça a ele para criar um plano personalizado no Vitrúvio IA!'
-    }
-
-    if (lower.includes('cansado') || lower.includes('desanimado') || lower.includes('motivação')) {
-        return 'Entendo que às vezes bate o cansaço, mas lembre-se: consistência supera intensidade! 🔥\n\nCada dia de treino te aproxima do seu objetivo. Pequenos progressos diários = grandes resultados em 12 meses! 💪'
-    }
-
-    // Default
-    return `Entendi! Com base no seu perfil, aqui vão minhas dicas:\n\n✅ Mantenha a consistência no treino\n✅ Foque em atingir sua meta de proteína diária\n✅ Durma bem (7-8h por noite)\n\nPrecisa de algo mais específico? Pode perguntar sobre treino, dieta, suplementação ou técnica! 💪`
-}
+// Respostas template removidas — agora usa vitruviusAI.ts (Gemini + fallback contextual)
