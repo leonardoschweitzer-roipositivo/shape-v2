@@ -65,6 +65,7 @@ import {
 interface DietaViewProps {
     atletaId: string;
     onBack: () => void;
+    onComplete?: () => void;
     diagnosticoId?: string;
     readOnlyData?: PlanoDieta;
 }
@@ -231,6 +232,7 @@ const TabelaRefeicoes: React.FC<{ refeicoes: RefeicaoEstrutura[] }> = ({ refeico
 export const DietaView: React.FC<DietaViewProps> = ({
     atletaId,
     onBack,
+    onComplete,
     diagnosticoId,
     readOnlyData,
 }) => {
@@ -909,7 +911,7 @@ export const DietaView: React.FC<DietaViewProps> = ({
                                     {estado === 'saved' && (
                                         <div className="flex flex-col items-end gap-1">
                                             <button
-                                                onClick={onBack}
+                                                onClick={onComplete || onBack}
                                                 className="flex items-center gap-3 px-8 py-3.5 bg-primary text-[#0A0F1C] font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(0,201,167,0.3)] transition-all"
                                             >
                                                 <CheckCircle size={18} /> Concluir Plano

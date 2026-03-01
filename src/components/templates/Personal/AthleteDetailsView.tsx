@@ -196,6 +196,26 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
         fetchPlans();
     }, [fetchPlans]);
 
+    const handleDeleteAssessment = async (assessmentId: string) => {
+        if (!confirm('Tem certeza que deseja excluir esta avaliação? Esta ação não pode ser desfeita.')) return;
+
+        try {
+            const { error } = await supabase.from('medidas').delete().eq('id', assessmentId);
+            if (error) throw error;
+
+            // Recarregar dados do store
+            const { loadFromSupabase } = useDataStore.getState();
+            const personalId = athlete.personalId;
+            if (personalId) {
+                await loadFromSupabase(personalId);
+            }
+            console.info('[AthleteDetails] ✅ Avaliação excluída:', assessmentId);
+        } catch (err) {
+            console.error('[AthleteDetails] ❌ Erro ao excluir avaliação:', err);
+            alert('Erro ao excluir a avaliação.');
+        }
+    };
+
     const handleDeletePlano = async (planoId: string) => {
         if (!confirm('Tem certeza que deseja excluir este Plano de Evolução e todos os dados relacionados?')) return;
 
@@ -710,14 +730,22 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                                     {ass.measurements.weight}kg
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
-                                                    <button
-                                                        onClick={() => onConsultAssessment(ass.id)}
-                                                        className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-all flex items-center gap-2 text-xs font-bold uppercase ml-auto"
-                                                    >
-                                                        <Eye size={16} />
-                                                        <span className="hidden md:inline">Consultar</span>
-                                                        <ExternalLink size={12} className="opacity-50" />
-                                                    </button>
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <button
+                                                            onClick={() => onConsultAssessment(ass.id)}
+                                                            className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-all flex items-center gap-2 text-[10px] font-bold uppercase"
+                                                        >
+                                                            <Eye size={16} />
+                                                            Consultar
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteAssessment(ass.id)}
+                                                            className="p-2 hover:bg-red-500/20 rounded-lg text-gray-500 hover:text-red-400 transition-all flex items-center gap-2 text-[10px] font-bold uppercase"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                            Excluir
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))}

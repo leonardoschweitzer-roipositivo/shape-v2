@@ -583,6 +583,9 @@ const App: React.FC = () => {
               atletaId={selectedAthleteId}
               diagnosticoId={diagnosticoPlanId ?? undefined}
               onBack={() => setCurrentView('treino-plano')}
+              onComplete={() => {
+                setCurrentView('athlete-details');
+              }}
             />
           ) : null;
         case 'consulta-diagnostico':
