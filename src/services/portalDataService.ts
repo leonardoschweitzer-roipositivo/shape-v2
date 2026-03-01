@@ -154,8 +154,7 @@ export function derivarTreinoDoDia(plano: PlanoTreino | null): WorkoutOfDay {
     const treinos = plano.treinos || [];
     const diasTreinados = treinos.length;
 
-    // Encontrar treino por dia da semana (1=Seg → Treino A, 2=Ter → Treino B, etc.)
-    // Se dia de descanso (dom ou dias sem treino), mostrar descanso
+    // Domingo ou mais dias que treinos → descanso
     if (diaSemana === 0 || diaSemana > diasTreinados) {
         return {
             id: 'descanso',
@@ -167,6 +166,8 @@ export function derivarTreinoDoDia(plano: PlanoTreino | null): WorkoutOfDay {
         };
     }
 
+    // Selecionar treino pela posição na sequência de letras
+    // diaSemana 1(Seg)→treinos[0](A), 2(Ter)→treinos[1](B), etc.
     const treinoHoje = treinos[diaSemana - 1];
     if (!treinoHoje) {
         return {
@@ -179,8 +180,9 @@ export function derivarTreinoDoDia(plano: PlanoTreino | null): WorkoutOfDay {
         };
     }
 
-    // Extrair grupos do nome do treino (ex: "Treino A - Peito + Tríceps")
+    // Extrair grupos do nome do treino
     const grupoNomes = treinoHoje.blocos.map(b => b.nomeGrupo).join(' + ');
+    const letra = (treinoHoje as any).letra || String.fromCharCode(65 + (diaSemana - 1));
 
     // Flatten exercícios de todos os blocos
     const todosExercicios = treinoHoje.blocos.flatMap(bloco =>
@@ -195,9 +197,9 @@ export function derivarTreinoDoDia(plano: PlanoTreino | null): WorkoutOfDay {
     );
 
     return {
-        id: `treino-${diaSemana}`,
+        id: `treino-${letra}`,
         titulo: grupoNomes || treinoHoje.nome || 'TREINO',
-        subtitulo: treinoHoje.nome || '',
+        subtitulo: `Treino ${letra} — ${treinoHoje.nome || ''}`,
         diaAtual: diaSemana,
         diasTotal: diasTreinados,
         status: 'pendente',
@@ -210,7 +212,7 @@ export function derivarTreinoDoDia(plano: PlanoTreino | null): WorkoutOfDay {
  */
 export interface ProximoTreino {
     data: string; // ex: "Segunda, 03 Mar"
-    diaSemanaLabel: string;
+    letraLabel: string; // ex: "Treino B"
     grupoMuscular: string;
     nomeTreino: string;
     exercicios: Array<{
@@ -251,6 +253,7 @@ export function derivarProximoTreino(plano: PlanoTreino | null): ProximoTreino |
         futuraData.setDate(futuraData.getDate() + offset);
 
         const grupoNomes = treino.blocos.map(b => b.nomeGrupo).join(' + ');
+        const letra = (treino as any).letra || String.fromCharCode(65 + treinoIndex);
 
         const exercicios = treino.blocos.flatMap(bloco =>
             bloco.exercicios.map((ex: any, i: number) => ({
@@ -264,7 +267,7 @@ export function derivarProximoTreino(plano: PlanoTreino | null): ProximoTreino |
 
         return {
             data: `${diasSemanaLabels[futuroDiaSemana]}, ${futuraData.getDate().toString().padStart(2, '0')} ${meses[futuraData.getMonth()]}`,
-            diaSemanaLabel: diasSemanaLabels[futuroDiaSemana],
+            letraLabel: `Treino ${letra}`,
             grupoMuscular: grupoNomes,
             nomeTreino: treino.nome || grupoNomes,
             exercicios,

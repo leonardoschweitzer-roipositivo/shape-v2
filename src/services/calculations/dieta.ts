@@ -12,6 +12,9 @@ import { type DiagnosticoDados } from './diagnostico';
 import { type PotencialAtleta } from './potencial';
 import { type ObjetivoVitruvio } from './objetivos';
 import { supabase } from '@/services/supabase';
+import { gerarConteudoIA } from '@/services/vitruviusAI';
+import { type PerfilAtletaIA, perfilParaTexto, dietaParaTexto, getFontesCientificas } from '@/services/vitruviusContext';
+import { buildDietaPrompt } from '@/services/vitruviusPrompts';
 
 // ═══════════════════════════════════════════════════════════
 // TYPES
@@ -581,6 +584,67 @@ export function gerarPlanoDieta(
         observacoesContexto: potencial.observacoesContexto,
         geradoEm: new Date().toISOString(),
     };
+}
+
+/**
+ * Enriquece o plano de dieta com IA (Gemini).
+ * Substitui cardápio hardcoded, dicas e mensagem final por geração personalizada.
+ * Fallback: mantém os dados atuais se IA falhar.
+ */
+export async function enriquecerDietaComIA(
+    planoDieta: PlanoDieta,
+    perfil: PerfilAtletaIA
+): Promise<PlanoDieta> {
+    try {
+        const perfilTexto = perfilParaTexto(perfil);
+        const dadosTexto = dietaParaTexto(planoDieta);
+        const fontesTexto = getFontesCientificas('dieta');
+
+        const prompt = buildDietaPrompt(perfilTexto, dadosTexto, fontesTexto);
+        const resultado = await gerarConteudoIA<{
+            cardapioTreino?: CardapioRefeicao[];
+            cardapioDescanso?: CardapioRefeicao[];
+            dicasNutricionais?: string[];
+            observacoesContexto?: string[];
+            mensagemFinal?: string;
+        }>(prompt);
+
+        if (resultado) {
+            const planoEnriquecido = { ...planoDieta };
+
+            // Atualizar cardápio
+            if (resultado.cardapioTreino?.length) {
+                planoEnriquecido.cardapio = resultado.cardapioTreino;
+            }
+
+            // Atualizar pontos de atenção com dicas da IA
+            if (resultado.dicasNutricionais?.length) {
+                planoEnriquecido.pontosAtencao = resultado.dicasNutricionais.map((d, i) => ({
+                    titulo: `🤖 Dica IA #${i + 1}`,
+                    descricao: d,
+                }));
+            }
+
+            // Adicionar observações contextuais da IA
+            if (resultado.observacoesContexto?.length) {
+                planoEnriquecido.contextoConsiderado = [
+                    ...planoEnriquecido.contextoConsiderado,
+                    ...resultado.observacoesContexto.map(o => `🤖 ${o}`),
+                ];
+            }
+
+            // Atualizar mensagem final
+            if (resultado.mensagemFinal) {
+                planoEnriquecido.mensagemFinal = resultado.mensagemFinal;
+            }
+
+            return planoEnriquecido;
+        }
+    } catch (error) {
+        console.error('[Dieta] Erro ao enriquecer com IA:', error);
+    }
+
+    return planoDieta;
 }
 
 // ═══════════════════════════════════════════════════════════

@@ -12,6 +12,9 @@ import { DiagnosticoDados } from './diagnostico';
 import { PotencialAtleta } from './potencial';
 import { supabase } from '@/services/supabase';
 import { type ObjetivoVitruvio, getObjetivoMeta } from './objetivos';
+import { gerarConteudoIA } from '@/services/vitruviusAI';
+import { type PerfilAtletaIA, perfilParaTexto, treinoParaTexto, getFontesCientificas } from '@/services/vitruviusContext';
+import { buildTreinoPrompt } from '@/services/vitruviusPrompts';
 
 // ═══════════════════════════════════════════════════════════
 // TYPES
@@ -53,8 +56,7 @@ export interface TrimestreAtual {
 }
 
 export interface EstruturaSemanal {
-    dia: string;
-    treino: string;
+    letra: string;
     grupos: string[];
     duracaoMinutos: number;
 }
@@ -85,7 +87,7 @@ export interface BlocoTreino {
 export interface TreinoDetalhado {
     id: string;
     nome: string;
-    diaSemana: string;
+    letra: string;
     duracaoMinutos: number;
     blocos: BlocoTreino[];
 }
@@ -294,26 +296,20 @@ export const gerarPlanoTreino = (
 
 
     const estruturaSemanal: EstruturaSemanal[] = isIniciante ? [
-        { dia: 'Segunda', treino: 'A', grupos: ['Peito', 'Ombros', 'Tríceps'], duracaoMinutos: 60 },
-        { dia: 'Terça', treino: 'OFF', grupos: ['Descanso Ativo'], duracaoMinutos: 0 },
-        { dia: 'Quarta', treino: 'B', grupos: ['Costas', 'Bíceps', 'Panturrilha'], duracaoMinutos: 60 },
-        { dia: 'Quinta', treino: 'OFF', grupos: ['Descanso Ativo'], duracaoMinutos: 0 },
-        { dia: 'Sexta', treino: 'C', grupos: ['Pernas', 'Panturrilha'], duracaoMinutos: 65 },
-        { dia: 'Sábado', treino: 'OFF', grupos: ['Descanso'], duracaoMinutos: 0 },
+        { letra: 'A', grupos: ['Peito', 'Ombros', 'Tríceps'], duracaoMinutos: 60 },
+        { letra: 'B', grupos: ['Costas', 'Bíceps', 'Panturrilha'], duracaoMinutos: 60 },
+        { letra: 'C', grupos: ['Pernas', 'Panturrilha'], duracaoMinutos: 65 },
     ] : isIntermediario ? [
-        { dia: 'Segunda', treino: 'A', grupos: ['Peito', 'Tríceps'], duracaoMinutos: 60 },
-        { dia: 'Terça', treino: 'B', grupos: ['Costas', 'Bíceps'], duracaoMinutos: 60 },
-        { dia: 'Quarta', treino: 'OFF', grupos: ['Descanso Ativo'], duracaoMinutos: 0 },
-        { dia: 'Quinta', treino: 'C', grupos: ['Ombros', 'Panturrilha'], duracaoMinutos: 60 },
-        { dia: 'Sexta', treino: 'D', grupos: ['Pernas', 'Panturrilha'], duracaoMinutos: 65 },
-        { dia: 'Sábado', treino: 'OFF', grupos: ['Descanso'], duracaoMinutos: 0 },
+        { letra: 'A', grupos: ['Peito', 'Tríceps'], duracaoMinutos: 60 },
+        { letra: 'B', grupos: ['Costas', 'Bíceps'], duracaoMinutos: 60 },
+        { letra: 'C', grupos: ['Ombros', 'Panturrilha'], duracaoMinutos: 60 },
+        { letra: 'D', grupos: ['Pernas', 'Panturrilha'], duracaoMinutos: 65 },
     ] : [
-        { dia: 'Segunda', treino: 'A', grupos: ['Peito', 'Tríceps'], duracaoMinutos: 60 },
-        { dia: 'Terça', treino: 'B', grupos: ['Costas', 'Bíceps'], duracaoMinutos: 60 },
-        { dia: 'Quarta', treino: 'C', grupos: ['Ombros', 'Panturrilha'], duracaoMinutos: 65 },
-        { dia: 'Quinta', treino: 'D', grupos: ['Pernas', 'Panturrilha'], duracaoMinutos: 70 },
-        { dia: 'Sexta', treino: 'E', grupos: ['Braços', 'Panturrilha'], duracaoMinutos: 55 },
-        { dia: 'Sábado', treino: 'OFF', grupos: ['Descanso'], duracaoMinutos: 0 },
+        { letra: 'A', grupos: ['Peito', 'Tríceps'], duracaoMinutos: 60 },
+        { letra: 'B', grupos: ['Costas', 'Bíceps'], duracaoMinutos: 60 },
+        { letra: 'C', grupos: ['Ombros', 'Panturrilha'], duracaoMinutos: 65 },
+        { letra: 'D', grupos: ['Pernas', 'Panturrilha'], duracaoMinutos: 70 },
+        { letra: 'E', grupos: ['Braços', 'Panturrilha'], duracaoMinutos: 55 },
     ];
 
     // 5. Treinos Detalhados — séries alinhadas com o Checkmate
@@ -380,7 +376,7 @@ export const gerarPlanoTreino = (
         {
             id: 'treino-a',
             nome: 'Treino A - Peito e Tríceps',
-            diaSemana: 'Segunda-feira',
+            letra: 'A',
             duracaoMinutos: 55 + Math.round(seriesPeito * 0.5),
             blocos: [
                 {
@@ -409,7 +405,7 @@ export const gerarPlanoTreino = (
         {
             id: 'treino-b',
             nome: 'Treino B - Costas e Bíceps',
-            diaSemana: 'Terça-feira',
+            letra: 'B',
             duracaoMinutos: 55 + Math.round(seriesCostas * 0.5),
             blocos: [
                 {
@@ -438,7 +434,7 @@ export const gerarPlanoTreino = (
         {
             id: 'treino-c',
             nome: 'Treino C - Ombros e Panturrilha',
-            diaSemana: 'Quarta-feira',
+            letra: 'C',
             duracaoMinutos: 55 + Math.round(seriesOmbros * 0.5),
             blocos: [
                 {
@@ -471,7 +467,7 @@ export const gerarPlanoTreino = (
         {
             id: 'treino-d',
             nome: 'Treino D - Pernas e Panturrilha',
-            diaSemana: 'Quinta-feira',
+            letra: 'D',
             duracaoMinutos: 60 + Math.round(seriesQuad * 0.5),
             blocos: [
                 {
@@ -509,7 +505,7 @@ export const gerarPlanoTreino = (
         {
             id: 'treino-e',
             nome: 'Treino E - Braços e Panturrilha',
-            diaSemana: 'Sexta-feira',
+            letra: 'E',
             duracaoMinutos: 50 + Math.round((seriesBiE + seriesTriE) * 0.5),
             blocos: [
                 {
@@ -588,6 +584,91 @@ export const gerarPlanoTreino = (
         geradoEm: dataRef
     };
 };
+
+/**
+ * Enriquece o plano de treino com IA (Gemini).
+ * Substitui exercícios hardcoded, técnicas e observações por geração personalizada.
+ * Fallback: mantém os exercícios atuais se IA falhar.
+ */
+export async function enriquecerTreinoComIA(
+    plano: PlanoTreino,
+    perfil: PerfilAtletaIA
+): Promise<PlanoTreino> {
+    try {
+        const perfilTexto = perfilParaTexto(perfil);
+        const dadosTexto = treinoParaTexto(plano);
+        const fontesTexto = getFontesCientificas('treino');
+
+        const prompt = buildTreinoPrompt(perfilTexto, dadosTexto, fontesTexto);
+        const resultado = await gerarConteudoIA<{
+            exerciciosPorBloco: Record<string, Array<{
+                blocoGrupo: string;
+                exercicios: Array<{
+                    ordem: number;
+                    nome: string;
+                    series: number;
+                    repeticoes: string;
+                    descansoSegundos: number;
+                    tecnica?: string;
+                    observacao?: string;
+                }>;
+            }>>;
+            observacoes: {
+                resumo: string;
+                pontosAtencao: string[];
+                mensagemFinal: string;
+            };
+            descricoesMesociclos: string[];
+        }>(prompt);
+
+        if (resultado) {
+            const planoEnriquecido = { ...plano };
+
+            // Atualizar exercícios se a IA retornou
+            if (resultado.exerciciosPorBloco) {
+                for (const treino of planoEnriquecido.treinos) {
+                    const blocoIA = resultado.exerciciosPorBloco[treino.id];
+                    if (blocoIA) {
+                        for (const bloco of treino.blocos) {
+                            const match = blocoIA.find(b => b.blocoGrupo === bloco.nomeGrupo);
+                            if (match?.exercicios?.length) {
+                                bloco.exercicios = match.exercicios;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Atualizar observações
+            if (resultado.observacoes) {
+                planoEnriquecido.observacoes = {
+                    ...planoEnriquecido.observacoes,
+                    resumo: resultado.observacoes.resumo || planoEnriquecido.observacoes.resumo,
+                    pontosAtencao: resultado.observacoes.pontosAtencao?.length
+                        ? resultado.observacoes.pontosAtencao
+                        : planoEnriquecido.observacoes.pontosAtencao,
+                    mensagemFinal: resultado.observacoes.mensagemFinal || planoEnriquecido.observacoes.mensagemFinal,
+                };
+            }
+
+            // Atualizar descrições dos mesociclos
+            if (resultado.descricoesMesociclos?.length === 3) {
+                for (let i = 0; i < 3; i++) {
+                    if (planoEnriquecido.trimestreAtual.mesociclos[i]) {
+                        planoEnriquecido.trimestreAtual.mesociclos[i].descricao =
+                            resultado.descricoesMesociclos[i];
+                    }
+                }
+            }
+
+            return planoEnriquecido;
+        }
+    } catch (error) {
+        console.error('[Treino] Erro ao enriquecer com IA:', error);
+    }
+
+    return plano;
+}
 
 // ═══════════════════════════════════════════════════════════
 // PERSISTÊNCIA - SUPABASE

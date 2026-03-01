@@ -12,6 +12,9 @@
 
 import { supabase } from '@/services/supabase';
 import { PotencialAtleta } from './potencial';
+import { gerarConteudoIA } from '@/services/vitruviusAI';
+import { type PerfilAtletaIA, perfilParaTexto, diagnosticoParaTexto, getFontesCientificas } from '@/services/vitruviusContext';
+import { buildDiagnosticoPrompt } from '@/services/vitruviusPrompts';
 
 // ═══════════════════════════════════════════════════════════
 // TYPES
@@ -103,6 +106,8 @@ export interface DiagnosticoDados {
     prioridades: Prioridade[];
     metasProporcoes: MetaProporcao[];
     resumoVitruvio: string;
+    recomendacoesIA?: string[];
+    _medidas?: Record<string, number>;
     geradoEm: string;
 }
 
@@ -710,9 +715,45 @@ export function gerarDiagnosticoCompleto(
         prioridades,
         metasProporcoes,
         resumoVitruvio,
+        recomendacoesIA: undefined,
         geradoEm: new Date().toISOString(),
         _medidas: input.medidas, // Para referência em cm na UI
     };
+}
+
+/**
+ * Enriquece o diagnóstico com IA (Gemini).
+ * Substitui o resumoVitruvio por geração personalizada e adiciona recomendações.
+ * Fallback: mantém o template string se IA falhar.
+ */
+export async function enriquecerDiagnosticoComIA(
+    diagnostico: DiagnosticoDados,
+    perfil: PerfilAtletaIA
+): Promise<DiagnosticoDados> {
+    try {
+        const perfilTexto = perfilParaTexto(perfil);
+        const dadosTexto = diagnosticoParaTexto(diagnostico);
+        const fontesTexto = getFontesCientificas('diagnostico');
+
+        const prompt = buildDiagnosticoPrompt(perfilTexto, dadosTexto, fontesTexto);
+        const resultado = await gerarConteudoIA<{
+            resumoVitruvio: string;
+            recomendacoesIA: string[];
+        }>(prompt);
+
+        if (resultado) {
+            return {
+                ...diagnostico,
+                resumoVitruvio: resultado.resumoVitruvio || diagnostico.resumoVitruvio,
+                recomendacoesIA: resultado.recomendacoesIA || [],
+            };
+        }
+    } catch (error) {
+        console.error('[Diagnostico] Erro ao enriquecer com IA:', error);
+    }
+
+    // Fallback: retorna diagnóstico sem alteração
+    return diagnostico;
 }
 
 // ═══════════════════════════════════════════════════════════

@@ -38,6 +38,7 @@ import {
 import { useDataStore } from '@/stores/dataStore';
 import {
     gerarDiagnosticoCompleto,
+    enriquecerDiagnosticoComIA,
     salvarDiagnostico,
     type DiagnosticoDados,
     type DiagnosticoInput,
@@ -805,6 +806,26 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
             setRecomendacao(rec);
             setObjetivoSelecionado(rec.objetivo);
             setEstado('ready');
+
+            // Enriquecer com IA em background (não bloqueia UI)
+            const perfil = {
+                nome: atleta.name,
+                sexo: input.sexo,
+                idade: input.idade,
+                altura: input.altura,
+                peso: input.peso,
+                gorduraPct: input.gorduraPct,
+                score: input.score,
+                classificacao: input.classificacao,
+                medidas: input.medidas as Record<string, number>,
+                contexto: atleta.contexto as any,
+            };
+            enriquecerDiagnosticoComIA(resultado, perfil).then(enriquecido => {
+                if (enriquecido !== resultado) {
+                    console.info('[DiagnosticoView] 🤖 Diagnóstico enriquecido com IA');
+                    setDiagnostico(enriquecido);
+                }
+            });
         }, 1500);
     };
 

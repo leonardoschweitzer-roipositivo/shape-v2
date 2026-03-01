@@ -68,7 +68,7 @@ export function CardTreino({ treino, proximoTreino, onVerTreino, onCompletei, on
                                 <Calendar size={16} className="text-indigo-400" />
                                 <div className="text-left">
                                     <span className="text-sm font-semibold text-white">
-                                        Próximo: {proximoTreino.diaSemanaLabel}
+                                        Próximo: {proximoTreino.letraLabel}
                                     </span>
                                     <span className="text-xs text-gray-500 ml-2">
                                         ({proximoTreino.grupoMuscular})

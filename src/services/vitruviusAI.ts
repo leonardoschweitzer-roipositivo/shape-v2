@@ -2,7 +2,7 @@
  * Vitruvius AI Service
  *
  * Serviço central de IA usando Google Gemini.
- * Usado pelo Chat do Coach e futuramente por Diagnóstico, Treino e Dieta.
+ * Usado pelo Chat do Coach e pelos 4 processos core (Diagnóstico, Treino, Dieta, Avaliação).
  */
 
 import { GoogleGenerativeAI, type GenerativeModel, type ChatSession } from '@google/generative-ai'
@@ -38,6 +38,78 @@ function getModel(): GenerativeModel | null {
     }
 
     return model
+}
+
+// Modelo com configuração otimizada para geração estruturada (JSON)
+let generateModel: GenerativeModel | null = null
+
+function getGenerateModel(): GenerativeModel | null {
+    if (!API_KEY) {
+        console.warn('[VitruviusAI] VITE_GEMINI_API_KEY não configurada')
+        return null
+    }
+
+    if (!genAI) {
+        genAI = new GoogleGenerativeAI(API_KEY)
+    }
+
+    if (!generateModel) {
+        generateModel = genAI.getGenerativeModel({
+            model: 'gemini-2.0-flash',
+            generationConfig: {
+                temperature: 0.4,
+                topP: 0.85,
+                maxOutputTokens: 4096,
+                responseMimeType: 'application/json',
+            },
+        })
+    }
+
+    return generateModel
+}
+
+// ==========================================
+// GERAÇÃO ESTRUTURADA (DIAGNÓSTICO, TREINO, DIETA, AVALIAÇÃO)
+// ==========================================
+
+/**
+ * Gera conteúdo estruturado (JSON) via Gemini.
+ * Usado pelos 4 processos core para gerar partes narrativas/qualitativas.
+ *
+ * @param prompt - Prompt completo (system + contexto + instrução)
+ * @returns JSON parseado ou null se falhar
+ */
+export async function gerarConteudoIA<T = any>(prompt: string): Promise<T | null> {
+    const aiModel = getGenerateModel()
+
+    if (!aiModel) {
+        console.warn('[VitruviusAI] Modelo não disponível — usando fallback determinístico')
+        return null
+    }
+
+    try {
+        console.info('[VitruviusAI] Gerando conteúdo IA...')
+        const result = await aiModel.generateContent(prompt)
+        const text = result.response.text()
+
+        if (!text) {
+            console.warn('[VitruviusAI] Resposta vazia do Gemini')
+            return null
+        }
+
+        // Limpar possíveis markdown code fences
+        const cleaned = text
+            .replace(/```json\n?/g, '')
+            .replace(/```\n?/g, '')
+            .trim()
+
+        const parsed = JSON.parse(cleaned) as T
+        console.info('[VitruviusAI] ✅ Conteúdo IA gerado com sucesso')
+        return parsed
+    } catch (error) {
+        console.error('[VitruviusAI] Erro na geração:', error)
+        return null
+    }
 }
 
 // ==========================================

@@ -47,6 +47,7 @@ import {
 import {
     gerarPlanoDieta,
     salvarPlanoDieta,
+    enriquecerDietaComIA,
     type PlanoDieta,
     type MacroSet,
     type RefeicaoEstrutura,
@@ -317,6 +318,26 @@ export const DietaView: React.FC<DietaViewProps> = ({
             const resultado = gerarPlanoDieta(atletaId, atleta.name, diag, pot, rec.objetivo, atleta.contexto);
             setPlano(resultado);
             setEstado('ready');
+
+            // Enriquecer com IA em background
+            const perfil = {
+                nome: atleta.name,
+                sexo: (atleta.gender === 'FEMALE' ? 'F' : 'M') as 'M' | 'F',
+                idade: atleta.birthDate ? Math.floor((Date.now() - new Date(atleta.birthDate).getTime()) / 31557600000) : 30,
+                altura: m.height,
+                peso: m.weight,
+                gorduraPct: ultimaAvaliacao.bf ?? 15,
+                score: atleta.score,
+                classificacao: classificacao,
+                medidas: m as Record<string, number>,
+                contexto: atleta.contexto as any,
+            };
+            enriquecerDietaComIA(resultado, perfil).then(enriquecido => {
+                if (enriquecido !== resultado) {
+                    console.info('[DietaView] 🤖 Dieta enriquecida com IA');
+                    setPlano(enriquecido);
+                }
+            });
         }, 1200);
     };
 

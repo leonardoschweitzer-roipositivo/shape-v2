@@ -45,6 +45,7 @@ import {
 import {
     gerarPlanoTreino,
     salvarPlanoTreino,
+    enriquecerTreinoComIA,
     type PlanoTreino,
     type TreinoDetalhado,
     type VolumePorGrupo
@@ -351,12 +352,8 @@ const SecaoDivisao: React.FC<{ plano: PlanoTreino }> = ({ plano }) => {
             <div className="space-y-3">
                 {plano.divisao.estruturaSemanal.map((e, idx) => (
                     <div key={idx} className="flex items-center gap-4 bg-white/[0.02] p-4 rounded-xl border border-white/5 hover:translate-x-1 transition-transform">
-                        <div className="w-24 shrink-0">
-                            <p className="text-[10px] uppercase tracking-widest text-gray-600 font-bold">{e.dia}</p>
-                        </div>
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black border ${e.treino === 'OFF' ? 'bg-gray-800/50 border-gray-700 text-gray-600' : 'bg-primary/20 border-primary/40 text-primary'
-                            }`}>
-                            {e.treino}
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black border bg-primary/20 border-primary/40 text-primary`}>
+                            {e.letra}
                         </div>
                         <div className="flex-1">
                             <p className="text-base font-bold text-gray-200">{e.grupos.join(' + ')}</p>
@@ -406,7 +403,7 @@ const SecaoTreinosSemanais: React.FC<{ treinos: TreinoDetalhado[] }> = ({ treino
                             <h3 className="text-2xl font-black text-white uppercase tracking-tight">{activeTreino.nome}</h3>
                             <div className="flex items-center gap-4 mt-1 text-gray-500">
                                 <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider">
-                                    <Calendar size={14} className="text-primary" /> {activeTreino.diaSemana}
+                                    <Dumbbell size={14} className="text-primary" /> Treino {activeTreino.letra}
                                 </span>
                                 <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider">
                                     <Clock size={14} className="text-primary" /> ~{activeTreino.duracaoMinutos} minutos
@@ -580,6 +577,26 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
             const resultado = gerarPlanoTreino(atletaId, atleta.name, diag, pot, rec.objetivo, atleta.contexto);
             setPlano(resultado);
             setEstado('ready');
+
+            // Enriquecer com IA em background
+            const perfil = {
+                nome: atleta.name,
+                sexo: (atleta.gender === 'FEMALE' ? 'F' : 'M') as 'M' | 'F',
+                idade: atleta.birthDate ? Math.floor((Date.now() - new Date(atleta.birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : 30,
+                altura: ultimaAvaliacao.measurements.height,
+                peso: ultimaAvaliacao.measurements.weight,
+                gorduraPct: ultimaAvaliacao.bf ?? 15,
+                score: atleta.score,
+                classificacao: classificacao,
+                medidas: ultimaAvaliacao.measurements as Record<string, number>,
+                contexto: atleta.contexto as any,
+            };
+            enriquecerTreinoComIA(resultado, perfil).then(enriquecido => {
+                if (enriquecido !== resultado) {
+                    console.info('[TreinoView] 🤖 Treino enriquecido com IA');
+                    setPlano(enriquecido);
+                }
+            });
         }, 1800);
     };
 
