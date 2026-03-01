@@ -228,3 +228,111 @@ ${fontesCientificas}
 
 Retorne APENAS o JSON, sem markdown, sem explicações extras.`;
 }
+
+// ═══════════════════════════════════════════════════════════
+// PROMPT: PROPORÇÕES ÁUREAS (ANÁLISE POR GRUPO)
+// ═══════════════════════════════════════════════════════════
+
+export function buildProporcoesPrompt(
+    perfilAtleta: string,
+    dadosProporcoesTexto: string,
+    fontesCientificas: string
+): string {
+    return `${SYSTEM_BASE}
+
+## Tarefa
+Você recebeu os dados de PROPORÇÕES ÁUREAS de um atleta — ratios atuais vs ideais para cada grupo muscular.
+Os números são VERDADE ABSOLUTA, não altere. Sua tarefa é gerar para CADA proporção:
+1. **analysis** — 1-2 frases sobre o estado atual contextualizado ao atleta (use dados reais, mencione ratio e porcentagem)
+2. **suggestion** — 1 frase com ação concreta e específica para este atleta (considere lesões, contexto, nível)
+3. **goal12m** — 1 frase com meta realista de 12 meses (pode usar HTML <strong> para destacar valores em cm)
+
+## Perfil do Atleta
+${perfilAtleta}
+
+## Dados das Proporções (VERDADE ABSOLUTA)
+${dadosProporcoesTexto}
+
+## Fontes Científicas Relevantes
+${fontesCientificas}
+
+## Regras
+- Cada proporção DEVE ter uma análise PERSONALIZADA e DIFERENTE das demais
+- Considere o contexto: se tem lesão de ombro, adapte a sugestão para Shape-V
+- Se o atleta está em fase de cutting, adapte as metas de crescimento muscular
+- Mencione valores numéricos reais (ratio, cm, %)
+- Não repita a mesma frase para proporções diferentes!
+
+## Formato de Resposta (JSON)
+\`\`\`json
+{
+    "proporcoes": {
+        "Shape-V": { "analysis": "string", "suggestion": "string", "goal12m": "string" },
+        "Costas": { "analysis": "string", "suggestion": "string", "goal12m": "string" },
+        "Peitoral": { "analysis": "string", "suggestion": "string", "goal12m": "string" },
+        "Braço": { "analysis": "string", "suggestion": "string", "goal12m": "string" },
+        "Antebraço": { "analysis": "string", "suggestion": "string", "goal12m": "string" },
+        "Tríade": { "analysis": "string", "suggestion": "string", "goal12m": "string" },
+        "Cintura": { "analysis": "string", "suggestion": "string", "goal12m": "string" },
+        "Coxa": { "analysis": "string", "suggestion": "string", "goal12m": "string" },
+        "Coxa vs Panturrilha": { "analysis": "string", "suggestion": "string", "goal12m": "string" },
+        "Panturrilha": { "analysis": "string", "suggestion": "string", "goal12m": "string" },
+        "Upper vs Lower": { "analysis": "string", "suggestion": "string", "goal12m": "string" }
+    }
+}
+\`\`\`
+
+IMPORTANTE: Gere análises para TODAS as 11 proporções listadas acima.
+Retorne APENAS o JSON, sem markdown, sem explicações extras.`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// PROMPT: ASSIMETRIAS (ANÁLISE POR GRUPO)
+// ═══════════════════════════════════════════════════════════
+
+export function buildAssimetriasPrompt(
+    perfilAtleta: string,
+    dadosAssimetriasTexto: string,
+    fontesCientificas: string
+): string {
+    return `${SYSTEM_BASE}
+
+## Tarefa
+Você recebeu os dados de ASSIMETRIA BILATERAL de um atleta — medidas esquerda vs direita para cada grupo muscular.
+Os números são VERDADE ABSOLUTA, não altere. Sua tarefa é gerar:
+1. **resumoGeral** — 2-3 frases analisando o padrão geral de assimetria do atleta
+2. **analisePorGrupo** — para cada grupo muscular, 1-2 frases sobre o estado e recomendação
+
+## Perfil do Atleta
+${perfilAtleta}
+
+## Dados de Assimetria (VERDADE ABSOLUTA)
+${dadosAssimetriasTexto}
+
+## Fontes Científicas Relevantes
+${fontesCientificas}
+
+## Regras
+- Diferença < 1% → simétrico, elogiar
+- Diferença 1-3% → leve, monitorar
+- Diferença 3-5% → moderada, recomendar exercícios unilaterais
+- Diferença > 5% → significativa, pode indicar risco de lesão
+- Considere lesões e contexto do atleta ao fazer recomendações
+- Se o atleta é destro, assimetria leve no braço direito é esperada
+
+## Formato de Resposta (JSON)
+\`\`\`json
+{
+    "resumoGeral": "string — 2-3 frases sobre o padrão geral",
+    "analisePorGrupo": {
+        "braco": "string — análise + recomendação",
+        "antebraco": "string — análise + recomendação",
+        "coxa": "string — análise + recomendação",
+        "panturrilha": "string — análise + recomendação"
+    }
+}
+\`\`\`
+
+Retorne APENAS o JSON, sem markdown, sem explicações extras.`;
+}
+

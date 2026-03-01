@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
-import { Sparkles } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Sparkles, Loader2 } from 'lucide-react';
 import { ProportionCard, ProportionAiAnalysisCard } from '@/components/organisms';
 import { colors as designColors, typography as designTypography, spacing as designSpacing } from '@/tokens';
 import type { ComparisonMode, Measurements } from '../types';
 import { useProportionCalculations } from '../hooks/useProportionCalculations';
+import { extractProportionRatios } from '../config/proportionItems';
+import { enriquecerProporcoesComIA, type ProporcoesIA } from '@/services/calculations/assessment';
+import { type PerfilAtletaIA } from '@/services/vitruviusContext';
 
 import { useAthleteStore } from '@/stores/athleteStore';
+import { useDataStore } from '@/stores/dataStore';
 
 // Mock data - in future this will come from assessment context
 const MOCK_MALE_MEASUREMENTS: Measurements = {
@@ -110,6 +114,7 @@ export const ProportionsTab: React.FC<ProportionsTabProps> = ({
     gender
 }) => {
     const { profile } = useAthleteStore();
+    const { personalAthletes } = useDataStore();
 
     // Determine effective gender: prop > store > default(male)
     const effectiveGender = gender || (profile?.gender === 'FEMALE' ? 'female' : 'male');
@@ -119,12 +124,56 @@ export const ProportionsTab: React.FC<ProportionsTabProps> = ({
         effectiveGender === 'female' ? 'female_golden' : 'golden'
     );
 
+    // AI state
+    const [proporcoesIA, setProporcoesIA] = useState<ProporcoesIA | null>(null);
+    const [iaLoading, setIaLoading] = useState(false);
+
     // Use mock data if not provided, selecting based on gender
-    // In a real scenario, we should get real measurements from profile or assessment context
     const activeMeasurements = userMeasurements || (effectiveGender === 'female' ? MOCK_FEMALE_MEASUREMENTS : MOCK_MALE_MEASUREMENTS);
 
     // Use custom hook for calculations
     const { proportionItems } = useProportionCalculations(activeMeasurements, comparisonMode);
+
+    // Enriquecer proporções com IA
+    useEffect(() => {
+        if (!proportionItems.length) return;
+
+        // Build proportion data for AI
+        const snapshots = extractProportionRatios(activeMeasurements, comparisonMode);
+        const proportionData = snapshots.map(s => ({
+            title: s.nome,
+            ratio: s.atual,
+            ideal: s.ideal,
+            pct: s.pct,
+            status: s.status,
+        }));
+
+        // Build athlete profile
+        const athlete = personalAthletes.find(a => a.id === profile?.id) || personalAthletes[0];
+        const perfil: PerfilAtletaIA = {
+            nome: athlete?.name || profile?.name || 'Atleta',
+            sexo: effectiveGender === 'female' ? 'F' : 'M',
+            idade: athlete?.birthDate ? Math.floor((Date.now() - new Date(athlete.birthDate).getTime()) / 31557600000) : 30,
+            altura: activeMeasurements.altura,
+            peso: activeMeasurements.peso,
+            gorduraPct: 15, // fallback
+            score: profile?.latestScore?.overall || 0,
+            classificacao: 'N/A',
+            medidas: activeMeasurements as Record<string, number>,
+            contexto: athlete?.contexto as any,
+        };
+
+        setIaLoading(true);
+        setProporcoesIA(null);
+        enriquecerProporcoesComIA(proportionData, perfil)
+            .then(result => {
+                if (result) {
+                    console.info('[ProportionsTab] 🤖 Proporções enriquecidas com IA');
+                    setProporcoesIA(result);
+                }
+            })
+            .finally(() => setIaLoading(false));
+    }, [activeMeasurements, comparisonMode]);
 
     return (
         <div className="flex flex-col gap-8 animate-fade-in-up w-full">
@@ -221,30 +270,42 @@ export const ProportionsTab: React.FC<ProportionsTabProps> = ({
 
             {/* Widgets Pairs */}
             <div className="flex flex-col gap-8">
-                {proportionItems.map((item, index) => (
-                    <div key={index}>
-                        <div className="flex flex-col lg:flex-row gap-6 w-full items-stretch">
-                            {/* Left: Proportion Card */}
-                            <div className="flex-1 min-w-0">
-                                <ProportionCard {...item.card} />
+                {proportionItems.map((item, index) => {
+                    // Resolve AI data for this proportion if available
+                    const aiData = proporcoesIA?.proporcoes?.[item.card.title];
+
+                    return (
+                        <div key={index}>
+                            <div className="flex flex-col lg:flex-row gap-6 w-full items-stretch">
+                                {/* Left: Proportion Card */}
+                                <div className="flex-1 min-w-0">
+                                    <ProportionCard {...item.card} />
+                                </div>
+
+                                {/* Right: AI Analysis Card (Matched Height) */}
+                                <div className="w-full lg:w-80 flex-shrink-0">
+                                    {iaLoading ? (
+                                        <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 h-full flex items-center gap-3">
+                                            <Loader2 size={18} className="text-primary animate-spin" />
+                                            <p className="text-xs text-gray-500">Analisando {item.card.title}...</p>
+                                        </div>
+                                    ) : (
+                                        <ProportionAiAnalysisCard
+                                            analysis={aiData?.analysis || item.ai.analysis}
+                                            suggestion={aiData?.suggestion || item.ai.suggestion}
+                                            goal12m={aiData?.goal12m || item.ai.goal12m}
+                                        />
+                                    )}
+                                </div>
                             </div>
 
-                            {/* Right: AI Analysis Card (Matched Height) */}
-                            <div className="w-full lg:w-80 flex-shrink-0">
-                                <ProportionAiAnalysisCard
-                                    analysis={item.ai.analysis}
-                                    suggestion={item.ai.suggestion}
-                                    goal12m={item.ai.goal12m}
-                                />
-                            </div>
+                            {/* Divider between rows (not after the last one) */}
+                            {index < proportionItems.length - 1 && (
+                                <div className="w-full h-px bg-gradient-to-r from-transparent via-white/5 to-transparent mt-8"></div>
+                            )}
                         </div>
-
-                        {/* Divider between rows (not after the last one) */}
-                        {index < proportionItems.length - 1 && (
-                            <div className="w-full h-px bg-gradient-to-r from-transparent via-white/5 to-transparent mt-8"></div>
-                        )}
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </div>
     );

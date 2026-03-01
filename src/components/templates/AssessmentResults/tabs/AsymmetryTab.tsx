@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
-import { Accessibility, Hand, Dumbbell, Activity, Footprints } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Accessibility, Hand, Dumbbell, Activity, Footprints, Loader2, Bot } from 'lucide-react';
 import { GlassPanel } from '@/components/atoms';
 import { AsymmetryCard, AiInsightCard, AsymmetryRadar } from '@/components/organisms';
 import { colors as designColors, typography as designTypography, spacing as designSpacing } from '@/tokens';
 import { MeasurementHistory } from '@/mocks/personal';
+import { enriquecerAssimetriasComIA, type AssimetriasIA } from '@/services/calculations/assessment';
+import { type PerfilAtletaIA } from '@/services/vitruviusContext';
+import { useDataStore } from '@/stores/dataStore';
 
 // Token styles (shared with parent)
 const tokenStyles = {
@@ -58,6 +61,9 @@ interface AsymmetryTabProps {
 
 export const AsymmetryTab: React.FC<AsymmetryTabProps> = ({ assessment }) => {
     const [view, setView] = useState<'total' | 'membros' | 'tronco'>('total');
+    const [assimetriasIA, setAssimetriasIA] = useState<AssimetriasIA | null>(null);
+    const [iaLoading, setIaLoading] = useState(false);
+    const { personalAthletes } = useDataStore();
 
     const formatVal = (val: number) => val.toFixed(1).replace('.', ',');
     const formatDiff = (diff: number) => (diff > 0 ? '+' : '') + diff.toFixed(1).replace('.', ',');
@@ -138,6 +144,48 @@ export const AsymmetryTab: React.FC<AsymmetryTabProps> = ({ assessment }) => {
         view === 'total' || item.category === view
     );
 
+    // Enriquecer assimetrias com IA
+    useEffect(() => {
+        if (!asymmetryItems.length || !assessment) return;
+
+        const m = assessment.measurements;
+        const owner = personalAthletes.find(a =>
+            a.assessments.some(ass => ass.id === assessment.id)
+        );
+
+        const perfil: PerfilAtletaIA = {
+            nome: owner?.name || 'Atleta',
+            sexo: 'M',
+            idade: owner?.birthDate ? Math.floor((Date.now() - new Date(owner.birthDate).getTime()) / 31557600000) : 30,
+            altura: m.height,
+            peso: m.weight,
+            gorduraPct: 15,
+            score: 0,
+            classificacao: 'N/A',
+            medidas: m as Record<string, number>,
+            contexto: owner?.contexto as any,
+        };
+
+        const dataForAI = asymmetryItems.map(item => ({
+            id: item.id,
+            title: item.title,
+            leftVal: item.leftVal,
+            rightVal: item.rightVal,
+            diff: item.diff,
+            status: item.status,
+        }));
+
+        setIaLoading(true);
+        enriquecerAssimetriasComIA(dataForAI, perfil)
+            .then(result => {
+                if (result) {
+                    console.info('[AsymmetryTab] 🤖 Assimetrias enriquecidas com IA');
+                    setAssimetriasIA(result);
+                }
+            })
+            .finally(() => setIaLoading(false));
+    }, [assessment]);
+
     return (
         <div className="flex flex-col gap-8 animate-fade-in-up">
             {/* Header Description & Control Bar */}
@@ -182,16 +230,26 @@ export const AsymmetryTab: React.FC<AsymmetryTabProps> = ({ assessment }) => {
             <div className="flex flex-col lg:flex-row gap-6 h-full">
                 <div className="w-full lg:w-2/3 flex flex-col gap-4">
                     {filteredItems.map(item => (
-                        <AsymmetryCard
-                            key={item.id}
-                            icon={item.icon}
-                            title={item.title}
-                            subtitle={item.subtitle}
-                            leftVal={item.leftVal}
-                            rightVal={item.rightVal}
-                            diff={item.diff}
-                            status={item.status as any}
-                        />
+                        <div key={item.id}>
+                            <AsymmetryCard
+                                icon={item.icon}
+                                title={item.title}
+                                subtitle={item.subtitle}
+                                leftVal={item.leftVal}
+                                rightVal={item.rightVal}
+                                diff={item.diff}
+                                status={item.status as any}
+                            />
+                            {/* AI insight per group */}
+                            {assimetriasIA?.analisePorGrupo?.[item.id] && (
+                                <div className="mt-2 ml-4 pl-4 border-l-2 border-primary/30">
+                                    <p className="text-xs text-gray-400 leading-relaxed flex items-start gap-2">
+                                        <Bot size={12} className="text-primary mt-0.5 shrink-0" />
+                                        {assimetriasIA.analisePorGrupo[item.id]}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
                     ))}
                 </div>
 
@@ -213,21 +271,34 @@ export const AsymmetryTab: React.FC<AsymmetryTabProps> = ({ assessment }) => {
                         </div>
                     </GlassPanel>
 
-                    <AiInsightCard
-                        type="AI Insight"
-                        title={assessment ? (filteredItems.some(item => item.status !== 'symmetrical') ? "Assimetria Detectada" : "Físico Simétrico") : "Dominância do Hemicorpo Direito"}
-                        description={
-                            assessment ? (
-                                filteredItems.some(item => item.status !== 'symmetrical') ?
-                                    `Identificamos desequilíbrios em: ${filteredItems.filter(item => item.status !== 'symmetrical').map(item => item.title).join(', ')}.` :
-                                    "Seus membros apresentam excelente equilíbrio bilateral."
-                            ) : (
-                                <>
-                                    Identificamos uma assimetria significativa no <strong className="text-orange-400">Braço Direito (+3,5cm)</strong> que pode estar relacionada à compensação em exercícios de empurrar.
-                                </>
-                            )
-                        }
-                    />
+                    {iaLoading ? (
+                        <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 flex items-center gap-3">
+                            <Loader2 size={18} className="text-primary animate-spin" />
+                            <p className="text-xs text-gray-500">Vitrúvio IA analisando assimetrias...</p>
+                        </div>
+                    ) : assimetriasIA ? (
+                        <AiInsightCard
+                            type="Vitrúvio IA"
+                            title={filteredItems.some(item => item.status !== 'symmetrical') ? "Assimetria Detectada" : "Físico Simétrico"}
+                            description={assimetriasIA.resumoGeral}
+                        />
+                    ) : (
+                        <AiInsightCard
+                            type="AI Insight"
+                            title={assessment ? (filteredItems.some(item => item.status !== 'symmetrical') ? "Assimetria Detectada" : "Físico Simétrico") : "Dominância do Hemicorpo Direito"}
+                            description={
+                                assessment ? (
+                                    filteredItems.some(item => item.status !== 'symmetrical') ?
+                                        `Identificamos desequilíbrios em: ${filteredItems.filter(item => item.status !== 'symmetrical').map(item => item.title).join(', ')}.` :
+                                        "Seus membros apresentam excelente equilíbrio bilateral."
+                                ) : (
+                                    <>
+                                        Identificamos uma assimetria significativa no <strong className="text-orange-400">Braço Direito (+3,5cm)</strong> que pode estar relacionada à compensação em exercícios de empurrar.
+                                    </>
+                                )
+                            }
+                        />
+                    )}
                 </div>
             </div>
         </div>

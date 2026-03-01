@@ -14,7 +14,7 @@ import type {
 import type { ComparisonMode } from '../../types/proportions.ts';
 import { gerarConteudoIA } from '@/services/vitruviusAI';
 import { type PerfilAtletaIA, perfilParaTexto, avaliacaoParaTexto, getFontesCientificas } from '@/services/vitruviusContext';
-import { buildAvaliacaoInsightsPrompt } from '@/services/vitruviusPrompts';
+import { buildAvaliacaoInsightsPrompt, buildProporcoesPrompt, buildAssimetriasPrompt } from '@/services/vitruviusPrompts';
 
 // ═══════════════════════════════════════════════════════════
 // CONSTANTS & CONFIGURATION
@@ -674,6 +674,99 @@ export async function enriquecerAvaliacaoComIA(
         }
     } catch (error) {
         console.error('[Avaliação] Erro ao enriquecer com IA:', error);
+    }
+
+    return null;
+}
+
+// ═══════════════════════════════════════════════════════════
+// PROPORÇÕES — ENRIQUECIMENTO COM IA
+// ═══════════════════════════════════════════════════════════
+
+export interface ProportionAiItem {
+    analysis: string;
+    suggestion: string;
+    goal12m: string;
+}
+
+export interface ProporcoesIA {
+    proporcoes: Record<string, ProportionAiItem>;
+}
+
+/**
+ * Converte dados de proporções para texto (para prompt IA).
+ */
+function proporcoesParaTexto(items: Array<{ title: string; ratio: number; ideal: number; pct: number; status: string; currentCm?: string; idealCm?: string }>): string {
+    return items.map(item =>
+        `- ${item.title}: Ratio atual=${item.ratio.toFixed(2)}, ideal=${item.ideal.toFixed(2)}, ${item.pct}% do ideal, status=${item.status}${item.currentCm ? ` (atual: ${item.currentCm}, meta: ${item.idealCm})` : ''}`
+    ).join('\n');
+}
+
+/**
+ * Enriquece a análise de proporções áureas com IA (Gemini).
+ * Retorna análise personalizada para cada uma das 11 proporções.
+ */
+export async function enriquecerProporcoesComIA(
+    proportionData: Array<{ title: string; ratio: number; ideal: number; pct: number; status: string; currentCm?: string; idealCm?: string }>,
+    perfil: PerfilAtletaIA
+): Promise<ProporcoesIA | null> {
+    try {
+        const perfilTexto = perfilParaTexto(perfil);
+        const dadosTexto = proporcoesParaTexto(proportionData);
+        const fontesTexto = getFontesCientificas('avaliacao');
+
+        const prompt = buildProporcoesPrompt(perfilTexto, dadosTexto, fontesTexto);
+        const resposta = await gerarConteudoIA<ProporcoesIA>(prompt);
+
+        if (resposta?.proporcoes) {
+            return resposta;
+        }
+    } catch (error) {
+        console.error('[Proporções] Erro ao enriquecer com IA:', error);
+    }
+
+    return null;
+}
+
+// ═══════════════════════════════════════════════════════════
+// ASSIMETRIAS — ENRIQUECIMENTO COM IA
+// ═══════════════════════════════════════════════════════════
+
+export interface AssimetriasIA {
+    resumoGeral: string;
+    analisePorGrupo: Record<string, string>;
+}
+
+/**
+ * Converte dados de assimetria para texto (para prompt IA).
+ */
+function assimetriasParaTexto(items: Array<{ id: string; title: string; leftVal: string; rightVal: string; diff: string; status: string }>): string {
+    return items.map(item =>
+        `- ${item.title}: Esquerdo=${item.leftVal}cm, Direito=${item.rightVal}cm, Diferença=${item.diff}cm, Status=${item.status}`
+    ).join('\n');
+}
+
+/**
+ * Enriquece a análise de assimetrias com IA (Gemini).
+ * Retorna resumo geral + análise personalizada por grupo.
+ */
+export async function enriquecerAssimetriasComIA(
+    asymmetryData: Array<{ id: string; title: string; leftVal: string; rightVal: string; diff: string; status: string }>,
+    perfil: PerfilAtletaIA
+): Promise<AssimetriasIA | null> {
+    try {
+        const perfilTexto = perfilParaTexto(perfil);
+        const dadosTexto = assimetriasParaTexto(asymmetryData);
+        const fontesTexto = getFontesCientificas('avaliacao');
+
+        const prompt = buildAssimetriasPrompt(perfilTexto, dadosTexto, fontesTexto);
+        const resposta = await gerarConteudoIA<AssimetriasIA>(prompt);
+
+        if (resposta?.resumoGeral) {
+            return resposta;
+        }
+    } catch (error) {
+        console.error('[Assimetrias] Erro ao enriquecer com IA:', error);
     }
 
     return null;
