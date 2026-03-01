@@ -42,7 +42,8 @@ export function buildDiagnosticoPrompt(
 Você recebeu o diagnóstico completo de um atleta. Os NÚMEROS já foram calculados deterministicamente.
 Sua tarefa é gerar:
 1. Um **resumo narrativo** personalizado (resumoVitruvio)
-2. **Recomendações estratégicas** personalizadas (recomendacoesIA)
+2. **Insights por seção** do diagnóstico — cada um com análise personalizada e contextualizada
+3. **Recomendações estratégicas** personalizadas (recomendacoesIA)
 
 ## Perfil do Atleta
 ${perfilAtleta}
@@ -55,15 +56,23 @@ ${fontesCientificas}
 
 ## Instruções Especiais
 - O resumo deve mencionar o CONTEXTO do atleta (lesões, medicações, estilo de vida) quando relevante
+- Cada insight de seção deve ser DIFERENTE e focar nos dados daquela seção
 - As recomendações devem ser AÇÃO concreta, não teoria genérica
 - Considere as prioridades do diagnóstico para focar nas áreas mais impactantes
 - Se o atleta tem lesões, destaque adaptações necessárias
 - Se usa medicações (ex: GLP-1, TRT), contextualize o impacto nas metas
+- Use valores numéricos reais nos insights (kcal, %, kg, cm)
 
 ## Formato de Resposta (JSON)
 \`\`\`json
 {
     "resumoVitruvio": "string — análise narrativa de 3-5 frases, personalizada e contextualizada",
+    "insightsPorSecao": {
+        "taxas": "string — 2-3 frases sobre as taxas metabólicas (TMB, NEAT, TDEE), como otimizar o gasto calórico",
+        "composicao": "string — 2-3 frases sobre composição corporal (peso, BF%, massa magra/gorda, estratégia de recomposição)",
+        "proporcoes": "string — 2-3 frases sobre proporções áureas (score, pontos fortes/fracos, simetria)",
+        "prioridades": "string — 2-3 frases sobre prioridades de desenvolvimento e como atacar os pontos fracos"
+    },
     "recomendacoesIA": ["string — recomendação 1", "string — recomendação 2", "string — recomendação 3"]
 }
 \`\`\`

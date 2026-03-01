@@ -107,6 +107,12 @@ export interface DiagnosticoDados {
     metasProporcoes: MetaProporcao[];
     resumoVitruvio: string;
     recomendacoesIA?: string[];
+    insightsPorSecao?: {
+        taxas?: string;
+        composicao?: string;
+        proporcoes?: string;
+        prioridades?: string;
+    };
     _medidas?: Record<string, number>;
     geradoEm: string;
 }
@@ -723,7 +729,7 @@ export function gerarDiagnosticoCompleto(
 
 /**
  * Enriquece o diagnóstico com IA (Gemini).
- * Substitui o resumoVitruvio por geração personalizada e adiciona recomendações.
+ * Substitui o resumoVitruvio por geração personalizada e adiciona recomendações e insights por seção.
  * Fallback: mantém o template string se IA falhar.
  */
 export async function enriquecerDiagnosticoComIA(
@@ -738,6 +744,12 @@ export async function enriquecerDiagnosticoComIA(
         const prompt = buildDiagnosticoPrompt(perfilTexto, dadosTexto, fontesTexto);
         const resultado = await gerarConteudoIA<{
             resumoVitruvio: string;
+            insightsPorSecao?: {
+                taxas?: string;
+                composicao?: string;
+                proporcoes?: string;
+                prioridades?: string;
+            };
             recomendacoesIA: string[];
         }>(prompt);
 
@@ -746,6 +758,7 @@ export async function enriquecerDiagnosticoComIA(
                 ...diagnostico,
                 resumoVitruvio: resultado.resumoVitruvio || diagnostico.resumoVitruvio,
                 recomendacoesIA: resultado.recomendacoesIA || [],
+                insightsPorSecao: resultado.insightsPorSecao || undefined,
             };
         }
     } catch (error) {
