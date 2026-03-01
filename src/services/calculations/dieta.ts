@@ -124,6 +124,10 @@ export interface PlanoDieta {
     proximosPassos: string[];
     mensagemFinal: string;
     observacoesContexto: string[];  // alertas do potencial
+    insightsPorSecao?: {
+        estrategia?: string;
+        checkpoints?: string;
+    };
 
     geradoEm: string;
 }
@@ -607,6 +611,10 @@ export async function enriquecerDietaComIA(
             dicasNutricionais?: string[];
             observacoesContexto?: string[];
             mensagemFinal?: string;
+            insightsPorSecao?: {
+                estrategia?: string;
+                checkpoints?: string;
+            };
         }>(prompt);
 
         if (resultado) {
@@ -636,6 +644,11 @@ export async function enriquecerDietaComIA(
             // Atualizar mensagem final
             if (resultado.mensagemFinal) {
                 planoEnriquecido.mensagemFinal = resultado.mensagemFinal;
+            }
+
+            // Atualizar insights por seção
+            if (resultado.insightsPorSecao) {
+                planoEnriquecido.insightsPorSecao = resultado.insightsPorSecao;
             }
 
             return planoEnriquecido;

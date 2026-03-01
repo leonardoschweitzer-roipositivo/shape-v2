@@ -139,6 +139,7 @@ Sua tarefa é gerar:
 2. **Técnicas de intensificação** contextualizadas
 3. **Observações personalizadas** para o treino
 4. **Descrições dos mesociclos** contextualizadas
+5. **Insights por seção** — análises personalizadas para cada seção do plano
 
 ## Perfil do Atleta
 ${perfilAtleta}
@@ -175,7 +176,11 @@ ${fontesCientificas}
         "pontosAtencao": ["string — ponto 1", "string — ponto 2"],
         "mensagemFinal": "string — mensagem motivacional personalizada"
     },
-    "descricoesMesociclos": ["string — desc meso 1", "string — desc meso 2", "string — desc meso 3"]
+    "descricoesMesociclos": ["string — desc meso 1", "string — desc meso 2", "string — desc meso 3"],
+    "insightsPorSecao": {
+        "resumoDiagnostico": "string — 2-3 frases personalizadas sobre como o diagnóstico guiou a montagem deste treino, destacando prioridades musculares e contexto do atleta",
+        "observacoesResumo": "string — 2-3 frases sobre a metodologia e posicionamento dos exercícios, com base no contexto e lesões do atleta"
+    }
 }
 \`\`\`
 
@@ -200,6 +205,7 @@ Sua tarefa é gerar:
 1. **Cardápio** com 3 opções por refeição (respeitando macros calculados)
 2. **Dicas nutricionais** personalizadas
 3. **Observações contextuais** sobre alimentação
+4. **Insights por seção** — análises personalizadas para cada parte do plano
 
 ## Perfil do Atleta
 ${perfilAtleta}
@@ -235,7 +241,11 @@ ${fontesCientificas}
     "cardapioDescanso": [...],
     "dicasNutricionais": ["string — dica 1", "string — dica 2", "string — dica 3"],
     "observacoesContexto": ["string — obs 1", "string — obs 2"],
-    "mensagemFinal": "string — mensagem de encerramento personalizada"
+    "mensagemFinal": "string — mensagem de encerramento personalizada",
+    "insightsPorSecao": {
+        "estrategia": "string — 2-3 frases sobre a estratégia calórica escolhida, por que essa fase, e como os macros foram calculados para este atleta",
+        "checkpoints": "string — 2-3 frases sobre os checkpoints semanais e como o atleta deve acompanhar seu progresso"
+    }
 }
 \`\`\`
 

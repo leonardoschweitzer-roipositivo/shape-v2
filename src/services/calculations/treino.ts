@@ -109,6 +109,10 @@ export interface PlanoTreino {
     divisao: DivisaoTreino;
     treinos: TreinoDetalhado[];
     observacoes: ObservacoesTreino;
+    insightsPorSecao?: {
+        resumoDiagnostico?: string;
+        observacoesResumo?: string;
+    };
     geradoEm: string;
 }
 
@@ -619,6 +623,10 @@ export async function enriquecerTreinoComIA(
                 mensagemFinal: string;
             };
             descricoesMesociclos: string[];
+            insightsPorSecao?: {
+                resumoDiagnostico?: string;
+                observacoesResumo?: string;
+            };
         }>(prompt);
 
         if (resultado) {
@@ -659,6 +667,11 @@ export async function enriquecerTreinoComIA(
                             resultado.descricoesMesociclos[i];
                     }
                 }
+            }
+
+            // Atualizar insights por seção
+            if (resultado.insightsPorSecao) {
+                planoEnriquecido.insightsPorSecao = resultado.insightsPorSecao;
             }
 
             return planoEnriquecido;

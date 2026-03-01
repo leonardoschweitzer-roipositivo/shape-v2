@@ -127,14 +127,25 @@ const SectionCard: React.FC<{
 );
 
 /** Box de insight do Vitrúvio — Gold Standard */
-const InsightBox: React.FC<{ text: string; title?: string }> = ({ text, title = 'Análise Vitrúvio IA' }) => (
+const InsightBox: React.FC<{ text: string; title?: string; isLoading?: boolean }> = ({ text, title = 'Análise Vitrúvio IA', isLoading }) => (
     <div className="bg-primary/5 border border-primary/20 rounded-xl p-6 mt-4">
         <div className="flex items-start gap-4">
-            <Bot size={26} className="text-primary mt-0.5 shrink-0" />
-            <div>
+            <Bot size={26} className={`text-primary mt-0.5 shrink-0 ${isLoading ? 'animate-pulse' : ''}`} />
+            <div className="flex-1">
                 <p className="text-base font-bold text-primary mb-2 uppercase tracking-wider">{title}</p>
-                <p className="text-lg text-gray-300 leading-relaxed">"{text}"</p>
-                <p className="text-xs text-gray-600 mt-3 text-right">— VITRÚVIO IA</p>
+                {isLoading ? (
+                    <div className="space-y-2">
+                        <div className="h-4 bg-primary/10 rounded animate-pulse w-full" />
+                        <div className="h-4 bg-primary/10 rounded animate-pulse w-5/6" />
+                        <div className="h-4 bg-primary/10 rounded animate-pulse w-4/6" />
+                        <p className="text-xs text-primary/60 mt-3 animate-pulse">Vitrúvio IA analisando plano de dieta...</p>
+                    </div>
+                ) : (
+                    <>
+                        <p className="text-lg text-gray-300 leading-relaxed">"{text}"</p>
+                        <p className="text-xs text-gray-600 mt-3 text-right">— VITRÚVIO IA</p>
+                    </>
+                )}
             </div>
         </div>
     </div>
@@ -236,6 +247,7 @@ export const DietaView: React.FC<DietaViewProps> = ({
     const [objetivoAtleta, setObjetivoAtleta] = useState<ObjetivoVitruvio>('RECOMP');
     const [cardapioAberto, setCardapioAberto] = useState<Set<string>>(new Set());
     const [toastStatus, setToastStatus] = useState<'success' | 'error' | null>(null);
+    const [iaEnriching, setIaEnriching] = useState(false);
 
     const toggleCardapio = (nome: string) => {
         setCardapioAberto(prev => {
@@ -320,6 +332,7 @@ export const DietaView: React.FC<DietaViewProps> = ({
             setEstado('ready');
 
             // Enriquecer com IA em background
+            setIaEnriching(true);
             const perfil = {
                 nome: atleta.name,
                 sexo: (atleta.gender === 'FEMALE' ? 'F' : 'M') as 'M' | 'F',
@@ -332,12 +345,21 @@ export const DietaView: React.FC<DietaViewProps> = ({
                 medidas: m as Record<string, number>,
                 contexto: atleta.contexto as any,
             };
-            enriquecerDietaComIA(resultado, perfil).then(enriquecido => {
-                if (enriquecido !== resultado) {
-                    console.info('[DietaView] 🤖 Dieta enriquecida com IA');
-                    setPlano(enriquecido);
-                }
-            });
+            console.info('[DietaView] 🚀 Iniciando enriquecimento IA...');
+            enriquecerDietaComIA(resultado, perfil)
+                .then(enriquecido => {
+                    if (enriquecido !== resultado) {
+                        console.info('[DietaView] 🤖 Dieta enriquecida com IA!', {
+                            temInsights: !!enriquecido.insightsPorSecao,
+                            mensagemFinal: enriquecido.mensagemFinal?.substring(0, 50) + '...',
+                        });
+                        setPlano(enriquecido);
+                    } else {
+                        console.warn('[DietaView] ⚠️ IA retornou mesmo objeto (falha?)');
+                    }
+                })
+                .catch(err => console.error('[DietaView] ❌ Erro IA:', err))
+                .finally(() => setIaEnriching(false));
         }, 1200);
     };
 
@@ -574,7 +596,7 @@ export const DietaView: React.FC<DietaViewProps> = ({
                                 </div>
                             </div>
 
-                            <InsightBox text={plano.estrategiaPrincipal} />
+                            <InsightBox isLoading={iaEnriching} text={plano.insightsPorSecao?.estrategia || plano.estrategiaPrincipal} />
                         </SectionCard>
 
                         {/* SEÇÃO 2: Macros */}
@@ -857,7 +879,7 @@ export const DietaView: React.FC<DietaViewProps> = ({
                                 </div>
                             )}
 
-                            <InsightBox text={plano.mensagemFinal} title="Mensagem Final do Vitrúvio" />
+                            <InsightBox isLoading={iaEnriching} text={plano.mensagemFinal} title="Mensagem Final do Vitrúvio" />
                         </SectionCard>
 
                         {/* Ações de Navegação */}

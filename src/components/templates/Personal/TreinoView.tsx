@@ -134,14 +134,25 @@ const SectionCard: React.FC<{
 );
 
 /** Box de insight do Vitrúvio */
-const InsightBox: React.FC<{ text: string; title?: string }> = ({ text, title = 'Análise Vitrúvio IA' }) => (
+const InsightBox: React.FC<{ text: string; title?: string; isLoading?: boolean }> = ({ text, title = 'Análise Vitrúvio IA', isLoading }) => (
     <div className="bg-primary/5 border border-primary/20 rounded-xl p-6 mt-4">
         <div className="flex items-start gap-4">
-            <Bot size={26} className="text-primary mt-0.5 shrink-0" />
-            <div>
+            <Bot size={26} className={`text-primary mt-0.5 shrink-0 ${isLoading ? 'animate-pulse' : ''}`} />
+            <div className="flex-1">
                 <p className="text-base font-bold text-primary mb-2 uppercase tracking-wider">{title}</p>
-                <p className="text-lg text-gray-300 leading-relaxed">"{text}"</p>
-                <p className="text-xs text-gray-600 mt-3 text-right">— VITRÚVIO IA</p>
+                {isLoading ? (
+                    <div className="space-y-2">
+                        <div className="h-4 bg-primary/10 rounded animate-pulse w-full" />
+                        <div className="h-4 bg-primary/10 rounded animate-pulse w-5/6" />
+                        <div className="h-4 bg-primary/10 rounded animate-pulse w-4/6" />
+                        <p className="text-xs text-primary/60 mt-3 animate-pulse">Vitrúvio IA analisando plano de treino...</p>
+                    </div>
+                ) : (
+                    <>
+                        <p className="text-lg text-gray-300 leading-relaxed">"{text}"</p>
+                        <p className="text-xs text-gray-600 mt-3 text-right">— VITRÚVIO IA</p>
+                    </>
+                )}
             </div>
         </div>
     </div>
@@ -162,7 +173,7 @@ const ProgressBar: React.FC<{ pct: number; color?: string }> = ({ pct, color = '
 // ═══════════════════════════════════════════════════════════
 
 /** Seção 1: Resumo do Diagnóstico */
-const SecaoResumoDiagnostico: React.FC<{ diagnostico: DiagnosticoDados; potencial?: PotencialAtleta }> = ({ diagnostico, potencial }) => {
+const SecaoResumoDiagnostico: React.FC<{ diagnostico: DiagnosticoDados; potencial?: PotencialAtleta; insightIA?: string; isLoading?: boolean }> = ({ diagnostico, potencial, insightIA, isLoading }) => {
     const priosAltas = diagnostico.prioridades.filter(p => p.nivel === 'ALTA');
     const nivelColors: Record<string, string> = {
         'INICIANTE': 'bg-blue-500/20  text-blue-400   border-blue-500/30',
@@ -213,7 +224,7 @@ const SecaoResumoDiagnostico: React.FC<{ diagnostico: DiagnosticoDados; potencia
                     ))}
                 </div>
             )}
-            <InsightBox text={`Plano calibrado para atleta ${potencial?.nivel ?? ''}: do score ${diagnostico.analiseEstetica.scoreAtual} para ${diagnostico.analiseEstetica.scoreMeta12M} em 12 meses. Prioridades máximas: ${priosAltas.map(p => p.grupo).join(', ') || 'equilíbrio geral'}.`} />
+            <InsightBox isLoading={isLoading} text={insightIA || `Plano calibrado para atleta ${potencial?.nivel ?? ''}: do score ${diagnostico.analiseEstetica.scoreAtual} para ${diagnostico.analiseEstetica.scoreMeta12M} em 12 meses. Prioridades máximas: ${priosAltas.map(p => p.grupo).join(', ') || 'equilíbrio geral'}.`} />
         </SectionCard>
     );
 };
@@ -491,6 +502,7 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
     const [estado, setEstado] = useState<TreinoState>(readOnlyData ? 'saved' : 'idle');
     const [objetivoAtleta, setObjetivoAtleta] = useState<ObjetivoVitruvio>('RECOMP');
     const [toastStatus, setToastStatus] = useState<'success' | 'error' | null>(null);
+    const [iaEnriching, setIaEnriching] = useState(false);
 
     // Pegar dados da última avaliação (mesmo que DiagnosticoView)
     const ultimaAvaliacao = useMemo(() => {
@@ -579,6 +591,7 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
             setEstado('ready');
 
             // Enriquecer com IA em background
+            setIaEnriching(true);
             const perfil = {
                 nome: atleta.name,
                 sexo: (atleta.gender === 'FEMALE' ? 'F' : 'M') as 'M' | 'F',
@@ -591,12 +604,21 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
                 medidas: ultimaAvaliacao.measurements as Record<string, number>,
                 contexto: atleta.contexto as any,
             };
-            enriquecerTreinoComIA(resultado, perfil).then(enriquecido => {
-                if (enriquecido !== resultado) {
-                    console.info('[TreinoView] 🤖 Treino enriquecido com IA');
-                    setPlano(enriquecido);
-                }
-            });
+            console.info('[TreinoView] 🚀 Iniciando enriquecimento IA...');
+            enriquecerTreinoComIA(resultado, perfil)
+                .then(enriquecido => {
+                    if (enriquecido !== resultado) {
+                        console.info('[TreinoView] 🤖 Treino enriquecido com IA!', {
+                            temInsights: !!enriquecido.insightsPorSecao,
+                            mensagemFinal: enriquecido.observacoes?.mensagemFinal?.substring(0, 50) + '...',
+                        });
+                        setPlano(enriquecido);
+                    } else {
+                        console.warn('[TreinoView] ⚠️ IA retornou mesmo objeto (falha?)');
+                    }
+                })
+                .catch(err => console.error('[TreinoView] ❌ Erro IA:', err))
+                .finally(() => setIaEnriching(false));
         }, 1800);
     };
 
@@ -760,7 +782,7 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
                             </div>
                         </div>
 
-                        {diagnostico && <SecaoResumoDiagnostico diagnostico={diagnostico} potencial={potencial ?? undefined} />}
+                        {diagnostico && <SecaoResumoDiagnostico diagnostico={diagnostico} potencial={potencial ?? undefined} insightIA={plano.insightsPorSecao?.resumoDiagnostico} isLoading={iaEnriching} />}
                         <SecaoVisaoAnual plano={plano} />
                         <SecaoTrimestreAtual plano={plano} />
                         <SecaoDivisao plano={plano} />
@@ -793,7 +815,7 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
                                     </div>
                                 </div>
                             </div>
-                            <InsightBox text={plano.observacoes.mensagemFinal} title="Mensagem do Vitrúvio" />
+                            <InsightBox isLoading={iaEnriching} text={plano.observacoes.mensagemFinal} title="Mensagem do Vitrúvio" />
                         </SectionCard>
 
                         {/* Navegação bottom */}
