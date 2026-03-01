@@ -21,6 +21,7 @@ import {
     Play
 } from 'lucide-react';
 import { portalService, PortalAthleteData } from '@/services/portalService';
+import { buscarDadosConsistencia, type DadosConsistencia } from '@/services/consistencia.service';
 import { SelfMeasurements } from './SelfMeasurements';
 import { AthletePortal } from '../AthletePortal';
 import {
@@ -28,6 +29,7 @@ import {
     CardPersonal,
     CardScoreMeta,
     CardRanking,
+    CardConsistencia,
     AcoesRapidas,
     FooterUltimaMedicao,
     CardIndicadorProgresso
@@ -173,6 +175,12 @@ interface HomeAtletaV2Props {
 }
 
 function HomeAtletaV2({ athleteData, onGoToPortal, onGoToMeasurements }: HomeAtletaV2Props) {
+    const [dadosConsistencia, setDadosConsistencia] = useState<DadosConsistencia | null>(null);
+
+    useEffect(() => {
+        buscarDadosConsistencia(athleteData.id).then(setDadosConsistencia).catch(console.error);
+    }, [athleteData.id]);
+
     const lastAval = athleteData.avaliacoes?.[0];
     const lastMedida = athleteData.medidas?.[0];
     const sexoLabel = athleteData.ficha?.sexo === 'F' ? 'FEMININO' : 'MASCULINO';
@@ -390,6 +398,11 @@ function HomeAtletaV2({ athleteData, onGoToPortal, onGoToMeasurements }: HomeAtl
                     VER TREINO DE HOJE
                 </button>
             </div>
+
+            {/* Card de Consistência */}
+            {dadosConsistencia && (
+                <CardConsistencia dados={dadosConsistencia} />
+            )}
 
             {/* 4. Card Ranking (Hall dos Deuses) */}
             <CardRanking

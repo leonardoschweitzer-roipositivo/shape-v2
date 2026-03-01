@@ -1,4 +1,5 @@
 export { AcoesRapidas } from './AcoesRapidas'
+export { CardConsistencia } from './CardConsistencia'
 export { CardFocoSemana } from './CardFocoSemana'
 export { CardPersonal } from './CardPersonal'
 export { CardRanking } from './CardRanking'
