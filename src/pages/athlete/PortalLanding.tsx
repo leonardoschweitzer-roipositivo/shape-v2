@@ -17,7 +17,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
     Shield,
-    Loader2
+    Loader2,
+    Play
 } from 'lucide-react';
 import { portalService, PortalAthleteData } from '@/services/portalService';
 import { SelfMeasurements } from './SelfMeasurements';
@@ -27,9 +28,9 @@ import {
     CardPersonal,
     CardScoreMeta,
     CardRanking,
-    CardFocoSemana,
     AcoesRapidas,
     FooterUltimaMedicao,
+    CardIndicadorProgresso
 } from './components';
 
 interface PortalLandingProps {
@@ -178,14 +179,37 @@ function HomeAtletaV2({ athleteData, onGoToPortal, onGoToMeasurements }: HomeAtl
     const peso = lastMedida?.peso ?? undefined;
     const altura = athleteData.ficha?.altura ?? 0;
 
-    // ---- Score & Meta (dados reais + derivados) ----
+    // ---- Score & Meta (dados do Diagnóstico / Fallback) ----
     const scoreAtual = lastAval?.score_geral ?? 0;
     const classificacaoAtual = lastAval?.classificacao_geral || getClassificacao(scoreAtual);
     const dataUltimaAvaliacao = lastAval ? new Date(lastAval.data) : new Date();
 
-    const proxClass = useMemo(() => getProximaClassificacao(scoreAtual), [scoreAtual]);
-    const scoreMeta = proxClass.min;
-    const classificacaoMeta = proxClass.nome;
+    // Pull goals from diagnostico
+    const diag = athleteData.diagnostico?.dados;
+    const scoreMeta = diag?.analiseEstetica?.scoreMeta6M ?? 65;
+    const classificacaoMeta = diag?.analiseEstetica?.scoreMeta12M ? (scoreMeta >= 80 ? 'ATLETA' : 'EVOLUINDO') : 'ATLETA'; // Simplificação
+
+    // Proporção Shape-V (Ombros/Cintura)
+    const ratioAtual = lastAval?.results?.classificacao?.ratios?.['Shape-V'] || (lastMedida?.ombros && lastMedida.cintura ? lastMedida.ombros / lastMedida.cintura : 0);
+    const itemShapeV = diag?.metasProporcoes?.find((p: any) => p.grupo === 'Shape-V');
+    const ratioMeta = itemShapeV?.meta6M || 1.618;
+    const ratioMeta12M = itemShapeV?.meta12M || 1.618;
+
+    // Medida Ombros cm (para impressionar mais como solicitado)
+    const ombrosAtual = lastMedida?.ombros || 0;
+    const cinturaAtual = lastMedida?.cintura || 1;
+    // Cálculo reverso da meta em CM para 12 meses
+    const ombrosMeta12M = Math.round((ratioMeta12M * cinturaAtual) * 10) / 10;
+
+    // Medida Cintura cm (Redução)
+    const pelvisAtual = athleteData.ficha?.pelve || 0;
+    // Meta de 0.86 * pélvis (conforme spec Golden Ratio)
+    const cinturaMeta12M = pelvisAtual > 0 ? Math.round((0.86 * pelvisAtual) * 10) / 10 : Math.round((cinturaAtual * 0.95) * 10) / 10;
+
+    // Percentual de Gordura
+    const bfAtual = lastAval?.gordura || 0;
+    const bfMeta = diag?.metasComposicao?.gordura6Meses || 12;
+
     const prazoMeta = 6;
     const percentualMeta = scoreMeta > 0 ? Math.min(100, Math.round((scoreAtual / scoreMeta) * 100)) : 0;
     const pontosRestantes = Math.max(0, scoreMeta - scoreAtual);
@@ -322,10 +346,55 @@ function HomeAtletaV2({ athleteData, onGoToPortal, onGoToMeasurements }: HomeAtl
                 pontosRestantes={pontosRestantes}
             />
 
-            {/* 4. Card Ranking */}
+            {/* 3.1 Proporção Principal: Shape-V */}
+            {ombrosAtual > 0 && (
+                <CardIndicadorProgresso
+                    label="Largura de Ombros"
+                    valorAtual={ombrosAtual}
+                    valorMeta={ombrosMeta12M}
+                    unidade="cm"
+                    cor="#8B5CF6"
+                />
+            )}
+
+            {/* 3.1.2 Medida: Cintura (Redução) */}
+            {cinturaAtual > 0 && (
+                <CardIndicadorProgresso
+                    label="Circunferência de Cintura"
+                    valorAtual={cinturaAtual}
+                    valorMeta={cinturaMeta12M}
+                    unidade="cm"
+                    isInverse={true}
+                    cor="#F59E0B"
+                />
+            )}
+
+            {/* 3.2 Percentual de Gordura */}
+            {bfAtual > 0 && (
+                <CardIndicadorProgresso
+                    label="Percentual de Gordura"
+                    valorAtual={bfAtual}
+                    valorMeta={bfMeta}
+                    unidade="%"
+                    cor="#F59E0B"
+                />
+            )}
+
+            {/* 3.3 Botão "VER TREINO DE HOJE" (Centralizado, estilo Primário) */}
+            <div className="max-w-2xl mx-auto px-6 mt-6">
+                <button
+                    onClick={onGoToPortal}
+                    className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-4 rounded-xl font-black tracking-widest text-sm uppercase transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
+                >
+                    <Play size={18} fill="white" />
+                    VER TREINO DE HOJE
+                </button>
+            </div>
+
+            {/* 4. Card Ranking (Hall dos Deuses) */}
             <CardRanking
                 contexto="academia"
-                nomeContexto="Academia"
+                nomeContexto="ACADEMIA"
                 posicaoGeral={47}
                 totalParticipantes={312}
                 percentilGeral={15}
@@ -334,18 +403,6 @@ function HomeAtletaV2({ athleteData, onGoToPortal, onGoToMeasurements }: HomeAtl
                 movimentoGeral={5}
                 movimentoEvolucao={-2}
                 atletaParticipa={true}
-            />
-
-            {/* 5. Card Foco da Semana */}
-            <CardFocoSemana
-                areaPrioritaria="OMBRO"
-                diferencaCm={4}
-                quantidadeTreinos={2}
-                grupamentoFoco="deltoides"
-                proximoTreinoNome="OMBRO + TRAPÉZIO"
-                temTreinoHoje={true}
-                treinoConcluido={false}
-                onVerTreino={onGoToPortal}
             />
 
             {/* 6. Ações Rápidas */}

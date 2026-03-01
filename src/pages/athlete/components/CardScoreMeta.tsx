@@ -98,24 +98,9 @@ export function CardScoreMeta({
                     </div>
                 </div>
 
-                {/* Classificações */}
-                <div className="flex justify-between px-1 mb-5 text-[10px] font-black tracking-widest uppercase">
+                <div className="flex justify-between px-1 mb-2 text-[10px] font-black tracking-widest uppercase">
                     <span style={{ color: corAtual }}>{classificacaoAtual}</span>
                     <span style={{ color: corMeta }}>{classificacaoMeta}</span>
-                </div>
-
-                {/* Progresso do mês */}
-                <div className={`rounded-xl px-4 py-3 flex items-center justify-between ${progressoData.alerta ? 'bg-red-500/5 border border-red-500/20' : 'bg-white/[0.02] border border-white/5'}`}>
-                    <div className="flex items-center space-x-2">
-                        <span className="text-lg">{evolucaoMes > 0 ? '📈' : evolucaoMes < 0 ? '📉' : '➖'}</span>
-                        <span className={`text-sm font-bold ${evolucaoMes > 0 ? 'text-emerald-400' : evolucaoMes < 0 ? 'text-red-400' : 'text-gray-300'}`}>
-                            {evolucaoMes > 0 ? '+' : ''}{evolucaoMes.toFixed(1)} pts
-                            <span className="text-gray-600 font-medium ml-1">este mês</span>
-                        </span>
-                    </div>
-                    <span className={`text-[9px] font-bold px-2.5 py-1 rounded-full tracking-wider uppercase ${progressoData.alerta ? 'text-red-400 bg-red-500/10' : 'text-indigo-300 bg-indigo-500/10'}`}>
-                        {progressoData.emoji} {progressoData.texto}
-                    </span>
                 </div>
             </div>
         </div>
