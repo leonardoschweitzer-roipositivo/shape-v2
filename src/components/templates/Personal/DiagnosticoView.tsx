@@ -770,6 +770,26 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
         return 0;
     }, [atleta.ratio, ultimaAvaliacao]);
 
+    // Se for modo leitura, garantir que a recomendação e objetivo estejam setados para exibição no final
+    useEffect(() => {
+        if (isReadOnly && diagnostico && !recomendacao && ultimaAvaliacao) {
+            const adonisProp = diagnostico.analiseEstetica.proporcoes.find(
+                p => p.grupo === 'Shape-V' || p.grupo === 'V-Taper'
+            );
+            const rec = recomendarObjetivo({
+                bf: diagnostico.composicaoAtual.gorduraPct,
+                ffmi: (ultimaAvaliacao as any).ffmi ?? 20,
+                sexo: atleta.gender === 'FEMALE' ? 'F' : 'M',
+                score: diagnostico.analiseEstetica.scoreAtual,
+                nivel: diagnostico.analiseEstetica.classificacaoAtual,
+                adonis: (adonisProp?.atual ?? ratioEfetivo) || undefined,
+            });
+            setRecomendacao(rec);
+            // Em modo leitura, o objetivo selecionado é o objetivo atual do atleta (ou o recomendado como fallback)
+            setObjetivoSelecionado((atleta as any).objetivo || rec.objetivo);
+        }
+    }, [isReadOnly, diagnostico, atleta, ultimaAvaliacao, ratioEfetivo, recomendacao]);
+
     const m = ultimaAvaliacao.measurements;
 
     // Enriquecer "Análise de Contexto" com IA ao montar

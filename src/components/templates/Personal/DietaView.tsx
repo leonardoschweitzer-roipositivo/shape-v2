@@ -243,6 +243,24 @@ export const DietaView: React.FC<DietaViewProps> = ({
     const atleta = useMemo(() => personalAthletes.find(a => a.id === atletaId), [personalAthletes, atletaId]);
     const ultimaAvaliacao = useMemo(() => atleta?.assessments[0] ?? null, [atleta]);
 
+    // Recomendação de objetivo imediata para o Header
+    const recomendacaoPadrao = useMemo(() => {
+        if (!atleta || !ultimaAvaliacao) return null;
+        const classificacao = atleta.score >= 90 ? 'ELITE'
+            : atleta.score >= 80 ? 'AVANÇADO'
+                : atleta.score >= 70 ? 'ATLÉTICO'
+                    : atleta.score >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE';
+
+        return recomendarObjetivo({
+            bf: ultimaAvaliacao.bf ?? 15,
+            ffmi: (ultimaAvaliacao as any).ffmi ?? 20,
+            sexo: atleta.gender === 'FEMALE' ? 'F' : 'M',
+            score: atleta.score,
+            nivel: classificacao,
+            adonis: atleta.ratio || undefined,
+        });
+    }, [atleta, ultimaAvaliacao]);
+
     const isReadOnly = !!readOnlyData;
     const [estado, setEstado] = useState<DietaState>(readOnlyData ? 'saved' : 'idle');
     const [plano, setPlano] = useState<PlanoDieta | null>(readOnlyData ?? null);
@@ -250,7 +268,7 @@ export const DietaView: React.FC<DietaViewProps> = ({
     const [diagnostico, setDiagnostico] = useState<DiagnosticoDados | null>(null);
     const [showDescanso, setShowDescanso] = useState(false);
     const [objetivoAtleta, setObjetivoAtleta] = useState<ObjetivoVitruvio>(
-        readOnlyData?.objetivo ?? 'RECOMP'
+        readOnlyData?.objetivo || recomendacaoPadrao?.objetivo || 'RECOMP'
     );
     const [cardapioAberto, setCardapioAberto] = useState<Set<string>>(new Set());
     const [toastStatus, setToastStatus] = useState<'success' | 'error' | null>(null);
@@ -497,25 +515,29 @@ export const DietaView: React.FC<DietaViewProps> = ({
                         )}
                     </div>
 
-                    {/* Resumo de dados */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <div className="bg-white/[0.03] p-4 rounded-xl border border-white/5">
-                            <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">Score Atual</p>
-                            <p className="text-2xl font-bold text-white">{atleta.score}</p>
-                        </div>
-                        <div className="bg-white/[0.03] p-4 rounded-xl border border-white/5">
-                            <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">Peso</p>
-                            <p className="text-2xl font-bold text-white">{ultimaAvaliacao.measurements.weight} <span className="text-sm text-gray-500">kg</span></p>
-                        </div>
-                        <div className="bg-white/[0.03] p-4 rounded-xl border border-white/5">
-                            <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">BF Atual</p>
-                            <p className="text-2xl font-bold text-white">{typeof ultimaAvaliacao.bf === 'number' ? ultimaAvaliacao.bf.toFixed(1) : ultimaAvaliacao.bf ?? '--'}<span className="text-sm text-gray-500">%</span></p>
-                        </div>
-                        <div className="bg-white/[0.03] p-4 rounded-xl border border-white/5">
-                            <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">Nível</p>
-                            <p className="text-lg font-bold text-white">
-                                {atleta.score >= 90 ? 'ELITE' : atleta.score >= 80 ? 'AVANÇADO' : atleta.score >= 70 ? 'ATLÉTICO' : atleta.score >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE'}
-                            </p>
+                    {/* Estrela do Norte — Objetivo (Substituindo os 4 cards antigos) */}
+                    <div className={`mt-4 rounded-2xl border p-6 ${getObjetivoMeta(objetivoAtleta).cor}`}>
+                        <div className="flex items-start gap-5">
+                            <span className="text-5xl leading-none mt-1">{getObjetivoMeta(objetivoAtleta).emoji}</span>
+                            <div className="flex-1">
+                                <p className="text-[10px] uppercase tracking-[0.25em] text-gray-500 font-bold mb-1">Estrela do Norte deste Plano</p>
+                                <h3 className="text-2xl font-bold text-white mb-2">{getObjetivoMeta(objetivoAtleta).label}</h3>
+                                <p className="text-base text-gray-300 leading-relaxed mb-4">{getObjetivoMeta(objetivoAtleta).descricao}</p>
+                                <div className="flex flex-wrap gap-3">
+                                    <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                                        <Flame size={12} className="text-primary" />
+                                        Fase: {plano?.faseLabel?.split(' — ')[0] || (objetivoAtleta === 'CUT' ? 'CUTTING' : objetivoAtleta === 'BULK' ? 'BULKING' : 'RECOMP')}
+                                    </span>
+                                    <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                                        <Activity size={12} className="text-primary" />
+                                        Estratégia: {objetivoAtleta === 'CUT' ? 'Déficit Calórico' : objetivoAtleta === 'BULK' ? 'Superávit Calórico' : 'Balanço Neutro'}
+                                    </span>
+                                    <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                                        <TrendingUp size={12} className="text-primary" />
+                                        Proteína Suportada
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -549,32 +571,6 @@ export const DietaView: React.FC<DietaViewProps> = ({
                 {/* Conteúdo gerado */}
                 {plano && (estado === 'ready' || estado === 'saving' || estado === 'saved') && (
                     <>
-                        {/* ★ Estrela do Norte — Objetivo */}
-                        <div className={`rounded-2xl border p-6 ${getObjetivoMeta(objetivoAtleta).cor}`}>
-                            <div className="flex items-start gap-5">
-                                <span className="text-5xl leading-none mt-1">{getObjetivoMeta(objetivoAtleta).emoji}</span>
-                                <div className="flex-1">
-                                    <p className="text-[10px] uppercase tracking-[0.25em] text-gray-500 font-bold mb-1">Estrela do Norte deste Plano</p>
-                                    <h3 className="text-2xl font-bold text-white mb-2">{getObjetivoMeta(objetivoAtleta).label}</h3>
-                                    <p className="text-base text-gray-300 leading-relaxed mb-4">{getObjetivoMeta(objetivoAtleta).descricao}</p>
-                                    <div className="flex flex-wrap gap-3">
-                                        <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
-                                            <Flame size={12} className="text-primary" />
-                                            Fase: {plano.faseLabel.split(' — ')[0]}
-                                        </span>
-                                        <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
-                                            <Activity size={12} className="text-primary" />
-                                            {plano.deficit > 0 ? `Déficit ${plano.deficit} kcal/dia` : `Superávit ${Math.abs(plano.deficit)} kcal/dia`}
-                                        </span>
-                                        <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
-                                            <TrendingUp size={12} className="text-primary" />
-                                            Proteína {plano.macrosTreino.proteina.gKg} g/kg
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                         {/* SEÇÃO 1: Estratégia Calórica */}
                         <SectionCard icon={Flame} title="Estratégia Calórica" subtitle="Definição do balanço energético para atingir as metas">
                             <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-bold uppercase tracking-widest mb-6 ${faseColor(plano.fase)}`}>

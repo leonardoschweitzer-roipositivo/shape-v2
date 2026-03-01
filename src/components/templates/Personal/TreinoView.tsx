@@ -499,22 +499,37 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
     const atleta = useMemo(() => personalAthletes.find(a => a.id === atletaId), [personalAthletes, atletaId]);
 
     const isReadOnly = !!readOnlyData;
-    const [plano, setPlano] = useState<PlanoTreino | null>(readOnlyData ?? null);
-    const [diagnostico, setDiagnostico] = useState<DiagnosticoDados | null>(null);
-    const [potencial, setPotencial] = useState<PotencialAtleta | null>(null);
-    const [estado, setEstado] = useState<TreinoState>(readOnlyData ? 'saved' : 'idle');
-    const [objetivoAtleta, setObjetivoAtleta] = useState<ObjetivoVitruvio>(
-        readOnlyData?.objetivo ?? 'RECOMP'
-    );
-    const [toastStatus, setToastStatus] = useState<'success' | 'error' | null>(null);
-    const [iaEnriching, setIaEnriching] = useState(false);
-    const [isApplying, setIsApplying] = useState(false);
-
     // Pegar dados da última avaliação (mesmo que DiagnosticoView)
     const ultimaAvaliacao = useMemo(() => {
         if (!atleta || atleta.assessments.length === 0) return null;
         return atleta.assessments[0];
     }, [atleta]);
+
+    // Recomendação de objetivo imediata para o Header
+    const recomendacaoPadrao = useMemo(() => {
+        if (!atleta || !ultimaAvaliacao) return null;
+        const classificacao = atleta.score >= 90 ? 'ELITE'
+            : atleta.score >= 80 ? 'AVANÇADO'
+                : atleta.score >= 70 ? 'ATLÉTICO'
+                    : atleta.score >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE';
+
+        return recomendarObjetivo({
+            bf: ultimaAvaliacao.bf ?? 15,
+            ffmi: (ultimaAvaliacao as any).ffmi ?? 20,
+            sexo: atleta.gender === 'FEMALE' ? 'F' : 'M',
+            score: atleta.score,
+            nivel: classificacao,
+            adonis: atleta.ratio || undefined,
+        });
+    }, [atleta, ultimaAvaliacao]);
+
+    const [plano, setPlano] = useState<PlanoTreino | null>(readOnlyData ?? null);
+    const [diagnostico, setDiagnostico] = useState<DiagnosticoDados | null>(null);
+    const [potencial, setPotencial] = useState<PotencialAtleta | null>(null);
+    const [estado, setEstado] = useState<TreinoState>(readOnlyData ? 'saved' : 'idle');
+    const [objetivoAtleta, setObjetivoAtleta] = useState<ObjetivoVitruvio>(
+        readOnlyData?.objetivo || recomendacaoPadrao?.objetivo || 'RECOMP'
+    );
 
     if (!atleta || !ultimaAvaliacao) {
         return (
@@ -747,25 +762,32 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
                         )}
                     </div>
 
-                    {/* Métricas do atleta — mesmo padrão do DietaView */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                        <div className="bg-white/[0.03] p-4 rounded-xl border border-white/5">
-                            <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">Score Atual</p>
-                            <p className="text-2xl font-bold text-white">{atleta.score}</p>
-                        </div>
-                        <div className="bg-white/[0.03] p-4 rounded-xl border border-white/5">
-                            <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">Peso</p>
-                            <p className="text-2xl font-bold text-white">{ultimaAvaliacao.measurements.weight} <span className="text-sm text-gray-500">kg</span></p>
-                        </div>
-                        <div className="bg-white/[0.03] p-4 rounded-xl border border-white/5">
-                            <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">BF Atual</p>
-                            <p className="text-2xl font-bold text-white">{typeof ultimaAvaliacao.bf === 'number' ? ultimaAvaliacao.bf.toFixed(1) : ultimaAvaliacao.bf ?? '--'}<span className="text-sm text-gray-500">%</span></p>
-                        </div>
-                        <div className="bg-white/[0.03] p-4 rounded-xl border border-white/5">
-                            <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">Nível</p>
-                            <p className="text-lg font-bold text-white">
-                                {atleta.score >= 90 ? 'ELITE' : atleta.score >= 80 ? 'AVANÇADO' : atleta.score >= 70 ? 'ATLÉTICO' : atleta.score >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE'}
-                            </p>
+                    {/* Estrela do Norte — Objetivo (Substituindo os 4 cards antigos) */}
+                    <div className={`mt-6 rounded-2xl border p-6 ${getObjetivoMeta(objetivoAtleta).cor}`}>
+                        <div className="flex items-start gap-5">
+                            <span className="text-5xl leading-none mt-1">{getObjetivoMeta(objetivoAtleta).emoji}</span>
+                            <div className="flex-1">
+                                <p className="text-[10px] uppercase tracking-[0.25em] text-gray-500 font-bold mb-1">Estrela do Norte deste Plano</p>
+                                <h3 className="text-2xl font-bold text-white mb-2">{getObjetivoMeta(objetivoAtleta).label}</h3>
+                                <p className="text-sm text-gray-300 leading-relaxed mb-4">{getObjetivoMeta(objetivoAtleta).descricao}</p>
+                                <div className="flex flex-wrap gap-3">
+                                    <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                                        <Activity size={12} className="text-primary" />
+                                        Rep Range: {(() => {
+                                            const o = objetivoAtleta;
+                                            return o === 'BULK' ? '5-7 → 10-12' : o === 'CUT' ? '10-12 → 15-20' : o === 'MAINTAIN' ? '10-12 → 15-20' : '8-10 → 12-15';
+                                        })()}
+                                    </span>
+                                    <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                                        <Clock size={12} className="text-primary" />
+                                        Descanso: {objetivoAtleta === 'BULK' ? '75-120s' : objetivoAtleta === 'CUT' || objetivoAtleta === 'MAINTAIN' ? '40-75s' : '50-90s'}
+                                    </span>
+                                    <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                                        <TrendingUp size={12} className="text-primary" />
+                                        Volume: {objetivoAtleta === 'BULK' ? '+5% base' : objetivoAtleta === 'CUT' ? '-10% base' : objetivoAtleta === 'MAINTAIN' ? '-25% base' : 'base'}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -799,35 +821,6 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
                 {/* Conteúdo Gerado — cards soltos, igual Dieta/Diagnóstico */}
                 {plano && (isReadOnly || diagnostico) && (estado === 'ready' || estado === 'saving' || estado === 'saved') && (
                     <div className="animate-in fade-in duration-500 flex flex-col gap-0">
-
-                        {/* ★ Estrela do Norte — Objetivo */}
-                        <div className={`rounded-2xl border p-6 mb-6 ${getObjetivoMeta(objetivoAtleta).cor}`}>
-                            <div className="flex items-start gap-5">
-                                <span className="text-5xl leading-none mt-1">{getObjetivoMeta(objetivoAtleta).emoji}</span>
-                                <div className="flex-1">
-                                    <p className="text-[10px] uppercase tracking-[0.25em] text-gray-500 font-bold mb-1">Estrela do Norte deste Plano</p>
-                                    <h3 className="text-2xl font-bold text-white mb-2">{getObjetivoMeta(objetivoAtleta).label}</h3>
-                                    <p className="text-sm text-gray-300 leading-relaxed mb-4">{getObjetivoMeta(objetivoAtleta).descricao}</p>
-                                    <div className="flex flex-wrap gap-3">
-                                        <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
-                                            <Activity size={12} className="text-primary" />
-                                            Rep Range: {(() => {
-                                                const o = objetivoAtleta;
-                                                return o === 'BULK' ? '5-7 → 10-12' : o === 'CUT' ? '10-12 → 15-20' : o === 'MAINTAIN' ? '10-12 → 15-20' : '8-10 → 12-15';
-                                            })()}
-                                        </span>
-                                        <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
-                                            <Clock size={12} className="text-primary" />
-                                            Descanso: {objetivoAtleta === 'BULK' ? '75-120s' : objetivoAtleta === 'CUT' || objetivoAtleta === 'MAINTAIN' ? '40-75s' : '50-90s'}
-                                        </span>
-                                        <span className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
-                                            <TrendingUp size={12} className="text-primary" />
-                                            Volume: {objetivoAtleta === 'BULK' ? '+5% base' : objetivoAtleta === 'CUT' ? '-10% base' : objetivoAtleta === 'MAINTAIN' ? '-25% base' : 'base'}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
 
                         {diagnostico && <SecaoResumoDiagnostico diagnostico={diagnostico} potencial={potencial ?? undefined} insightIA={plano.insightsPorSecao?.resumoDiagnostico} isLoading={iaEnriching} />}
                         <SecaoVisaoAnual plano={plano} />
