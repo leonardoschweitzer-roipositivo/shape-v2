@@ -12,6 +12,9 @@ import type {
     TriadeData
 } from '../../types/assessment.ts';
 import type { ComparisonMode } from '../../types/proportions.ts';
+import { gerarConteudoIA } from '@/services/vitruviusAI';
+import { type PerfilAtletaIA, perfilParaTexto, avaliacaoParaTexto, getFontesCientificas } from '@/services/vitruviusContext';
+import { buildAvaliacaoInsightsPrompt } from '@/services/vitruviusPrompts';
 
 // ═══════════════════════════════════════════════════════════
 // CONSTANTS & CONFIGURATION
@@ -638,4 +641,40 @@ export function calcularAvaliacaoGeral(input: AvaliacaoGeralInput): AvaliacaoGer
         },
         insights,
     };
+}
+
+// ═══════════════════════════════════════════════════════════
+// ENRIQUECIMENTO COM IA
+// ═══════════════════════════════════════════════════════════
+
+export interface InsightsIA {
+    insightsNarrativos: string;
+    comparacaoEvolutiva: string | null;
+}
+
+/**
+ * Enriquece os resultados da avaliação com IA (Gemini).
+ * Gera insights narrativos personalizados e comparação evolutiva.
+ * Fallback: retorna null se IA falhar (UI mantém insights determinísticos).
+ */
+export async function enriquecerAvaliacaoComIA(
+    resultado: AvaliacaoGeralOutput,
+    perfil: PerfilAtletaIA
+): Promise<InsightsIA | null> {
+    try {
+        const perfilTexto = perfilParaTexto(perfil);
+        const dadosTexto = avaliacaoParaTexto(resultado);
+        const fontesTexto = getFontesCientificas('avaliacao');
+
+        const prompt = buildAvaliacaoInsightsPrompt(perfilTexto, dadosTexto, fontesTexto);
+        const resposta = await gerarConteudoIA<InsightsIA>(prompt);
+
+        if (resposta?.insightsNarrativos) {
+            return resposta;
+        }
+    } catch (error) {
+        console.error('[Avaliação] Erro ao enriquecer com IA:', error);
+    }
+
+    return null;
 }

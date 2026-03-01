@@ -167,6 +167,54 @@ export function dietaParaTexto(dieta: PlanoDieta): string {
     return linhas.join('\n');
 }
 
+/**
+ * Converte dados da avaliação geral para texto (consumido pelo prompt).
+ */
+export function avaliacaoParaTexto(avaliacao: import('@/types/assessment').AvaliacaoGeralOutput): string {
+    const linhas: string[] = [
+        `### Score Final: ${avaliacao.avaliacaoGeral}/100`,
+        `Classificação: ${avaliacao.classificacao.nivel} ${avaliacao.classificacao.emoji}`,
+        `Descrição: ${avaliacao.classificacao.descricao}`,
+        '',
+        '### Scores por Pilar',
+        `- Proporções Áureas: ${avaliacao.scores.proporcoes.valor}/100 (peso ${avaliacao.scores.proporcoes.peso * 100}%)`,
+        `- Composição Corporal: ${avaliacao.scores.composicao.valor}/100 (peso ${avaliacao.scores.composicao.peso * 100}%)`,
+        `- Simetria Bilateral: ${avaliacao.scores.simetria.valor}/100 (peso ${avaliacao.scores.simetria.peso * 100}%)`,
+        '',
+        '### Composição Corporal',
+        `- BF: ${avaliacao.scores.composicao.detalhes.detalhes.bf.valor}% (score ${avaliacao.scores.composicao.detalhes.detalhes.bf.score})`,
+        `- FFMI: ${avaliacao.scores.composicao.detalhes.detalhes.ffmi.valor} (score ${avaliacao.scores.composicao.detalhes.detalhes.ffmi.score})`,
+        `- Peso Magro: ${avaliacao.scores.composicao.detalhes.pesoMagro}kg`,
+        `- Peso Gordo: ${avaliacao.scores.composicao.detalhes.pesoGordo}kg`,
+        '',
+        '### Proporções (detalhes)',
+        ...avaliacao.scores.proporcoes.detalhes.detalhes.map(d =>
+            `- ${d.proporcao}: ${d.percentualDoIdeal}% do ideal (peso ${d.peso})`
+        ),
+        '',
+        '### Simetria (detalhes)',
+        ...avaliacao.scores.simetria.detalhes.detalhes.map(d =>
+            `- ${d.grupo}: D=${d.direito}cm E=${d.esquerdo}cm (diff ${d.diferencaPercent}% — ${d.status})`
+        ),
+        '',
+        '### Insights Determinísticos',
+        `- Ponto Forte: ${avaliacao.insights.pontoForte.categoria} (${avaliacao.insights.pontoForte.valor})`,
+        `- Ponto Fraco: ${avaliacao.insights.pontoFraco.categoria} (${avaliacao.insights.pontoFraco.valor})`,
+        `- Próxima Meta: ${avaliacao.insights.proximaMeta.acao}`,
+    ];
+
+    if (avaliacao.penalizacoes) {
+        linhas.push(
+            '',
+            '### Penalizações',
+            `- V-Taper: ${avaliacao.penalizacoes.vTaper}`,
+            `- Cintura absoluta: ${avaliacao.penalizacoes.cintura}`,
+        );
+    }
+
+    return linhas.join('\n');
+}
+
 // ═══════════════════════════════════════════════════════════
 // FONTES CIENTÍFICAS
 // ═══════════════════════════════════════════════════════════

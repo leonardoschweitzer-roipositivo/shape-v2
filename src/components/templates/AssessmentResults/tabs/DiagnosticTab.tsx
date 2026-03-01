@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Activity } from 'lucide-react';
+import { Activity, Loader2, Bot } from 'lucide-react';
 import { GlassPanel } from '@/components/atoms';
 import {
     ScoreWidget,
@@ -11,6 +11,7 @@ import {
 import { colors as designColors, typography as designTypography, spacing as designSpacing } from '@/tokens';
 import { MeasurementHistory } from '@/mocks/personal';
 import { calcularAvaliacaoGeral } from '@/services/calculations';
+import { enriquecerAvaliacaoComIA, type InsightsIA } from '@/services/calculations/assessment';
 import { mapMeasurementToInput } from '@/services/calculations/evolutionProcessor';
 import { calculateAge } from '@/utils/dateUtils';
 import { useDataStore } from '@/stores/dataStore';
@@ -71,6 +72,8 @@ interface DiagnosticTabProps {
 
 export const DiagnosticTab: React.FC<DiagnosticTabProps> = ({ assessment, gender = 'male', birthDate, age: ageProp }) => {
     const [filter, setFilter] = useState<'todos' | 'comp' | 'metrics'>('todos');
+    const [insightsIA, setInsightsIA] = useState<InsightsIA | null>(null);
+    const [iaLoading, setIaLoading] = useState(false);
 
     // Resolve birthDate: prop first, then search in store for the athlete owning this assessment
     const { personalAthletes } = useDataStore();
@@ -169,9 +172,47 @@ export const DiagnosticTab: React.FC<DiagnosticTabProps> = ({ assessment, gender
             fatMass: parseFloat(fatMass.toFixed(1)),
             bf: parseFloat(bf.toFixed(1)),
             score: result.avaliacaoGeral,
-            classificacao: result.classificacao
+            classificacao: result.classificacao,
+            _result: result, // preserve full result for AI enrichment
         };
     }, [assessment, gender, bfMethod, resolvedBirthDate, ageProp]);
+
+    // Enriquecimento com IA em background
+    useEffect(() => {
+        if (!metrics._result || !assessment) return;
+
+        const m = assessment.measurements;
+        const genderUpper = gender === 'female' ? 'F' : 'M';
+        const age = ageProp || calculateAge(resolvedBirthDate) || 30;
+
+        // Resolve contexto do atleta (se disponível no store)
+        const owner = personalAthletes.find(a =>
+            a.assessments.some(ass => ass.id === assessment.id)
+        );
+
+        const perfil = {
+            nome: owner?.name || 'Atleta',
+            sexo: genderUpper as 'M' | 'F',
+            idade: age,
+            altura: m.height,
+            peso: m.weight,
+            gorduraPct: metrics.bf,
+            score: metrics.score,
+            classificacao: metrics.classificacao?.nivel || 'N/A',
+            medidas: m as Record<string, number>,
+            contexto: owner?.contexto as any,
+        };
+
+        setIaLoading(true);
+        enriquecerAvaliacaoComIA(metrics._result, perfil)
+            .then(result => {
+                if (result) {
+                    console.info('[DiagnosticTab] 🤖 Avaliação enriquecida com IA');
+                    setInsightsIA(result);
+                }
+            })
+            .finally(() => setIaLoading(false));
+    }, [metrics._result]); // Only re-run when calc results change
 
     return (
         <div className="flex flex-col gap-8 animate-fade-in-up">
@@ -254,18 +295,44 @@ export const DiagnosticTab: React.FC<DiagnosticTabProps> = ({ assessment, gender
                 )}
 
                 {/* Bottom Row: AI Analysis */}
-                <AiAnalysisWidget
-                    analysis={
-                        <>
-                            Com base na análise de simetria bilateral, o cliente apresenta um <span className="text-white font-medium">{metrics.score > 80 ? 'excelente equilíbrio' : 'desequilíbrio leve'}</span>. O percentual de gordura ({metrics.bf.toFixed(1)}%) indica necessidade de <span className="text-primary font-bold">
-                                {gender === 'male'
-                                    ? (metrics.bf > 25 ? 'foco em redução de gordura (cutting)' : metrics.bf > 15 ? 'recomposição corporal' : 'bulking limpo')
-                                    : (metrics.bf > 32 ? 'foco em redução de gordura (cutting)' : metrics.bf > 22 ? 'recomposição corporal' : 'bulking limpo')
-                                }
-                            </span> para otimização estética e saúde.
-                        </>
-                    }
-                />
+                {iaLoading ? (
+                    <div className="bg-primary/5 border border-primary/20 rounded-2xl p-8 flex items-center gap-4">
+                        <Loader2 size={24} className="text-primary animate-spin" />
+                        <div>
+                            <p className="text-sm font-bold text-primary uppercase tracking-wider">Vitrúvio IA analisando...</p>
+                            <p className="text-xs text-gray-500 mt-1">Gerando insights personalizados com base no seu perfil completo.</p>
+                        </div>
+                    </div>
+                ) : insightsIA ? (
+                    <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6">
+                        <div className="flex items-start gap-4">
+                            <Bot size={26} className="text-primary mt-0.5 shrink-0" />
+                            <div className="flex-1">
+                                <p className="text-sm font-bold text-primary mb-2 uppercase tracking-wider">Análise Vitrúvio IA</p>
+                                <p className="text-base text-gray-300 leading-relaxed">"{insightsIA.insightsNarrativos}"</p>
+                                {insightsIA.comparacaoEvolutiva && (
+                                    <p className="text-sm text-gray-400 leading-relaxed mt-3 border-t border-white/5 pt-3">
+                                        📈 {insightsIA.comparacaoEvolutiva}
+                                    </p>
+                                )}
+                                <p className="text-xs text-gray-600 mt-3 text-right">— VITRÚVIO IA</p>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <AiAnalysisWidget
+                        analysis={
+                            <>
+                                Com base na análise de simetria bilateral, o cliente apresenta um <span className="text-white font-medium">{metrics.score > 80 ? 'excelente equilíbrio' : 'desequilíbrio leve'}</span>. O percentual de gordura ({metrics.bf.toFixed(1)}%) indica necessidade de <span className="text-primary font-bold">
+                                    {gender === 'male'
+                                        ? (metrics.bf > 25 ? 'foco em redução de gordura (cutting)' : metrics.bf > 15 ? 'recomposição corporal' : 'bulking limpo')
+                                        : (metrics.bf > 32 ? 'foco em redução de gordura (cutting)' : metrics.bf > 22 ? 'recomposição corporal' : 'bulking limpo')
+                                    }
+                                </span> para otimização estética e saúde.
+                            </>
+                        }
+                    />
+                )}
             </div>
         </div>
     );
