@@ -246,6 +246,7 @@ export const AthleteContextSection: React.FC<AthleteContextSectionProps> = ({
     athleteId,
     contexto,
     onContextoUpdated,
+    isInsideAccordion,
 }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
