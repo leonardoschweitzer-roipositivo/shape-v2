@@ -244,13 +244,50 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
         if (!confirm('Tem certeza que deseja excluir este Plano de Evolução e todos os dados relacionados?')) return;
 
         try {
-            // A exclusão do diagnóstico deve disparar cascade nas tabelas de treino/dieta se as FKs estiverem corretas
-            // Senão fazemos manual:
-            await supabase.from('planos_treino').delete().eq('diagnostico_id', planoId);
-            await supabase.from('planos_dieta').delete().eq('diagnostico_id', planoId);
-            const { error } = await supabase.from('diagnosticos').delete().eq('id', planoId);
+            // Os planos_treino e planos_dieta são salvos com atleta_id (e opcionalmente diagnostico_id).
+            // O buscarPlanoTreino/buscarPlanoDieta busca por atleta_id, então é assim que existem no DB.
+            // Estratégia: excluir por múltiplas vias para garantir que todos sejam removidos.
 
+            // Buscar o plano local para pegar IDs dos filhos (se disponíveis via join)
+            const plano = evolutionPlans.find(p => p.id === planoId);
+            const deletePromises: Promise<any>[] = [];
+
+            // 1. Delete por ID direto (dos filhos encontrados no join)
+            if (plano?.planos_treino?.length > 0) {
+                for (const pt of plano.planos_treino) {
+                    deletePromises.push(supabase.from('planos_treino').delete().eq('id', pt.id));
+                }
+            }
+            if (plano?.planos_dieta?.length > 0) {
+                for (const pd of plano.planos_dieta) {
+                    deletePromises.push(supabase.from('planos_dieta').delete().eq('id', pd.id));
+                }
+            }
+
+            // 2. Delete por atleta_id (garante que registros sem diagnostico_id também sejam removidos)
+            deletePromises.push(
+                supabase.from('planos_treino').delete().eq('atleta_id', athlete.id)
+            );
+            deletePromises.push(
+                supabase.from('planos_dieta').delete().eq('atleta_id', athlete.id)
+            );
+
+            // 3. Fallback: tentar por diagnostico_id
+            deletePromises.push(
+                supabase.from('planos_treino').delete().eq('diagnostico_id' as any, planoId)
+            );
+            deletePromises.push(
+                supabase.from('planos_dieta').delete().eq('diagnostico_id' as any, planoId)
+            );
+
+            // Executar tudo em paralelo (allSettled = não bloqueia se um falhar)
+            await Promise.allSettled(deletePromises);
+
+            // 4. Por último, excluir o diagnóstico pai
+            const { error } = await supabase.from('diagnosticos').delete().eq('id', planoId);
             if (error) throw error;
+
+            console.info('[AthleteDetails] ✅ Plano de evolução excluído completamente:', planoId);
             fetchPlans();
         } catch (err) {
             console.error('Erro ao excluir plano:', err);

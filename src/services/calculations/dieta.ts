@@ -70,6 +70,7 @@ export interface PlanoDieta {
     atletaId: string;
     nomeAtleta: string;
     frequenciaSemanal: number;      // campo conveniência para UI
+    objetivo: ObjetivoVitruvio;     // objetivo selecionado no diagnóstico
 
     // Estratégia calórica
     fase: FaseDieta;
@@ -539,6 +540,7 @@ export function gerarPlanoDieta(
         atletaId,
         nomeAtleta,
         frequenciaSemanal: freq,
+        objetivo,
         fase,
         faseLabel: faseLabels[fase],
         tdee,

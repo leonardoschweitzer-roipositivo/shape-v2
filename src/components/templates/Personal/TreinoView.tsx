@@ -503,7 +503,9 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
     const [diagnostico, setDiagnostico] = useState<DiagnosticoDados | null>(null);
     const [potencial, setPotencial] = useState<PotencialAtleta | null>(null);
     const [estado, setEstado] = useState<TreinoState>(readOnlyData ? 'saved' : 'idle');
-    const [objetivoAtleta, setObjetivoAtleta] = useState<ObjetivoVitruvio>('RECOMP');
+    const [objetivoAtleta, setObjetivoAtleta] = useState<ObjetivoVitruvio>(
+        readOnlyData?.objetivo ?? 'RECOMP'
+    );
     const [toastStatus, setToastStatus] = useState<'success' | 'error' | null>(null);
     const [iaEnriching, setIaEnriching] = useState(false);
     const [isApplying, setIsApplying] = useState(false);

@@ -104,6 +104,7 @@ export interface PlanoTreino {
     id: string;
     planoEvolucaoId: string;
     atletaId: string;
+    objetivo: ObjetivoVitruvio;
     visaoAnual: VisaoAnual;
     trimestreAtual: TrimestreAtual;
     divisao: DivisaoTreino;
@@ -571,6 +572,7 @@ export const gerarPlanoTreino = (
         id: `treino-${Date.now()}`,
         planoEvolucaoId: `evol-${Date.now()}`,
         atletaId,
+        objetivo,
         visaoAnual,
         trimestreAtual: {
             numero: 1,

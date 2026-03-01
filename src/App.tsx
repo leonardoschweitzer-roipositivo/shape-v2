@@ -264,21 +264,36 @@ const App: React.FC = () => {
     }
   };
 
-  const handleViewEvolutionPlan = (plano: any) => {
+  const handleViewEvolutionPlan = async (plano: any) => {
     console.info('[App] 🔍 Visualizando plano completo:', plano.id);
     setConsultaPlanoCompleto(plano);
 
-    // Configura os dados das 3 etapas para as views de consulta
+    // Garante que selectedAthleteId está definido (essencial para renderizar consulta-treino/dieta)
+    if (plano.atleta_id) {
+      setSelectedAthleteId(plano.atleta_id);
+    }
+
+    // Configura os dados do Diagnóstico
     if (plano.dados) setConsultaDiagData(plano.dados);
 
+    // Configura os dados do Treino — tenta join local primeiro, depois busca no DB
     if (plano.planos_treino && plano.planos_treino.length > 0) {
       setConsultaTreinoData(plano.planos_treino[0].dados);
+    } else if (plano.atleta_id) {
+      // Fallback: busca o plano de treino mais recente do atleta no banco
+      const treinoData = await buscarPlanoTreino(plano.atleta_id);
+      setConsultaTreinoData(treinoData);
     } else {
       setConsultaTreinoData(null);
     }
 
+    // Configura os dados da Dieta — tenta join local primeiro, depois busca no DB
     if (plano.planos_dieta && plano.planos_dieta.length > 0) {
       setConsultaDietaData(plano.planos_dieta[0].dados);
+    } else if (plano.atleta_id) {
+      // Fallback: busca o plano de dieta mais recente do atleta no banco
+      const dietaData = await buscarPlanoDieta(plano.atleta_id);
+      setConsultaDietaData(dietaData);
     } else {
       setConsultaDietaData(null);
     }

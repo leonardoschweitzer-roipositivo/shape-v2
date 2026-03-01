@@ -249,7 +249,9 @@ export const DietaView: React.FC<DietaViewProps> = ({
     const [potencial, setPotencial] = useState<PotencialAtleta | null>(null);
     const [diagnostico, setDiagnostico] = useState<DiagnosticoDados | null>(null);
     const [showDescanso, setShowDescanso] = useState(false);
-    const [objetivoAtleta, setObjetivoAtleta] = useState<ObjetivoVitruvio>('RECOMP');
+    const [objetivoAtleta, setObjetivoAtleta] = useState<ObjetivoVitruvio>(
+        readOnlyData?.objetivo ?? 'RECOMP'
+    );
     const [cardapioAberto, setCardapioAberto] = useState<Set<string>>(new Set());
     const [toastStatus, setToastStatus] = useState<'success' | 'error' | null>(null);
     const [iaEnriching, setIaEnriching] = useState(false);

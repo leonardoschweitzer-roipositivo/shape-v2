@@ -749,6 +749,27 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
         );
     }
 
+    // Score efetivo: usa o score do atleta no store, com fallback no score da última avaliação.
+    // O mapper já popula ultimaAvaliacao.score lendo também de results.avaliacaoGeral,
+    // então esse valor é sempre o mais confiável disponível.
+    const scoreEfetivo = useMemo(() => {
+        if (atleta.score > 0) return atleta.score;
+        if (ultimaAvaliacao.score > 0) return ultimaAvaliacao.score;
+        return 0;
+    }, [atleta.score, ultimaAvaliacao.score]);
+
+    // Ratio efetivo: usa o ratio do store, com fallback no ratio da última avaliação
+    // ou no cálculo direto ombros/cintura das medidas.
+    const ratioEfetivo = useMemo(() => {
+        if (atleta.ratio > 0) return atleta.ratio;
+        if (ultimaAvaliacao.ratio > 0) return ultimaAvaliacao.ratio;
+        const m = ultimaAvaliacao.measurements;
+        if (m?.shoulders && m?.waist && m.waist > 0) {
+            return Math.round((m.shoulders / m.waist) * 100) / 100;
+        }
+        return 0;
+    }, [atleta.ratio, ultimaAvaliacao]);
+
     const m = ultimaAvaliacao.measurements;
 
     // Enriquecer "Análise de Contexto" com IA ao montar
@@ -765,8 +786,8 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
             altura: m.height,
             peso: m.weight,
             gorduraPct: ultimaAvaliacao.bf ?? 15,
-            score: atleta.score,
-            classificacao: atleta.score >= 90 ? 'ELITE' : atleta.score >= 80 ? 'AVANÇADO' : atleta.score >= 70 ? 'ATLÉTICO' : atleta.score >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE',
+            score: scoreEfetivo,
+            classificacao: scoreEfetivo >= 90 ? 'ELITE' : scoreEfetivo >= 80 ? 'AVANÇADO' : scoreEfetivo >= 70 ? 'ATLÉTICO' : scoreEfetivo >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE',
             medidas: m as Record<string, number>,
             contexto: atleta.contexto as any,
         };
@@ -801,9 +822,9 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                 idade: atleta.birthDate ? Math.floor((Date.now() - new Date(atleta.birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : 30,
                 sexo: atleta.gender === 'FEMALE' ? 'F' : 'M',
                 gorduraPct: ultimaAvaliacao.bf ?? 15,
-                score: atleta.score,
-                classificacao: atleta.score >= 90 ? 'ELITE' : atleta.score >= 80 ? 'AVANÇADO' : atleta.score >= 70 ? 'ATLÉTICO' : atleta.score >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE',
-                ratio: atleta.ratio,
+                score: scoreEfetivo,
+                classificacao: scoreEfetivo >= 90 ? 'ELITE' : scoreEfetivo >= 80 ? 'AVANÇADO' : scoreEfetivo >= 70 ? 'ATLÉTICO' : scoreEfetivo >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE',
+                ratio: ratioEfetivo,
                 freqTreino: 5,
                 nivelAtividade: 'SEDENTARIO',
                 usaAnabolizantes: atleta.contexto?.medicacoesUso?.descricao ? true : false,
@@ -833,11 +854,11 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
             };
 
             // Pipeline completo: Potencial → Diagnóstico reanalisado
-            const classificacao = input.score >= 90 ? 'ELITE'
-                : input.score >= 80 ? 'AVANÇADO'
-                    : input.score >= 70 ? 'ATLÉTICO'
-                        : input.score >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE';
-            const potencial = calcularPotencialAtleta(classificacao, input.score, atleta.contexto);
+            const classificacao = scoreEfetivo >= 90 ? 'ELITE'
+                : scoreEfetivo >= 80 ? 'AVANÇADO'
+                    : scoreEfetivo >= 70 ? 'ATLÉTICO'
+                        : scoreEfetivo >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE';
+            const potencial = calcularPotencialAtleta(classificacao, scoreEfetivo, atleta.contexto);
             // Corrigir com valores reais do contexto (não mais hardcoded)
             input.nivelAtividade = inferirNivelAtividade(atleta.contexto);
             input.freqTreino = potencial.frequenciaSemanal;
@@ -1076,10 +1097,10 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                         {/* Score Widget Block */}
                         <div className="lg:col-span-1">
                             <ScoreWidget
-                                score={atleta.score}
+                                score={scoreEfetivo}
                                 label="SCORE GERAL"
                                 change={atleta.scoreVariation >= 0 ? `+${atleta.scoreVariation}%` : `${atleta.scoreVariation}%`}
-                                classification={getScoreClassification(atleta.score)}
+                                classification={getScoreClassification(scoreEfetivo)}
                             />
                         </div>
                     </div>

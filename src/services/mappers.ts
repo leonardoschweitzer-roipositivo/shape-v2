@@ -28,11 +28,21 @@ export function mapAtletaToPersonalAthlete(
     const ultimoAssessment = assessments[0]; // Já vem ordenado DESC por date
     const penultimoAssessment = assessments[1];
 
-    // Score e ratio agora vêm direto das colunas dedicadas do DB
-    const score = Number(ultimoAssessment?.score) || 0;
-    const penultimaScore = Number(penultimoAssessment?.score) || score;
+    // Score: lê da coluna dedicada, com fallback no objeto `results.avaliacaoGeral`
+    // (quando a avaliação foi salva antes da coluna score ser adicionada ao schema)
+    const getScore = (a: any): number => {
+        if (!a) return 0;
+        return Number(a.score) || Number(a.results?.avaliacaoGeral) || 0;
+    };
+    const getRatio = (a: any): number => {
+        if (!a) return 0;
+        return Number(a.ratio) || Number(a.results?.scores?.proporcoes?.detalhes?.proporcaoMaisForte) || 0;
+    };
+
+    const score = getScore(ultimoAssessment);
+    const penultimaScore = getScore(penultimoAssessment) || score;
     const scoreVariation = score - penultimaScore;
-    const ratio = Number(ultimoAssessment?.ratio) || 0;
+    const ratio = getRatio(ultimoAssessment);
 
     // Auto-converter altura de metros para cm
     let alturaCm = Number(ficha?.altura) || 0;
@@ -47,8 +57,8 @@ export function mapAtletaToPersonalAthlete(
         return {
             id: assessment.id,
             date: assessment.date,
-            score: Number(assessment.score) || 0,
-            ratio: Number(assessment.ratio) || 0,
+            score: getScore(assessment),
+            ratio: getRatio(assessment),
             bf: Number(assessment.body_fat) || 0,
             ffmi: resultsStored?.scores?.composicao?.detalhes?.detalhes?.ffmi?.valor || 0,
             proporcoes: resultsStored?.proporcoes_aureas || resultsStored?.scores || null,
