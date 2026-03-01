@@ -1053,7 +1053,7 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                             Voltar
                         </button>
 
-                        {!isReadOnly && (
+                        {!isReadOnly ? (
                             <div className="flex items-center gap-4">
                                 {estado === 'ready' && (
                                     <button
@@ -1080,6 +1080,14 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                                     </button>
                                 )}
                             </div>
+                        ) : (
+                            <button
+                                onClick={() => onNext()}
+                                className="flex items-center gap-3 px-8 py-3.5 bg-primary text-[#0A0F1C] font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(0,201,167,0.3)] transition-all"
+                            >
+                                Próximo: Plano de Treino
+                                <ArrowRight size={18} />
+                            </button>
                         )}
                     </div>
                 )}

@@ -788,7 +788,7 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
                                 <ArrowLeft size={18} />
                                 Voltar
                             </button>
-                            {!isReadOnly && (
+                            {!isReadOnly ? (
                                 <div className="flex items-center gap-4">
                                     {estado === 'ready' && (
                                         <button onClick={handleSalvar} className="flex items-center gap-3 px-8 py-3.5 bg-emerald-600 text-white font-bold text-sm uppercase tracking-wider rounded-xl hover:bg-emerald-500 transition-all">
@@ -806,6 +806,14 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
                                         </button>
                                     )}
                                 </div>
+                            ) : (
+                                <button
+                                    onClick={onNext}
+                                    className="flex items-center gap-3 px-8 py-3.5 bg-primary text-[#0A0F1C] font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(0,201,167,0.3)] transition-all"
+                                >
+                                    Próximo: Plano de Dieta
+                                    <ArrowRight size={18} />
+                                </button>
                             )}
                         </div>
                     </div>

@@ -46,6 +46,7 @@ interface AthleteDetailsViewProps {
     onConsultAssessment: (assessmentId: string) => void;
     hideStatusControl?: boolean;
     onDeleteAthlete?: (athleteId: string) => void;
+    onViewPlan?: (plano: any) => void;
 }
 
 const SectionHeader = ({ icon: Icon, title, subtitle, rightElement }: { icon: any, title: string, subtitle: string, rightElement?: React.ReactNode }) => (
@@ -158,7 +159,7 @@ const calculateAge = (birthDateStr?: string): number | null => {
     return age;
 };
 
-export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete, onBack, onNewAssessment, onConsultAssessment, hideStatusControl = false, onDeleteAthlete }) => {
+export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete, onBack, onNewAssessment, onConsultAssessment, hideStatusControl = false, onDeleteAthlete, onViewPlan }) => {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const { updateAthlete } = useDataStore();
@@ -176,8 +177,8 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                 .from('diagnosticos')
                 .select(`
                     *,
-                    planos_treino (id, status, created_at),
-                    planos_dieta (id, status, created_at)
+                    planos_treino (id, status, created_at, dados),
+                    planos_dieta (id, status, created_at, dados)
                 `)
                 .eq('atleta_id', athlete.id)
                 .order('created_at', { ascending: false });
@@ -791,7 +792,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                                 <td className="px-6 py-4 text-right">
                                                     <div className="flex items-center justify-end gap-2">
                                                         <button
-                                                            onClick={() => console.log('Acessar plano:', plano.id)}
+                                                            onClick={() => onViewPlan?.(plano)}
                                                             className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-all flex items-center gap-2 text-[10px] font-bold uppercase"
                                                         >
                                                             <Eye size={16} />

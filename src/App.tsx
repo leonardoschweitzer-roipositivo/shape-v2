@@ -84,6 +84,7 @@ const App: React.FC = () => {
   const [consultaDiagData, setConsultaDiagData] = useState<DiagnosticoDados | null>(null);
   const [consultaTreinoData, setConsultaTreinoData] = useState<PlanoTreino | null>(null);
   const [consultaDietaData, setConsultaDietaData] = useState<PlanoDieta | null>(null);
+  const [consultaPlanoCompleto, setConsultaPlanoCompleto] = useState<any | null>(null);
 
   // Derived user profile from Auth Store
   const userProfile: ProfileType = (authProfile?.role?.toLowerCase() as ProfileType) || 'atleta';
@@ -261,6 +262,28 @@ const App: React.FC = () => {
       setSelectedAthleteId(athleteId);
       setCurrentView('results');
     }
+  };
+
+  const handleViewEvolutionPlan = (plano: any) => {
+    console.info('[App] 🔍 Visualizando plano completo:', plano.id);
+    setConsultaPlanoCompleto(plano);
+
+    // Configura os dados das 3 etapas para as views de consulta
+    if (plano.dados) setConsultaDiagData(plano.dados);
+
+    if (plano.planos_treino && plano.planos_treino.length > 0) {
+      setConsultaTreinoData(plano.planos_treino[0].dados);
+    } else {
+      setConsultaTreinoData(null);
+    }
+
+    if (plano.planos_dieta && plano.planos_dieta.length > 0) {
+      setConsultaDietaData(plano.planos_dieta[0].dados);
+    } else {
+      setConsultaDietaData(null);
+    }
+
+    setCurrentView('consulta-diagnostico');
   };
 
   const handleInviteAthlete = () => {
@@ -469,6 +492,7 @@ const App: React.FC = () => {
                 setAthleteForEvaluation(selectedAthlete);
                 setCurrentView('assessment');
               }}
+              onViewPlan={handleViewEvolutionPlan}
               onDeleteAthlete={async (athleteId) => {
                 try {
                   // 1. Deletar medidas do atleta
@@ -565,8 +589,16 @@ const App: React.FC = () => {
           return selectedAthleteId && consultaDiagData ? (
             <DiagnosticoView
               atletaId={selectedAthleteId}
-              onBack={() => { setConsultaDiagData(null); setCurrentView('coach'); }}
-              onNext={() => { }}
+              onBack={() => {
+                if (consultaPlanoCompleto) {
+                  setConsultaDiagData(null);
+                  setConsultaPlanoCompleto(null);
+                }
+                setCurrentView('athlete-details');
+              }}
+              onNext={() => {
+                if (consultaPlanoCompleto) setCurrentView('consulta-treino');
+              }}
               readOnlyData={consultaDiagData}
             />
           ) : null;
@@ -574,8 +606,16 @@ const App: React.FC = () => {
           return selectedAthleteId && consultaTreinoData ? (
             <TreinoView
               atletaId={selectedAthleteId}
-              onBack={() => { setConsultaTreinoData(null); setCurrentView('coach'); }}
-              onNext={() => { }}
+              onBack={() => {
+                if (consultaPlanoCompleto) setCurrentView('consulta-diagnostico');
+                else {
+                  setConsultaTreinoData(null);
+                  setCurrentView('coach');
+                }
+              }}
+              onNext={() => {
+                if (consultaPlanoCompleto) setCurrentView('consulta-dieta');
+              }}
               readOnlyData={consultaTreinoData}
             />
           ) : null;
@@ -583,7 +623,13 @@ const App: React.FC = () => {
           return selectedAthleteId && consultaDietaData ? (
             <DietaView
               atletaId={selectedAthleteId}
-              onBack={() => { setConsultaDietaData(null); setCurrentView('coach'); }}
+              onBack={() => {
+                if (consultaPlanoCompleto) setCurrentView('consulta-treino');
+                else {
+                  setConsultaDietaData(null);
+                  setCurrentView('coach');
+                }
+              }}
               readOnlyData={consultaDietaData}
             />
           ) : null;
@@ -736,6 +782,7 @@ const App: React.FC = () => {
             onNewAssessment={() => {
               setCurrentView('assessment');
             }}
+            onViewPlan={handleViewEvolutionPlan}
             hideStatusControl={true}
           />
         );
