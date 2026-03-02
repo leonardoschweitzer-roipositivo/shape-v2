@@ -87,6 +87,7 @@ export const AssessmentScreen = memo(function AssessmentScreen({
                         classificacao={avaliacao.classificacaoGeral}
                         emoji={avaliacao.emojiGeral}
                         scores={avaliacao.scores}
+                        penalizacoes={avaliacao.penalizacoes}
                     />
 
                     {/* 2. Diagnóstico Estético */}

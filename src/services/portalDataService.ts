@@ -632,12 +632,26 @@ export async function buscarDadosAvaliacao(atletaId: string): Promise<AvaliacaoD
     const pesoMagro = compDetalhes?.pesoMagro || 0;
     const pesoGordo = compDetalhes?.pesoGordo || 0;
 
-    let classComp = 'NORMAL';
+    // Helper local para classificação BF% (Padrão ACE)
+    const genero = a.measurements?.genero || a.measurements?.gender || 'MALE';
+    let classComp = 'ACEITÁVEL';
     let emojiComp = '🏃';
-    if (scoreComposicao >= 80) { classComp = 'ATLÉTICO'; emojiComp = '🔥'; }
-    else if (scoreComposicao >= 60) { classComp = 'FITNESS'; emojiComp = '💪'; }
-    else if (scoreComposicao >= 40) { classComp = 'NORMAL'; emojiComp = '🏃'; }
-    else { classComp = 'ACIMA DO PESO'; emojiComp = '⚠️'; }
+
+    if (genero === 'MALE' || genero === 'male' || genero === 'M') {
+        if (bf < 6) { classComp = 'ESSENCIAL'; emojiComp = '💎'; }
+        else if (bf < 13) { classComp = 'ATLETA'; emojiComp = '🥇'; }
+        else if (bf < 17) { classComp = 'FITNESS'; emojiComp = '💪'; }
+        else if (bf < 25) { classComp = 'ACEITÁVEL'; emojiComp = '🏃'; }
+        else if (bf < 30) { classComp = 'ACIMA'; emojiComp = '⚠️'; }
+        else { classComp = 'OBESIDADE'; emojiComp = '❌'; }
+    } else {
+        if (bf < 14) { classComp = 'ESSENCIAL'; emojiComp = '💎'; }
+        else if (bf < 21) { classComp = 'ATLETA'; emojiComp = '🥇'; }
+        else if (bf < 25) { classComp = 'FITNESS'; emojiComp = '💪'; }
+        else if (bf < 32) { classComp = 'ACEITÁVEL'; emojiComp = '🏃'; }
+        else if (bf < 39) { classComp = 'ACIMA'; emojiComp = '⚠️'; }
+        else { classComp = 'OBESIDADE'; emojiComp = '❌'; }
+    }
 
     const diagnostico = {
         bf,
@@ -733,6 +747,8 @@ export async function buscarDadosAvaliacao(atletaId: string): Promise<AvaliacaoD
     else if (scoreSimetria < 85) { classSimetria = 'BOM'; emojiSimetria = '⚠️'; }
     else if (scoreSimetria < 95) { classSimetria = 'MUITO BOM'; emojiSimetria = '💪'; }
 
+    const penalizacoes = results?.penalizacoes || { vTaper: 1.0, cintura: 1.0 };
+
     return {
         id: a.id,
         data: new Date(a.date),
@@ -744,6 +760,7 @@ export async function buscarDadosAvaliacao(atletaId: string): Promise<AvaliacaoD
             composicao: { valor: scoreComposicao, peso: 0.35, contribuicao: (scoresDB?.composicao?.contribuicao || scoreComposicao * 0.35) },
             simetria: { valor: scoreSimetria, peso: 0.25, contribuicao: (scoresDB?.simetria?.contribuicao || scoreSimetria * 0.25) },
         },
+        penalizacoes,
         diagnostico,
         proporcoes,
         assimetria: {
@@ -786,6 +803,7 @@ interface AvaliacaoDadosResult {
         composicao: { valor: number; peso: number; contribuicao: number };
         simetria: { valor: number; peso: number; contribuicao: number };
     };
+    penalizacoes: { vTaper: number; cintura: number };
     diagnostico: {
         bf: number;
         scoreBF: number;

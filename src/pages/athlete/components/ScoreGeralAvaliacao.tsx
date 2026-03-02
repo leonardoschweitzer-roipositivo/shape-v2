@@ -16,6 +16,10 @@ interface ScoreGeralAvaliacaoProps {
         composicao: { valor: number; peso: number; contribuicao: number }
         simetria: { valor: number; peso: number; contribuicao: number }
     }
+    penalizacoes?: {
+        vTaper: number
+        cintura: number
+    }
 }
 
 function getScoreColor(score: number): string {
@@ -32,6 +36,7 @@ export const ScoreGeralAvaliacao = memo(function ScoreGeralAvaliacao({
     classificacao,
     emoji,
     scores,
+    penalizacoes,
 }: ScoreGeralAvaliacaoProps) {
     const color = getScoreColor(scoreGeral)
     const circumference = 2 * Math.PI * 54 // radius = 54
@@ -43,10 +48,29 @@ export const ScoreGeralAvaliacao = memo(function ScoreGeralAvaliacao({
         { label: 'Simetria', peso: '25%', valor: scores.simetria.valor, cor: '#10B981' },
     ]
 
+    // Cálculo do score bruto antes das penalizações
+    const scoreBase =
+        (scores.proporcoes.valor * scores.proporcoes.peso) +
+        (scores.composicao.valor * scores.composicao.peso) +
+        (scores.simetria.valor * scores.simetria.peso)
+
+    const diferencaScore = Math.round(scoreBase - scoreGeral)
+
+    let textoPenalizacao = ''
+    if (diferencaScore > 0) {
+        const motivos = []
+        if (penalizacoes?.cintura && penalizacoes.cintura < 1.0) motivos.push('Cintura')
+        if (penalizacoes?.vTaper && penalizacoes.vTaper < 1.0) motivos.push('V-Taper')
+
+        textoPenalizacao = motivos.length > 0
+            ? `-${diferencaScore} pts (${motivos.join(' e ')})`
+            : `-${diferencaScore} pts penalização`
+    }
+
     return (
         <div className="bg-gradient-to-br from-[#0D1425] to-[#0A0F1C] rounded-2xl border border-white/5 p-6">
             {/* Score Circular */}
-            <div className="flex flex-col items-center mb-6">
+            <div className="flex flex-col items-center mb-4">
                 <div className="relative w-32 h-32">
                     <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
                         {/* Background circle */}
@@ -80,14 +104,21 @@ export const ScoreGeralAvaliacao = memo(function ScoreGeralAvaliacao({
                 </div>
 
                 {/* Classificação */}
-                <div className="mt-3 flex items-center gap-2">
-                    <span className="text-lg">{emoji}</span>
-                    <span
-                        className="text-sm font-bold uppercase tracking-wider"
-                        style={{ color }}
-                    >
-                        {classificacao}
-                    </span>
+                <div className="mt-3 flex flex-col items-center">
+                    <div className="flex items-center gap-2">
+                        <span className="text-lg">{emoji}</span>
+                        <span
+                            className="text-sm font-bold uppercase tracking-wider"
+                            style={{ color }}
+                        >
+                            {classificacao}
+                        </span>
+                    </div>
+                    {diferencaScore > 0 && (
+                        <span className="text-[10px] text-red-500/90 font-medium mt-1 text-center leading-tight">
+                            Bruto {Math.round(scoreBase)} <span className="opacity-50 mx-0.5">•</span> {textoPenalizacao}
+                        </span>
+                    )}
                 </div>
             </div>
 

@@ -139,6 +139,8 @@ export interface AvaliacaoDados {
         composicao: { valor: number; peso: number; contribuicao: number }
         simetria: { valor: number; peso: number; contribuicao: number }
     }
+    /** Penalizações aplicadas após a média ponderada */
+    penalizacoes: { vTaper: number; cintura: number }
     /** Seção: Diagnóstico Estético */
     diagnostico: DiagnosticoEstetico
     /** Seção: Proporções Áureas */
