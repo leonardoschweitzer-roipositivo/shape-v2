@@ -36,7 +36,7 @@ const INTENSIDADE_LABEL: Record<1 | 2 | 3 | 4, string> = {
 }
 
 export function CardTreino({ treino, proximoTreino, onVerTreino, onCompletei, onPular }: CardTreinoProps) {
-    const [accordionOpen, setAccordionOpen] = useState(false)
+    const [accordionOpen, setAccordionOpen] = useState(treino.status === 'pendente')
 
     // Estado: DESCANSO
     if (treino.status === 'descanso') {
@@ -152,11 +152,44 @@ export function CardTreino({ treino, proximoTreino, onVerTreino, onCompletei, on
                 </div>
 
                 <button
-                    onClick={onVerTreino}
-                    className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors font-bold"
+                    onClick={() => {
+                        setAccordionOpen(!accordionOpen)
+                        onVerTreino()
+                    }}
+                    className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors font-bold flex items-center gap-1"
                 >
-                    VER DETALHES →
+                    {accordionOpen ? 'OCULTAR DETALHES' : 'VER DETALHES'}
+                    {accordionOpen ? <ChevronUp size={14} /> : <span>→</span>}
                 </button>
+
+                {accordionOpen && treino.exercicios && treino.exercicios.length > 0 && (
+                    <div className="mt-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="bg-emerald-500/5 rounded-xl p-4 border border-emerald-500/10">
+                            <div className="space-y-3">
+                                {treino.exercicios.map((ex, i) => (
+                                    <div
+                                        key={ex.id}
+                                        className="flex items-center gap-3 py-1 border-b border-emerald-500/5 last:border-0 pb-2 last:pb-0"
+                                    >
+                                        <span className="text-xs text-emerald-500/40 font-mono w-5">
+                                            {(i + 1).toString().padStart(2, '0')}
+                                        </span>
+                                        <div className="flex-1">
+                                            <p className="text-sm text-emerald-100 font-medium">
+                                                {ex.nome}
+                                            </p>
+                                        </div>
+                                        <div className="bg-emerald-500/10 px-2 py-1 rounded-md">
+                                            <span className="text-[11px] text-emerald-400 font-mono">
+                                                {ex.series}×{ex.repeticoes}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         )
     }
@@ -208,12 +241,53 @@ export function CardTreino({ treino, proximoTreino, onVerTreino, onCompletei, on
             </div>
 
             <button
-                onClick={onVerTreino}
+                onClick={() => {
+                    setAccordionOpen(!accordionOpen)
+                    onVerTreino()
+                }}
                 className="w-full py-2.5 px-4 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 rounded-xl text-sm font-bold text-indigo-400 transition-colors mb-3 flex items-center justify-center gap-2"
             >
-                <Play size={16} />
-                VER TREINO COMPLETO
+                {accordionOpen ? <ChevronUp size={16} /> : <Play size={16} />}
+                {accordionOpen ? 'FECHAR TREINO' : 'VER TREINO COMPLETO'}
             </button>
+
+            {/* Accordion de Exercícios */}
+            {accordionOpen && treino.exercicios && treino.exercicios.length > 0 && (
+                <div className="mb-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="bg-white/[0.03] rounded-xl p-4 border border-white/5">
+                        <h4 className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-[0.2em]">
+                            Lista de Exercícios
+                        </h4>
+                        <div className="space-y-3">
+                            {treino.exercicios.map((ex, i) => (
+                                <div
+                                    key={ex.id}
+                                    className="flex items-center gap-3 py-1 border-b border-white/[0.02] last:border-0 pb-2 last:pb-0"
+                                >
+                                    <span className="text-xs text-indigo-500/50 font-mono w-5">
+                                        {(i + 1).toString().padStart(2, '0')}
+                                    </span>
+                                    <div className="flex-1">
+                                        <p className="text-sm text-gray-200 font-medium">
+                                            {ex.nome}
+                                        </p>
+                                        {ex.foco && (
+                                            <p className="text-[10px] text-gray-500 uppercase tracking-wider">
+                                                {ex.foco}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className="bg-white/5 px-2 py-1 rounded-md">
+                                        <span className="text-[11px] text-gray-400 font-mono">
+                                            {ex.series}×{ex.repeticoes}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="grid grid-cols-2 gap-3">
                 <button
