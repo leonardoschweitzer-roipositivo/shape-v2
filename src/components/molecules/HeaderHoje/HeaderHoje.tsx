@@ -26,45 +26,46 @@ function getSaudacao(): string {
 
 export function HeaderHoje({ nomeAtleta, dataFormatada, streak, personalNome }: HeaderHojeProps) {
     return (
-        <div className="relative overflow-hidden">
+        <div className="relative overflow-hidden mb-2">
             <div className="absolute inset-0 bg-gradient-to-b from-indigo-600/15 via-indigo-900/5 to-transparent" />
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-500/8 via-transparent to-transparent" />
 
-            <div className="relative px-5 pt-6 pb-4">
-                {/* Single row: Avatar + Name/Personal + Streak + Logo */}
-                <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20 flex-shrink-0">
-                        <User className="text-white" size={20} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <h1 className="text-lg font-black text-white tracking-tight uppercase truncate">
-                            {nomeAtleta}
+            <div className="relative px-6 pt-8 pb-2">
+                <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                        <span className="text-[9px] font-bold tracking-[0.2em] text-indigo-400 uppercase">
+                            {dataFormatada}
+                        </span>
+                        <h1 className="text-xl font-black text-white tracking-tight uppercase leading-tight mt-1">
+                            O Que Temos <br className="hidden sm:block" />Para Hoje
                         </h1>
-                        {personalNome && (
-                            <span className="text-[10px] text-gray-500 font-bold tracking-wider uppercase">
-                                Personal: <span className="text-gray-400">{personalNome}</span>
-                            </span>
-                        )}
+
+                        <div className="flex items-center gap-2 mt-2">
+                            <User size={12} className="text-gray-500" />
+                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+                                Atleta: <span className="text-white">{nomeAtleta}</span>
+                            </p>
+                        </div>
                     </div>
 
-                    {/* Streak + Vitru Logo */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                        {/* Streak */}
-                        <div className="flex items-center gap-1 px-2 py-1 bg-orange-500/10 rounded-full border border-orange-500/20">
-                            <Flame size={13} className="text-orange-500" />
-                            <span className="text-[11px] font-bold text-orange-500">
-                                {streak}
+                    {/* Right side: Streak + Vitru */}
+                    <div className="flex flex-col items-end gap-3 flex-shrink-0">
+                        {/* Streak Badge */}
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-orange-500/10 rounded-full border border-orange-500/20 shadow-[0_0_15px_rgba(249,115,22,0.15)]">
+                            <Flame size={12} className="text-orange-500" />
+                            <span className="text-[10px] font-black tracking-widest text-orange-400">
+                                {streak} DIAS
                             </span>
                         </div>
 
-                        {/* Vitru Logo */}
-                        <div className="flex flex-col items-center gap-0.5">
-                            <div className="w-8 h-8 bg-indigo-500/20 rounded-lg flex items-center justify-center">
-                                <span className="text-indigo-300 font-black text-sm">V</span>
+                        {/* Vitru AI Logo */}
+                        <div className="flex items-center gap-1.5 opacity-80">
+                            <div className="w-6 h-6 bg-indigo-500/20 rounded-md flex items-center justify-center">
+                                <span className="text-indigo-300 font-black text-[10px]">V</span>
                             </div>
-                            <div className="flex items-center gap-0.5">
-                                <span className="text-white font-black text-[7px] tracking-widest">VITRU</span>
-                                <span className="text-indigo-400 font-black text-[6px] tracking-widest italic">IA</span>
+                            <div className="flex flex-col">
+                                <span className="text-white font-black text-[6px] tracking-widest leading-none">VITRU</span>
+                                <span className="text-indigo-400 font-black text-[5px] tracking-widest italic leading-none mt-[1px]">IA</span>
                             </div>
                         </div>
                     </div>
