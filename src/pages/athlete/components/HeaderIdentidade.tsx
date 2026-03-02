@@ -49,17 +49,6 @@ export function HeaderIdentidade({
                             </div>
                         )}
                     </div>
-
-                    {/* Vitru Logo */}
-                    <div className="flex flex-col items-center gap-0.5 flex-shrink-0">
-                        <div className="w-8 h-8 bg-indigo-500/20 rounded-lg flex items-center justify-center">
-                            <span className="text-indigo-300 font-black text-sm">V</span>
-                        </div>
-                        <div className="flex items-center gap-0.5">
-                            <span className="text-white font-black text-[8px] tracking-widest">VITRU</span>
-                            <span className="text-indigo-400 font-black text-[7px] tracking-widest italic">IA</span>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

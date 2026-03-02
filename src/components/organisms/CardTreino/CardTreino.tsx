@@ -37,8 +37,25 @@ const INTENSIDADE_LABEL: Record<1 | 2 | 3 | 4, string> = {
 
 export function CardTreino({ treino, proximoTreino, onVerTreino, onCompletei, onPular }: CardTreinoProps) {
     const [accordionOpen, setAccordionOpen] = useState(treino.status === 'pendente')
+    const [exerciciosFeitos, setExerciciosFeitos] = useState<Record<string, boolean>>({})
 
-    // Estado: DESCANSO
+    const handleToggleExercicio = (id: string) => {
+        const novoEstado = { ...exerciciosFeitos, [id]: !exerciciosFeitos[id] }
+        setExerciciosFeitos(novoEstado)
+
+        // Verificar se todos os exercícios do treino foram marcados
+        if (treino.exercicios && treino.exercicios.length > 0) {
+            const todosFeitos = treino.exercicios.every(ex => novoEstado[ex.id])
+            if (todosFeitos) {
+                // Pequeno delay para o aluno ver o último checkbox marcar antes de completar
+                setTimeout(() => {
+                    onCompletei()
+                }, 400)
+            }
+        }
+    }
+
+    // Estado: DESCANSO (mesmo código anterior)
     if (treino.status === 'descanso') {
         return (
             <div className="bg-[#0C1220] rounded-2xl border border-white/5 overflow-hidden">
@@ -124,7 +141,7 @@ export function CardTreino({ treino, proximoTreino, onVerTreino, onCompletei, on
         )
     }
 
-    // Estado: COMPLETO
+    // Estado: COMPLETO (mesmo código anterior)
     if (treino.status === 'completo') {
         return (
             <div className="bg-emerald-500/10 rounded-2xl p-6 border border-emerald-500/20">
@@ -175,7 +192,7 @@ export function CardTreino({ treino, proximoTreino, onVerTreino, onCompletei, on
                                             {(i + 1).toString().padStart(2, '0')}
                                         </span>
                                         <div className="flex-1">
-                                            <p className="text-sm text-emerald-100 font-medium">
+                                            <p className="text-sm text-emerald-100 font-medium line-through decoration-emerald-500/50">
                                                 {ex.nome}
                                             </p>
                                         </div>
@@ -229,7 +246,7 @@ export function CardTreino({ treino, proximoTreino, onVerTreino, onCompletei, on
                 </span>
             </div>
 
-            <div className="mb-4">
+            <div className="mb-6">
                 <p className="text-lg font-semibold text-white mb-1">
                     {treino.titulo}
                 </p>
@@ -240,45 +257,44 @@ export function CardTreino({ treino, proximoTreino, onVerTreino, onCompletei, on
                 )}
             </div>
 
-            <button
-                onClick={() => {
-                    setAccordionOpen(!accordionOpen)
-                    onVerTreino()
-                }}
-                className="w-full py-2.5 px-4 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 rounded-xl text-sm font-bold text-indigo-400 transition-colors mb-3 flex items-center justify-center gap-2"
-            >
-                {accordionOpen ? <ChevronUp size={16} /> : <Play size={16} />}
-                {accordionOpen ? 'FECHAR TREINO' : 'VER TREINO COMPLETO'}
-            </button>
-
-            {/* Accordion de Exercícios */}
-            {accordionOpen && treino.exercicios && treino.exercicios.length > 0 && (
-                <div className="mb-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+            {/* Lista de Exercícios (Fixa e com Checkboxes) */}
+            {treino.exercicios && treino.exercicios.length > 0 && (
+                <div className="mb-6 space-y-3 animate-in fade-in duration-300">
                     <div className="bg-white/[0.03] rounded-xl p-4 border border-white/5">
-                        <h4 className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-[0.2em]">
+                        <h4 className="text-xs font-bold text-gray-500 mb-4 uppercase tracking-[0.2em]">
                             Lista de Exercícios
                         </h4>
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                             {treino.exercicios.map((ex, i) => (
                                 <div
                                     key={ex.id}
-                                    className="flex items-center gap-3 py-1 border-b border-white/[0.02] last:border-0 pb-2 last:pb-0"
+                                    className="flex items-center gap-4 group cursor-pointer"
+                                    onClick={() => handleToggleExercicio(ex.id)}
                                 >
-                                    <span className="text-xs text-indigo-500/50 font-mono w-5">
-                                        {(i + 1).toString().padStart(2, '0')}
-                                    </span>
+                                    {/* Custom Checkbox */}
+                                    <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${exerciciosFeitos[ex.id]
+                                            ? 'bg-indigo-500 border-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]'
+                                            : 'border-white/10 bg-white/5 group-hover:border-white/20'
+                                        }`}>
+                                        {exerciciosFeitos[ex.id] && <Check size={14} className="text-white" strokeWidth={3} />}
+                                    </div>
+
                                     <div className="flex-1">
-                                        <p className="text-sm text-gray-200 font-medium">
+                                        <p className={`text-sm font-medium transition-colors ${exerciciosFeitos[ex.id] ? 'text-gray-500 line-through' : 'text-gray-200'
+                                            }`}>
                                             {ex.nome}
                                         </p>
-                                        {ex.foco && (
-                                            <p className="text-[10px] text-gray-500 uppercase tracking-wider">
+                                        {ex.foco && !exerciciosFeitos[ex.id] && (
+                                            <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">
                                                 {ex.foco}
                                             </p>
                                         )}
                                     </div>
-                                    <div className="bg-white/5 px-2 py-1 rounded-md">
-                                        <span className="text-[11px] text-gray-400 font-mono">
+
+                                    <div className={`px-2 py-1 rounded-md transition-colors ${exerciciosFeitos[ex.id] ? 'bg-white/[0.02]' : 'bg-white/5'
+                                        }`}>
+                                        <span className={`text-[11px] font-mono transition-colors ${exerciciosFeitos[ex.id] ? 'text-gray-700' : 'text-gray-400'
+                                            }`}>
                                             {ex.series}×{ex.repeticoes}
                                         </span>
                                     </div>

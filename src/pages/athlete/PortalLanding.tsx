@@ -328,11 +328,6 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
                     </p>
                 </div>
 
-                <div className="mt-12 text-center">
-                    <span className="text-zinc-700 font-black text-[10px] tracking-widest uppercase">
-                        ✨ POWERED BY VITRU IA
-                    </span>
-                </div>
             </div>
         );
     }

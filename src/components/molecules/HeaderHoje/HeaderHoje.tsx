@@ -31,7 +31,7 @@ export function HeaderHoje({ nomeAtleta, dataFormatada, streak, personalNome }: 
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-500/8 via-transparent to-transparent" />
 
             <div className="relative px-6 pt-8 pb-2">
-                <div className="flex justify-between items-start">
+                <div className="flex justify-between items-center">
                     <div className="flex-1">
                         <span className="text-[9px] font-bold tracking-[0.2em] text-indigo-400 uppercase">
                             {dataFormatada}
@@ -48,7 +48,6 @@ export function HeaderHoje({ nomeAtleta, dataFormatada, streak, personalNome }: 
                         </div>
                     </div>
 
-                    {/* Right side: Streak + Vitru */}
                     <div className="flex flex-col items-end gap-3 flex-shrink-0">
                         {/* Streak Badge */}
                         <div className="flex items-center gap-1.5 px-2.5 py-1 bg-orange-500/10 rounded-full border border-orange-500/20 shadow-[0_0_15px_rgba(249,115,22,0.15)]">
@@ -56,17 +55,6 @@ export function HeaderHoje({ nomeAtleta, dataFormatada, streak, personalNome }: 
                             <span className="text-[10px] font-black tracking-widest text-orange-400">
                                 {streak} DIAS
                             </span>
-                        </div>
-
-                        {/* Vitru AI Logo */}
-                        <div className="flex items-center gap-1.5 opacity-80">
-                            <div className="w-6 h-6 bg-indigo-500/20 rounded-md flex items-center justify-center">
-                                <span className="text-indigo-300 font-black text-[10px]">V</span>
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="text-white font-black text-[6px] tracking-widest leading-none">VITRU</span>
-                                <span className="text-indigo-400 font-black text-[5px] tracking-widest italic leading-none mt-[1px]">IA</span>
-                            </div>
                         </div>
                     </div>
                 </div>
