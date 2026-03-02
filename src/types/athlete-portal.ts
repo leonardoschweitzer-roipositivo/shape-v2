@@ -11,7 +11,7 @@ import { ResumoDiario, TreinoDiario, Refeicao, TrackerType } from './daily-track
 // NAVEGAÇÃO E LAYOUT
 // ==========================================
 
-export type AthletePortalTab = 'hoje' | 'coach' | 'progresso' | 'perfil'
+export type AthletePortalTab = 'home' | 'hoje' | 'coach' | 'avalicao'
 
 export interface BottomNavItem {
     id: AthletePortalTab

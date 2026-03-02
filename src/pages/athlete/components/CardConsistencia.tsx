@@ -143,21 +143,31 @@ export function CardConsistencia({ dados }: CardConsistenciaProps) {
                 )}
 
                 {/* Heatmap */}
-                <div className="mb-1">
+                <div className="mb-2 w-full">
                     {/* Labels dos meses */}
-                    <div style={{ position: 'relative', height: 16 }}>
-                        {gradeData.mesesLabels.map((ml, i) => (
-                            <span
-                                key={i}
-                                className="text-[9px] text-gray-500 font-bold uppercase"
-                                style={{
-                                    position: 'absolute',
-                                    left: ml.coluna * totalCellSize,
-                                }}
-                            >
-                                {MESES[ml.mes]}
-                            </span>
-                        ))}
+                    <div className="relative h-4 w-full">
+                        {gradeData.mesesLabels.map((ml, i) => {
+                            // Calcula % da posição baseada na coluna atual vs total de colunas.
+                            // Subtraímos uma pequena margem para no último mês não colar totalmente na borda e sumir texto
+                            const leftPercentage = (ml.coluna / numWeeksToShow) * 100;
+                            const isUltimo = i === gradeData.mesesLabels.length - 1;
+
+                            return (
+                                <span
+                                    key={i}
+                                    className="text-[9px] text-gray-500 font-bold uppercase inline-block"
+                                    style={{
+                                        position: 'absolute',
+                                        // Se for o último, alinha à direita da porcentagem calculada para evitar clipping
+                                        left: isUltimo ? undefined : `${leftPercentage}%`,
+                                        right: isUltimo ? '0%' : undefined,
+                                        transform: isUltimo ? 'none' : 'translateX(-50%)' // Centraliza o texto no ponto exato
+                                    }}
+                                >
+                                    {MESES[ml.mes]}
+                                </span>
+                            );
+                        })}
                     </div>
 
                     {/* Grade SVG - Responsivo (sem altura fixa para evitar gap no mobile) */}
