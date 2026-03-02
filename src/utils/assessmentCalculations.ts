@@ -39,8 +39,8 @@ export const CLASSIFICACOES: Record<ClassificacaoId, ClassificacaoProporcao> = {
     },
     QUASE_LA: {
         id: 'QUASE_LA',
-        label: 'Quase Lá',
-        labelCurto: 'QUASE LÁ',
+        label: 'Muito Bom',
+        labelCurto: 'MUITO BOM',
         cor: '#3B82F6',
         corTexto: '#93C5FD',
         emoji: '💪',
@@ -145,7 +145,7 @@ export function getClassificacao(percentualDoIdeal: number): ClassificacaoPropor
 export function getLabelContextual(percentualDoIdeal: number): string {
     if (percentualDoIdeal < 82) return 'INÍCIO DA JORNADA'
     if (percentualDoIdeal < 90) return `NO CAMINHO (${Math.round(percentualDoIdeal)}%)`
-    if (percentualDoIdeal < 97) return `QUASE LÁ (${Math.round(percentualDoIdeal)}%)`
+    if (percentualDoIdeal < 97) return `MUITO BOM (${Math.round(percentualDoIdeal)}%)`
     if (percentualDoIdeal >= 97 && percentualDoIdeal <= 103) return 'META ATINGIDA! 🎯'
     return `ELITE (${Math.round(percentualDoIdeal)}%)`
 }

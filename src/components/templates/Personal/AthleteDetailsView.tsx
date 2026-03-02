@@ -218,8 +218,24 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
             if (source === 'medidas') {
                 // Assessment virtual gerado a partir de medidas brutas.
                 // NÃO excluímos a medida pois ela é dado base do atleta.
-                // Apenas notificamos o usuário.
                 alert('Esta avaliação foi gerada automaticamente a partir das medidas do atleta e não pode ser excluída individualmente. Para removê-la, exclua as medidas correspondentes na ficha do atleta.');
+                return;
+            }
+
+            // Validar se o ID é um UUID real do Supabase.
+            // IDs locais gerados pelo store têm formato "assessment-{timestamp}" e não são UUIDs válidos.
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            if (!uuidRegex.test(assessmentId)) {
+                console.warn('[AthleteDetails] ⚠️ ID não é UUID válido (possível ID local):', assessmentId);
+
+                // Tentar recarregar do Supabase para sincronizar IDs reais
+                const { loadFromSupabase } = useDataStore.getState();
+                const personalId = athlete.personalId;
+                if (personalId) {
+                    await loadFromSupabase(personalId);
+                }
+
+                alert('Os dados foram sincronizados. Por favor, tente excluir novamente.');
                 return;
             }
 
@@ -238,9 +254,11 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                 return;
             }
 
-            console.info('[AthleteDetails] ✅ Avaliação excluída:', assessmentId);
+            console.info('[AthleteDetails] ✅ Avaliação excluída com sucesso:', assessmentId);
 
-            // Recarregar dados do store
+            // Recarregar dados do store para refletir a exclusão
+            // NOTA: Excluímos APENAS da tabela 'assessments'.
+            // A tabela 'medidas' NÃO é afetada — as medidas do atleta permanecem intactas.
             const { loadFromSupabase } = useDataStore.getState();
             const personalId = athlete.personalId;
             if (personalId) {

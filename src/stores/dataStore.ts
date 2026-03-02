@@ -282,15 +282,35 @@ export const useDataStore = create<DataState>()(
                                 ratio: Math.round(physicalRatio * 100) / 100,
                             };
 
-                            const { error: assessmentError } = await supabase
+                            const { data: insertedData, error: assessmentError } = await supabase
                                 .from('assessments')
-                                .insert(assessmentInsert as any);
+                                .insert(assessmentInsert as any)
+                                .select('id')
+                                .single();
 
                             if (assessmentError) {
                                 console.error('[DataStore] ❌ Erro ao inserir na tabela assessments:', assessmentError.message, assessmentError.details, assessmentError.hint);
                                 console.error('[DataStore] ❌ Payload (primeiros 500 chars):', JSON.stringify(assessmentInsert).substring(0, 500));
                             } else {
-                                console.info('[DataStore] ✅ Avaliação completa persistida na tabela assessments');
+                                console.info('[DataStore] ✅ Avaliação completa persistida na tabela assessments, ID:', insertedData?.id);
+
+                                // Atualizar o ID local (assessment-{timestamp}) para o UUID real do Supabase
+                                if (insertedData?.id) {
+                                    const realId = insertedData.id;
+                                    set((state) => ({
+                                        personalAthletes: state.personalAthletes.map(a => {
+                                            if (a.id !== athleteId) return a;
+                                            return {
+                                                ...a,
+                                                assessments: a.assessments.map(ass =>
+                                                    ass.id === newAssessment.id
+                                                        ? { ...ass, id: realId, _source: 'assessments' as const }
+                                                        : ass
+                                                ),
+                                            };
+                                        }),
+                                    }));
+                                }
                             }
 
                             // Backward compat: também gravar na tabela medidas (para manter histórico detalhado)

@@ -507,7 +507,7 @@ export function analisarProporcoes(
             pct,
             status: pct >= 100 ? 'ELITE' :
                 pct >= 90 ? 'META' :
-                    pct >= 75 ? 'QUASE LÁ' :
+                    pct >= 75 ? 'MUITO BOM' :
                         pct >= 50 ? 'CAMINHO' : 'INÍCIO',
         });
     }

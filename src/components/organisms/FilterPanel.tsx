@@ -58,7 +58,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
                     <option value="todas">Todas</option>
                     <option value="ELITE">ELITE 👑</option>
                     <option value="META">META 🎯</option>
-                    <option value="QUASE_LA">QUASE LÁ 💪</option>
+                    <option value="QUASE_LA">MUITO BOM 💪</option>
                     <option value="CAMINHO">CAMINHO 🛤️</option>
                     <option value="INICIO">INÍCIO 🚀</option>
                 </select>

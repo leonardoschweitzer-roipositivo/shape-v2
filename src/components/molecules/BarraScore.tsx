@@ -10,7 +10,7 @@ const getClassificacaoConfig = (classificacao: string) => {
     const configs: Record<string, { label: string; emoji: string; color: string }> = {
         'ELITE': { label: 'ELITE', emoji: '👑', color: '#9333EA' },
         'META': { label: 'META', emoji: '🎯', color: '#10B981' },
-        'QUASE_LA': { label: 'QUASE LÁ', emoji: '💪', color: '#3B82F6' },
+        'QUASE_LA': { label: 'MUITO BOM', emoji: '💪', color: '#3B82F6' },
         'CAMINHO': { label: 'CAMINHO', emoji: '🛤️', color: '#F59E0B' },
         'INICIO': { label: 'INÍCIO', emoji: '🚀', color: '#EF4444' }
     };
@@ -43,7 +43,7 @@ export const BarraScore: React.FC<BarraScoreProps> = ({
                 <div className="flex justify-between text-[8px] font-bold text-gray-500 uppercase tracking-widest">
                     <span>Início</span>
                     <span>Caminho</span>
-                    <span>Quase Lá</span>
+                    <span>Muito Bom</span>
                     <span>Meta</span>
                     <span>Elite</span>
                 </div>

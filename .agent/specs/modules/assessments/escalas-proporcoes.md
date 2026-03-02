@@ -112,15 +112,15 @@ const CLASSIFICACOES_PROPORCAO = {
     emoji: '🛤️',
   },
   
-  QUASE_LA: {
+  MUITO_BOM: {
     id: 'QUASE_LA',
     minPercent: 90,
     maxPercent: 97,
-    label: 'Quase Lá',
-    labelCurto: 'QUASE LÁ',
+    label: 'Muito Bom',
+    labelCurto: 'MUITO BOM',
     cor: '#3B82F6',           // Azul médio
     corTexto: '#93C5FD',      // Azul muito claro
-    descricao: 'Quase lá - falta pouco para a meta',
+    descricao: 'Muito bom - aproximando-se da meta',
     emoji: '💪',
   },
   
@@ -157,7 +157,7 @@ const CLASSIFICACOES_PROPORCAO = {
 │                                                                             │
 │  % DO IDEAL    75%      82%       90%       97%   100%  103%          110%  │
 │                │        │         │         │      │     │             │    │
-│  FAIXA         │ INÍCIO │ CAMINHO │QUASE LÁ │ META │  ★  │   ELITE     │    │
+│  FAIXA         │ INÍCIO │ CAMINHO │MUITO BOM│ META │  ★  │   ELITE     │    │
 │                │        │         │         │      │     │             │    │
 │  EMOJI         │  🚀    │   🛤️    │   💪    │  🎯  │     │    👑       │    │
 │                │        │         │         │      │     │             │    │
@@ -178,8 +178,8 @@ Dependendo do % do ideal, mostramos labels diferentes:
 function getLabelContextual(percentualDoIdeal: number): string {
   if (percentualDoIdeal < 82) return 'INÍCIO DA JORNADA'
   if (percentualDoIdeal < 90) return `NO CAMINHO (${Math.round(percentualDoIdeal)}%)`
-  if (percentualDoIdeal < 97) return `QUASE LÁ (${Math.round(percentualDoIdeal)}%)`
-  if (percentualDoIdeal < 100) return `QUASE LÁ (${Math.round(percentualDoIdeal)}%)`
+  if (percentualDoIdeal < 97) return `MUITO BOM (${Math.round(percentualDoIdeal)}%)`
+  if (percentualDoIdeal < 100) return `MUITO BOM (${Math.round(percentualDoIdeal)}%)`
   if (percentualDoIdeal >= 100 && percentualDoIdeal <= 103) return 'META ATINGIDA! 🎯'
   return `ELITE (${Math.round(percentualDoIdeal)}%)`
 }
@@ -203,7 +203,7 @@ function getLabelProporcaoInversa(percentualDoIdeal: number): string {
   // percentualDoIdeal aqui já foi invertido
   
   if (percentualDoIdeal >= 100) return 'DENTRO DA META 🎯'
-  if (percentualDoIdeal >= 97) return `QUASE LÁ (${Math.round(percentualDoIdeal)}%)`
+  if (percentualDoIdeal >= 97) return `MUITO BOM (${Math.round(percentualDoIdeal)}%)`
   if (percentualDoIdeal >= 90) return `NO CAMINHO (${Math.round(percentualDoIdeal)}%)`
   if (percentualDoIdeal >= 82) return 'PRECISA REDUZIR'
   return 'FORA DA META'
@@ -216,7 +216,7 @@ function getLabelProporcaoInversa(percentualDoIdeal: number): string {
 |:----------:|-------------|-----------|-------------------|
 | < 82% | BLOCO | **INÍCIO** | Não julga, indica começo |
 | 82-90% | NORMAL | **CAMINHO** | Mostra que está progredindo |
-| 90-97% | ATLÉTICO | **QUASE LÁ** | Honesto: ainda falta algo |
+| 90-97% | ATLÉTICO | **MUITO BOM** | Honesto: nível elevado |
 | 97-103% | ESTÉTICO | **META** | Claro: é o objetivo |
 | > 103% | FREAK | **ELITE** | Positivo: destaque real |
 
@@ -237,7 +237,7 @@ const ESCALA_VISUAL = {
   FAIXAS: {
     INICIO: { inicio: 75, fim: 82 },
     CAMINHO: { inicio: 82, fim: 90 },
-    QUASE_LA: { inicio: 90, fim: 97 },
+    MUITO_BOM: { inicio: 90, fim: 97 },
     META: { inicio: 97, fim: 103 },
     ELITE: { inicio: 103, fim: 110 },
   },
@@ -309,7 +309,7 @@ function getFaixasVisuais(): Record<string, { inicio: number, fim: number, largu
 // RESULTADO:
 // INICIO:   0.0% - 20.0%   (75-82% do ideal)  largura: 20%
 // CAMINHO:  20.0% - 42.9%  (82-90% do ideal)  largura: 22.9%
-// QUASE_LA: 42.9% - 62.9%  (90-97% do ideal)  largura: 20%
+// MUITO_BOM: 42.9% - 62.9%  (90-97% do ideal)  largura: 20%
 // META:     62.9% - 80.0%  (97-103% do ideal) largura: 17.1%
 // ELITE:    80.0% - 100%   (103-110% do ideal) largura: 20%
 // GOLDEN:   71.43%         (100% do ideal)
@@ -324,7 +324,7 @@ function getFaixasVisuais(): Record<string, { inicio: number, fim: number, largu
 function getClassificacao(percentualDoIdeal: number): ClassificacaoProporcao {
   if (percentualDoIdeal < 82) return CLASSIFICACOES_PROPORCAO.INICIO
   if (percentualDoIdeal < 90) return CLASSIFICACOES_PROPORCAO.CAMINHO
-  if (percentualDoIdeal < 97) return CLASSIFICACOES_PROPORCAO.QUASE_LA
+  if (percentualDoIdeal < 97) return CLASSIFICACOES_PROPORCAO.MUITO_BOM
   if (percentualDoIdeal < 103) return CLASSIFICACOES_PROPORCAO.META
   return CLASSIFICACOES_PROPORCAO.ELITE
 }
@@ -340,9 +340,9 @@ function getClassificacao(percentualDoIdeal: number): ClassificacaoProporcao {
 | 82% | **20.0%** | **CAMINHO** | 🛤️ |
 | 85% | 28.6% | CAMINHO | 🛤️ |
 | 88% | 37.1% | CAMINHO | 🛤️ |
-| 90% | **42.9%** | **QUASE LÁ** | 💪 |
-| 93% | 51.4% | QUASE LÁ | 💪 |
-| 95% | 57.1% | QUASE LÁ | 💪 |
+| 90% | **42.9%** | **MUITO BOM** | 💪 |
+| 93% | 51.4% | MUITO BOM | 💪 |
+| 95% | 57.1% | MUITO BOM | 💪 |
 | 97% | **62.9%** | **META** | 🎯 |
 | 98% | 65.7% | META | 🎯 |
 | 99% | 68.6% | META | 🎯 |
@@ -781,7 +781,7 @@ const proporcoesMasculinas = [
     indiceMeta: 1.62,
     ehInversa: false,
     formulaBase: 'Ombros ÷ Cintura',
-    // → percentual: 97.5%, classificação: ESTÉTICO, label: "QUASE LÁ (98%)"
+    // → percentual: 97.5%, classificação: ESTÉTICO, label: "MUITO BOM (98%)"
   },
   {
     nome: 'Peitoral',

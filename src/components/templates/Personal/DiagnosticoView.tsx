@@ -349,7 +349,7 @@ const SecaoEstetica: React.FC<{ dados: DiagnosticoDados; insightIA?: string; isL
                         const stages = [
                             { key: 'INICIANTE', label: 'Iniciante', emoji: '🌱' },
                             { key: 'INTERMEDIÁRIO', label: 'Intermediário', emoji: '📈' },
-                            { key: 'ATLÉTICO', label: 'Atlético', emoji: '⚡' },
+                            { key: 'MUITO_BOM', label: 'Muito Bom', emoji: '💪' },
                             { key: 'AVANÇADO', label: 'Avançado', emoji: '💪' },
                             { key: 'ELITE', label: 'Elite', emoji: '🏆' },
                         ];
@@ -770,7 +770,7 @@ const SecaoMetas: React.FC<{
 // ═══════════════════════════════════════════════════════════
 
 const generateGeneralAnalysis = (contexto: ContextoAtleta | null | undefined, score: number): string => {
-    const scoreText = score >= 85 ? "nível de elite" : score >= 70 ? "perfil atlético sólido" : score >= 60 ? "estágio intermediário" : "fase inicial de desenvolvimento";
+    const scoreText = score >= 85 ? "nível de elite" : score >= 70 ? "perfil muito bom" : score >= 60 ? "estágio intermediário" : "fase inicial de desenvolvimento";
 
     if (!contexto) {
         return `O atleta encontra-se em um ${scoreText} (Score: ${score}). No entanto, a ausência de dados de contexto impossibilita uma análise de riscos e lifestyle. Recomenda-se preencher a ficha para personalizar as próximas etapas de treino e dieta.`;
