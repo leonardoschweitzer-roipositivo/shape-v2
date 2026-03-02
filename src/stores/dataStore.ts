@@ -10,6 +10,7 @@ import { useAthleteStore } from '@/stores/athleteStore';
 import { calculateAge } from '@/utils/dateUtils';
 import type { Atleta, Ficha, Medida } from '@/lib/database.types';
 import { extractProportionRatios } from '@/components/templates/AssessmentResults/config/proportionItems';
+import { extractFemaleProportionRatios } from '@/components/templates/AssessmentResults/config/femaleProportionItems';
 import type { Measurements } from '@/components/templates/AssessmentResults/types';
 
 type DataSource = 'MOCK' | 'SUPABASE';
@@ -175,7 +176,9 @@ export const useDataStore = create<DataState>()(
                     pelvis: measurements.hips,
                     cabeca: 56
                 };
-                const proporcoesAureas = extractProportionRatios(userMeasForRatios, 'golden');
+                const proporcoesAureas = gender === 'FEMALE'
+                    ? extractFemaleProportionRatios(userMeasForRatios, 'female_golden')
+                    : extractProportionRatios(userMeasForRatios, 'golden');
 
                 const newAssessment: MeasurementHistory = {
                     id: `assessment-${Date.now()}`,

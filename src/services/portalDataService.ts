@@ -180,9 +180,9 @@ export function derivarTreinoDoDia(plano: PlanoTreino | null): WorkoutOfDay {
     const letra = (treinoHoje as any).letra || String.fromCharCode(65 + (diaSemana - 1));
 
     // Flatten exercícios de todos os blocos
-    const todosExercicios = treinoHoje.blocos.flatMap(bloco =>
+    const todosExercicios = treinoHoje.blocos.flatMap((bloco, bIdx) =>
         bloco.exercicios.map((ex: any, i: number) => ({
-            id: `ex-${i}`,
+            id: `ex-${bIdx}-${i}`,
             nome: ex.nome || ex.exercicio || '',
             series: ex.series || 0,
             repeticoes: ex.repeticoes || ex.reps || '',
@@ -250,9 +250,9 @@ export function derivarProximoTreino(plano: PlanoTreino | null): ProximoTreino |
         const grupoNomes = treino.blocos.map(b => b.nomeGrupo).join(' + ');
         const letra = (treino as any).letra || String.fromCharCode(65 + treinoIndex);
 
-        const exercicios = treino.blocos.flatMap(bloco =>
+        const exercicios = treino.blocos.flatMap((bloco, bIdx) =>
             bloco.exercicios.map((ex: any, i: number) => ({
-                id: `next-ex-${i}`,
+                id: `next-ex-${bIdx}-${i}`,
                 nome: ex.nome || ex.exercicio || '',
                 series: ex.series || 0,
                 repeticoes: ex.repeticoes || ex.reps || '',
@@ -412,9 +412,9 @@ export async function montarDadosHoje(ctx: PortalContext): Promise<TodayScreenDa
     const isTreinoDay = treino.status !== 'descanso';
     const dieta = derivarDietaDoDia(ctx.planoDieta, isTreinoDay);
 
-    // Buscar trackers e refeições em PARALELO
+    // Buscar trackers, refeições e status do treino em PARALELO
     const hoje = new Date().toISOString().split('T')[0];
-    const [trackers, { data: refeicoes }] = await Promise.all([
+    const [trackers, { data: refeicoes }, { data: treinoReg }] = await Promise.all([
         buscarRegistrosDoDia(ctx.atletaId),
         supabase
             .from('registros_diarios')
@@ -422,7 +422,24 @@ export async function montarDadosHoje(ctx: PortalContext): Promise<TodayScreenDa
             .eq('atleta_id', ctx.atletaId)
             .eq('data', hoje)
             .eq('tipo', 'refeicao'),
+        supabase
+            .from('registros_diarios')
+            .select('dados')
+            .eq('atleta_id', ctx.atletaId)
+            .eq('data', hoje)
+            .eq('tipo', 'treino')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle(),
     ]);
+
+    // Aplicar status do treino se existir registro hoje
+    if (treinoReg && (treinoReg as any).dados) {
+        const d = (treinoReg as any).dados;
+        treino.status = d.status || 'pendente';
+        if (d.duracao) treino.duracao = d.duracao;
+        if (d.intensidade) treino.intensidade = d.intensidade;
+    }
 
     const dicaCoach = gerarDicaCoach(dieta, treino, trackers);
 

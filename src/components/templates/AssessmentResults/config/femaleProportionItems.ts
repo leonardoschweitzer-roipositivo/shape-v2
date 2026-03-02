@@ -2,7 +2,8 @@ import type {
     Measurements,
     IdealMeasurements,
     ProportionItem,
-    ComparisonMode
+    ComparisonMode,
+    ProportionRatioSnapshot
 } from '../types';
 import {
     METAS_FEMININAS
@@ -88,6 +89,91 @@ const makeAnalysis = (currentRatio: number, targetRatio: number, baseline: numbe
 
 /** Format cm value */
 const cm = (v: number) => v.toFixed(1);
+
+/**
+ * Extracts pure ratio data for female athletes — database persistence and downstream consumers.
+ * Feminine counterpart to `extractProportionRatios` in proportionItems.ts.
+ */
+export const extractFemaleProportionRatios = (
+    userMeasurements: Measurements,
+    comparisonMode: ComparisonMode
+): ProportionRatioSnapshot[] => {
+    const cat = comparisonMode === 'female_golden' ? 'golden_ratio' :
+        comparisonMode as keyof typeof METAS_FEMININAS.whr;
+
+    const getRatioPercent = (current: number, target: number, inverse = false) => {
+        if (!target || target <= 0) return 0;
+        if (inverse) {
+            if (current <= target) {
+                const bonus = (target - current) / target;
+                return Math.min(110, 100 + (bonus * 50));
+            }
+            const excessoPercent = ((current - target) / target) * 100;
+            return Math.max(0, 100 - (excessoPercent * 1.5));
+        }
+        return Math.min(115, (current / target) * 100);
+    };
+
+    const results: ProportionRatioSnapshot[] = [];
+
+    // 1. WHR (Waist-to-Hip Ratio) — INVERSO: menor = melhor
+    const whrAtual = userMeasurements.cintura / userMeasurements.quadril;
+    const whrTarget = METAS_FEMININAS.whr[cat];
+    const whrPct = Math.round(getRatioPercent(whrAtual, whrTarget, true));
+    results.push({ nome: 'WHR', atual: whrAtual, ideal: whrTarget, pct: whrPct, status: getStatus(whrPct) });
+
+    // 2. Ampulheta (Harmonia Index)
+    const busto = userMeasurements.busto || userMeasurements.peito;
+    const bustoCinturaRatio = busto / userMeasurements.cintura;
+    const quadrilCinturaRatio = userMeasurements.quadril / userMeasurements.cintura;
+    const bustoQuadrilRatio = busto / userMeasurements.quadril;
+    const idealBC = METAS_FEMININAS.bustoCintura[cat];
+    const idealQC = METAS_FEMININAS.quadrilCintura[cat];
+    const idealBQ = METAS_FEMININAS.bustoQuadril[cat];
+    const desvioBC = Math.abs(bustoCinturaRatio - idealBC) / idealBC;
+    const desvioQC = Math.abs(quadrilCinturaRatio - idealQC) / idealQC;
+    const desvioBQ = Math.abs(bustoQuadrilRatio - idealBQ) / idealBQ;
+    const hgScore = Math.max(0, Math.min(100, (1 - ((desvioBC * 0.3) + (desvioQC * 0.4) + (desvioBQ * 0.3))) * 100));
+    results.push({ nome: 'Ampulheta', atual: hgScore, ideal: 100, pct: Math.round(hgScore), status: getStatus(Math.round(hgScore)) });
+
+    // 3. SHR (Shoulder-Hip Ratio)
+    const shrAtual = userMeasurements.ombros / userMeasurements.quadril;
+    const shrTarget = METAS_FEMININAS.ombrosQuadril[cat];
+    const shrPct = Math.round(getRatioPercent(shrAtual, shrTarget));
+    results.push({ nome: 'SHR', atual: shrAtual, ideal: shrTarget, pct: shrPct, status: getStatus(shrPct) });
+
+    // 4. Braço (Antebraço ÷ Braço)
+    const brRatioAtual = userMeasurements.antebraco / userMeasurements.braco;
+    const brRatioTarget = METAS_FEMININAS.antebracoBraco[cat];
+    const brPct = Math.round(getRatioPercent(brRatioAtual, brRatioTarget));
+    results.push({ nome: 'Braço', atual: brRatioAtual, ideal: brRatioTarget, pct: brPct, status: getStatus(brPct) });
+
+    // 5. Hip-Thigh (Coxa ÷ Quadril)
+    const htrAtual = userMeasurements.coxa / userMeasurements.quadril;
+    const htrTarget = METAS_FEMININAS.coxaQuadril[cat];
+    const htrPct = Math.round(getRatioPercent(htrAtual, htrTarget));
+    results.push({ nome: 'Hip-Thigh', atual: htrAtual, ideal: htrTarget, pct: htrPct, status: getStatus(htrPct) });
+
+    // 6. Coxa (Coxa ÷ Joelho)
+    const cjAtual = userMeasurements.coxa / userMeasurements.joelho;
+    const cjTarget = METAS_FEMININAS.coxaJoelho[cat];
+    const cjPct = Math.round(getRatioPercent(cjAtual, cjTarget));
+    results.push({ nome: 'Coxa', atual: cjAtual, ideal: cjTarget, pct: cjPct, status: getStatus(cjPct) });
+
+    // 7. Coxa vs Panturrilha
+    const cpAtual = userMeasurements.coxa / userMeasurements.panturrilha;
+    const cpTarget = METAS_FEMININAS.coxaPanturrilha[cat];
+    const cpPct = Math.round(getRatioPercent(cpAtual, cpTarget));
+    results.push({ nome: 'Coxa vs Pantur.', atual: cpAtual, ideal: cpTarget, pct: cpPct, status: getStatus(cpPct) });
+
+    // 8. Panturrilha (Panturrilha ÷ Tornozelo)
+    const ptAtual = userMeasurements.panturrilha / userMeasurements.tornozelo;
+    const ptTarget = METAS_FEMININAS.panturrilhaTornozelo[cat];
+    const ptPct = Math.round(getRatioPercent(ptAtual, ptTarget));
+    results.push({ nome: 'Panturrilha', atual: ptAtual, ideal: ptTarget, pct: ptPct, status: getStatus(ptPct) });
+
+    return results;
+};
 
 /**
  * Generates proportion items configuration for female athletes based on SPEC v1.0

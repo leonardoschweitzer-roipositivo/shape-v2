@@ -124,6 +124,18 @@ export const ProportionsTab: React.FC<ProportionsTabProps> = ({
         effectiveGender === 'female' ? 'female_golden' : 'golden'
     );
 
+    // Sync comparisonMode when effectiveGender changes (e.g., prop arrives after mount)
+    useEffect(() => {
+        const isFemaleMode = ['female_golden', 'bikini', 'wellness', 'figure', 'womens_physique', 'womens_bodybuilding'].includes(comparisonMode);
+        const isMaleMode = ['golden', 'classic', 'mens', 'open'].includes(comparisonMode);
+
+        if (effectiveGender === 'female' && isMaleMode) {
+            setComparisonMode('female_golden');
+        } else if (effectiveGender === 'male' && isFemaleMode) {
+            setComparisonMode('golden');
+        }
+    }, [effectiveGender]);
+
     // AI state
     const [proporcoesIA, setProporcoesIA] = useState<ProporcoesIA | null>(null);
     const [iaLoading, setIaLoading] = useState(false);
