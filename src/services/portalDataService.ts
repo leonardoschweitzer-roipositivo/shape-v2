@@ -47,10 +47,11 @@ export interface PortalContext {
 
 /**
  * Carrega contexto completo do atleta — chamado uma vez ao entrar no portal
+ * OTIMIZADO: todas as queries rodam em paralelo via Promise.all
  */
 export async function carregarContextoPortal(atletaId: string): Promise<PortalContext | null> {
     try {
-        // 1. Dados do atleta
+        // 1. Buscar atleta primeiro (precisa do personal_id)
         const { data: atleta } = await supabase
             .from('atletas')
             .select('*')
@@ -58,59 +59,53 @@ export async function carregarContextoPortal(atletaId: string): Promise<PortalCo
             .single();
         if (!atleta) return null;
 
-        // 2. Personal
-        const { data: personal } = await supabase
-            .from('personais')
-            .select('id, nome')
-            .eq('id', (atleta as any).personal_id)
-            .single();
-
-        // 3. Ficha
-        const { data: ficha } = await supabase
-            .from('fichas')
-            .select('*')
-            .eq('atleta_id', atletaId)
-            .single();
-
-        // 4. Último diagnóstico confirmado
-        const { data: diag } = await supabase
-            .from('diagnosticos')
-            .select('dados')
-            .eq('atleta_id', atletaId)
-            .eq('status', 'confirmado')
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single();
-
-        // 5. Último plano de treino ativo
-        const { data: treino } = await supabase
-            .from('planos_treino')
-            .select('dados')
-            .eq('atleta_id', atletaId)
-            .eq('status', 'ativo')
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single();
-
-        // 6. Último plano de dieta ativo
-        const { data: dieta } = await supabase
-            .from('planos_dieta')
-            .select('dados')
-            .eq('atleta_id', atletaId)
-            .eq('status', 'ativo')
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single();
+        // 2-6. Todas as queries restantes em PARALELO
+        const [
+            { data: personal },
+            { data: ficha },
+            { data: diag },
+            { data: treino },
+            { data: dieta },
+        ] = await Promise.all([
+            supabase
+                .from('personais')
+                .select('id, nome')
+                .eq('id', (atleta as any).personal_id)
+                .single(),
+            supabase
+                .from('fichas')
+                .select('*')
+                .eq('atleta_id', atletaId)
+                .single(),
+            supabase
+                .from('diagnosticos')
+                .select('dados')
+                .eq('atleta_id', atletaId)
+                .eq('status', 'confirmado')
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single(),
+            supabase
+                .from('planos_treino')
+                .select('dados')
+                .eq('atleta_id', atletaId)
+                .eq('status', 'ativo')
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single(),
+            supabase
+                .from('planos_dieta')
+                .select('dados')
+                .eq('atleta_id', atletaId)
+                .eq('status', 'ativo')
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single(),
+        ]);
 
         console.log('[PortalDataService] Diagnóstico:', diag ? 'ENCONTRADO' : 'NÃO ENCONTRADO');
         console.log('[PortalDataService] Plano Treino:', treino ? 'ENCONTRADO' : 'NÃO ENCONTRADO');
         console.log('[PortalDataService] Plano Dieta:', dieta ? 'ENCONTRADO' : 'NÃO ENCONTRADO');
-        if (dieta) {
-            const d = (dieta as any).dados;
-            console.log('[PortalDataService] Dieta keys:', Object.keys(d || {}));
-            console.log('[PortalDataService] calDiasTreino:', d?.calDiasTreino);
-            console.log('[PortalDataService] macrosTreino:', d?.macrosTreino);
-        }
 
         return {
             atletaId,
@@ -410,22 +405,26 @@ export function gerarDicaCoach(
 
 /**
  * Monta dados completos da tela HOJE
+ * OTIMIZADO: trackers e refeições carregam em paralelo
  */
 export async function montarDadosHoje(ctx: PortalContext): Promise<TodayScreenData> {
     const treino = derivarTreinoDoDia(ctx.planoTreino);
     const isTreinoDay = treino.status !== 'descanso';
     const dieta = derivarDietaDoDia(ctx.planoDieta, isTreinoDay);
-    const trackers = await buscarRegistrosDoDia(ctx.atletaId);
-    const dicaCoach = gerarDicaCoach(dieta, treino, trackers);
 
-    // Buscar refeições do dia para somar macros consumidos
+    // Buscar trackers e refeições em PARALELO
     const hoje = new Date().toISOString().split('T')[0];
-    const { data: refeicoes } = await supabase
-        .from('registros_diarios')
-        .select('dados')
-        .eq('atleta_id', ctx.atletaId)
-        .eq('data', hoje)
-        .eq('tipo', 'refeicao');
+    const [trackers, { data: refeicoes }] = await Promise.all([
+        buscarRegistrosDoDia(ctx.atletaId),
+        supabase
+            .from('registros_diarios')
+            .select('dados')
+            .eq('atleta_id', ctx.atletaId)
+            .eq('data', hoje)
+            .eq('tipo', 'refeicao'),
+    ]);
+
+    const dicaCoach = gerarDicaCoach(dieta, treino, trackers);
 
     if (refeicoes && refeicoes.length > 0) {
         for (const ref of refeicoes) {

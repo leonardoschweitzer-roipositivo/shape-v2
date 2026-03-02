@@ -57,9 +57,9 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
     const [lastPeso, setLastPeso] = useState<number | undefined>(undefined)
     const [showRefeicaoModal, setShowRefeicaoModal] = useState(false)
 
-    // Load initial data
+    // Phase 1: Load critical data (context + today) — show screen ASAP
     useEffect(() => {
-        async function load() {
+        async function loadCritical() {
             setLoading(true)
             try {
                 const context = await carregarContextoPortal(atletaId)
@@ -70,37 +70,48 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                 }
                 setCtx(context)
 
-                // Load all tabs data in parallel
-                const [today, score, grafico, props, historico, msgs, personalData] = await Promise.all([
-                    montarDadosHoje(context),
+                // Today data is the critical path — load it immediately
+                const today = await montarDadosHoje(context)
+                setTodayData(today)
+                setDadosBasicos(extrairDadosBasicos(context))
+                setProximoTreino(derivarProximoTreino(context.planoTreino))
+            } catch (err) {
+                console.error('[AthletePortal] Erro ao carregar dados críticos:', err)
+            }
+            setLoading(false)
+        }
+        loadCritical()
+    }, [atletaId])
+
+    // Phase 2: Load secondary data in background (after screen is visible)
+    useEffect(() => {
+        if (!ctx) return
+        async function loadSecondary() {
+            try {
+                const [score, grafico, props, historico, msgs, personalData] = await Promise.all([
                     buscarScoreGeral(atletaId),
                     buscarGraficoEvolucao(atletaId),
                     buscarProporcoes(atletaId),
                     buscarHistoricoAvaliacoes(atletaId),
                     buscarMensagensChat(atletaId),
-                    buscarDadosPersonal(context.personalId),
+                    buscarDadosPersonal(ctx.personalId),
                 ])
 
-                setTodayData(today)
                 setScoreGeral(score)
                 setGraficoEvolucao(grafico)
                 setProporcoes(props)
                 setHistoricoAvaliacoes(historico)
                 setChatMessages(msgs)
-                setDadosBasicos(extrairDadosBasicos(context))
                 setPersonal(personalData)
-                setProximoTreino(derivarProximoTreino(context.planoTreino))
-                // Get last weight from grafico data
                 if (grafico.dados.length > 0) {
                     setLastPeso(grafico.dados[grafico.dados.length - 1].valor)
                 }
             } catch (err) {
-                console.error('[AthletePortal] Erro geral:', err)
+                console.error('[AthletePortal] Erro ao carregar dados secundários:', err)
             }
-            setLoading(false)
         }
-        load()
-    }, [atletaId])
+        loadSecondary()
+    }, [ctx, atletaId])
 
     // Handlers para a tela HOJE
     const handleVerTreino = () => {
