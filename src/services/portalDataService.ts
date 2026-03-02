@@ -473,6 +473,7 @@ export async function buscarScoreGeral(atletaId: string): Promise<ScoreGeral> {
         .select('score, results, date')
         .eq('atleta_id', atletaId)
         .order('date', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(2);
 
     if (!assessments || assessments.length === 0) {
@@ -505,6 +506,7 @@ export async function buscarGraficoEvolucao(atletaId: string): Promise<GraficoEv
         .select('data, peso')
         .eq('atleta_id', atletaId)
         .order('data', { ascending: true })
+        .order('created_at', { ascending: true })
         .limit(50);
 
     const dados = (medidas || []).map((m: any) => ({
@@ -528,6 +530,7 @@ export async function buscarProporcoes(atletaId: string): Promise<ProporcaoResum
         .select('results')
         .eq('atleta_id', atletaId)
         .order('date', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(1)
         .single();
 
@@ -566,6 +569,7 @@ export async function buscarHistoricoAvaliacoes(atletaId: string) {
         .select('id, date, score, results')
         .eq('atleta_id', atletaId)
         .order('date', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(10);
 
     return (assessments || []).map((a: any) => ({
@@ -599,6 +603,7 @@ export async function buscarDadosAvaliacao(atletaId: string): Promise<AvaliacaoD
         .select('id, date, score, results, body_fat, measurements')
         .eq('atleta_id', atletaId)
         .order('date', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(1)
         .single();
 

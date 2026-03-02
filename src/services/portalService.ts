@@ -63,6 +63,7 @@ export interface PortalAthleteData {
         score_geral: number | null;
         classificacao_geral: string | null;
         results?: any;
+        measurements?: any;
         gordura?: number;
     }>;
     diagnostico?: {
@@ -166,12 +167,14 @@ export const portalService = {
                 .select('*')
                 .eq('atleta_id', atletaId)
                 .order('data', { ascending: false })
+                .order('created_at', { ascending: false })
                 .limit(5),
             supabase
                 .from('assessments')
                 .select('*')
                 .eq('atleta_id', atletaId)
                 .order('date', { ascending: false })
+                .order('created_at', { ascending: false })
                 .limit(5),
             supabase
                 .from('personais')
@@ -232,7 +235,10 @@ export const portalService = {
                 score_geral: a.score,
                 classificacao_geral: a.results?.classificacao?.nivel || '',
                 results: a.results,
+                measurements: a.measurements,
                 gordura: a.results?.composicao?.gorduraPct || 0,
+                ratio: a.ratio,
+                peso: a.weight,
             })),
             diagnostico: diagnostico ? {
                 id: diagnostico.id,

@@ -191,7 +191,13 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
     const lastAval = athleteData.avaliacoes?.[0];
     const lastMedida = athleteData.medidas?.[0];
     const sexoLabel = athleteData.ficha?.sexo === 'F' ? 'FEMININO' : 'MASCULINO';
-    const peso = lastMedida?.peso ?? undefined;
+
+    // Priorizar peso da avaliação ou diagnóstico sobre a tabela de medidas
+    const peso = lastAval?.measurements?.linear?.weight
+        || (lastAval as any)?.weight
+        || lastMedida?.peso
+        || undefined;
+
     const altura = athleteData.ficha?.altura ?? 0;
 
     // ---- Score & Meta (dados do Diagnóstico / Fallback) ----
@@ -206,15 +212,28 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
 
     const firstMedida = athleteData.medidas?.[athleteData.medidas.length - 1] || lastMedida; // A última do array é a mais antiga/primeira
 
+    // Medidas Atuais: Priorizar Avaliação IA -> Diagnóstico -> Tabela Medidas
+    const ombrosAtual = lastAval?.measurements?.linear?.shoulders
+        || (lastAval as any)?.measurements?.shoulders
+        || diag?._medidas?.ombros
+        || lastMedida?.ombros
+        || 0;
+
+    const cinturaAtual = lastAval?.measurements?.linear?.waist
+        || (lastAval as any)?.measurements?.waist
+        || diag?._medidas?.cintura
+        || lastMedida?.cintura
+        || 1;
+
     // Proporção Shape-V (Ombros/Cintura)
-    const ratioAtual = lastAval?.results?.classificacao?.ratios?.['Shape-V'] || (lastMedida?.ombros && lastMedida.cintura ? lastMedida.ombros / lastMedida.cintura : 0);
+    const ratioAtual = (lastAval as any)?.ratio
+        || lastAval?.results?.classificacao?.ratios?.['Shape-V']
+        || (ombrosAtual > 0 && cinturaAtual > 0 ? ombrosAtual / cinturaAtual : 0);
     const itemShapeV = diag?.metasProporcoes?.find((p: any) => p.grupo === 'Shape-V');
     const ratioMeta = itemShapeV?.meta6M || 1.618;
     const ratioMeta12M = itemShapeV?.meta12M || 1.618;
 
     // Medida Ombros cm (para impressionar mais como solicitado)
-    const ombrosAtual = lastMedida?.ombros || 0;
-    const cinturaAtual = lastMedida?.cintura || 1;
     // Cálculo reverso da meta em CM para 12 meses
     const ombrosMeta12M = Math.round((ratioMeta12M * cinturaAtual) * 10) / 10;
     const ombrosBasal = firstMedida?.ombros || ombrosAtual - (ombrosAtual * 0.1);
@@ -281,14 +300,14 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
             icone: '🤖',
             label: 'COACH IA',
             rota: '/atleta/coach',
-            onClick: onGoToPortal,
+            onClick: () => onGoToPortal('coach'),
         },
         {
             id: 'evolucao',
             icone: '📊',
             label: 'EVOLUÇÃO',
             rota: '/atleta/evolucao',
-            onClick: onGoToPortal,
+            onClick: () => onGoToPortal('avalicao'),
         },
     ];
 
