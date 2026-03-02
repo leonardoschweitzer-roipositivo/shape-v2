@@ -382,6 +382,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
             await atletaService.atualizarFicha(draftAthlete.id, {
                 sexo: draftAthlete.gender === 'FEMALE' ? 'F' : 'M',
                 data_nascimento: draftAthlete.birthDate || null,
+                contexto: draftAthlete.contexto as any,
                 ...(latestAssessment ? {
                     altura: latestAssessment.measurements.height,
                     pelve: latestAssessment.measurements.pelvis,
@@ -665,6 +666,8 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                             athleteId={draftAthlete.id}
                             contexto={draftAthlete.contexto || null}
                             isInsideAccordion
+                            globalIsEditing={isEditing}
+                            onDraftChange={(draft) => setDraftAthlete(prev => ({ ...prev, contexto: draft }))}
                             onContextoUpdated={(updatedContexto: ContextoAtleta) => {
                                 setDraftAthlete(prev => ({ ...prev, contexto: updatedContexto }));
                                 updateAthlete({ ...draftAthlete, contexto: updatedContexto });

@@ -55,7 +55,9 @@ interface AthleteContextSectionProps {
     athleteId: string;
     contexto: ContextoAtleta | null;
     onContextoUpdated?: (contexto: ContextoAtleta) => void;
+    onDraftChange?: (draft: ContextoAtleta) => void;
     isInsideAccordion?: boolean;
+    globalIsEditing?: boolean;
 }
 
 // ===== CONFIG =====
@@ -246,20 +248,30 @@ export const AthleteContextSection: React.FC<AthleteContextSectionProps> = ({
     athleteId,
     contexto,
     onContextoUpdated,
+    onDraftChange,
     isInsideAccordion,
+    globalIsEditing = false,
 }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [draft, setDraft] = useState<ContextoAtleta>(contexto || EMPTY_CONTEXTO);
 
-    // Sync with external changes
+    const isActuallyEditing = isEditing || globalIsEditing;
+
+    // Sync with external changes only if not actively editing
     useEffect(() => {
-        setDraft(contexto || EMPTY_CONTEXTO);
-    }, [contexto]);
+        if (!isActuallyEditing) {
+            setDraft(contexto || EMPTY_CONTEXTO);
+        }
+    }, [contexto, isActuallyEditing]);
 
     const updateField = useCallback((key: keyof ContextoAtleta, value: string) => {
-        setDraft(prev => ({ ...prev, [key]: value }));
-    }, []);
+        setDraft(prev => {
+            const next = { ...prev, [key]: value };
+            if (onDraftChange) onDraftChange(next);
+            return next;
+        });
+    }, [onDraftChange]);
 
     const handleSave = async () => {
         setIsSaving(true);
@@ -297,38 +309,42 @@ export const AthleteContextSection: React.FC<AthleteContextSectionProps> = ({
         <div className={isInsideAccordion ? "" : "pt-6"}>
             {/* Section Header */}
             {isInsideAccordion ? (
-                <div className="flex justify-end gap-2 mb-4">
-                    {isEditing ? (
-                        <>
-                            <button
-                                onClick={handleCancel}
-                                disabled={isSaving}
-                                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 transition-all font-bold text-[10px] uppercase tracking-wider disabled:opacity-50"
-                            >
-                                <X size={14} />
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={handleSave}
-                                disabled={isSaving}
-                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all font-bold text-[10px] uppercase tracking-wider
-                                bg-primary text-[#0A0F1C] border-primary shadow-[0_0_15px_rgba(0,201,167,0.3)]
-                                ${isSaving ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-[0_0_25px_rgba(0,201,167,0.4)]'}`}
-                            >
-                                {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
-                                {isSaving ? 'Salvando...' : 'Salvar'}
-                            </button>
-                        </>
-                    ) : (
-                        <button
-                            onClick={() => setIsEditing(true)}
-                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 text-gray-400 hover:text-white hover:border-white/30 transition-all font-bold text-[10px] uppercase tracking-wider"
-                        >
-                            <Edit3 size={14} />
-                            Editar Contexto
-                        </button>
+                <>
+                    {!globalIsEditing && (
+                        <div className="flex justify-end gap-2 mb-4">
+                            {isEditing ? (
+                                <>
+                                    <button
+                                        onClick={handleCancel}
+                                        disabled={isSaving}
+                                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 transition-all font-bold text-[10px] uppercase tracking-wider disabled:opacity-50"
+                                    >
+                                        <X size={14} />
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        onClick={handleSave}
+                                        disabled={isSaving}
+                                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all font-bold text-[10px] uppercase tracking-wider
+                                        bg-primary text-[#0A0F1C] border-primary shadow-[0_0_15px_rgba(0,201,167,0.3)]
+                                        ${isSaving ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-[0_0_25px_rgba(0,201,167,0.4)]'}`}
+                                    >
+                                        {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                                        {isSaving ? 'Salvando...' : 'Salvar'}
+                                    </button>
+                                </>
+                            ) : (
+                                <button
+                                    onClick={() => setIsEditing(true)}
+                                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 text-gray-400 hover:text-white hover:border-white/30 transition-all font-bold text-[10px] uppercase tracking-wider"
+                                >
+                                    <Edit3 size={14} />
+                                    Editar Contexto
+                                </button>
+                            )}
+                        </div>
                     )}
-                </div>
+                </>
             ) : (
                 <div className="flex items-center justify-between mb-8 group">
                     <div className="flex items-center gap-4">
@@ -351,38 +367,40 @@ export const AthleteContextSection: React.FC<AthleteContextSectionProps> = ({
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex items-center gap-2">
-                        {isEditing ? (
-                            <>
+                    {!globalIsEditing && (
+                        <div className="flex items-center gap-2">
+                            {isEditing ? (
+                                <>
+                                    <button
+                                        onClick={handleCancel}
+                                        disabled={isSaving}
+                                        className="flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 transition-all font-bold text-xs uppercase tracking-wider disabled:opacity-50"
+                                    >
+                                        <X size={16} />
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        onClick={handleSave}
+                                        disabled={isSaving}
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all font-bold text-xs uppercase tracking-wider
+                                        bg-primary text-[#0A0F1C] border-primary shadow-[0_0_15px_rgba(0,201,167,0.3)]
+                                        ${isSaving ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-[0_0_25px_rgba(0,201,167,0.4)]'}`}
+                                    >
+                                        {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+                                        {isSaving ? 'Salvando...' : 'Salvar Contexto'}
+                                    </button>
+                                </>
+                            ) : (
                                 <button
-                                    onClick={handleCancel}
-                                    disabled={isSaving}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 transition-all font-bold text-xs uppercase tracking-wider disabled:opacity-50"
+                                    onClick={() => setIsEditing(true)}
+                                    className="flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 bg-white/5 text-gray-400 hover:text-white hover:border-white/30 transition-all font-bold text-xs uppercase tracking-wider"
                                 >
-                                    <X size={16} />
-                                    Cancelar
+                                    <Edit3 size={16} />
+                                    Editar Contexto
                                 </button>
-                                <button
-                                    onClick={handleSave}
-                                    disabled={isSaving}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all font-bold text-xs uppercase tracking-wider
-                                    bg-primary text-[#0A0F1C] border-primary shadow-[0_0_15px_rgba(0,201,167,0.3)]
-                                    ${isSaving ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-[0_0_25px_rgba(0,201,167,0.4)]'}`}
-                                >
-                                    {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
-                                    {isSaving ? 'Salvando...' : 'Salvar Contexto'}
-                                </button>
-                            </>
-                        ) : (
-                            <button
-                                onClick={() => setIsEditing(true)}
-                                className="flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 bg-white/5 text-gray-400 hover:text-white hover:border-white/30 transition-all font-bold text-xs uppercase tracking-wider"
-                            >
-                                <Edit3 size={16} />
-                                Editar Contexto
-                            </button>
-                        )}
-                    </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -393,7 +411,7 @@ export const AthleteContextSection: React.FC<AthleteContextSectionProps> = ({
                         key={config.key}
                         config={config}
                         value={draft[config.key] || ''}
-                        isEditing={isEditing}
+                        isEditing={isActuallyEditing}
                         onChange={(val: string) => updateField(config.key, val)}
                     />
                 ))}
