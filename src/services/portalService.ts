@@ -108,10 +108,10 @@ export const portalService = {
 
     /**
      * Valida um portal_token e retorna os dados completos do atleta
-     * Inclui ficha, medidas e avaliações
+     * OTIMIZADO: todas as queries rodam em paralelo via Promise.all
      */
     async validateToken(token: string): Promise<PortalAthleteData | null> {
-        // 1. Buscar atleta pelo token
+        // 1. Buscar atleta pelo token (obrigatório primeiro)
         const { data: atleta, error: atletaError } = await supabase
             .from('atletas')
             .select('*')
@@ -130,62 +130,72 @@ export const portalService = {
             return null;
         }
 
-        // 3. Incrementar acessos
-        await supabase
-            .from('atletas')
-            .update({
-                portal_acessos: ((atleta as any).portal_acessos || 0) + 1,
-                portal_ultimo_acesso: new Date().toISOString(),
-            } as any)
-            .eq('id', (atleta as any).id);
+        const atletaId = (atleta as any).id;
+        const personalId = (atleta as any).personal_id;
 
-        // 4. Buscar ficha
-        const { data: ficha } = await supabase
-            .from('fichas')
-            .select('*')
-            .eq('atleta_id', (atleta as any).id)
-            .single();
+        // 3. Incrementar acessos (fire-and-forget — não bloqueia UI)
+        (async () => {
+            try {
+                await supabase
+                    .from('atletas')
+                    .update({
+                        portal_acessos: ((atleta as any).portal_acessos || 0) + 1,
+                        portal_ultimo_acesso: new Date().toISOString(),
+                    } as any)
+                    .eq('id', atletaId);
+            } catch (err) {
+                console.warn('[PortalService] Erro ao incrementar acessos:', err);
+            }
+        })();
 
-        // 5. Buscar medidas (últimas 5)
-        const { data: medidas } = await supabase
-            .from('medidas')
-            .select('*')
-            .eq('atleta_id', (atleta as any).id)
-            .order('data', { ascending: false })
-            .limit(5);
-
-        // 6. Buscar avaliações (tabela consolidada)
-        const { data: assessments } = await supabase
-            .from('assessments')
-            .select('*')
-            .eq('atleta_id', (atleta as any).id)
-            .order('date', { ascending: false })
-            .limit(5);
-
-        const { data: personal } = await supabase
-            .from('personais')
-            .select('nome')
-            .eq('id', (atleta as any).personal_id)
-            .single();
-
-        // 8. Buscar Plano de Evolução (Diagnóstico confirmado mais recente)
-        const { data: diagnostico } = await supabase
-            .from('diagnosticos')
-            .select('*')
-            .eq('atleta_id', (atleta as any).id)
-            .eq('status', 'confirmado')
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single();
+        // 4-8. Todas as queries em PARALELO
+        const [
+            { data: ficha },
+            { data: medidas },
+            { data: assessments },
+            { data: personal },
+            { data: diagnostico },
+        ] = await Promise.all([
+            supabase
+                .from('fichas')
+                .select('*')
+                .eq('atleta_id', atletaId)
+                .single(),
+            supabase
+                .from('medidas')
+                .select('*')
+                .eq('atleta_id', atletaId)
+                .order('data', { ascending: false })
+                .limit(5),
+            supabase
+                .from('assessments')
+                .select('*')
+                .eq('atleta_id', atletaId)
+                .order('date', { ascending: false })
+                .limit(5),
+            supabase
+                .from('personais')
+                .select('nome')
+                .eq('id', personalId)
+                .single(),
+            supabase
+                .from('diagnosticos')
+                .select('*')
+                .eq('atleta_id', atletaId)
+                .eq('status', 'confirmado')
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single(),
+        ]);
 
         console.info(`[PortalService] ✅ Atleta validado: ${(atleta as any).nome}`);
 
         return {
-            id: (atleta as any).id,
+            id: atletaId,
             nome: (atleta as any).nome,
             email: (atleta as any).email,
             telefone: (atleta as any).telefone,
-            personal_id: (atleta as any).personal_id,
+            personal_id: personalId,
             personalNome: (personal as any)?.nome || 'Personal',
             ficha: ficha ? {
                 id: (ficha as any).id,
@@ -221,7 +231,7 @@ export const portalService = {
                 data: a.date,
                 score_geral: a.score,
                 classificacao_geral: a.results?.classificacao?.nivel || '',
-                results: a.results, // Pass all results
+                results: a.results,
                 gordura: a.results?.composicao?.gorduraPct || 0,
             })),
             diagnostico: diagnostico ? {

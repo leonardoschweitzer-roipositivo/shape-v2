@@ -70,6 +70,7 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [athleteData, setAthleteData] = useState<PortalAthleteData | null>(null);
+    const [dadosConsistencia, setDadosConsistencia] = useState<DadosConsistencia | null>(null);
     const [view, setView] = useState<PortalView>('home');
     const [portalTab, setPortalTab] = useState<AthletePortalTab>('hoje');
 
@@ -82,6 +83,8 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
                     setError('Link inválido ou expirado. Peça um novo link ao seu Personal.');
                 } else {
                     setAthleteData(data);
+                    // Consistência carrega em background (não bloqueia a HOME)
+                    buscarDadosConsistencia(data.id).then(setDadosConsistencia).catch(console.error);
                 }
             } catch (err) {
                 setError('Erro ao carregar dados. Tente novamente.');
@@ -163,6 +166,7 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
     return (
         <HomeAtletaV2
             athleteData={athleteData}
+            dadosConsistencia={dadosConsistencia}
             onGoToPortal={(tab) => {
                 setPortalTab(tab);
                 setView('portal');
@@ -177,16 +181,12 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
 // ===========================================================
 interface HomeAtletaV2Props {
     athleteData: PortalAthleteData;
+    dadosConsistencia: DadosConsistencia | null;
     onGoToPortal: (tab: AthletePortalTab) => void;
     onGoToMeasurements: () => void;
 }
 
-function HomeAtletaV2({ athleteData, onGoToPortal, onGoToMeasurements }: HomeAtletaV2Props) {
-    const [dadosConsistencia, setDadosConsistencia] = useState<DadosConsistencia | null>(null);
-
-    useEffect(() => {
-        buscarDadosConsistencia(athleteData.id).then(setDadosConsistencia).catch(console.error);
-    }, [athleteData.id]);
+function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeasurements }: HomeAtletaV2Props) {
 
     const lastAval = athleteData.avaliacoes?.[0];
     const lastMedida = athleteData.medidas?.[0];
