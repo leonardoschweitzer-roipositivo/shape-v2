@@ -41,10 +41,10 @@ export function CardConsistencia({ dados }: CardConsistenciaProps) {
     const tempoFormatado = formatarTempo(tempoTotalMinutos)
 
     // ---- Tamanho dos quadrados ----
-    const cellSize = 11
-    const cellGap = 3
+    const cellSize = 20
+    const cellGap = 4
     const totalCellSize = cellSize + cellGap
-    const numWeeksToShow = 34 // Aumentado para cobrir a largura do card (~8 meses)
+    const numWeeksToShow = 26 // Exatamente 6 meses (26 semanas)
 
     // ---- Gerar grade do heatmap (últimas 34 semanas) ----
     const gradeData = useMemo(() => {
@@ -53,9 +53,8 @@ export function CardConsistencia({ dados }: CardConsistenciaProps) {
         hoje.setHours(0, 0, 0, 0)
         const hojeKey = hoje.toISOString().split('T')[0]
 
-        // Calcular data de início baseada no número de semanas
-        const startDate = new Date(hoje)
-        startDate.setDate(startDate.getDate() - (numWeeksToShow * 7))
+        // Janela de 6 meses: Março a Agosto de 2026
+        const startDate = new Date(ano, 2, 1) // 1 de Março
 
         // Ajustar para segunda-feira
         const diaSemana = startDate.getDay()
@@ -88,10 +87,13 @@ export function CardConsistencia({ dados }: CardConsistenciaProps) {
                 cursor.setDate(cursor.getDate() + 1)
             }
 
-            // Label do mês
+            // Registrar label do mês
             const mesAtual = semana[0].mes
             if (mesAtual !== mesAnterior) {
-                mesesLabels.push({ mes: mesAtual, coluna: col })
+                // Registrar apenas se estiver dentro da janela Mar-Ago (2 a 7)
+                if (mesAtual >= 2 && mesAtual <= 7) {
+                    mesesLabels.push({ mes: mesAtual, coluna: col })
+                }
                 mesAnterior = mesAtual
             }
 
@@ -99,7 +101,7 @@ export function CardConsistencia({ dados }: CardConsistenciaProps) {
         }
 
         return { semanas, mesesLabels }
-    }, [checkins, numWeeksToShow])
+    }, [checkins, numWeeksToShow, ano])
 
     const svgWidth = numWeeksToShow * totalCellSize
     const svgHeight = 7 * totalCellSize
@@ -141,7 +143,7 @@ export function CardConsistencia({ dados }: CardConsistenciaProps) {
                 )}
 
                 {/* Heatmap */}
-                <div className="mb-4">
+                <div className="mb-1">
                     {/* Labels dos meses */}
                     <div style={{ position: 'relative', height: 16 }}>
                         {gradeData.mesesLabels.map((ml, i) => (
@@ -158,12 +160,12 @@ export function CardConsistencia({ dados }: CardConsistenciaProps) {
                         ))}
                     </div>
 
-                    {/* Grade SVG */}
+                    {/* Grade SVG - Responsivo (sem altura fixa para evitar gap no mobile) */}
                     <svg
                         width="100%"
-                        height={svgHeight}
                         viewBox={`0 0 ${svgWidth} ${svgHeight}`}
                         preserveAspectRatio="xMinYMin meet"
+                        className="w-full h-auto"
                     >
                         {gradeData.semanas.map((semana, col) =>
                             semana.map((dia, row) => (
