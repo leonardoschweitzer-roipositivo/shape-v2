@@ -353,18 +353,12 @@ const SecaoTrimestreAtual: React.FC<{ plano: PlanoTreino }> = ({ plano }) => {
 
 /** Seção 4: Divisão de Treino — derivada de treinos[] (fonte única de verdade) */
 const SecaoDivisao: React.FC<{ treinos: TreinoDetalhado[] }> = ({ treinos }) => {
-    // Derivar dados da divisão a partir dos treinos reais
     const letras = treinos.map(t => t.letra).join('');
     const frequencia = treinos.length;
-    const estrutura = treinos.map(t => ({
-        letra: t.letra,
-        grupos: t.blocos.map(b => b.nomeGrupo),
-        duracaoMinutos: t.duracaoMinutos,
-    }));
 
     return (
         <SectionCard icon={LayoutGrid} title="Divisão do Plano" subtitle="Como o trabalho é distribuído ao longo da semana">
-            <div className="flex items-center gap-6 mb-8">
+            <div className="flex items-center gap-6">
                 <div className="bg-primary/10 border border-primary/20 px-6 py-4 rounded-2xl">
                     <p className="text-[10px] uppercase tracking-widest text-primary font-bold mb-1">Estratégia</p>
                     <p className="text-3xl font-black text-white">{letras}</p>
@@ -373,26 +367,6 @@ const SecaoDivisao: React.FC<{ treinos: TreinoDetalhado[] }> = ({ treinos }) => 
                     <p className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1">Frequência</p>
                     <p className="text-3xl font-black text-white">{frequencia}x <span className="text-sm text-gray-500 font-normal">semanal</span></p>
                 </div>
-            </div>
-
-            <div className="space-y-3">
-                {estrutura.map((e, idx) => (
-                    <div key={idx} className="flex items-center gap-4 bg-white/[0.02] p-4 rounded-xl border border-white/5 hover:translate-x-1 transition-transform">
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black border bg-primary/20 border-primary/40 text-primary`}>
-                            {e.letra}
-                        </div>
-                        <div className="flex-1">
-                            <p className="text-base font-bold text-gray-200">{e.grupos?.join(' + ')}</p>
-                            <div className="flex items-center gap-3 mt-1">
-                                {e.duracaoMinutos > 0 && (
-                                    <span className="flex items-center gap-1 text-[10px] text-gray-500 uppercase">
-                                        <Clock size={10} /> {e.duracaoMinutos} min
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                ))}
             </div>
         </SectionCard>
     );
