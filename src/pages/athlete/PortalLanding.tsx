@@ -366,6 +366,22 @@ function HomeAtletaV2({ athleteData, onGoToPortal, onGoToMeasurements }: HomeAtl
                 pontosRestantes={pontosRestantes}
             />
 
+            {/* Card de Consistência */}
+            {dadosConsistencia && (
+                <CardConsistencia dados={dadosConsistencia} />
+            )}
+
+            {/* 3.3 Botão "VER TREINO DE HOJE" (Centralizado, estilo Primário) */}
+            <div className="max-w-2xl mx-auto px-6 mt-6 mb-6">
+                <button
+                    onClick={() => onGoToPortal('hoje')}
+                    className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-4 rounded-xl font-black tracking-widest text-sm uppercase transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
+                >
+                    <Play size={18} fill="white" />
+                    VER TREINO DE HOJE
+                </button>
+            </div>
+
             {/* 3.1 Proporção Principal: Shape-V */}
             {ombrosAtual > 0 && (
                 <CardIndicadorProgresso
@@ -402,22 +418,6 @@ function HomeAtletaV2({ athleteData, onGoToPortal, onGoToMeasurements }: HomeAtl
                     isInverse={true}
                     cor="#F59E0B"
                 />
-            )}
-
-            {/* 3.3 Botão "VER TREINO DE HOJE" (Centralizado, estilo Primário) */}
-            <div className="max-w-2xl mx-auto px-6 mt-6">
-                <button
-                    onClick={() => onGoToPortal('hoje')}
-                    className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-4 rounded-xl font-black tracking-widest text-sm uppercase transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
-                >
-                    <Play size={18} fill="white" />
-                    VER TREINO DE HOJE
-                </button>
-            </div>
-
-            {/* Card de Consistência */}
-            {dadosConsistencia && (
-                <CardConsistencia dados={dadosConsistencia} />
             )}
 
             {/* 4. Card Ranking (Hall dos Deuses) */}
