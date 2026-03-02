@@ -196,6 +196,8 @@ function HomeAtletaV2({ athleteData, onGoToPortal, onGoToMeasurements }: HomeAtl
     const scoreMeta = diag?.analiseEstetica?.scoreMeta6M ?? 65;
     const classificacaoMeta = diag?.analiseEstetica?.scoreMeta12M ? (scoreMeta >= 80 ? 'ATLETA' : 'EVOLUINDO') : 'ATLETA'; // Simplificação
 
+    const firstMedida = athleteData.medidas?.[athleteData.medidas.length - 1] || lastMedida; // A última do array é a mais antiga/primeira
+
     // Proporção Shape-V (Ombros/Cintura)
     const ratioAtual = lastAval?.results?.classificacao?.ratios?.['Shape-V'] || (lastMedida?.ombros && lastMedida.cintura ? lastMedida.ombros / lastMedida.cintura : 0);
     const itemShapeV = diag?.metasProporcoes?.find((p: any) => p.grupo === 'Shape-V');
@@ -207,18 +209,35 @@ function HomeAtletaV2({ athleteData, onGoToPortal, onGoToMeasurements }: HomeAtl
     const cinturaAtual = lastMedida?.cintura || 1;
     // Cálculo reverso da meta em CM para 12 meses
     const ombrosMeta12M = Math.round((ratioMeta12M * cinturaAtual) * 10) / 10;
+    const ombrosBasal = firstMedida?.ombros || ombrosAtual - (ombrosAtual * 0.1);
 
     // Medida Cintura cm (Redução)
     const pelvisAtual = athleteData.ficha?.pelve || 0;
     // Meta de 0.86 * pélvis (conforme spec Golden Ratio)
     const cinturaMeta12M = pelvisAtual > 0 ? Math.round((0.86 * pelvisAtual) * 10) / 10 : Math.round((cinturaAtual * 0.95) * 10) / 10;
+    const cinturaBasal = firstMedida?.cintura || cinturaAtual + (cinturaAtual * 0.1);
 
     // Percentual de Gordura
     const bfAtual = lastAval?.gordura || 0;
     const bfMeta = diag?.metasComposicao?.gordura6Meses || 12;
+    const firstAval = athleteData.avaliacoes?.[athleteData.avaliacoes.length - 1] || lastAval;
+    const bfBasal = firstAval?.gordura || bfAtual + 5;
 
     const prazoMeta = 6;
-    const percentualMeta = scoreMeta > 0 ? Math.min(100, Math.round((scoreAtual / scoreMeta) * 100)) : 0;
+
+    // Cálculo do Score: Baseado no Gap (Distância entre Primeira Avaliação e Meta)
+    const scoreBasal = firstAval?.score_geral || 0;
+    const gapScoreTotal = Math.max(0, scoreMeta - scoreBasal);
+    const progressoScorePercorrido = Math.max(0, scoreAtual - scoreBasal);
+
+    let percentualMeta = gapScoreTotal > 0 ? (progressoScorePercorrido / gapScoreTotal) * 100 : 0;
+
+    // Travar entre 0 e 100
+    if (scoreAtual < scoreBasal) percentualMeta = 0;
+    if (scoreAtual >= scoreMeta) percentualMeta = 100;
+
+    percentualMeta = Math.max(0, Math.min(100, Math.round(percentualMeta)));
+
     const pontosRestantes = Math.max(0, scoreMeta - scoreAtual);
 
     // Evolução: se tem 2+ avaliações, calcular
@@ -345,6 +364,7 @@ function HomeAtletaV2({ athleteData, onGoToPortal, onGoToMeasurements }: HomeAtl
                     label="Largura de Ombros"
                     valorAtual={ombrosAtual}
                     valorMeta={ombrosMeta12M}
+                    valorBasal={ombrosBasal}
                     unidade="cm"
                     cor="#8B5CF6"
                 />
@@ -356,6 +376,7 @@ function HomeAtletaV2({ athleteData, onGoToPortal, onGoToMeasurements }: HomeAtl
                     label="Circunferência de Cintura"
                     valorAtual={cinturaAtual}
                     valorMeta={cinturaMeta12M}
+                    valorBasal={cinturaBasal}
                     unidade="cm"
                     isInverse={true}
                     cor="#F59E0B"
@@ -368,7 +389,9 @@ function HomeAtletaV2({ athleteData, onGoToPortal, onGoToMeasurements }: HomeAtl
                     label="Percentual de Gordura"
                     valorAtual={bfAtual}
                     valorMeta={bfMeta}
+                    valorBasal={bfBasal}
                     unidade="%"
+                    isInverse={true}
                     cor="#F59E0B"
                 />
             )}

@@ -11,6 +11,7 @@ interface CardIndicadorProgressoProps {
     subValorAtual?: number
     subValorMeta?: number
     subUnidade?: string
+    valorBasal?: number
 }
 
 export function CardIndicadorProgresso({
@@ -23,15 +24,32 @@ export function CardIndicadorProgresso({
     subLabel,
     subValorAtual,
     subValorMeta,
-    subUnidade = ''
+    subUnidade = '',
+    valorBasal
 }: CardIndicadorProgressoProps) {
-    // Cálculo de percentual
-    // Mostramos quanto do gap foi percorrido
-    // Para ganho (ombros): (Atual / Meta)
-    // Para redução (cintura): (Meta / Atual) ou relativo ao baseline
-    const percent = !isInverse
-        ? Math.min(100, Math.round((valorAtual / valorMeta) * 100))
-        : Math.min(100, Math.round((valorMeta / valorAtual) * 100));
+    // Cálculo de percentual baseado em Gap (Basal vs Meta)
+    // Se não tivermos um basal, usaremos um valor default levemente pior que o atual para não quebrar a UI
+    const pseudoBasal = isInverse ? valorAtual + (valorAtual * 0.1) : valorAtual - (valorAtual * 0.1);
+    const basalReal = valorBasal ?? pseudoBasal;
+
+    // Vamos criar a prop valorBasal na interface
+    // (A interface deve ter valorBasal, vou assumir aqui uma variável local para segurar as pontas se a prop não existe, mas depois arrumaremos a interface)
+    const gapTotal = Math.abs(valorMeta - basalReal);
+    const progressoPercorrido = Math.abs(valorAtual - basalReal);
+
+    let percentComplete = gapTotal > 0 ? (progressoPercorrido / gapTotal) * 100 : 0;
+
+    // Tratamento de segurança:
+    // Se isInverse e o valorAtual for MAIOR que o basal, o cara regrediu, então 0%
+    if (isInverse && valorAtual > basalReal) percentComplete = 0;
+    // Se !isInverse e o valorAtual for MENOR que o basal, o cara regrediu, então 0%
+    if (!isInverse && valorAtual < basalReal) percentComplete = 0;
+
+    // Se já bateu ou passou da meta:
+    if (isInverse && valorAtual <= valorMeta) percentComplete = 100;
+    if (!isInverse && valorAtual >= valorMeta) percentComplete = 100;
+
+    const percent = Math.max(0, Math.min(100, Math.round(percentComplete)));
 
     // Agora o USER quer que o número Principal seja a META
     const primaryValue = unidade === '%' ? `${valorMeta}%` : valorMeta.toFixed(1)
@@ -66,7 +84,7 @@ export function CardIndicadorProgresso({
                         <div
                             className="h-full rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(139,92,246,0.3)]"
                             style={{
-                                width: `${percent}%`,
+                                width: `${Math.max(3, percent)}%`,
                                 backgroundColor: cor
                             }}
                         />

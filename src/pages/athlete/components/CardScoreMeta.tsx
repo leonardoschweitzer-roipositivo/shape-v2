@@ -80,7 +80,7 @@ export function CardScoreMeta({
                             <div
                                 className="h-full rounded-full transition-all duration-1000"
                                 style={{
-                                    width: `${percentualMeta}%`,
+                                    width: `${Math.max(3, percentualMeta)}%`,
                                     background: `linear-gradient(90deg, ${corAtual} 0%, ${corMeta} 100%)`,
                                 }}
                             />
