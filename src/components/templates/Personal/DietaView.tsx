@@ -32,6 +32,8 @@ import {
     Activity,
     TrendingUp,
     ChevronDown,
+    Trash2,
+    Plus,
 } from 'lucide-react';
 import { useDataStore } from '@/stores/dataStore';
 import {
@@ -60,6 +62,9 @@ import {
 import { ChatPlanoEvolucao } from '@/components/organisms/ChatPlanoEvolucao/ChatPlanoEvolucao';
 import { perfilParaTexto, dietaParaTexto, getFontesCientificas } from '@/services/vitruviusContext';
 import { extrairDiretrizesDoChat } from '@/services/vitruviusAI';
+import { useEditableState } from '@/hooks/useEditableState';
+import { EditToolbar } from '@/components/molecules/EditToolbar/EditToolbar';
+import { EditableField } from '@/components/atoms/EditableField/EditableField';
 
 // ═══════════════════════════════════════════════════════════
 // TYPES
@@ -184,49 +189,164 @@ const MacroBar: React.FC<{ macros: MacroSet }> = ({ macros }) => (
     </div>
 );
 
-const TabelaRefeicoes: React.FC<{ refeicoes: RefeicaoEstrutura[] }> = ({ refeicoes }) => (
-    <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-            <thead>
-                <tr className="border-b border-white/5">
-                    <th className="text-left text-[10px] text-gray-600 uppercase tracking-widest font-bold pb-3 pr-4">#</th>
-                    <th className="text-left text-[10px] text-gray-600 uppercase tracking-widest font-bold pb-3 pr-4">Refeição</th>
-                    <th className="text-left text-[10px] text-gray-600 uppercase tracking-widest font-bold pb-3 pr-4">Horário</th>
-                    <th className="text-right text-[10px] text-gray-600 uppercase tracking-widest font-bold pb-3 pr-4">Prot.</th>
-                    <th className="text-right text-[10px] text-gray-600 uppercase tracking-widest font-bold pb-3 pr-4">Carb.</th>
-                    <th className="text-right text-[10px] text-gray-600 uppercase tracking-widest font-bold pb-3 pr-4">Gord.</th>
-                    <th className="text-right text-[10px] text-gray-600 uppercase tracking-widest font-bold pb-3">Kcal</th>
-                </tr>
-            </thead>
-            <tbody className="divide-y divide-white/[0.03]">
-                {refeicoes.map((r) => (
-                    <tr key={r.numero} className="hover:bg-white/[0.02] transition-colors">
-                        <td className="py-3 pr-4 text-gray-500">{r.numero}</td>
-                        <td className="py-3 pr-4">
-                            <span className="mr-2">{r.emoji}</span>
-                            <span className="text-gray-300 font-medium">{r.nome}</span>
-                            {r.observacao && (
-                                <p className="text-[10px] text-gray-600 mt-0.5">{r.observacao}</p>
-                            )}
-                        </td>
-                        <td className="py-3 pr-4 text-gray-500 text-xs">{r.horario}</td>
-                        <td className="py-3 pr-4 text-right text-blue-400 font-bold">{r.proteina}g</td>
-                        <td className="py-3 pr-4 text-right text-amber-400 font-bold">{r.carboidrato}g</td>
-                        <td className="py-3 pr-4 text-right text-rose-400 font-bold">{r.gordura}g</td>
-                        <td className="py-3 text-right text-gray-400 font-bold">{r.kcal}</td>
+const TabelaRefeicoes: React.FC<{
+    refeicoes: RefeicaoEstrutura[];
+    isEditing?: boolean;
+    onUpdateRefeicoes?: (refeicoes: RefeicaoEstrutura[]) => void;
+}> = ({ refeicoes, isEditing = false, onUpdateRefeicoes }) => {
+    const updateRefeicao = (idx: number, field: keyof RefeicaoEstrutura, value: any) => {
+        if (!onUpdateRefeicoes) return;
+        const updated = refeicoes.map((r, i) => {
+            if (i !== idx) return r;
+            const newR = { ...r, [field]: value };
+            // Auto-recalcular kcal quando macros mudam
+            if (['proteina', 'carboidrato', 'gordura'].includes(field)) {
+                newR.kcal = Math.round(newR.proteina * 4 + newR.carboidrato * 4 + newR.gordura * 9);
+            }
+            return newR;
+        });
+        onUpdateRefeicoes(updated);
+    };
+
+    const addRefeicao = () => {
+        if (!onUpdateRefeicoes) return;
+        const nova: RefeicaoEstrutura = {
+            numero: refeicoes.length + 1,
+            nome: 'Nova Refeição',
+            emoji: '🍽️',
+            horario: '12:00',
+            proteina: 30,
+            carboidrato: 40,
+            gordura: 10,
+            kcal: 370,
+        };
+        onUpdateRefeicoes([...refeicoes, nova]);
+    };
+
+    const removeRefeicao = (idx: number) => {
+        if (!onUpdateRefeicoes || refeicoes.length <= 2) return;
+        const updated = refeicoes.filter((_, i) => i !== idx).map((r, i) => ({ ...r, numero: i + 1 }));
+        onUpdateRefeicoes(updated);
+    };
+
+    return (
+        <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+                <thead>
+                    <tr className="border-b border-white/5">
+                        <th className="text-left text-[10px] text-gray-600 uppercase tracking-widest font-bold pb-3 pr-4">#</th>
+                        <th className="text-left text-[10px] text-gray-600 uppercase tracking-widest font-bold pb-3 pr-4">Refeição</th>
+                        <th className="text-left text-[10px] text-gray-600 uppercase tracking-widest font-bold pb-3 pr-4">Horário</th>
+                        <th className="text-right text-[10px] text-gray-600 uppercase tracking-widest font-bold pb-3 pr-4">Prot.</th>
+                        <th className="text-right text-[10px] text-gray-600 uppercase tracking-widest font-bold pb-3 pr-4">Carb.</th>
+                        <th className="text-right text-[10px] text-gray-600 uppercase tracking-widest font-bold pb-3 pr-4">Gord.</th>
+                        <th className="text-right text-[10px] text-gray-600 uppercase tracking-widest font-bold pb-3">Kcal</th>
+                        {isEditing && <th className="w-8" />}
                     </tr>
-                ))}
-                <tr className="border-t border-white/10">
-                    <td colSpan={3} className="pt-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest">TOTAL</td>
-                    <td className="pt-3 text-right text-blue-400 font-black">{refeicoes.reduce((s, r) => s + r.proteina, 0)}g</td>
-                    <td className="pt-3 text-right text-amber-400 font-black">{refeicoes.reduce((s, r) => s + r.carboidrato, 0)}g</td>
-                    <td className="pt-3 text-right text-rose-400 font-black">{refeicoes.reduce((s, r) => s + r.gordura, 0)}g</td>
-                    <td className="pt-3 text-right text-white font-black">{refeicoes.reduce((s, r) => s + r.kcal, 0)}</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-);
+                </thead>
+                <tbody className="divide-y divide-white/[0.03]">
+                    {refeicoes.map((r, idx) => (
+                        <tr key={r.numero} className={`transition-colors ${isEditing ? 'bg-primary/[0.02]' : 'hover:bg-white/[0.02]'}`}>
+                            <td className="py-3 pr-4 text-gray-500">{r.numero}</td>
+                            <td className="py-3 pr-4">
+                                {isEditing ? (
+                                    <input
+                                        type="text"
+                                        value={r.nome}
+                                        onChange={(e) => updateRefeicao(idx, 'nome', e.target.value)}
+                                        className="bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-sm text-gray-300 font-medium w-full focus:border-primary/50 focus:outline-none"
+                                    />
+                                ) : (
+                                    <>
+                                        <span className="mr-2">{r.emoji}</span>
+                                        <span className="text-gray-300 font-medium">{r.nome}</span>
+                                        {r.observacao && (
+                                            <p className="text-[10px] text-gray-600 mt-0.5">{r.observacao}</p>
+                                        )}
+                                    </>
+                                )}
+                            </td>
+                            <td className="py-3 pr-4 text-gray-500 text-xs">
+                                {isEditing ? (
+                                    <input
+                                        type="text"
+                                        value={r.horario}
+                                        onChange={(e) => updateRefeicao(idx, 'horario', e.target.value)}
+                                        className="bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-xs text-gray-500 w-16 text-center focus:border-primary/50 focus:outline-none"
+                                    />
+                                ) : r.horario}
+                            </td>
+                            <td className="py-3 pr-4 text-right text-blue-400 font-bold">
+                                {isEditing ? (
+                                    <input
+                                        type="number"
+                                        value={r.proteina}
+                                        onChange={(e) => updateRefeicao(idx, 'proteina', Number(e.target.value))}
+                                        className="bg-white/5 border border-white/10 rounded-lg px-1 py-1 text-sm text-blue-400 font-bold w-14 text-center focus:border-primary/50 focus:outline-none"
+                                        min={0}
+                                    />
+                                ) : <>{r.proteina}g</>}
+                            </td>
+                            <td className="py-3 pr-4 text-right text-amber-400 font-bold">
+                                {isEditing ? (
+                                    <input
+                                        type="number"
+                                        value={r.carboidrato}
+                                        onChange={(e) => updateRefeicao(idx, 'carboidrato', Number(e.target.value))}
+                                        className="bg-white/5 border border-white/10 rounded-lg px-1 py-1 text-sm text-amber-400 font-bold w-14 text-center focus:border-primary/50 focus:outline-none"
+                                        min={0}
+                                    />
+                                ) : <>{r.carboidrato}g</>}
+                            </td>
+                            <td className="py-3 pr-4 text-right text-rose-400 font-bold">
+                                {isEditing ? (
+                                    <input
+                                        type="number"
+                                        value={r.gordura}
+                                        onChange={(e) => updateRefeicao(idx, 'gordura', Number(e.target.value))}
+                                        className="bg-white/5 border border-white/10 rounded-lg px-1 py-1 text-sm text-rose-400 font-bold w-14 text-center focus:border-primary/50 focus:outline-none"
+                                        min={0}
+                                    />
+                                ) : <>{r.gordura}g</>}
+                            </td>
+                            <td className="py-3 text-right text-gray-400 font-bold">{r.kcal}</td>
+                            {isEditing && (
+                                <td className="py-3 pl-2">
+                                    {refeicoes.length > 2 && (
+                                        <button
+                                            onClick={() => removeRefeicao(idx)}
+                                            className="p-1 text-gray-600 hover:text-red-400 transition-colors"
+                                            title="Remover refeição"
+                                        >
+                                            <Trash2 size={12} />
+                                        </button>
+                                    )}
+                                </td>
+                            )}
+                        </tr>
+                    ))}
+                    <tr className="border-t border-white/10">
+                        <td colSpan={3} className="pt-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest">TOTAL</td>
+                        <td className="pt-3 text-right text-blue-400 font-black">{refeicoes.reduce((s, r) => s + r.proteina, 0)}g</td>
+                        <td className="pt-3 text-right text-amber-400 font-black">{refeicoes.reduce((s, r) => s + r.carboidrato, 0)}g</td>
+                        <td className="pt-3 text-right text-rose-400 font-black">{refeicoes.reduce((s, r) => s + r.gordura, 0)}g</td>
+                        <td className="pt-3 text-right text-white font-black">{refeicoes.reduce((s, r) => s + r.kcal, 0)}</td>
+                        {isEditing && <td />}
+                    </tr>
+                </tbody>
+            </table>
+            {isEditing && (
+                <button
+                    onClick={addRefeicao}
+                    className="flex items-center gap-2 mt-3 text-xs font-bold text-primary uppercase tracking-wider hover:bg-primary/10 px-4 py-2 rounded-xl transition-all"
+                >
+                    <Plus size={14} />
+                    Adicionar Refeição
+                </button>
+            )}
+        </div>
+    );
+};
 
 // ═══════════════════════════════════════════════════════════
 // MAIN COMPONENT
@@ -274,6 +394,30 @@ export const DietaView: React.FC<DietaViewProps> = ({
     const [toastStatus, setToastStatus] = useState<'success' | 'error' | null>(null);
     const [iaEnriching, setIaEnriching] = useState(false);
     const [isApplying, setIsApplying] = useState(false);
+
+    // ── Edição inline da dieta ──
+    const {
+        isEditing: isEditingDieta,
+        editData: editPlano,
+        hasChanges: hasDietChanges,
+        startEditing: startEditingDieta,
+        cancelEditing: cancelEditingDieta,
+        commitEditing: commitEditingDieta,
+        updateEditData: updateEditPlano,
+    } = useEditableState<PlanoDieta | null>(plano);
+
+    const handleSaveDietEdits = () => {
+        const edited = commitEditingDieta();
+        if (edited) setPlano(edited);
+    };
+
+    /** Dados ativos para render (editPlano quando editando, plano quando não) */
+    const activePlano = isEditingDieta ? editPlano : plano;
+
+    /** Helper: Atualiza um campo númerico do plano em edição */
+    const updateDietField = <K extends keyof PlanoDieta>(field: K, value: PlanoDieta[K]) => {
+        updateEditPlano(prev => prev ? { ...prev, [field]: value } : prev);
+    };
 
     const toggleCardapio = (nome: string) => {
         setCardapioAberto(prev => {
@@ -584,8 +728,18 @@ export const DietaView: React.FC<DietaViewProps> = ({
                     <>
                         {/* SEÇÃO 1: Estratégia Calórica */}
                         <SectionCard icon={Flame} title="Estratégia Calórica" subtitle="Definição do balanço energético para atingir as metas">
-                            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-bold uppercase tracking-widest mb-6 ${faseColor(plano.fase)}`}>
-                                <Target size={14} /> {plano.faseLabel}
+                            <div className="flex justify-end mb-4">
+                                <EditToolbar
+                                    isEditing={isEditingDieta}
+                                    hasChanges={hasDietChanges}
+                                    onStartEditing={startEditingDieta}
+                                    onSave={handleSaveDietEdits}
+                                    onDiscard={cancelEditingDieta}
+                                    readOnly={isReadOnly}
+                                />
+                            </div>
+                            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-bold uppercase tracking-widest mb-6 ${faseColor(activePlano!.fase)}`}>
+                                <Target size={14} /> {activePlano!.faseLabel}
                             </div>
 
                             <div className="bg-white/[0.03] rounded-xl border border-white/5 p-5 mb-4">
@@ -617,16 +771,44 @@ export const DietaView: React.FC<DietaViewProps> = ({
                                         <Dumbbell size={14} className="text-primary" />
                                         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Dias de Treino</p>
                                     </div>
-                                    <p className="text-2xl font-black text-white">{plano.calDiasTreino.toLocaleString('pt-BR')}</p>
-                                    <p className="text-xs text-gray-600">kcal · {plano.frequenciaSemanal ?? 4}x/semana · +carbs</p>
+                                    {isEditingDieta ? (
+                                        <EditableField
+                                            type="number"
+                                            isEditing
+                                            value={editPlano?.calDiasTreino ?? 0}
+                                            onChange={(v) => updateDietField('calDiasTreino', v)}
+                                            min={800}
+                                            max={6000}
+                                            step={50}
+                                            suffix=" kcal"
+                                            inputClassName="text-2xl font-black"
+                                        />
+                                    ) : (
+                                        <p className="text-2xl font-black text-white">{activePlano!.calDiasTreino.toLocaleString('pt-BR')}</p>
+                                    )}
+                                    <p className="text-xs text-gray-600">kcal · {activePlano!.frequenciaSemanal ?? 4}x/semana · +carbs</p>
                                 </div>
                                 <div className="bg-white/[0.03] rounded-xl border border-white/5 p-4">
                                     <div className="flex items-center gap-2 mb-2">
                                         <Scale size={14} className="text-gray-500" />
                                         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Dias de Descanso</p>
                                     </div>
-                                    <p className="text-2xl font-black text-white">{plano.calDiasDescanso.toLocaleString('pt-BR')}</p>
-                                    <p className="text-xs text-gray-600">kcal · {7 - (plano.frequenciaSemanal ?? 4)}x/semana · -carbs</p>
+                                    {isEditingDieta ? (
+                                        <EditableField
+                                            type="number"
+                                            isEditing
+                                            value={editPlano?.calDiasDescanso ?? 0}
+                                            onChange={(v) => updateDietField('calDiasDescanso', v)}
+                                            min={800}
+                                            max={6000}
+                                            step={50}
+                                            suffix=" kcal"
+                                            inputClassName="text-2xl font-black"
+                                        />
+                                    ) : (
+                                        <p className="text-2xl font-black text-white">{activePlano!.calDiasDescanso.toLocaleString('pt-BR')}</p>
+                                    )}
+                                    <p className="text-xs text-gray-600">kcal · {7 - (activePlano!.frequenciaSemanal ?? 4)}x/semana · -carbs</p>
                                 </div>
                             </div>
 
@@ -709,7 +891,17 @@ export const DietaView: React.FC<DietaViewProps> = ({
                                     😴 Dias de Descanso
                                 </button>
                             </div>
-                            <TabelaRefeicoes refeicoes={showDescanso ? plano.refeicoesDescanso : plano.refeicoesTreino} />
+                            <TabelaRefeicoes
+                                refeicoes={showDescanso
+                                    ? (isEditingDieta ? editPlano!.refeicoesDescanso : plano.refeicoesDescanso)
+                                    : (isEditingDieta ? editPlano!.refeicoesTreino : plano.refeicoesTreino)}
+                                isEditing={isEditingDieta}
+                                onUpdateRefeicoes={(updated) => {
+                                    if (!isEditingDieta) return;
+                                    const field = showDescanso ? 'refeicoesDescanso' : 'refeicoesTreino';
+                                    updateEditPlano(prev => prev ? { ...prev, [field]: updated } : prev);
+                                }}
+                            />
 
                             <div className="mt-6 bg-white/[0.02] rounded-xl border border-white/5 p-5">
                                 <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">🍕 Refeição Livre</p>
@@ -957,8 +1149,6 @@ export const DietaView: React.FC<DietaViewProps> = ({
                                 contexto: atleta.contexto as any,
                             })}
                             fontesCientificas={getFontesCientificas('dieta')}
-                            onAplicarAjustes={handleAplicarAjustes}
-                            isApplying={isApplying}
                         />
 
                         {/* Ações de Navegação */}

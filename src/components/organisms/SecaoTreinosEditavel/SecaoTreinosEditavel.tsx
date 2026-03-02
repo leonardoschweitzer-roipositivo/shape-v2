@@ -1,0 +1,534 @@
+/**
+ * SecaoTreinosEditavel — Seção de Treinos Detalhados com edição inline
+ *
+ * Permite ao Personal:
+ * - Editar nome, séries, reps, descanso e técnica de cada exercício
+ * - Adicionar/remover exercícios dentro de um bloco
+ * - Adicionar/remover treinos (letras)
+ * - Reordenar exercícios com botões ▲/▼
+ */
+
+import React, { useState } from 'react';
+import {
+    BookOpen,
+    Dumbbell,
+    Clock,
+    Plus,
+    Trash2,
+    ChevronUp,
+    ChevronDown,
+    GripVertical,
+} from 'lucide-react';
+import type { TreinoDetalhado, BlocoTreino, Exercicio } from '@/services/calculations/treino';
+import { EditableField } from '@/components/atoms/EditableField/EditableField';
+
+// ═══════════════════════════════════════════════════════════
+// TYPES
+// ═══════════════════════════════════════════════════════════
+
+interface SecaoTreinosEditavelProps {
+    treinos: TreinoDetalhado[];
+    isEditing: boolean;
+    onUpdateTreinos: (treinos: TreinoDetalhado[]) => void;
+}
+
+// ═══════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════
+
+const TECNICAS_OPCOES = [
+    { value: '', label: '— Nenhuma —' },
+    { value: 'Drop-set', label: 'Drop-set' },
+    { value: 'Rest-pause', label: 'Rest-pause' },
+    { value: 'Bi-set', label: 'Bi-set' },
+    { value: 'Tri-set', label: 'Tri-set' },
+    { value: 'FST-7', label: 'FST-7' },
+    { value: 'Myo-reps', label: 'Myo-reps' },
+    { value: 'Cluster', label: 'Cluster' },
+    { value: 'Pausa no pico', label: 'Pausa no pico' },
+    { value: 'Excêntrico lento', label: 'Excêntrico lento' },
+    { value: 'Isometria', label: 'Isometria' },
+];
+
+const DESCANSO_OPCOES = [
+    { value: '30', label: '30s' },
+    { value: '45', label: '45s' },
+    { value: '60', label: '60s' },
+    { value: '75', label: '75s' },
+    { value: '90', label: '90s' },
+    { value: '120', label: '120s' },
+    { value: '150', label: '150s' },
+    { value: '180', label: '180s' },
+];
+
+const PROXIMA_LETRA = (treinos: TreinoDetalhado[]): string => {
+    const letras = treinos.map(t => t.letra);
+    const alfabeto = 'ABCDEFGHIJ'.split('');
+    return alfabeto.find(l => !letras.includes(l)) || String.fromCharCode(65 + treinos.length);
+};
+
+// ═══════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════
+
+/** Gera um ID único simples */
+const uid = (): string => `ex-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+
+/** Cria exercício vazio */
+const criarExercicioVazio = (ordem: number): Exercicio => ({
+    ordem,
+    nome: '',
+    series: 3,
+    repeticoes: '10-12',
+    descansoSegundos: 60,
+    tecnica: undefined,
+    observacao: undefined,
+});
+
+/** Recalcula total de séries de um bloco */
+const recalcularSeriesTotalBloco = (bloco: BlocoTreino): BlocoTreino => ({
+    ...bloco,
+    seriesTotal: bloco.exercicios.reduce((sum, ex) => sum + ex.series, 0),
+});
+
+// ═══════════════════════════════════════════════════════════
+// SUBCOMPONENTS
+// ═══════════════════════════════════════════════════════════
+
+/** Linha editável de exercício */
+const ExercicioRow: React.FC<{
+    ex: Exercicio;
+    isEditing: boolean;
+    onUpdate: (ex: Exercicio) => void;
+    onRemove: () => void;
+    onMoveUp: (() => void) | null;
+    onMoveDown: (() => void) | null;
+}> = ({ ex, isEditing, onUpdate, onRemove, onMoveUp, onMoveDown }) => {
+    if (!isEditing) {
+        // Modo display — igual ao original
+        return (
+            <tr className="border-b border-white/[0.02] hover:bg-white/[0.01] transition-colors">
+                <td className="px-6 py-5 text-gray-600 font-mono text-lg">{ex.ordem}</td>
+                <td className="py-5">
+                    <p className="font-bold text-gray-200 text-lg leading-tight">{ex.nome}</p>
+                    {ex.observacao && <p className="text-xs text-primary mt-1 italic opacity-80">{ex.observacao}</p>}
+                </td>
+                <td className="py-5 text-center font-bold text-white text-xl">{ex.series}</td>
+                <td className="py-5 text-center text-gray-400 font-semibold">{ex.repeticoes}</td>
+                <td className="py-5 text-center text-gray-500 text-sm">{ex.descansoSegundos}s</td>
+                <td className="px-6 py-5 text-right">
+                    {ex.tecnica ? (
+                        <span className="text-[10px] font-black bg-primary/10 text-primary border border-primary/20 px-2 py-1 rounded uppercase tracking-wider shadow-[0_0_10px_rgba(0,201,167,0.05)]">
+                            {ex.tecnica}
+                        </span>
+                    ) : (
+                        <span className="text-gray-700">—</span>
+                    )}
+                </td>
+            </tr>
+        );
+    }
+
+    // Modo edição
+    return (
+        <tr className="border-b border-primary/10 bg-primary/[0.02]">
+            <td className="px-4 py-3">
+                <div className="flex flex-col items-center gap-1">
+                    <span className="text-gray-600 font-mono text-sm">{ex.ordem}</span>
+                    <div className="flex flex-col gap-0.5">
+                        {onMoveUp && (
+                            <button onClick={onMoveUp} className="text-gray-600 hover:text-primary p-0.5 transition-colors" title="Mover para cima">
+                                <ChevronUp size={12} />
+                            </button>
+                        )}
+                        {onMoveDown && (
+                            <button onClick={onMoveDown} className="text-gray-600 hover:text-primary p-0.5 transition-colors" title="Mover para baixo">
+                                <ChevronDown size={12} />
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </td>
+            <td className="py-3 pr-2">
+                <EditableField
+                    type="text"
+                    isEditing
+                    value={ex.nome}
+                    onChange={(v) => onUpdate({ ...ex, nome: v })}
+                    placeholder="Nome do exercício"
+                    inputClassName="text-sm"
+                />
+                <div className="mt-1">
+                    <EditableField
+                        type="text"
+                        isEditing
+                        value={ex.observacao || ''}
+                        onChange={(v) => onUpdate({ ...ex, observacao: v || undefined })}
+                        placeholder="Observação (opcional)"
+                        inputClassName="text-xs opacity-70"
+                    />
+                </div>
+            </td>
+            <td className="py-3 text-center">
+                <EditableField
+                    type="number"
+                    isEditing
+                    value={ex.series}
+                    onChange={(v) => onUpdate({ ...ex, series: v })}
+                    min={1}
+                    max={10}
+                />
+            </td>
+            <td className="py-3 text-center">
+                <EditableField
+                    type="text"
+                    isEditing
+                    value={ex.repeticoes}
+                    onChange={(v) => onUpdate({ ...ex, repeticoes: v })}
+                    placeholder="8-12"
+                    inputClassName="w-20 text-center"
+                />
+            </td>
+            <td className="py-3 text-center">
+                <EditableField
+                    type="select"
+                    isEditing
+                    value={String(ex.descansoSegundos)}
+                    onChange={(v) => onUpdate({ ...ex, descansoSegundos: Number(v) })}
+                    options={DESCANSO_OPCOES}
+                />
+            </td>
+            <td className="px-4 py-3">
+                <div className="flex items-center gap-2 justify-end">
+                    <EditableField
+                        type="select"
+                        isEditing
+                        value={ex.tecnica || ''}
+                        onChange={(v) => onUpdate({ ...ex, tecnica: v || undefined })}
+                        options={TECNICAS_OPCOES}
+                    />
+                    <button
+                        onClick={onRemove}
+                        className="p-1.5 text-gray-600 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                        title="Remover exercício"
+                    >
+                        <Trash2 size={14} />
+                    </button>
+                </div>
+            </td>
+        </tr>
+    );
+};
+
+// ═══════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ═══════════════════════════════════════════════════════════
+
+export const SecaoTreinosEditavel: React.FC<SecaoTreinosEditavelProps> = ({
+    treinos,
+    isEditing,
+    onUpdateTreinos,
+}) => {
+    const [activeTab, setActiveTab] = useState(treinos[0]?.id || '');
+    const activeTreino = treinos.find(t => t.id === activeTab);
+
+    // ── Handlers de exercício ──
+
+    const updateExercicio = (treinoId: string, blocoIdx: number, exOrdem: number, updated: Exercicio) => {
+        const newTreinos = treinos.map(t => {
+            if (t.id !== treinoId) return t;
+            return {
+                ...t,
+                blocos: t.blocos.map((b, bIdx) => {
+                    if (bIdx !== blocoIdx) return b;
+                    const newBloco = {
+                        ...b,
+                        exercicios: b.exercicios.map(e => e.ordem === exOrdem ? updated : e),
+                    };
+                    return recalcularSeriesTotalBloco(newBloco);
+                }),
+            };
+        });
+        onUpdateTreinos(newTreinos);
+    };
+
+    const removeExercicio = (treinoId: string, blocoIdx: number, exOrdem: number) => {
+        const newTreinos = treinos.map(t => {
+            if (t.id !== treinoId) return t;
+            return {
+                ...t,
+                blocos: t.blocos.map((b, bIdx) => {
+                    if (bIdx !== blocoIdx) return b;
+                    const newExercicios = b.exercicios
+                        .filter(e => e.ordem !== exOrdem)
+                        .map((e, i) => ({ ...e, ordem: i + 1 }));
+                    return recalcularSeriesTotalBloco({ ...b, exercicios: newExercicios });
+                }),
+            };
+        });
+        onUpdateTreinos(newTreinos);
+    };
+
+    const addExercicio = (treinoId: string, blocoIdx: number) => {
+        const newTreinos = treinos.map(t => {
+            if (t.id !== treinoId) return t;
+            return {
+                ...t,
+                blocos: t.blocos.map((b, bIdx) => {
+                    if (bIdx !== blocoIdx) return b;
+                    const novoEx = criarExercicioVazio(b.exercicios.length + 1);
+                    const newBloco = { ...b, exercicios: [...b.exercicios, novoEx] };
+                    return recalcularSeriesTotalBloco(newBloco);
+                }),
+            };
+        });
+        onUpdateTreinos(newTreinos);
+    };
+
+    const moveExercicio = (treinoId: string, blocoIdx: number, exOrdem: number, direction: 'up' | 'down') => {
+        const newTreinos = treinos.map(t => {
+            if (t.id !== treinoId) return t;
+            return {
+                ...t,
+                blocos: t.blocos.map((b, bIdx) => {
+                    if (bIdx !== blocoIdx) return b;
+                    const idx = b.exercicios.findIndex(e => e.ordem === exOrdem);
+                    if (idx < 0) return b;
+                    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+                    if (swapIdx < 0 || swapIdx >= b.exercicios.length) return b;
+                    const newExercicios = [...b.exercicios];
+                    [newExercicios[idx], newExercicios[swapIdx]] = [newExercicios[swapIdx], newExercicios[idx]];
+                    return { ...b, exercicios: newExercicios.map((e, i) => ({ ...e, ordem: i + 1 })) };
+                }),
+            };
+        });
+        onUpdateTreinos(newTreinos);
+    };
+
+    // ── Handlers de treino (letra) ──
+
+    const addTreino = () => {
+        const letra = PROXIMA_LETRA(treinos);
+        const novoTreino: TreinoDetalhado = {
+            id: uid(),
+            nome: `Treino ${letra}`,
+            letra,
+            duracaoMinutos: 60,
+            blocos: [{
+                nomeGrupo: 'Grupo Muscular',
+                seriesTotal: 0,
+                isPrioridade: false,
+                exercicios: [criarExercicioVazio(1)],
+            }],
+        };
+        const updated = [...treinos, novoTreino];
+        onUpdateTreinos(updated);
+        setActiveTab(novoTreino.id);
+    };
+
+    const removeTreino = (treinoId: string) => {
+        if (treinos.length <= 1) return; // Mínimo 1 treino
+        const updated = treinos.filter(t => t.id !== treinoId);
+        onUpdateTreinos(updated);
+        if (activeTab === treinoId) {
+            setActiveTab(updated[0]?.id || '');
+        }
+    };
+
+    const addBloco = (treinoId: string) => {
+        const newTreinos = treinos.map(t => {
+            if (t.id !== treinoId) return t;
+            return {
+                ...t,
+                blocos: [...t.blocos, {
+                    nomeGrupo: 'Novo Grupo',
+                    seriesTotal: 0,
+                    isPrioridade: false,
+                    exercicios: [criarExercicioVazio(1)],
+                }],
+            };
+        });
+        onUpdateTreinos(newTreinos);
+    };
+
+    const removeBloco = (treinoId: string, blocoIdx: number) => {
+        const newTreinos = treinos.map(t => {
+            if (t.id !== treinoId) return t;
+            if (t.blocos.length <= 1) return t; // Mínimo 1 bloco
+            return { ...t, blocos: t.blocos.filter((_, i) => i !== blocoIdx) };
+        });
+        onUpdateTreinos(newTreinos);
+    };
+
+    const updateBlocoNome = (treinoId: string, blocoIdx: number, nome: string) => {
+        const newTreinos = treinos.map(t => {
+            if (t.id !== treinoId) return t;
+            return {
+                ...t,
+                blocos: t.blocos.map((b, i) => i === blocoIdx ? { ...b, nomeGrupo: nome } : b),
+            };
+        });
+        onUpdateTreinos(newTreinos);
+    };
+
+    const updateTreinoNome = (treinoId: string, nome: string) => {
+        const newTreinos = treinos.map(t => t.id === treinoId ? { ...t, nome } : t);
+        onUpdateTreinos(newTreinos);
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // RENDER
+    // ═══════════════════════════════════════════════════════════
+
+    return (
+        <>
+            {/* Tabs */}
+            <div className="flex flex-wrap gap-2 mb-8 bg-white/[0.02] p-1.5 rounded-2xl border border-white/5">
+                {treinos.map((t) => (
+                    <div key={t.id} className="relative flex-1 min-w-[120px]">
+                        <button
+                            onClick={() => setActiveTab(t.id)}
+                            className={`w-full px-4 py-3 rounded-xl font-bold text-sm uppercase transition-all ${activeTab === t.id
+                                ? 'bg-primary text-[#0A0F1C] shadow-lg shadow-primary/20'
+                                : 'text-gray-500 hover:text-white hover:bg-white/5'
+                                }`}
+                        >
+                            {t.nome}
+                        </button>
+                        {isEditing && treinos.length > 1 && (
+                            <button
+                                onClick={() => removeTreino(t.id)}
+                                className="absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center bg-red-500/80 text-white rounded-full text-[10px] hover:bg-red-500 transition-all shadow-lg z-10"
+                                title={`Remover ${t.nome}`}
+                            >
+                                ×
+                            </button>
+                        )}
+                    </div>
+                ))}
+                {isEditing && (
+                    <button
+                        onClick={addTreino}
+                        className="flex items-center gap-1.5 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider text-primary hover:bg-primary/10 border border-dashed border-primary/30 transition-all"
+                    >
+                        <Plus size={14} />
+                        Treino
+                    </button>
+                )}
+            </div>
+
+            {/* Ficha Ativa */}
+            {activeTreino && (
+                <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            {isEditing ? (
+                                <EditableField
+                                    type="text"
+                                    isEditing
+                                    value={activeTreino.nome}
+                                    onChange={(v) => updateTreinoNome(activeTreino.id, v)}
+                                    inputClassName="text-2xl font-black text-white"
+                                />
+                            ) : (
+                                <h3 className="text-2xl font-black text-white uppercase tracking-tight">{activeTreino.nome}</h3>
+                            )}
+                            <div className="flex items-center gap-4 mt-1 text-gray-500">
+                                <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider">
+                                    <Dumbbell size={14} className="text-primary" /> Treino {activeTreino.letra}
+                                </span>
+                                <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider">
+                                    <Clock size={14} className="text-primary" /> ~{activeTreino.duracaoMinutos} minutos
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-8">
+                        {activeTreino.blocos.map((bloco, bIdx) => (
+                            <div key={bIdx} className="bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden">
+                                <div className="bg-white/[0.03] px-6 py-4 flex items-center justify-between border-b border-white/5">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-2 h-2 rounded-full ${bloco.isPrioridade ? 'bg-red-500 animate-pulse' : 'bg-primary/60'}`} />
+                                        {isEditing ? (
+                                            <EditableField
+                                                type="text"
+                                                isEditing
+                                                value={bloco.nomeGrupo}
+                                                onChange={(v) => updateBlocoNome(activeTreino.id, bIdx, v)}
+                                                inputClassName="text-lg font-black text-white uppercase"
+                                            />
+                                        ) : (
+                                            <h4 className="text-lg font-black text-white uppercase tracking-wider">{bloco.nomeGrupo}</h4>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[11px] font-bold text-gray-500 border border-white/10 px-3 py-1 rounded-full uppercase">
+                                            Total: {bloco.seriesTotal} séries
+                                        </span>
+                                        {isEditing && activeTreino.blocos.length > 1 && (
+                                            <button
+                                                onClick={() => removeBloco(activeTreino.id, bIdx)}
+                                                className="p-1.5 text-gray-600 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                                                title="Remover bloco"
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-base">
+                                        <thead>
+                                            <tr className="border-b border-white/5 text-[10px] text-gray-600 uppercase tracking-[0.2em]">
+                                                <th className="text-left px-6 py-3 w-16">#</th>
+                                                <th className="text-left py-3">Exercício</th>
+                                                <th className="text-center py-3">Séries</th>
+                                                <th className="text-center py-3">Reps</th>
+                                                <th className="text-center py-3">Descanso</th>
+                                                <th className="text-right px-6 py-3">Técnica</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {bloco.exercicios.map((ex, exIdx) => (
+                                                <ExercicioRow
+                                                    key={`${ex.ordem}-${exIdx}`}
+                                                    ex={ex}
+                                                    isEditing={isEditing}
+                                                    onUpdate={(updated) => updateExercicio(activeTreino.id, bIdx, ex.ordem, updated)}
+                                                    onRemove={() => removeExercicio(activeTreino.id, bIdx, ex.ordem)}
+                                                    onMoveUp={exIdx > 0 ? () => moveExercicio(activeTreino.id, bIdx, ex.ordem, 'up') : null}
+                                                    onMoveDown={exIdx < bloco.exercicios.length - 1 ? () => moveExercicio(activeTreino.id, bIdx, ex.ordem, 'down') : null}
+                                                />
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {isEditing && (
+                                    <div className="px-6 py-3 border-t border-white/5">
+                                        <button
+                                            onClick={() => addExercicio(activeTreino.id, bIdx)}
+                                            className="flex items-center gap-2 text-xs font-bold text-primary uppercase tracking-wider hover:bg-primary/10 px-4 py-2 rounded-xl transition-all"
+                                        >
+                                            <Plus size={14} />
+                                            Adicionar Exercício
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                        {isEditing && (
+                            <button
+                                onClick={() => addBloco(activeTreino.id)}
+                                className="w-full flex items-center justify-center gap-2 py-4 border-2 border-dashed border-white/10 rounded-2xl text-sm font-bold text-gray-500 uppercase tracking-wider hover:border-primary/30 hover:text-primary hover:bg-primary/5 transition-all"
+                            >
+                                <Plus size={16} />
+                                Adicionar Grupo Muscular
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
+        </>
+    );
+};

@@ -62,6 +62,9 @@ import {
 import { ChatPlanoEvolucao } from '@/components/organisms/ChatPlanoEvolucao/ChatPlanoEvolucao';
 import { perfilParaTexto, treinoParaTexto, getFontesCientificas } from '@/services/vitruviusContext';
 import { extrairDiretrizesDoChat } from '@/services/vitruviusAI';
+import { useEditableState } from '@/hooks/useEditableState';
+import { EditToolbar } from '@/components/molecules/EditToolbar/EditToolbar';
+import { SecaoTreinosEditavel } from '@/components/organisms/SecaoTreinosEditavel/SecaoTreinosEditavel';
 
 // ═══════════════════════════════════════════════════════════
 // TYPES
@@ -348,23 +351,32 @@ const SecaoTrimestreAtual: React.FC<{ plano: PlanoTreino }> = ({ plano }) => {
     );
 };
 
-/** Seção 4: Divisão de Treino */
-const SecaoDivisao: React.FC<{ plano: PlanoTreino }> = ({ plano }) => {
+/** Seção 4: Divisão de Treino — derivada de treinos[] (fonte única de verdade) */
+const SecaoDivisao: React.FC<{ treinos: TreinoDetalhado[] }> = ({ treinos }) => {
+    // Derivar dados da divisão a partir dos treinos reais
+    const letras = treinos.map(t => t.letra).join('');
+    const frequencia = treinos.length;
+    const estrutura = treinos.map(t => ({
+        letra: t.letra,
+        grupos: t.blocos.map(b => b.nomeGrupo),
+        duracaoMinutos: t.duracaoMinutos,
+    }));
+
     return (
         <SectionCard icon={LayoutGrid} title="Divisão do Plano" subtitle="Como o trabalho é distribuído ao longo da semana">
             <div className="flex items-center gap-6 mb-8">
                 <div className="bg-primary/10 border border-primary/20 px-6 py-4 rounded-2xl">
                     <p className="text-[10px] uppercase tracking-widest text-primary font-bold mb-1">Estratégia</p>
-                    <p className="text-3xl font-black text-white">{plano.divisao.tipo}</p>
+                    <p className="text-3xl font-black text-white">{letras}</p>
                 </div>
                 <div className="bg-white/[0.03] border border-white/10 px-6 py-4 rounded-2xl">
                     <p className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1">Frequência</p>
-                    <p className="text-3xl font-black text-white">{plano.divisao.frequenciaSemanal}x <span className="text-sm text-gray-500 font-normal">semanal</span></p>
+                    <p className="text-3xl font-black text-white">{frequencia}x <span className="text-sm text-gray-500 font-normal">semanal</span></p>
                 </div>
             </div>
 
             <div className="space-y-3">
-                {plano?.divisao?.estruturaSemanal?.map((e, idx) => (
+                {estrutura.map((e, idx) => (
                     <div key={idx} className="flex items-center gap-4 bg-white/[0.02] p-4 rounded-xl border border-white/5 hover:translate-x-1 transition-transform">
                         <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black border bg-primary/20 border-primary/40 text-primary`}>
                             {e.letra}
@@ -533,6 +545,23 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
     const [toastStatus, setToastStatus] = useState<'success' | 'error' | null>(null);
     const [iaEnriching, setIaEnriching] = useState(false);
     const [isApplying, setIsApplying] = useState(false);
+
+    // ── Edição inline do treino ──
+    const {
+        isEditing: isEditingTreino,
+        editData: editTreinos,
+        hasChanges: hasTrainingChanges,
+        startEditing: startEditingTreino,
+        cancelEditing: cancelEditingTreino,
+        commitEditing: commitEditingTreino,
+        updateEditData: updateEditTreinos,
+    } = useEditableState<TreinoDetalhado[]>(plano?.treinos ?? []);
+
+    const handleSaveEdits = () => {
+        if (!plano) return;
+        const editedTreinos = commitEditingTreino();
+        setPlano({ ...plano, treinos: editedTreinos });
+    };
 
     if (!atleta) {
         return (
@@ -839,8 +868,25 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
                         {diagnostico && <SecaoResumoDiagnostico diagnostico={diagnostico} potencial={potencial ?? undefined} insightIA={plano.insightsPorSecao?.resumoDiagnostico} isLoading={iaEnriching} />}
                         <SecaoVisaoAnual plano={plano} />
                         <SecaoTrimestreAtual plano={plano} />
-                        <SecaoDivisao plano={plano} />
-                        <SecaoTreinosSemanais treinos={plano.treinos} />
+                        <SecaoDivisao treinos={isEditingTreino ? editTreinos : plano.treinos} />
+                        {/* Seção 5: Treinos — editável */}
+                        <SectionCard icon={BookOpen} title="Treinos da Semana" subtitle="Fichas detalhadas de exercícios e técnicas avançadas">
+                            <div className="flex justify-end mb-4">
+                                <EditToolbar
+                                    isEditing={isEditingTreino}
+                                    hasChanges={hasTrainingChanges}
+                                    onStartEditing={startEditingTreino}
+                                    onSave={handleSaveEdits}
+                                    onDiscard={cancelEditingTreino}
+                                    readOnly={isReadOnly}
+                                />
+                            </div>
+                            <SecaoTreinosEditavel
+                                treinos={isEditingTreino ? editTreinos : plano.treinos}
+                                isEditing={isEditingTreino}
+                                onUpdateTreinos={(updated) => updateEditTreinos(() => updated)}
+                            />
+                        </SectionCard>
 
                         <SectionCard icon={Award} title="Instruções de Sucesso" subtitle="Diretrizes metodológicas para garantir os resultados planejados">
                             <div className="space-y-4">
@@ -891,8 +937,6 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
                                 contexto: atleta.contexto as any,
                             })}
                             fontesCientificas={getFontesCientificas('treino')}
-                            onAplicarAjustes={handleAplicarAjustes}
-                            isApplying={isApplying}
                         />
 
                         {/* Navegação bottom */}

@@ -60,6 +60,9 @@ import { type PerfilAtletaIA, perfilParaTexto, getFontesCientificas, diagnostico
 import { buildAnaliseContextoPrompt } from '@/services/vitruviusPrompts';
 import { ChatPlanoEvolucao } from '@/components/organisms/ChatPlanoEvolucao/ChatPlanoEvolucao';
 import { extrairDiretrizesDoChat } from '@/services/vitruviusAI';
+import { useEditableState } from '@/hooks/useEditableState';
+import { EditToolbar } from '@/components/molecules/EditToolbar/EditToolbar';
+import { EditableField } from '@/components/atoms/EditableField/EditableField';
 
 // ═══════════════════════════════════════════════════════════
 // TYPES
@@ -527,9 +530,42 @@ const SecaoPrioridades: React.FC<{ dados: DiagnosticoDados; insightIA?: string; 
 };
 
 /** Seção 5: Metas 12 Meses */
-const SecaoMetas: React.FC<{ dados: DiagnosticoDados; nomeAtleta: string; medidas?: any }> = ({ dados, nomeAtleta, medidas }) => {
+const SecaoMetas: React.FC<{
+    dados: DiagnosticoDados;
+    nomeAtleta: string;
+    medidas?: any;
+    isEditing?: boolean;
+    onUpdateData?: (updater: (prev: DiagnosticoDados | null) => DiagnosticoDados | null) => void;
+}> = ({ dados, nomeAtleta, medidas, isEditing = false, onUpdateData }) => {
     const { analiseEstetica, metasProporcoes, resumoVitruvio } = dados;
     const progressoPct = Math.round((analiseEstetica.scoreAtual / analiseEstetica.scoreMeta12M) * 100);
+
+    const updateScoreMeta = (value: number) => {
+        if (!onUpdateData) return;
+        onUpdateData(prev => {
+            if (!prev) return prev;
+            return {
+                ...prev,
+                analiseEstetica: {
+                    ...prev.analiseEstetica,
+                    scoreMeta12M: value,
+                },
+            };
+        });
+    };
+
+    const updateMetaProporcao = (grupo: string, field: 'meta3M' | 'meta6M' | 'meta9M' | 'meta12M', value: number) => {
+        if (!onUpdateData) return;
+        onUpdateData(prev => {
+            if (!prev) return prev;
+            return {
+                ...prev,
+                metasProporcoes: prev.metasProporcoes.map(m =>
+                    m.grupo === grupo ? { ...m, [field]: value } : m
+                ),
+            };
+        });
+    };
 
     return (
         <SectionCard icon={TrendingUp} title="Metas de 12 Meses" subtitle="Objetivos e checkpoints do plano de evolução">
@@ -543,8 +579,25 @@ const SecaoMetas: React.FC<{ dados: DiagnosticoDados; nomeAtleta: string; medida
                     </div>
                     <ArrowRight size={22} className="text-primary" />
                     <div>
-                        <p className="text-3xl font-bold text-primary">{analiseEstetica.scoreMeta12M}+</p>
-                        <p className="text-xs text-gray-500">META</p>
+                        {isEditing ? (
+                            <>
+                                <input
+                                    type="number"
+                                    value={analiseEstetica.scoreMeta12M}
+                                    onChange={(e) => updateScoreMeta(Number(e.target.value))}
+                                    className="bg-white/5 border border-primary/40 rounded-lg px-2 py-1 text-3xl font-bold text-primary w-24 text-center focus:border-primary focus:outline-none"
+                                    step={0.1}
+                                    min={0}
+                                    max={100}
+                                />
+                                <p className="text-xs text-primary/60 mt-1">META (editando)</p>
+                            </>
+                        ) : (
+                            <>
+                                <p className="text-3xl font-bold text-primary">{analiseEstetica.scoreMeta12M}+</p>
+                                <p className="text-xs text-gray-500">META</p>
+                            </>
+                        )}
                     </div>
                 </div>
                 <ProgressBar pct={progressoPct} />
@@ -609,10 +662,50 @@ const SecaoMetas: React.FC<{ dados: DiagnosticoDados; nomeAtleta: string; medida
                                                         {m.grupo}
                                                     </td>
                                                     <td className="pt-3 pb-1 text-right text-gray-400">{m.atual}</td>
-                                                    <td className="pt-3 pb-1 text-right text-gray-500">{m.meta3M}</td>
-                                                    <td className="pt-3 pb-1 text-right text-gray-500">{m.meta6M}</td>
-                                                    <td className="pt-3 pb-1 text-right text-gray-500">{m.meta9M}</td>
-                                                    <td className="pt-3 pb-1 text-right text-primary font-bold">{m.meta12M}</td>
+                                                    <td className="pt-3 pb-1 text-right text-gray-500">
+                                                        {isEditing ? (
+                                                            <input
+                                                                type="number"
+                                                                value={m.meta3M}
+                                                                onChange={(e) => updateMetaProporcao(m.grupo, 'meta3M', Number(e.target.value))}
+                                                                className="bg-white/5 border border-white/10 rounded px-1 py-0.5 text-sm text-gray-400 w-16 text-center focus:border-primary/50 focus:outline-none"
+                                                                step={0.01}
+                                                            />
+                                                        ) : m.meta3M}
+                                                    </td>
+                                                    <td className="pt-3 pb-1 text-right text-gray-500">
+                                                        {isEditing ? (
+                                                            <input
+                                                                type="number"
+                                                                value={m.meta6M}
+                                                                onChange={(e) => updateMetaProporcao(m.grupo, 'meta6M', Number(e.target.value))}
+                                                                className="bg-white/5 border border-white/10 rounded px-1 py-0.5 text-sm text-gray-400 w-16 text-center focus:border-primary/50 focus:outline-none"
+                                                                step={0.01}
+                                                            />
+                                                        ) : m.meta6M}
+                                                    </td>
+                                                    <td className="pt-3 pb-1 text-right text-gray-500">
+                                                        {isEditing ? (
+                                                            <input
+                                                                type="number"
+                                                                value={m.meta9M}
+                                                                onChange={(e) => updateMetaProporcao(m.grupo, 'meta9M', Number(e.target.value))}
+                                                                className="bg-white/5 border border-white/10 rounded px-1 py-0.5 text-sm text-gray-400 w-16 text-center focus:border-primary/50 focus:outline-none"
+                                                                step={0.01}
+                                                            />
+                                                        ) : m.meta9M}
+                                                    </td>
+                                                    <td className="pt-3 pb-1 text-right text-primary font-bold">
+                                                        {isEditing ? (
+                                                            <input
+                                                                type="number"
+                                                                value={m.meta12M}
+                                                                onChange={(e) => updateMetaProporcao(m.grupo, 'meta12M', Number(e.target.value))}
+                                                                className="bg-white/5 border border-primary/30 rounded px-1 py-0.5 text-sm text-primary font-bold w-16 text-center focus:border-primary focus:outline-none"
+                                                                step={0.01}
+                                                            />
+                                                        ) : m.meta12M}
+                                                    </td>
                                                     <td className="pt-3 pb-1 text-right text-gray-600">{m.idealFinal}</td>
                                                 </tr>
                                                 {cm && (
@@ -734,6 +827,22 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
     const [analiseContextoIA, setAnaliseContextoIA] = useState<string | null>(null);
     const [contextLoading, setContextLoading] = useState(true);
     const [isApplying, setIsApplying] = useState(false);
+
+    // ── Edição inline do diagnóstico (metas e prioridades) ──
+    const {
+        isEditing: isEditingDiag,
+        editData: editDiag,
+        hasChanges: hasDiagChanges,
+        startEditing: startEditingDiag,
+        cancelEditing: cancelEditingDiag,
+        commitEditing: commitEditingDiag,
+        updateEditData: updateEditDiag,
+    } = useEditableState<DiagnosticoDados | null>(diagnostico);
+
+    const handleSaveDiagEdits = () => {
+        const edited = commitEditingDiag();
+        if (edited) setDiagnostico(edited);
+    };
 
     // Pegar dados da última avaliação
     const ultimaAvaliacao = useMemo(() => {
@@ -1169,7 +1278,28 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                         <SecaoComposicao dados={diagnostico} insightIA={diagnostico.insightsPorSecao?.composicao} isLoading={iaEnriching} />
                         <SecaoEstetica dados={diagnostico} insightIA={diagnostico.insightsPorSecao?.proporcoes} isLoading={iaEnriching} />
                         <SecaoPrioridades dados={diagnostico} insightIA={diagnostico.insightsPorSecao?.prioridades} isLoading={iaEnriching} />
-                        <SecaoMetas dados={diagnostico} nomeAtleta={atleta.name} medidas={(diagnostico as any)?._medidas} />
+
+                        {/* Metas editáveis */}
+                        <div className="relative">
+                            <div className="flex justify-end mb-2">
+                                <EditToolbar
+                                    isEditing={isEditingDiag}
+                                    hasChanges={hasDiagChanges}
+                                    onStartEditing={startEditingDiag}
+                                    onSave={handleSaveDiagEdits}
+                                    onDiscard={cancelEditingDiag}
+                                    readOnly={isReadOnly}
+                                    saveLabel="Salvar Metas"
+                                />
+                            </div>
+                            <SecaoMetas
+                                dados={isEditingDiag && editDiag ? editDiag : diagnostico}
+                                nomeAtleta={atleta.name}
+                                medidas={(diagnostico as any)?._medidas}
+                                isEditing={isEditingDiag}
+                                onUpdateData={updateEditDiag}
+                            />
+                        </div>
 
                         {/* Card de recomendação de objetivo */}
                         {recomendacao && (
@@ -1264,8 +1394,6 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                                 contexto: atleta.contexto as any,
                             })}
                             fontesCientificas={getFontesCientificas('diagnostico')}
-                            onAplicarAjustes={handleAplicarAjustes}
-                            isApplying={isApplying}
                         />
                     </>
                 )}
