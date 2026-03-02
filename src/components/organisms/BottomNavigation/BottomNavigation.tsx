@@ -6,7 +6,7 @@
  */
 
 import React from 'react'
-import { Home, MessageCircle, TrendingUp, User } from 'lucide-react'
+import { LayoutDashboard, Dumbbell, MessageCircle, TrendingUp } from 'lucide-react'
 import { AthletePortalTab } from '../../../types/athlete-portal'
 
 interface BottomNavigationProps {
@@ -22,9 +22,14 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
     {
+        id: 'home',
+        label: 'HOME',
+        icon: LayoutDashboard // Using LayoutDashboard for Home
+    },
+    {
         id: 'hoje',
         label: 'HOJE',
-        icon: Home
+        icon: Dumbbell
     },
     {
         id: 'coach',
@@ -32,14 +37,9 @@ const NAV_ITEMS: NavItem[] = [
         icon: MessageCircle
     },
     {
-        id: 'progresso',
-        label: 'PROGRESSO',
+        id: 'avalicao',
+        label: 'AVALIAÇÃO',
         icon: TrendingUp
-    },
-    {
-        id: 'perfil',
-        label: 'PERFIL',
-        icon: User
     }
 ]
 

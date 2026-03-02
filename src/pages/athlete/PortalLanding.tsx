@@ -24,6 +24,8 @@ import { portalService, PortalAthleteData } from '@/services/portalService';
 import { buscarDadosConsistencia, type DadosConsistencia } from '@/services/consistencia.service';
 import { SelfMeasurements } from './SelfMeasurements';
 import { AthletePortal } from '../AthletePortal';
+import { BottomNavigation } from '../../components/organisms/BottomNavigation/BottomNavigation';
+import { AthletePortalTab } from '../../types/athlete-portal';
 import {
     HeaderIdentidade,
     CardScoreMeta,
@@ -69,6 +71,7 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
     const [error, setError] = useState<string | null>(null);
     const [athleteData, setAthleteData] = useState<PortalAthleteData | null>(null);
     const [view, setView] = useState<PortalView>('home');
+    const [portalTab, setPortalTab] = useState<AthletePortalTab>('hoje');
 
     useEffect(() => {
         async function loadData() {
@@ -129,6 +132,8 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
             <AthletePortal
                 atletaId={athleteData.id}
                 atletaNome={athleteData.nome}
+                initialTab={portalTab}
+                onGoToHome={() => setView('home')}
             />
         );
     }
@@ -158,7 +163,10 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
     return (
         <HomeAtletaV2
             athleteData={athleteData}
-            onGoToPortal={() => setView('portal')}
+            onGoToPortal={(tab) => {
+                setPortalTab(tab);
+                setView('portal');
+            }}
             onGoToMeasurements={() => setView('measurements')}
         />
     );
@@ -169,7 +177,7 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
 // ===========================================================
 interface HomeAtletaV2Props {
     athleteData: PortalAthleteData;
-    onGoToPortal: () => void;
+    onGoToPortal: (tab: AthletePortalTab) => void;
     onGoToMeasurements: () => void;
 }
 
@@ -399,7 +407,7 @@ function HomeAtletaV2({ athleteData, onGoToPortal, onGoToMeasurements }: HomeAtl
             {/* 3.3 Botão "VER TREINO DE HOJE" (Centralizado, estilo Primário) */}
             <div className="max-w-2xl mx-auto px-6 mt-6">
                 <button
-                    onClick={onGoToPortal}
+                    onClick={() => onGoToPortal('hoje')}
                     className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-4 rounded-xl font-black tracking-widest text-sm uppercase transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
                 >
                     <Play size={18} fill="white" />
@@ -434,6 +442,19 @@ function HomeAtletaV2({ athleteData, onGoToPortal, onGoToMeasurements }: HomeAtl
                 dataUltimaMedida={lastMedida ? new Date(lastMedida.data) : new Date()}
                 diasDesdeUltima={diasDesdeUltima}
                 statusMedicao={statusMedicao}
+            />
+
+            {/* Espaço para o menu não sobrepor o footer */}
+            <div className="h-20" />
+
+            {/* Menu Inferior */}
+            <BottomNavigation
+                activeTab="home"
+                onTabChange={(tab) => {
+                    if (tab !== 'home') {
+                        onGoToPortal(tab);
+                    }
+                }}
             />
         </div>
     );

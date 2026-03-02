@@ -35,10 +35,12 @@ import {
 interface AthletePortalProps {
     atletaId: string;
     atletaNome?: string;
+    initialTab?: AthletePortalTab;
+    onGoToHome?: () => void;
 }
 
-export function AthletePortal({ atletaId, atletaNome }: AthletePortalProps) {
-    const [activeTab, setActiveTab] = useState<AthletePortalTab>('hoje')
+export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoToHome }: AthletePortalProps) {
+    const [activeTab, setActiveTab] = useState<AthletePortalTab>(initialTab)
     const [loading, setLoading] = useState(true)
     const [ctx, setCtx] = useState<PortalContext | null>(null)
 
@@ -298,31 +300,29 @@ export function AthletePortal({ atletaId, atletaNome }: AthletePortalProps) {
                     />
                 )
 
-            case 'progresso':
-                return scoreGeral && graficoEvolucao ? (
-                    <ProgressScreen
-                        scoreGeral={scoreGeral}
-                        graficoEvolucao={graficoEvolucao}
-                        proporcoes={proporcoes}
-                        historicoAvaliacoes={historicoAvaliacoes}
-                        onVerDetalhesAvaliacao={(id) => console.log('Ver avaliação:', id)}
-                    />
-                ) : null
+            case 'home':
+                // Temporário. Como a "Home" antiga (PortalLanding) é um contêiner separado na página de rota,
+                // precisaremos gerenciar isso. Por agora, vamos manter 'home' apenas emitindo um evento se precisar
+                // ou apenas retornando a Home. Na verdade o PortalLanding RENDERIZA a o AthletePortal como uma folha.
+                return (
+                    <div className="flex-1 flex flex-col items-center justify-center pt-24">
+                        <h2 className="text-white text-xl font-black uppercase">Home</h2>
+                        <p className="text-gray-400 mt-2">Clique em Hoje para ver a rotina.</p>
+                        <button
+                            className="mt-6 px-6 py-2 bg-indigo-600 rounded-lg text-white font-bold"
+                            onClick={() => window.location.href = `/atleta/${atletaId}`}
+                        >
+                            Ir para Dashboard
+                        </button>
+                    </div>
+                )
 
-            case 'perfil':
-                return dadosBasicos ? (
-                    <ProfileScreen
-                        nome={ctx?.atletaNome || atletaNome || 'Atleta'}
-                        email=""
-                        dadosBasicos={dadosBasicos}
-                        personal={personal}
-                        onSettings={() => console.log('Configurações')}
-                        onHelp={() => console.log('Ajuda')}
-                        onLogout={() => {
-                            window.location.href = '/'
-                        }}
-                    />
-                ) : null
+            case 'avalicao':
+                return (
+                    <div className="flex-1 flex items-center justify-center min-h-screen">
+                        <p className="text-gray-500 font-bold uppercase tracking-widest text-sm">Em breve: Avaliação</p>
+                    </div>
+                )
 
             default:
                 return null
@@ -334,7 +334,13 @@ export function AthletePortal({ atletaId, atletaNome }: AthletePortalProps) {
             {renderActiveScreen()}
             <BottomNavigation
                 activeTab={activeTab}
-                onTabChange={setActiveTab}
+                onTabChange={(tab) => {
+                    if (tab === 'home') {
+                        if (onGoToHome) onGoToHome()
+                    } else {
+                        setActiveTab(tab)
+                    }
+                }}
             />
             <RegistrarRefeicaoModal
                 isOpen={showRefeicaoModal}
