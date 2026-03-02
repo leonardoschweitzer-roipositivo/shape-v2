@@ -31,7 +31,6 @@ import {
     CardScoreMeta,
     CardRanking,
     CardConsistencia,
-    AcoesRapidas,
     FooterUltimaMedicao,
     CardIndicadorProgresso
 } from './components';
@@ -287,29 +286,6 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
             : 'atrasado' as const;
 
     // ---- Ações Rápidas ----
-    const acoes = [
-        {
-            id: 'medir',
-            icone: '📏',
-            label: 'MEDIR',
-            rota: '/atleta/medidas/nova',
-            onClick: onGoToMeasurements,
-        },
-        {
-            id: 'coach',
-            icone: '🤖',
-            label: 'COACH IA',
-            rota: '/atleta/coach',
-            onClick: () => onGoToPortal('coach'),
-        },
-        {
-            id: 'evolucao',
-            icone: '📊',
-            label: 'EVOLUÇÃO',
-            rota: '/atleta/evolucao',
-            onClick: () => onGoToPortal('avalicao'),
-        },
-    ];
 
     // ---- Estado: Sem medidas (Primeiro acesso) ----
     const temAvaliacao = !!lastAval;
@@ -396,31 +372,6 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
                 </button>
             </div>
 
-            {/* 3.1 Proporção Principal: Shape-V */}
-            {ombrosAtual > 0 && (
-                <CardIndicadorProgresso
-                    label="Largura de Ombros"
-                    valorAtual={ombrosAtual}
-                    valorMeta={ombrosMeta12M}
-                    valorBasal={ombrosBasal}
-                    unidade="cm"
-                    cor="#8B5CF6"
-                />
-            )}
-
-            {/* 3.1.2 Medida: Cintura (Redução) */}
-            {cinturaAtual > 0 && (
-                <CardIndicadorProgresso
-                    label="Circunferência de Cintura"
-                    valorAtual={cinturaAtual}
-                    valorMeta={cinturaMeta12M}
-                    valorBasal={cinturaBasal}
-                    unidade="cm"
-                    isInverse={true}
-                    cor="#F59E0B"
-                />
-            )}
-
             {/* 3.2 Percentual de Gordura */}
             {bfAtual > 0 && (
                 <CardIndicadorProgresso
@@ -447,9 +398,6 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
                 movimentoEvolucao={-2}
                 atletaParticipa={true}
             />
-
-            {/* 6. Ações Rápidas */}
-            <AcoesRapidas acoes={acoes} />
 
             {/* 7. Footer */}
             <FooterUltimaMedicao
