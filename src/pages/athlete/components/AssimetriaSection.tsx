@@ -13,7 +13,7 @@ interface AssimetriaSectionProps {
     assimetria: AssimetriaGeral
 }
 
-function AssimetriaRow({ item }: { item: AssimetriaItem }) {
+function AssimetriaRow({ item }: { item: AssimetriaItem; key?: string }) {
     const statusColors: Record<string, string> = {
         simetrico: 'text-green-400',
         leve: 'text-yellow-400',

@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { BottomNavigation } from '../components/organisms/BottomNavigation'
-import { TodayScreen, CoachScreen, ProgressScreen, ProfileScreen } from './athlete'
+import { TodayScreen, CoachScreen, ProgressScreen, ProfileScreen, AssessmentScreen } from './athlete'
 import { AthletePortalTab } from '../types/athlete-portal'
 import type { TodayScreenData, ScoreGeral, GraficoEvolucaoData, ProporcaoResumo, ChatMessage, MeuPersonal, DadosBasicos } from '../types/athlete-portal'
 import { Loader2 } from 'lucide-react'
@@ -23,6 +23,7 @@ import {
     buscarHistoricoAvaliacoes,
     buscarMensagensChat,
     salvarMensagemChat,
+    buscarDadosAvaliacao,
     registrarTracker,
     completarTreino,
     pularTreino,
@@ -56,6 +57,8 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
     const [proximoTreino, setProximoTreino] = useState<ProximoTreino | null>(null)
     const [lastPeso, setLastPeso] = useState<number | undefined>(undefined)
     const [showRefeicaoModal, setShowRefeicaoModal] = useState(false)
+    const [avaliacaoDados, setAvaliacaoDados] = useState<any>(null)
+    const [avaliacaoLoading, setAvaliacaoLoading] = useState(false)
 
     // Phase 1: Load critical data (context + today) — show screen ASAP
     useEffect(() => {
@@ -88,13 +91,14 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
         if (!ctx) return
         async function loadSecondary() {
             try {
-                const [score, grafico, props, historico, msgs, personalData] = await Promise.all([
+                const [score, grafico, props, historico, msgs, personalData, avaliacaoData] = await Promise.all([
                     buscarScoreGeral(atletaId),
                     buscarGraficoEvolucao(atletaId),
                     buscarProporcoes(atletaId),
                     buscarHistoricoAvaliacoes(atletaId),
                     buscarMensagensChat(atletaId),
                     buscarDadosPersonal(ctx.personalId),
+                    buscarDadosAvaliacao(atletaId),
                 ])
 
                 setScoreGeral(score)
@@ -103,6 +107,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                 setHistoricoAvaliacoes(historico)
                 setChatMessages(msgs)
                 setPersonal(personalData)
+                setAvaliacaoDados(avaliacaoData)
                 if (grafico.dados.length > 0) {
                     setLastPeso(grafico.dados[grafico.dados.length - 1].valor)
                 }
@@ -330,9 +335,10 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
 
             case 'avalicao':
                 return (
-                    <div className="flex-1 flex items-center justify-center min-h-screen">
-                        <p className="text-gray-500 font-bold uppercase tracking-widest text-sm">Em breve: Avaliação</p>
-                    </div>
+                    <AssessmentScreen
+                        avaliacao={avaliacaoDados}
+                        isLoading={avaliacaoLoading}
+                    />
                 )
 
             default:
