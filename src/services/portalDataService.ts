@@ -578,12 +578,25 @@ export async function buscarHistoricoAvaliacoes(atletaId: string) {
 
 /**
  * Busca dados completos da última avaliação para a tela AVALIAÇÃO
- * Extrai diagnóstico, proporções detalhadas e assimetrias do campo `results`
+ * 
+ * Estrutura real do campo `results` salvo por dataStore.ts > addAssessment:
+ * {
+ *   avaliacaoGeral: number,
+ *   classificacao: { nivel, emoji, cor, descricao },
+ *   scores: {
+ *     proporcoes: { valor, peso, contribuicao, detalhes: { score, detalhes: [{proporcao,peso,percentualDoIdeal,contribuicao,valor}] } },
+ *     composicao: { valor, peso, contribuicao, detalhes: { score, detalhes: { bf:{valor,score}, ffmi:{valor,score}, pesoRelativo:{valor,score} }, pesoMagro, pesoGordo } },
+ *     simetria:   { valor, peso, contribuicao, detalhes: { score, detalhes: [{grupo,esquerdo,direito,diferenca,diferencaPercent,score,status,ladoDominante}] } }
+ *   },
+ *   penalizacoes: { vTaper, cintura },
+ *   insights: { pontoForte, pontoFraco, proximaMeta },
+ *   proporcoes_aureas: [{ nome, atual, ideal, pct, status }]
+ * }
  */
 export async function buscarDadosAvaliacao(atletaId: string): Promise<AvaliacaoDadosResult | null> {
     const { data: assessment } = await supabase
         .from('assessments')
-        .select('id, date, score, results')
+        .select('id, date, score, results, body_fat, measurements')
         .eq('atleta_id', atletaId)
         .order('date', { ascending: false })
         .limit(1)
@@ -595,31 +608,35 @@ export async function buscarDadosAvaliacao(atletaId: string): Promise<AvaliacaoD
     const results = a.results || {};
     const score = a.score || 0;
 
-    // Classificação geral
-    let classificacaoGeral = 'INICIANDO';
-    let emojiGeral = '🏃';
-    if (score >= 90) { classificacaoGeral = 'ELITE'; emojiGeral = '👑'; }
-    else if (score >= 80) { classificacaoGeral = 'AVANÇADO'; emojiGeral = '🔥'; }
-    else if (score >= 70) { classificacaoGeral = 'ATLÉTICO'; emojiGeral = '💪'; }
-    else if (score >= 60) { classificacaoGeral = 'INTERMEDIÁRIO'; emojiGeral = '🏃'; }
-    else if (score >= 50) { classificacaoGeral = 'INICIANTE'; emojiGeral = '🌱'; }
+    // === CLASSIFICAÇÃO GERAL (do campo results.classificacao) ===
+    const classFromDB = results?.classificacao;
+    const classificacaoGeral = classFromDB?.nivel || getClassificacaoLabel(score);
+    const emojiGeral = classFromDB?.emoji || getClassificacaoEmoji(score);
 
-    // === DIAGNÓSTICO ESTÉTICO ===
-    const comp = results?.composicao || results?.composition || {};
-    const bf = comp?.bf || comp?.bodyFat || 0;
-    const ffmi = comp?.ffmi || 0;
-    const massaMagra = comp?.massaMagra || comp?.leanMass || 0;
-    const massaGorda = comp?.massaGorda || comp?.fatMass || 0;
-    const scoreBF = comp?.scoreBF || comp?.bfScore || 0;
-    const scoreFFMI = comp?.scoreFFMI || comp?.ffmiScore || 0;
-    const scorePR = comp?.scorePesoRelativo || 0;
-    const scoreComp = comp?.score || comp?.scoreTotal || 0;
+    // === SCORES DOS 3 PILARES (do campo results.scores) ===
+    const scoresDB = results?.scores || {};
+    const scoreProporcoes = scoresDB?.proporcoes?.valor || 0;
+    const scoreComposicao = scoresDB?.composicao?.valor || 0;
+    const scoreSimetria = scoresDB?.simetria?.valor || 100;
+
+    // === DIAGNÓSTICO ESTÉTICO (do campo results.scores.composicao.detalhes) ===
+    const compDetalhes = scoresDB?.composicao?.detalhes || {};
+    const compDetalhesSub = compDetalhes?.detalhes || {};
+
+    const bf = compDetalhesSub?.bf?.valor || a.body_fat || 0;
+    const scoreBF = compDetalhesSub?.bf?.score || 0;
+    const ffmi = compDetalhesSub?.ffmi?.valor || 0;
+    const scoreFFMI = compDetalhesSub?.ffmi?.score || 0;
+    const pesoRelativoVal = compDetalhesSub?.pesoRelativo?.valor || 0;
+    const scorePesoRelativo = compDetalhesSub?.pesoRelativo?.score || 0;
+    const pesoMagro = compDetalhes?.pesoMagro || 0;
+    const pesoGordo = compDetalhes?.pesoGordo || 0;
 
     let classComp = 'NORMAL';
     let emojiComp = '🏃';
-    if (scoreComp >= 80) { classComp = 'ATLÉTICO'; emojiComp = '🔥'; }
-    else if (scoreComp >= 60) { classComp = 'FITNESS'; emojiComp = '💪'; }
-    else if (scoreComp >= 40) { classComp = 'NORMAL'; emojiComp = '🏃'; }
+    if (scoreComposicao >= 80) { classComp = 'ATLÉTICO'; emojiComp = '🔥'; }
+    else if (scoreComposicao >= 60) { classComp = 'FITNESS'; emojiComp = '💪'; }
+    else if (scoreComposicao >= 40) { classComp = 'NORMAL'; emojiComp = '🏃'; }
     else { classComp = 'ACIMA DO PESO'; emojiComp = '⚠️'; }
 
     const diagnostico = {
@@ -627,99 +644,94 @@ export async function buscarDadosAvaliacao(atletaId: string): Promise<AvaliacaoD
         scoreBF,
         ffmi,
         scoreFFMI,
-        massaMagra,
-        massaGorda,
-        pesoRelativo: comp?.pesoRelativo || 0,
-        scorePesoRelativo: scorePR,
-        scoreTotal: scoreComp,
+        massaMagra: pesoMagro,
+        massaGorda: pesoGordo,
+        pesoRelativo: pesoRelativoVal,
+        scorePesoRelativo,
+        scoreTotal: scoreComposicao,
         classificacao: classComp,
         emoji: emojiComp,
     };
 
-    // === PROPORÇÕES ÁUREAS ===
-    const rawProporcoes = results?.proporcoes || results?.proportions || [];
+    // === PROPORÇÕES ÁUREAS (do campo results.proporcoes_aureas) ===
+    // Formato: [{ nome, atual, ideal, pct, status }]
+    const rawProporcoes = results?.proporcoes_aureas || [];
+
+    // Nomes de proporções inversas — cintura e upper vs lower
+    const INVERSAS = ['Cintura', 'Upper vs Lower'];
+
+    // Fórmulas base por nome de proporção
+    const FORMULAS: Record<string, string> = {
+        'Shape-V': 'Ombros ÷ Cintura',
+        'Costas': 'Costas ÷ Cintura',
+        'Peitoral': 'Peitoral ÷ Punho',
+        'Braço': 'Braço ÷ Punho',
+        'Antebraço': 'Antebraço ÷ Braço',
+        'Tríade': 'Pescoço ≈ Braço ≈ Panturrilha',
+        'Cintura': 'Cintura ÷ Pélvis',
+        'Coxa': 'Coxa ÷ Joelho',
+        'Coxa vs Pantur.': 'Coxa ÷ Panturrilha',
+        'Panturrilha': 'Panturrilha ÷ Tornozelo',
+        'Upper vs Lower': 'Braço+Ante. ÷ Coxa+Pant.',
+    };
+
     const proporcoes = rawProporcoes.map((p: any) => {
-        const atual = p.ratio || p.indiceAtual || p.atual || 0;
-        const meta = p.idealRatio || p.indiceMeta || p.meta || 1.618;
-        const ehInversa = p.ehInversa || p.isInverse || false;
-
-        let percentualDoIdeal: number;
-        if (ehInversa) {
-            // Proporção inversa (cintura): menor é melhor
-            if (atual <= meta) {
-                const bonus = ((meta - atual) / meta) * 100;
-                percentualDoIdeal = Math.min(110, 100 + bonus * 0.5);
-            } else {
-                const excesso = ((atual - meta) / meta) * 100;
-                percentualDoIdeal = Math.max(75, 100 - excesso * 1.5);
-            }
-        } else {
-            percentualDoIdeal = meta > 0 ? Math.min(115, (atual / meta) * 100) : 0;
-        }
-
+        const ehInversa = INVERSAS.includes(p.nome);
         return {
-            nome: p.name || p.nome || '',
-            categoria: p.categoria || '',
-            indiceAtual: parseFloat(atual.toFixed(3)),
-            indiceMeta: parseFloat(meta.toFixed(3)),
-            percentualDoIdeal: Math.round(percentualDoIdeal * 10) / 10,
+            nome: p.nome || '',
+            categoria: '',
+            indiceAtual: parseFloat((p.atual || 0).toFixed(3)),
+            indiceMeta: parseFloat((p.ideal || 1.618).toFixed(3)),
+            percentualDoIdeal: p.pct || 0,
             ehInversa,
-            formulaBase: p.formulaBase || p.formula || '',
-            medidaAtual: p.medidaAtual || undefined,
-            medidaMeta: p.medidaMeta || undefined,
-            diferencaCm: p.diferencaCm || undefined,
-            // classificacao e posicaoBarra serão calculados no componente
+            formulaBase: FORMULAS[p.nome] || '',
+            medidaAtual: undefined,
+            medidaMeta: undefined,
+            diferencaCm: undefined,
             classificacao: {} as any,
             posicaoBarra: 0,
         };
     });
 
-    // === ASSIMETRIA ===
-    const rawAssimetria = results?.assimetria || results?.asymmetry || {};
-    const assimetriaMembros = rawAssimetria?.membros || rawAssimetria?.members || [];
-    const membros = assimetriaMembros.map((m: any) => {
-        const esq = m.ladoEsquerdo || m.left || 0;
-        const dir = m.ladoDireito || m.right || 0;
-        const maior = Math.max(esq, dir);
-        const menor = Math.min(esq, dir);
-        const diffCm = Math.abs(esq - dir);
-        const diffPct = maior > 0 ? ((maior - menor) / maior) * 100 : 0;
+    // === ASSIMETRIA (do campo results.scores.simetria.detalhes.detalhes) ===
+    // Formato: [{ grupo, esquerdo, direito, diferenca, diferencaPercent, score, status, ladoDominante }]
+    const simetriaDetalhes = scoresDB?.simetria?.detalhes?.detalhes || [];
 
+    // Mapeamento de nomes internos para labels amigáveis
+    const GRUPO_LABELS: Record<string, string> = {
+        braco: 'Braço',
+        antebraco: 'Antebraço',
+        coxa: 'Coxa',
+        panturrilha: 'Panturrilha',
+        peitoral: 'Peitoral',
+    };
+
+    const membros = simetriaDetalhes.map((s: any) => {
+        const diferencaPercentual = s.diferencaPercent || 0;
         let status = 'simetrico';
         let emoji = '✅';
         let label = 'Simétrico';
-        if (diffPct > 10) { status = 'significativa'; emoji = '❌'; label = 'Assimetria significativa'; }
-        else if (diffPct > 5) { status = 'moderada'; emoji = '🔶'; label = 'Assimetria moderada'; }
-        else if (diffPct > 2) { status = 'leve'; emoji = '⚠️'; label = 'Leve assimetria'; }
+        if (diferencaPercentual > 10) { status = 'significativa'; emoji = '❌'; label = 'Assimetria significativa'; }
+        else if (diferencaPercentual > 5) { status = 'moderada'; emoji = '🔶'; label = 'Assimetria moderada'; }
+        else if (diferencaPercentual > 2) { status = 'leve'; emoji = '⚠️'; label = 'Leve assimetria'; }
 
         return {
-            membro: m.membro || m.name || '',
-            ladoEsquerdo: esq,
-            ladoDireito: dir,
-            diferencaCm: Math.round(diffCm * 10) / 10,
-            diferencaPercentual: Math.round(diffPct * 10) / 10,
+            membro: GRUPO_LABELS[s.grupo] || s.grupo || '',
+            ladoEsquerdo: s.esquerdo || 0,
+            ladoDireito: s.direito || 0,
+            diferencaCm: Math.round((s.diferenca || 0) * 10) / 10,
+            diferencaPercentual: Math.round(diferencaPercentual * 10) / 10,
             status,
             emoji,
             label,
         };
     });
 
-    const scoresSimetria = membros.map((m: any) =>
-        Math.max(50, 100 - m.diferencaPercentual * 5)
-    );
-    const scoreSimetria = membros.length > 0
-        ? Math.round(scoresSimetria.reduce((a: number, b: number) => a + b, 0) / scoresSimetria.length)
-        : 100;
-
     let classSimetria = 'EXCELENTE';
     let emojiSimetria = '✅';
     if (scoreSimetria < 70) { classSimetria = 'PRECISA MELHORAR'; emojiSimetria = '❌'; }
     else if (scoreSimetria < 85) { classSimetria = 'BOM'; emojiSimetria = '⚠️'; }
     else if (scoreSimetria < 95) { classSimetria = 'MUITO BOM'; emojiSimetria = '💪'; }
-
-    // === SCORES DOS 3 PILARES ===
-    const scoreProporcoes = results?.scoreProporcoes || results?.proportionScore || score * 0.4;
-    const scoreComposicao = scoreComp || score * 0.35;
 
     return {
         id: a.id,
@@ -728,19 +740,38 @@ export async function buscarDadosAvaliacao(atletaId: string): Promise<AvaliacaoD
         classificacaoGeral,
         emojiGeral,
         scores: {
-            proporcoes: { valor: scoreProporcoes, peso: 0.40, contribuicao: scoreProporcoes * 0.40 },
-            composicao: { valor: scoreComposicao, peso: 0.35, contribuicao: scoreComposicao * 0.35 },
-            simetria: { valor: scoreSimetria, peso: 0.25, contribuicao: scoreSimetria * 0.25 },
+            proporcoes: { valor: scoreProporcoes, peso: 0.40, contribuicao: (scoresDB?.proporcoes?.contribuicao || scoreProporcoes * 0.40) },
+            composicao: { valor: scoreComposicao, peso: 0.35, contribuicao: (scoresDB?.composicao?.contribuicao || scoreComposicao * 0.35) },
+            simetria: { valor: scoreSimetria, peso: 0.25, contribuicao: (scoresDB?.simetria?.contribuicao || scoreSimetria * 0.25) },
         },
         diagnostico,
         proporcoes,
         assimetria: {
             membros,
-            scoreGeral: scoreSimetria,
+            scoreGeral: Math.round(scoreSimetria),
             classificacao: classSimetria,
             emoji: emojiSimetria,
         },
     };
+}
+
+/** Helpers para classificação quando não existe results.classificacao */
+function getClassificacaoLabel(score: number): string {
+    if (score >= 90) return 'ELITE';
+    if (score >= 80) return 'AVANÇADO';
+    if (score >= 70) return 'ATLÉTICO';
+    if (score >= 60) return 'INTERMEDIÁRIO';
+    if (score >= 50) return 'INICIANTE';
+    return 'COMEÇANDO';
+}
+
+function getClassificacaoEmoji(score: number): string {
+    if (score >= 90) return '👑';
+    if (score >= 80) return '🥇';
+    if (score >= 70) return '💪';
+    if (score >= 60) return '🏃';
+    if (score >= 50) return '🌱';
+    return '🚀';
 }
 
 /** Return type for buscarDadosAvaliacao */
