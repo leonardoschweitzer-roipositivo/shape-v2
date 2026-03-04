@@ -351,21 +351,16 @@ export function analisarProporcoes(
         return Math.max(0, Math.min(115, Math.round((progress / range) * 100)));
     };
 
-    // ─── Se recebeu dados do banco, usar atual/ideal e recalcular % com baselines ───
+    // ─── Se recebeu dados do banco, usar atual/ideal/pct já calculados (preserva regras de sexo) ───
     if (proporcoesPreCalculadas?.length && proporcoesPreCalculadas[0]?.nome) {
-        console.log('[Diagnostico] ✅ USANDO ratios do banco + recalculando % com baselines');
+        console.log('[Diagnostico] ✅ USANDO ratios do banco (preservando % e status femininos/masculinos)');
         return proporcoesPreCalculadas.map(p => {
-            const bl = BASELINES[p.nome] || { baseline: 0 };
-            const pct = calcPct(p.atual, p.ideal, bl.baseline, bl.inverse);
             return {
                 grupo: p.nome,
                 atual: Math.round(p.atual * 100) / 100,
                 ideal: p.ideal,
-                pct,
-                status: pct >= 103 ? 'ELITE' :
-                    pct >= 97 ? 'META' :
-                        pct >= 90 ? 'QUASE LÁ' :
-                            pct >= 82 ? 'CAMINHO' : 'INÍCIO',
+                pct: p.pct,
+                status: p.status,
             };
         });
     }
@@ -587,13 +582,20 @@ export function gerarMetasProporcoes(
     const MAX_CM_12M: Record<string, number> = {
         'Costas': 3,              // circunferência torácica (lat spread)
         'Shape-V': 2.5,           // circunferência de ombros
+        'SHR': 2.5,               // ombros (feminino)
         'Peitoral': 3,            // circunferência torácica
         'Braço': 1.5,             // braço (grupo menor, cresce menos em cm)
+        'Proporção de Braço': 1.5, // braço (feminino)
         'Antebraço': 0.5,         // muito limitado geneticamente
         'Coxa': 2.5,              // grupo grande, responde bem
+        'Desenvolvimento de Coxa': 2.5, // coxa (feminino)
         'Coxa vs Pantur.': 2.5,   // coxa
+        'Proporção de Perna': 2.5, // perna inteira (feminino)
         'Panturrilha': 0.8,       // grupo mais resistente a hipertrofia
+        'Desenvolvimento de Panturrilha': 0.8, // panturrilha (feminino)
+        'Hip-Thigh': 2.5,         // coxa / quadril
         'Tríade': 5,              // pontos de score (não cm)
+        'Ampulheta': 5,           // pontos de score (não cm)
         'Upper vs Lower': 1.5,    // combinação de grupos
     };
 
@@ -604,16 +606,24 @@ export function gerarMetasProporcoes(
             case 'Costas':
             case 'Shape-V':
                 return medidas.cintura;
+            case 'SHR':
+            case 'Hip-Thigh':
+                return (medidas as any).quadril || medidas.cintura * 1.1;
             case 'Peitoral':
-            case 'Braço':
+            case 'Proporção de Braço':
                 return medidas.punho;
+            case 'Braço':
+                return Math.max(medidas.bracoD, medidas.bracoE) || medidas.punho;
             case 'Antebraço':
                 return Math.max(medidas.bracoD, medidas.bracoE);
             case 'Coxa':
+            case 'Desenvolvimento de Coxa':
                 return medidas.joelho;
             case 'Coxa vs Pantur.':
+            case 'Proporção de Perna':
                 return Math.max(medidas.panturrilhaD, medidas.panturrilhaE);
             case 'Panturrilha':
+            case 'Desenvolvimento de Panturrilha':
                 return medidas.tornozelo;
             default:
                 return 0;
@@ -621,7 +631,7 @@ export function gerarMetasProporcoes(
     };
 
     return proporcoes
-        .filter(p => p.pct < 100 && p.grupo !== 'Cintura')
+        .filter(p => p.pct < 100 && p.grupo !== 'Cintura' && p.grupo !== 'WHR')
         .slice(0, 5)
         .map(p => {
             const diff = p.ideal - p.atual;
