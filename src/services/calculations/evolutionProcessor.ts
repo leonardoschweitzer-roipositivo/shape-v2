@@ -60,20 +60,23 @@ export function mapMeasurementToInput(
     const pantMedio = (m.calfLeft + m.calfRight) / 2;
     const coxaMedia = (m.thighLeft + m.thighRight) / 2;
 
+    // Gender-specific proportion targets
+    const isFemale = gender === 'FEMALE';
+
     const vTaperAtual = m.shoulders / m.waist;
-    const vTaperMeta = 1.618;
+    const vTaperMeta = isFemale ? 1.35 : 1.618; // Hourglass vs Adonis
     const vTaperScore = getRatioPercent(vTaperAtual, vTaperMeta);
 
     const peitoRatio = m.chest / punho;
-    const peitoMeta = 6.5;
+    const peitoMeta = isFemale ? 5.5 : 6.5; // Busto/punho feminino vs Peitoral/punho masculino
     const peitoScore = getRatioPercent(peitoRatio, peitoMeta);
 
     const bracoRatio = bracoMedio / punho;
-    const bracoMeta = 2.5;
+    const bracoMeta = isFemale ? 2.15 : 2.5; // Braço feminino proporcionalmente menor
     const bracoScore = getRatioPercent(bracoRatio, bracoMeta);
 
     const cinturaRatio = m.waist / height;
-    const cinturaMeta = 0.45;
+    const cinturaMeta = isFemale ? 0.38 : 0.45; // Cintura/altura feminina mais restritiva
     const cinturaScore = getRatioPercent(cinturaRatio, cinturaMeta, true);
 
     const triadeMedia = (bracoMedio + pantMedio + neck) / 3;

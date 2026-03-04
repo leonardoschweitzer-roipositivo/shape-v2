@@ -12,6 +12,8 @@
 
 import { supabase } from '@/services/supabase';
 import { PotencialAtleta } from './potencial';
+import { calcularAvaliacaoGeral } from './assessment';
+import type { AvaliacaoGeralInput } from '@/types/assessment';
 import { gerarConteudoIA } from '@/services/vitruviusAI';
 import { type PerfilAtletaIA, perfilParaTexto, diagnosticoParaTexto, getFontesCientificas } from '@/services/vitruviusContext';
 import { buildDiagnosticoPrompt } from '@/services/vitruviusPrompts';
@@ -665,6 +667,196 @@ export function gerarMetasProporcoes(
 }
 
 // ═══════════════════════════════════════════════════════════
+// PROJEÇÃO DE SCORE META (3 PILARES)
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * Projeta o Score Meta para 6 e 12 meses simulando melhorias reais nos 3 pilares:
+ * - Composição Corporal (BF projetado, massa magra projetada)
+ * - Proporções Áureas (metas trimestrais já calculadas)
+ * - Simetria Bilateral (convergência das assimetrias para <2%)
+ *
+ * Ao invés de somar um delta flat, monta um AvaliacaoGeralInput projetado
+ * e chama calcularAvaliacaoGeral para obter o score real projetado.
+ */
+function projetarScoreMeta(
+    input: DiagnosticoInput,
+    proporcoes: ProporcoesGrupo[],
+    simetria: ReturnType<typeof analisarSimetria>,
+    metasComposicao: MetasComposicao,
+    metasProporcoes: MetaProporcao[],
+    gorduraMeta12M: number,
+    fallbackDelta: number
+): { scoreMeta6M: number; scoreMeta12M: number } {
+    try {
+        const genero = input.sexo === 'M' ? 'MALE' as const : 'FEMALE' as const;
+        const altura = input.altura;
+        const idade = input.idade;
+
+        // ── Helper: projetar proporções para um horizonte (fração 0→1) ──
+        const projetarProporcoesParaHorizonte = (fracao: number) => {
+            // Criar mapa de metas projetadas por grupo
+            const metaMap = new Map<string, number>();
+            for (const mp of metasProporcoes) {
+                const ganhoTotal = mp.meta12M - mp.atual;
+                metaMap.set(mp.grupo, mp.atual + ganhoTotal * fracao);
+            }
+
+            // Para proporções sem meta explícita, manter o valor atual
+            return proporcoes.map(p => ({
+                ...p,
+                atualProjetado: metaMap.get(p.grupo) ?? p.atual,
+            }));
+        };
+
+        // ── Helper: construir AvaliacaoGeralInput projetado ──
+        const buildInputProjetado = (fracao: number): AvaliacaoGeralInput => {
+            // 1. Composição projetada
+            const meses = Math.round(fracao * 12);
+            const ganhoMMLMensal = 0.2;
+            const massaMagraProj = input.peso * (1 - input.gorduraPct / 100) + ganhoMMLMensal * meses;
+            const bfProj = input.gorduraPct - (input.gorduraPct - gorduraMeta12M) * fracao;
+            const pesoProj = massaMagraProj / (1 - bfProj / 100);
+            const pesoGordoProj = pesoProj - massaMagraProj;
+
+            // 2. Proporções projetadas
+            const propsProj = projetarProporcoesParaHorizonte(fracao);
+
+            // Mapear de volta para o formato AvaliacaoGeralInput.proporcoes
+            const findProp = (nome: string) => propsProj.find(p => p.grupo === nome);
+
+            const makeProportionData = (nome: string) => {
+                const p = findProp(nome);
+                if (!p) return null;
+                const pctDoIdeal = p.ideal > 0 ? Math.min(115, (p.atualProjetado / p.ideal) * 100) : 0;
+                return {
+                    indiceAtual: p.atualProjetado,
+                    indiceMeta: p.ideal,
+                    percentualDoIdeal: Math.round(pctDoIdeal * 10) / 10,
+                    classificacao: 'NORMAL' as const,
+                };
+            };
+
+            const makeInverseProportionData = (nome: string) => {
+                const p = findProp(nome);
+                if (!p) return null;
+                // Para proporções inversas, menor que ideal = bom
+                const pctDoIdeal = p.ideal > 0
+                    ? (p.atualProjetado <= p.ideal ? 100 : Math.max(0, (p.ideal / p.atualProjetado) * 100))
+                    : 0;
+                return {
+                    indiceAtual: p.atualProjetado,
+                    indiceMeta: p.ideal,
+                    percentualDoIdeal: Math.round(pctDoIdeal * 10) / 10,
+                    classificacao: 'NORMAL' as const,
+                };
+            };
+
+            // Tríade projetada: convergir para harmonia
+            const triadeAtual = findProp('Tríade');
+            const triadeProj = triadeAtual
+                ? Math.min(100, triadeAtual.atualProjetado)
+                : 85;
+
+            // 3. Simetria projetada: convergir assimetrias para <2% linearmente
+            const projetarSimetria = (esq: number, dir: number) => {
+                const diff = Math.abs(esq - dir);
+                const media = (esq + dir) / 2;
+                const diffPctAtual = media > 0 ? (diff / media) * 100 : 0;
+                // Projetar redução: convergir em direção a <1% em 12 meses
+                const diffPctProj = Math.max(0.5, diffPctAtual * (1 - fracao * 0.7));
+                const diffProj = (diffPctProj / 100) * media;
+                // Recalcular esquerdo/direito mantendo a média
+                return {
+                    esquerdo: Math.round((media - diffProj / 2) * 10) / 10,
+                    direito: Math.round((media + diffProj / 2) * 10) / 10,
+                    diferenca: Math.round(diffProj * 10) / 10,
+                    diferencaPercentual: Math.round(diffPctProj * 10) / 10,
+                    status: 'SIMETRICO' as const,
+                };
+            };
+
+            // Cintura projetada em cm (interpolar entre atual e meta)
+            const cinturaAtualCm = input.medidas.cintura;
+            // Meta de cintura: se proporção Cintura está nas metas, usar; senão redução simples
+            const cinturaPropMeta = metasProporcoes.find(mp => mp.grupo === 'Cintura');
+            let cinturaProjetadaCm = cinturaAtualCm;
+            if (cinturaPropMeta && input.medidas.pelvis > 0) {
+                // Ratio projetado * pélvis = cintura ideal projetada
+                cinturaProjetadaCm = cinturaPropMeta.atual + (cinturaPropMeta.meta12M - cinturaPropMeta.atual) * fracao;
+                cinturaProjetadaCm = cinturaProjetadaCm * input.medidas.pelvis;
+            } else {
+                // Fallback: reduzir proporcionalmente ao BF
+                cinturaProjetadaCm = cinturaAtualCm * (1 - fracao * 0.05);
+            }
+
+            return {
+                proporcoes: {
+                    metodo: 'golden' as const,
+                    vTaper: makeProportionData('Shape-V'),
+                    peitoral: makeProportionData('Peitoral'),
+                    braco: makeProportionData('Braço') || makeProportionData('Proporção de Braço'),
+                    antebraco: makeProportionData('Antebraço'),
+                    triade: {
+                        harmoniaPercentual: triadeProj,
+                        pescoco: input.medidas.pescoco,
+                        braco: (input.medidas.bracoD + input.medidas.bracoE) / 2,
+                        panturrilha: (input.medidas.panturrilhaD + input.medidas.panturrilhaE) / 2,
+                    },
+                    cintura: makeInverseProportionData('Cintura') || makeInverseProportionData('WHR'),
+                    coxa: makeProportionData('Coxa') || makeProportionData('Desenvolvimento de Coxa'),
+                    coxaPanturrilha: makeProportionData('Coxa vs Pantur.') || makeProportionData('Proporção de Perna'),
+                    panturrilha: makeProportionData('Panturrilha') || makeProportionData('Desenvolvimento de Panturrilha'),
+                    costas: makeProportionData('Costas'),
+                    upperLower: makeInverseProportionData('Upper vs Lower'),
+                },
+                composicao: {
+                    peso: Math.round(pesoProj * 10) / 10,
+                    altura,
+                    idade: idade + Math.round(fracao),
+                    genero,
+                    bf: Math.round(bfProj * 10) / 10,
+                    metodo_bf: 'NAVY',
+                    pesoMagro: Math.round(massaMagraProj * 10) / 10,
+                    pesoGordo: Math.round(pesoGordoProj * 10) / 10,
+                    cintura: Math.round(cinturaProjetadaCm * 10) / 10,
+                },
+                assimetrias: {
+                    braco: projetarSimetria(input.medidas.bracoE, input.medidas.bracoD),
+                    antebraco: projetarSimetria(input.medidas.antebracoE, input.medidas.antebracoD),
+                    coxa: projetarSimetria(input.medidas.coxaE, input.medidas.coxaD),
+                    panturrilha: projetarSimetria(input.medidas.panturrilhaE, input.medidas.panturrilhaD),
+                },
+            };
+        };
+
+        // Calcular scores projetados para 6M e 12M
+        const input6M = buildInputProjetado(0.5);
+        const input12M = buildInputProjetado(1.0);
+
+        const resultado6M = calcularAvaliacaoGeral(input6M);
+        const resultado12M = calcularAvaliacaoGeral(input12M);
+
+        const scoreMeta6M = Math.min(100, Math.round(resultado6M.avaliacaoGeral * 10) / 10);
+        const scoreMeta12M = Math.min(100, Math.round(resultado12M.avaliacaoGeral * 10) / 10);
+
+        // Segurança: meta não pode ser inferior ao score atual
+        return {
+            scoreMeta6M: Math.max(input.score, scoreMeta6M),
+            scoreMeta12M: Math.max(input.score, scoreMeta12M),
+        };
+    } catch (error) {
+        console.error('[Diagnostico] Erro ao projetar Score Meta, usando fallback:', error);
+        // Fallback: método antigo (delta flat)
+        const deltaScore6M = Math.round(fallbackDelta * 0.55 * 10) / 10;
+        return {
+            scoreMeta6M: Math.min(100, Math.round((input.score + deltaScore6M) * 10) / 10),
+            scoreMeta12M: Math.min(100, Math.round((input.score + fallbackDelta) * 10) / 10),
+        };
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
 // GERADOR PRINCIPAL
 // ═══════════════════════════════════════════════════════════
 
@@ -699,11 +891,18 @@ export function gerarDiagnosticoCompleto(
     const proporcoes = analisarProporcoes(input.medidas, input.proporcoesPreCalculadas);
     const simetria = analisarSimetria(input.medidas);
 
-    // Meta de score: dinâmica via PotencialAtleta (se disponível) ou fallback conservador
-    const deltaScore = potencial?.deltaPotencialScore12M ?? 6;
-    const deltaScore6M = Math.round(deltaScore * 0.55 * 10) / 10;
-    const scoreMeta12M = Math.min(100, Math.round((input.score + deltaScore) * 10) / 10);
-    const scoreMeta6M = Math.min(100, Math.round((input.score + deltaScore6M) * 10) / 10);
+    // 4. Prioridades e metas (precisam estar antes do cálculo de Score Meta)
+    const prioridades = gerarPrioridades(proporcoes);
+    const metasProporcoes = gerarMetasProporcoes(proporcoes, input.medidas);
+
+    // 5. Meta de score: SIMULAÇÃO CONTEXTUALIZADA via 3 pilares
+    //    Projeta melhorias reais em composição, proporções e simetria
+    //    e calcula o score resultante via calcularAvaliacaoGeral.
+    const fallbackDelta = potencial?.deltaPotencialScore12M ?? 6;
+    const { scoreMeta6M, scoreMeta12M } = projetarScoreMeta(
+        input, proporcoes, simetria, metasComposicao, metasProporcoes, gorduraMeta12M, fallbackDelta
+    );
+    const deltaScore = Math.round((scoreMeta12M - input.score) * 10) / 10;
     const classificacaoMeta = scoreMeta12M >= 95 ? 'ELITE' : scoreMeta12M >= 85 ? 'META' : 'CAMINHO';
     const labelNivel = potencial?.nivel ?? input.classificacao.toUpperCase();
 
@@ -716,11 +915,7 @@ export function gerarDiagnosticoCompleto(
         simetria,
     };
 
-    // 4. Prioridades e metas
-    const prioridades = gerarPrioridades(proporcoes);
-    const metasProporcoes = gerarMetasProporcoes(proporcoes, input.medidas);
-
-    // 5. Resumo do Vitrúvio — contextualizado com nível e meta real
+    // 6. Resumo do Vitrúvio — contextualizado com nível e meta real
     const resumoVitruvio = `${input.nomeAtleta}, você está classificado como ${labelNivel} com score ${input.score}. Com base no seu perfil, histórico e contexto, a meta realista em 12 meses é atingir score ${scoreMeta12M}+ (${classificacaoMeta}) — um ganho de ${deltaScore} pontos. Na composição corporal, a meta é reduzir gordura de ${input.gorduraPct}% para ${gorduraMeta12M}% enquanto ganha massa magra. Com consistência e o plano correto para o seu nível, essas metas são desafiadoras mas totalmente alcançáveis. Vamos montar o plano de treino para fazer isso acontecer!`;
 
     return {
