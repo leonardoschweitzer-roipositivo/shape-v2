@@ -133,8 +133,8 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
         }
     }
 
-    const handlePularTreino = async () => {
-        await pularTreino(atletaId, todayData?.treino?.indiceTreino)
+    const handlePularTreino = async (continuarHoje?: boolean) => {
+        await pularTreino(atletaId, todayData?.treino?.indiceTreino, continuarHoje)
         if (ctx) {
             const today = await montarDadosHoje(ctx)
             setTodayData(today)

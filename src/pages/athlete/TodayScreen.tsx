@@ -22,7 +22,7 @@ interface TodayScreenProps {
     personalNome?: string
     onVerTreino: () => void
     onCompletarTreino: () => void
-    onPularTreino: () => void
+    onPularTreino: (continuarHoje?: boolean) => void
     onRegistrarRefeicao: () => void
     onTrackerClick: (tipo: TrackerRapido['id']) => void
     onFalarComCoach: () => void
@@ -42,8 +42,15 @@ export function TodayScreen({
     onTrackerClick,
     onFalarComCoach
 }: TodayScreenProps) {
+    const [modalPularOpen, setModalPularOpen] = React.useState(false)
+
+    const handleConfirmPular = (continuar: boolean) => {
+        setModalPularOpen(false)
+        onPularTreino(continuar)
+    }
+
     return (
-        <div className="min-h-screen bg-[#060B18] pb-20">
+        <div className="min-h-screen bg-[#060B18] pb-20 relative">
             {/* Header */}
             <HeaderHoje
                 nomeAtleta={data.atleta.nome}
@@ -63,7 +70,7 @@ export function TodayScreen({
                     proximoTreino={proximoTreino}
                     onVerTreino={onVerTreino}
                     onCompletei={onCompletarTreino}
-                    onPular={onPularTreino}
+                    onPular={() => setModalPularOpen(true)}
                 />
 
                 {/* Card de Dieta */}
@@ -84,6 +91,43 @@ export function TodayScreen({
                     onFalarComCoach={onFalarComCoach}
                 />
             </div>
+
+            {/* Modal de Pular Treino */}
+            {modalPularOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                    <div className="bg-[#0C1220] border border-white/10 rounded-3xl w-full max-w-sm p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-full bg-orange-500/20 flex flex-shrink-0 items-center justify-center">
+                                <span className="text-orange-500 text-lg">⏭️</span>
+                            </div>
+                            <h3 className="text-lg font-black text-white uppercase tracking-wide">Pular Treino?</h3>
+                        </div>
+                        <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+                            Você pode optar por <strong>descansar o resto do dia</strong> ou avançar para <strong>treinar o próximo treino da sequência hoje mesmo</strong>.
+                        </p>
+                        <div className="flex flex-col gap-3">
+                            <button
+                                onClick={() => handleConfirmPular(true)}
+                                className="w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-sm transition-colors shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2"
+                            >
+                                FAZER O PRÓXIMO HOJE
+                            </button>
+                            <button
+                                onClick={() => handleConfirmPular(false)}
+                                className="w-full py-3.5 px-4 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2"
+                            >
+                                DESCANSAR HOJE
+                            </button>
+                            <button
+                                onClick={() => setModalPularOpen(false)}
+                                className="w-full py-2.5 px-4 text-gray-500 hover:text-white font-bold text-sm transition-colors mt-2 uppercase tracking-wider"
+                            >
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

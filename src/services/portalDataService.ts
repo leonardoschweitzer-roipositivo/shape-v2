@@ -434,7 +434,7 @@ export async function montarDadosHoje(ctx: PortalContext): Promise<TodayScreenDa
     ]);
 
     const dHoje = treinoReg ? (treinoReg as any).dados : null;
-    const jaFezTreinoHoje = dHoje && (dHoje.status === 'completo' || dHoje.status === 'pulado');
+    const jaFezTreinoHoje = dHoje && (dHoje.status === 'completo' || (dHoje.status === 'pulado' && dHoje.continuarHoje !== true));
 
     // Se ele já completou/pulou um treino HOJE, queremos renderizar exatamente esse treino
     // na tela (para mostrar o card verde de "COMPLETO" ou card laranja de "PULADO").
@@ -952,10 +952,11 @@ export async function completarTreino(
 /**
  * Marca treino como pulado
  */
-export async function pularTreino(atletaId: string, treinoIndex?: number): Promise<boolean> {
+export async function pularTreino(atletaId: string, treinoIndex?: number, continuarHoje: boolean = false): Promise<boolean> {
     return registrarTracker(atletaId, 'treino', {
         status: 'pulado',
         treinoIndex,
+        continuarHoje,
     });
 }
 
