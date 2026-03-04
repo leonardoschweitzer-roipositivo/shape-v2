@@ -8,7 +8,7 @@
 import React, { useState } from 'react';
 import {
     Ruler, Scale, CheckCircle, ArrowLeft, Sparkles,
-    Activity, Heart
+    Activity, Heart, Bone
 } from 'lucide-react';
 
 interface SelfMeasurementsProps {
@@ -30,6 +30,7 @@ interface MeasurementField {
 const FIELDS: MeasurementField[] = [
     // Básicas
     { key: 'peso', label: 'Peso', unit: 'kg', placeholder: '0.0', section: 'basicas' },
+    { key: 'altura', label: 'Altura', unit: 'cm', placeholder: '0.0', section: 'basicas' },
 
     // Tronco
     { key: 'pescoco', label: 'Pescoço', unit: 'cm', placeholder: '0.0', section: 'tronco' },
@@ -50,6 +51,11 @@ const FIELDS: MeasurementField[] = [
     { key: 'coxa_esquerda', label: 'Coxa Esquerda', unit: 'cm', placeholder: '0.0', section: 'membros' },
     { key: 'panturrilha_direita', label: 'Panturrilha Direita', unit: 'cm', placeholder: '0.0', section: 'membros' },
     { key: 'panturrilha_esquerda', label: 'Panturrilha Esquerda', unit: 'cm', placeholder: '0.0', section: 'membros' },
+
+    // Estrutura Óssea
+    { key: 'punho', label: 'Punho', unit: 'cm', placeholder: '0.0', section: 'estrutura' },
+    { key: 'joelho', label: 'Joelho', unit: 'cm', placeholder: '0.0', section: 'estrutura' },
+    { key: 'tornozelo', label: 'Tornozelo', unit: 'cm', placeholder: '0.0', section: 'estrutura' },
 ];
 
 const SECTIONS = [
@@ -57,6 +63,7 @@ const SECTIONS = [
     { id: 'tronco', label: 'TRONCO', icon: Activity, color: 'text-blue-400' },
     { id: 'core', label: 'CORE', icon: Heart, color: 'text-orange-400' },
     { id: 'membros', label: 'MEMBROS', icon: Ruler, color: 'text-purple-400' },
+    { id: 'estrutura', label: 'ESTRUTURA ÓSSEA', icon: Bone, color: 'text-zinc-400' },
 ];
 
 export function SelfMeasurements({ atletaId, atletaNome, sexo, onSave, onBack }: SelfMeasurementsProps) {
@@ -182,7 +189,7 @@ export function SelfMeasurements({ atletaId, atletaNome, sexo, onSave, onBack }:
                                     </h3>
                                 </div>
 
-                                <div className={section.id === 'membros' ? 'grid grid-cols-2 gap-3' : 'grid grid-cols-1 sm:grid-cols-3 gap-3'}>
+                                <div className={(section.id === 'membros' || section.id === 'estrutura') ? 'grid grid-cols-2 gap-3' : 'grid grid-cols-1 sm:grid-cols-3 gap-3'}>
                                     {sectionFields.map(field => (
                                         <div key={field.key} className="relative">
                                             <label className="block text-[10px] text-gray-500 font-medium uppercase tracking-wider mb-1.5">
@@ -215,8 +222,8 @@ export function SelfMeasurements({ atletaId, atletaNome, sexo, onSave, onBack }:
                         onClick={handleSubmit}
                         disabled={saving || filledCount < 3}
                         className={`w-full flex items-center justify-center gap-3 px-8 py-4 rounded-xl font-bold text-sm uppercase tracking-widest transition-all ${saving || filledCount < 3
-                                ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
-                                : 'bg-gradient-to-r from-indigo-500 to-emerald-500 text-white shadow-[0_0_30px_rgba(99,102,241,0.3)] hover:shadow-[0_0_40px_rgba(99,102,241,0.5)] hover:scale-[1.02] active:scale-[0.98]'
+                            ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
+                            : 'bg-gradient-to-r from-indigo-500 to-emerald-500 text-white shadow-[0_0_30px_rgba(99,102,241,0.3)] hover:shadow-[0_0_40px_rgba(99,102,241,0.5)] hover:scale-[1.02] active:scale-[0.98]'
                             }`}
                     >
                         {saving ? (

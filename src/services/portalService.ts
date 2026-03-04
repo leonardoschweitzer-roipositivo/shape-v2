@@ -252,6 +252,10 @@ export const portalService = {
      */
     async saveMeasurements(atletaId: string, measurements: {
         peso?: number;
+        altura?: number;
+        punho?: number;
+        joelho?: number;
+        tornozelo?: number;
         pescoco?: number;
         ombros?: number;
         peitoral?: number;
@@ -267,12 +271,32 @@ export const portalService = {
         panturrilha_direita?: number;
         panturrilha_esquerda?: number;
     }): Promise<{ success: boolean; medidaId?: string }> {
+        const { altura, punho, joelho, tornozelo, ...medidasRestantes } = measurements;
+
+        // Se o atleta preencheu a altura ou medidas ósseas, salva na ficha dele
+        if (altura !== undefined || punho !== undefined || joelho !== undefined || tornozelo !== undefined) {
+            const updates: any = {};
+            if (altura !== undefined) updates.altura = altura;
+            if (punho !== undefined) updates.punho = punho;
+            if (joelho !== undefined) updates.joelho = joelho;
+            if (tornozelo !== undefined) updates.tornozelo = tornozelo;
+
+            const { error: fichaError } = await supabase
+                .from('fichas')
+                .update(updates)
+                .eq('atleta_id', atletaId);
+
+            if (fichaError) {
+                console.error('[PortalService] Erro ao salvar medidas estruturais na ficha:', fichaError);
+            }
+        }
+
         const { data, error } = await supabase
             .from('medidas')
             .insert({
                 atleta_id: atletaId,
                 data: new Date().toISOString().split('T')[0],
-                ...measurements,
+                ...medidasRestantes,
                 registrado_por: 'APP', // Registrado pelo próprio atleta
             } as any)
             .select()
