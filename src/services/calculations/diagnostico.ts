@@ -321,7 +321,7 @@ const GR_TARGETS = {
  */
 export function analisarProporcoes(
     medidas: DiagnosticoInput['medidas'],
-    proporcoesPreCalculadas?: any[]
+    proporcoesPreCalculadas?: (ProporcoesGrupo | any)[]
 ): ProporcoesGrupo[] {
     // ─── Baselines fisiológicos compartilhados ───
     const BASELINES: Record<string, { baseline: number; inverse?: boolean }> = {

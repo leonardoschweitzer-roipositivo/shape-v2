@@ -19,19 +19,19 @@ let model: GenerativeModel | null = null
 const safetySettings = [
     {
         category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-        threshold: HarmBlockThreshold.BLOCK_NONE,
+        threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
     },
     {
         category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-        threshold: HarmBlockThreshold.BLOCK_NONE,
+        threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
     },
     {
         category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-        threshold: HarmBlockThreshold.BLOCK_NONE,
+        threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
     },
     {
         category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-        threshold: HarmBlockThreshold.BLOCK_NONE,
+        threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
     },
 ];
 
@@ -127,8 +127,11 @@ export async function gerarConteudoIA<T = any>(prompt: string): Promise<T | null
         const parsed = JSON.parse(cleaned) as T
         console.info('[VitruviusAI] ✅ Conteúdo IA gerado com sucesso')
         return parsed
-    } catch (error) {
-        console.error('[VitruviusAI] Erro na geração:', error)
+    } catch (error: any) {
+        console.error('[VitruviusAI] ❌ Erro na geração:', error?.message || error)
+        if (error?.response) {
+            console.error('[VitruviusAI] ❌ Detalhes:', error.response)
+        }
         return null
     }
 }
