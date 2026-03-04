@@ -20,7 +20,7 @@ export const ProporcoesSection = memo(function ProporcoesSection({
     proporcoes,
     scoreTotal,
 }: ProporcoesSectionProps) {
-    const [expanded, setExpanded] = useState(true)
+    const [expanded, setExpanded] = useState(false)
 
     return (
         <div className="bg-gradient-to-br from-[#0D1425] to-[#0A0F1C] rounded-2xl border border-white/5 overflow-hidden">
