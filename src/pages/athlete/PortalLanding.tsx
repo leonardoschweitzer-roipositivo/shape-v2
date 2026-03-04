@@ -206,7 +206,7 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
 
     // Pull goals from diagnostico
     const diag = athleteData.diagnostico?.dados;
-    const scoreMeta = diag?.analiseEstetica?.scoreMeta6M ?? 65;
+    const scoreMeta = diag?.analiseEstetica?.scoreMeta12M ?? 65;
     const classificacaoMeta = diag?.analiseEstetica?.scoreMeta12M ? (scoreMeta >= 80 ? 'ATLETA' : 'EVOLUINDO') : 'ATLETA'; // Simplificação
 
     const firstMedida = athleteData.medidas?.[athleteData.medidas.length - 1] || lastMedida; // A última do array é a mais antiga/primeira
@@ -245,11 +245,11 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
 
     // Percentual de Gordura
     const bfAtual = lastAval?.gordura || 0;
-    const bfMeta = diag?.metasComposicao?.gordura6Meses || 12;
+    const bfMeta = diag?.metasComposicao?.gordura12Meses || 12;
     const firstAval = athleteData.avaliacoes?.[athleteData.avaliacoes.length - 1] || lastAval;
     const bfBasal = firstAval?.gordura || bfAtual + 5;
 
-    const prazoMeta = 6;
+    const prazoMeta = 12;
 
     // Cálculo do Score: Baseado no Gap (Distância entre Primeira Avaliação e Meta)
     const scoreBasal = firstAval?.score_geral || 0;
