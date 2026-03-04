@@ -19,7 +19,7 @@ const CLASSIFICATION_COLORS = {
     'DEUS GREGO': 'bg-purple-500'
 }
 
-function ProporcaoCard({ proporcao }: { proporcao: ProporcaoResumo }) {
+function ProporcaoCard({ proporcao }: { proporcao: ProporcaoResumo; key?: string }) {
     const barColor = CLASSIFICATION_COLORS[proporcao.classificacao] || 'bg-gray-500'
 
     return (

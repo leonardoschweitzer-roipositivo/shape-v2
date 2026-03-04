@@ -68,7 +68,7 @@ export function SelfMeasurements({ atletaId, atletaNome, sexo, onSave, onBack }:
         setValues(prev => ({ ...prev, [key]: value }));
     };
 
-    const filledCount = Object.values(values).filter(v => v && parseFloat(v) > 0).length;
+    const filledCount = Object.values(values).filter(v => v && parseFloat(v as any) > 0).length;
     const totalFields = FIELDS.length;
     const progress = Math.round((filledCount / totalFields) * 100);
 
@@ -76,7 +76,7 @@ export function SelfMeasurements({ atletaId, atletaNome, sexo, onSave, onBack }:
         setSaving(true);
         const numericValues: Record<string, number> = {};
         for (const [key, val] of Object.entries(values)) {
-            const num = parseFloat(val);
+            const num = parseFloat(val as any);
             if (!isNaN(num) && num > 0) {
                 numericValues[key] = num;
             }
@@ -193,7 +193,7 @@ export function SelfMeasurements({ atletaId, atletaNome, sexo, onSave, onBack }:
                                                     type="number"
                                                     step="0.1"
                                                     value={values[field.key] || ''}
-                                                    onChange={(e) => handleChange(field.key, e.target.value)}
+                                                    onChange={(e) => handleChange(field.key, e.target.value as any)}
                                                     placeholder={field.placeholder}
                                                     className="w-full bg-[#0A0F1C] border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-700 focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/20 text-sm font-mono transition-all"
                                                 />

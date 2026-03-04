@@ -1,0 +1,51 @@
+src/components/organisms/BottomNavigation/BottomNavigation.tsx(20,18): error TS2304: Cannot find name 'Home'.
+src/components/organisms/ChatMessages/ChatMessages.tsx(89,44): error TS2322: Type '{ key: string; message: ChatMessage; }' is not assignable to type '{ message: ChatMessage; }'.
+  Property 'key' does not exist on type '{ message: ChatMessage; }'.
+src/components/organisms/GamificationPanel/GamificationPanel.tsx(135,64): error TS2339: Property 'percentualNivel' does not exist on type 'XPSystem'.
+src/components/organisms/GamificationPanel/GamificationPanel.tsx(136,94): error TS2339: Property 'cor' does not exist on type 'number'.
+src/components/organisms/GamificationPanel/GamificationPanel.tsx(136,115): error TS2339: Property 'cor' does not exist on type 'number'.
+src/components/organisms/GamificationPanel/GamificationPanel.tsx(143,59): error TS2339: Property 'nivel' does not exist on type 'number'.
+src/components/organisms/GamificationPanel/GamificationPanel.tsx(146,59): error TS2339: Property 'nivel' does not exist on type 'number'.
+src/components/organisms/HistoricoAvaliacoes/HistoricoAvaliacoes.tsx(79,29): error TS2322: Type '{ key: string; avaliacao: HistoricoAvaliacaoItem; onClick: () => void; }' is not assignable to type '{ avaliacao: HistoricoAvaliacaoItem; onClick: () => void; }'.
+  Property 'key' does not exist on type '{ avaliacao: HistoricoAvaliacaoItem; onClick: () => void; }'.
+src/components/organisms/ListaProporcoesResumo/ListaProporcoesResumo.tsx(75,32): error TS2322: Type '{ key: string; proporcao: ProporcaoResumo; }' is not assignable to type '{ proporcao: ProporcaoResumo; }'.
+  Property 'key' does not exist on type '{ proporcao: ProporcaoResumo; }'.
+src/components/templates/Personal/AthleteDetailsView.tsx(288,41): error TS2345: Argument of type 'PostgrestFilterBuilder<any, any, any, null, "planos_treino", unknown, "DELETE">' is not assignable to parameter of type 'Promise<any>'.
+  Type 'PostgrestFilterBuilder<any, any, any, null, "planos_treino", unknown, "DELETE">' is missing the following properties from type 'Promise<any>': catch, finally, [Symbol.toStringTag]
+src/components/templates/Personal/AthleteDetailsView.tsx(293,41): error TS2345: Argument of type 'PostgrestFilterBuilder<any, any, any, null, "planos_dieta", unknown, "DELETE">' is not assignable to parameter of type 'Promise<any>'.
+  Type 'PostgrestFilterBuilder<any, any, any, null, "planos_dieta", unknown, "DELETE">' is missing the following properties from type 'Promise<any>': catch, finally, [Symbol.toStringTag]
+src/components/templates/Personal/AthleteDetailsView.tsx(299,17): error TS2345: Argument of type 'PostgrestFilterBuilder<any, any, any, null, "planos_treino", unknown, "DELETE">' is not assignable to parameter of type 'Promise<any>'.
+  Type 'PostgrestFilterBuilder<any, any, any, null, "planos_treino", unknown, "DELETE">' is missing the following properties from type 'Promise<any>': catch, finally, [Symbol.toStringTag]
+src/components/templates/Personal/AthleteDetailsView.tsx(302,17): error TS2345: Argument of type 'PostgrestFilterBuilder<any, any, any, null, "planos_dieta", unknown, "DELETE">' is not assignable to parameter of type 'Promise<any>'.
+  Type 'PostgrestFilterBuilder<any, any, any, null, "planos_dieta", unknown, "DELETE">' is missing the following properties from type 'Promise<any>': catch, finally, [Symbol.toStringTag]
+src/components/templates/Personal/AthleteDetailsView.tsx(307,17): error TS2345: Argument of type 'PostgrestFilterBuilder<any, any, any, null, "planos_treino", unknown, "DELETE">' is not assignable to parameter of type 'Promise<any>'.
+  Type 'PostgrestFilterBuilder<any, any, any, null, "planos_treino", unknown, "DELETE">' is missing the following properties from type 'Promise<any>': catch, finally, [Symbol.toStringTag]
+src/components/templates/Personal/AthleteDetailsView.tsx(307,17): error TS2589: Type instantiation is excessively deep and possibly infinite.
+src/components/templates/Personal/AthleteDetailsView.tsx(310,17): error TS2345: Argument of type 'PostgrestFilterBuilder<any, any, any, null, "planos_dieta", unknown, "DELETE">' is not assignable to parameter of type 'Promise<any>'.
+  Type 'PostgrestFilterBuilder<any, any, any, null, "planos_dieta", unknown, "DELETE">' is missing the following properties from type 'Promise<any>': catch, finally, [Symbol.toStringTag]
+src/hooks/useTokens.ts(42,52): error TS2339: Property 'lighter' does not exist on type '{ readonly dark: "#0A0F1C"; readonly card: "#131B2C"; readonly glass: "rgba(255, 255, 255, 0.05)"; }'.
+src/hooks/useTokens.ts(51,52): error TS2339: Property 'lighter' does not exist on type '{ readonly dark: "#0A0F1C"; readonly card: "#131B2C"; readonly glass: "rgba(255, 255, 255, 0.05)"; }'.
+src/hooks/useTokens.ts(80,52): error TS2339: Property 'lighter' does not exist on type '{ readonly dark: "#0A0F1C"; readonly card: "#131B2C"; readonly glass: "rgba(255, 255, 255, 0.05)"; }'.
+src/mocks/gamification-profiles.ts(28,5): error TS2322: Type '(Badge | { desbloqueado: true; dataDesbloqueio: Date; id: string; nome: string; icone: string; descricao: string; condicao: (dados: any) => boolean; xpBonus: number; conquistado?: boolean; dataConquista?: Date; } | { ...; })[]' is not assignable to type 'Badge[]'.
+  Type 'Badge | { desbloqueado: true; dataDesbloqueio: Date; id: string; nome: string; icone: string; descricao: string; condicao: (dados: any) => boolean; xpBonus: number; conquistado?: boolean; dataConquista?: Date; } | { ...; }' is not assignable to type 'Badge'.
+    Type 'Badge' is missing the following properties from type 'Badge': categoria, raridade, desbloqueado
+src/mocks/gamification-profiles.ts(95,5): error TS2322: Type '(Badge | { desbloqueado: true; dataDesbloqueio: Date; id: string; nome: string; icone: string; descricao: string; condicao: (dados: any) => boolean; xpBonus: number; conquistado?: boolean; dataConquista?: Date; } | { ...; })[]' is not assignable to type 'Badge[]'.
+  Type 'Badge | { desbloqueado: true; dataDesbloqueio: Date; id: string; nome: string; icone: string; descricao: string; condicao: (dados: any) => boolean; xpBonus: number; conquistado?: boolean; dataConquista?: Date; } | { ...; }' is not assignable to type 'Badge'.
+    Type 'Badge' is missing the following properties from type 'Badge': categoria, raridade, desbloqueado
+src/mocks/gamification-profiles.ts(150,5): error TS2322: Type '(Badge | { desbloqueado: true; dataDesbloqueio: Date; id: string; nome: string; icone: string; descricao: string; condicao: (dados: any) => boolean; xpBonus: number; conquistado?: boolean; dataConquista?: Date; } | { ...; })[]' is not assignable to type 'Badge[]'.
+  Type 'Badge | { desbloqueado: true; dataDesbloqueio: Date; id: string; nome: string; icone: string; descricao: string; condicao: (dados: any) => boolean; xpBonus: number; conquistado?: boolean; dataConquista?: Date; } | { ...; }' is not assignable to type 'Badge'.
+    Type 'Badge' is missing the following properties from type 'Badge': categoria, raridade, desbloqueado
+src/mocks/gamification-profiles.ts(205,5): error TS2322: Type '(Badge | { desbloqueado: true; dataDesbloqueio: Date; id: string; nome: string; icone: string; descricao: string; condicao: (dados: any) => boolean; xpBonus: number; conquistado?: boolean; dataConquista?: Date; } | { ...; })[]' is not assignable to type 'Badge[]'.
+  Type 'Badge | { desbloqueado: true; dataDesbloqueio: Date; id: string; nome: string; icone: string; descricao: string; condicao: (dados: any) => boolean; xpBonus: number; conquistado?: boolean; dataConquista?: Date; } | { ...; }' is not assignable to type 'Badge'.
+    Type 'Badge' is missing the following properties from type 'Badge': categoria, raridade, desbloqueado
+src/pages/athlete/SelfMeasurements.tsx(71,75): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+src/pages/athlete/SelfMeasurements.tsx(79,36): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+src/services/calculations/classicPhysique.ts(33,77): error TS2551: Property 'COXA_CINTURA' does not exist on type '{ readonly OMBROS_CINTURA: 1.7; readonly PEITO_PUNHO: 7; readonly BRACO_PUNHO: 2.7; readonly CINTURA_ALTURA: 0.42; readonly COXA_JOELHO: 1.85; readonly PANTURRILHA_BRACO: 0.96; readonly ANTEBRACO_BRACO: 0.8; ... 7 more ...; readonly BF_IDEAL: 4; }'. Did you mean 'COSTAS_CINTURA'?
+src/services/calculations/femaleProportions.ts(166,57): error TS2339: Property 'WHR' does not exist on type '{ BUSTO_QUADRIL: number; OMBROS_QUADRIL: number; CINTURA_ALTURA: number; BF_MIN: number; BF_MAX: number; BF_IDEAL: number; }'.
+src/services/calculations/femaleProportions.ts(175,53): error TS2339: Property 'BRACO_PUNHO' does not exist on type '{ BUSTO_QUADRIL: number; OMBROS_QUADRIL: number; CINTURA_ALTURA: number; BF_MIN: number; BF_MAX: number; BF_IDEAL: number; }'.
+src/services/calculations/femaleProportions.ts(176,63): error TS2339: Property 'ANTEBRACO_BRACO' does not exist on type '{ BUSTO_QUADRIL: number; OMBROS_QUADRIL: number; CINTURA_ALTURA: number; BF_MIN: number; BF_MAX: number; BF_IDEAL: number; }'.
+src/services/calculations/femaleProportions.ts(177,63): error TS2339: Property 'PANTURRILHA_TORNOZELO' does not exist on type '{ BUSTO_QUADRIL: number; OMBROS_QUADRIL: number; CINTURA_ALTURA: number; BF_MIN: number; BF_MAX: number; BF_IDEAL: number; }'.
+src/services/calculations/femaleProportions.ts(178,53): error TS2339: Property 'COXA_JOELHO' does not exist on type '{ BUSTO_QUADRIL: number; OMBROS_QUADRIL: number; CINTURA_ALTURA: number; BF_MIN: number; BF_MAX: number; BF_IDEAL: number; }'.
+src/services/gamification/index.ts(325,9): error TS2353: Object literal may only specify known properties, and 'xpAtual' does not exist in type 'XPSystem'.
+src/services/gamification/index.ts(335,5): error TS2322: Type '{ desbloqueado: boolean; id: string; nome: string; icone: string; descricao: string; xpBonus: number; conquistado?: boolean; dataConquista?: Date; }[]' is not assignable to type 'Badge[]'.
+  Property 'condicao' is missing in type '{ desbloqueado: boolean; id: string; nome: string; icone: string; descricao: string; xpBonus: number; conquistado?: boolean; dataConquista?: Date; }' but required in type 'Badge'.

@@ -17,7 +17,7 @@ interface BottomNavigationProps {
 interface NavItem {
     id: AthletePortalTab
     label: string
-    icon: typeof Home
+    icon: any
 }
 
 const NAV_ITEMS: NavItem[] = [

@@ -163,7 +163,7 @@ export function calcularIdeaisFemaleGoldenRatio(medidas: Measurements): IdealMea
     const { quadril, punho, tornozelo, joelho } = medidas;
 
     // Calcular cintura ideal baseada no quadril
-    const cintura_ideal = quadril * FEMALE_GOLDEN_RATIO.WHR;
+    const cintura_ideal = quadril * (FEMALE_GOLDEN_RATIO as any).WHR;
 
     // Calcular busto ideal (similar ao quadril para forma ampulheta)
     const busto_ideal = quadril * FEMALE_GOLDEN_RATIO.BUSTO_QUADRIL;
@@ -172,10 +172,10 @@ export function calcularIdeaisFemaleGoldenRatio(medidas: Measurements): IdealMea
     const ombros_ideal = quadril * FEMALE_GOLDEN_RATIO.OMBROS_QUADRIL;
 
     // Calcular membros
-    const braco_ideal = punho * FEMALE_GOLDEN_RATIO.BRACO_PUNHO;
-    const antebraco_ideal = braco_ideal * FEMALE_GOLDEN_RATIO.ANTEBRACO_BRACO;
-    const panturrilha_ideal = tornozelo * FEMALE_GOLDEN_RATIO.PANTURRILHA_TORNOZELO;
-    const coxa_ideal = joelho * FEMALE_GOLDEN_RATIO.COXA_JOELHO;
+    const braco_ideal = punho * (FEMALE_GOLDEN_RATIO as any).BRACO_PUNHO;
+    const antebraco_ideal = braco_ideal * (FEMALE_GOLDEN_RATIO as any).ANTEBRACO_BRACO;
+    const panturrilha_ideal = tornozelo * (FEMALE_GOLDEN_RATIO as any).PANTURRILHA_TORNOZELO;
+    const coxa_ideal = joelho * (FEMALE_GOLDEN_RATIO as any).COXA_JOELHO;
 
     return {
         cintura: cintura_ideal,

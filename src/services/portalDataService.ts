@@ -143,6 +143,18 @@ async function getUltimoTreinoIndex(atletaId: string): Promise<number> {
             if (typeof d.treinoIndex === 'number') {
                 return d.treinoIndex;
             }
+            // Fallback para registros antigos (antes do treinoIndex existir)
+            // Se não tinha o index salvo, derivamos pela lógica antiga: (dia da semana - 1)
+            // Cuidado: (new Date("YYYY-MM-DD") - fuso horário)
+            if ((record as any).data) {
+                const parts = (record as any).data.split('-');
+                if (parts.length === 3) {
+                    const dataRecordLocal = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+                    let tsIndex = dataRecordLocal.getDay() - 1;
+                    if (tsIndex < 0) tsIndex = 0; // domingo tratamos como 0 para não bugar negativo
+                    return tsIndex;
+                }
+            }
         }
     }
     return -1;

@@ -27,7 +27,7 @@ function formatDate(date: Date): string {
     })
 }
 
-function AvaliacaoItem({ avaliacao, onClick }: { avaliacao: HistoricoAvaliacaoItem; onClick: () => void }) {
+function AvaliacaoItem({ avaliacao, onClick }: { avaliacao: HistoricoAvaliacaoItem; onClick: () => void; key?: string }) {
     return (
         <button
             onClick={onClick}

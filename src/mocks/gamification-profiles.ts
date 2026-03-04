@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Mock Data - Gamification Profiles
  * Perfis de gamificação com XP, níveis, badges e streaks

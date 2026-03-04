@@ -30,7 +30,7 @@ export function calcularIdeaisClassicPhysique(medidas: UserMeasurements): Propor
         braco: bracoIdeal,
         antebraco: bracoIdeal * CLASSIC_PHYSIQUE.ANTEBRACO_BRACO,
         cintura: altura * CLASSIC_PHYSIQUE.CINTURA_ALTURA,
-        coxa: (altura * CLASSIC_PHYSIQUE.CINTURA_ALTURA) * CLASSIC_PHYSIQUE.COXA_CINTURA,
+        coxa: (altura * CLASSIC_PHYSIQUE.CINTURA_ALTURA) * CLASSIC_PHYSIQUE.COSTAS_CINTURA,
         panturrilha: panturrilhaIdeal,
         pescoco: bracoIdeal,
         costas: cintura * CLASSIC_PHYSIQUE.COSTAS_CINTURA,

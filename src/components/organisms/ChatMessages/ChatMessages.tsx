@@ -20,7 +20,7 @@ function formatTime(date: Date): string {
     })
 }
 
-function ChatMessageBubble({ message }: { message: ChatMessageType }) {
+function ChatMessageBubble({ message, key }: { message: ChatMessageType, key?: string }) {
     const isUser = message.role === 'user'
 
     return (
