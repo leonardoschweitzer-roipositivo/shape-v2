@@ -621,8 +621,8 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
             });
             setObjetivoAtleta(rec.objetivo);
 
-            // 4. Gerar treino consumindo o potencial como fonte única + objetivo + contexto
-            const resultado = gerarPlanoTreino(atletaId, atleta.name, diag, pot, rec.objetivo, atleta.contexto);
+            // 4. Gerar treino consumindo o potencial como fonte única + objetivo + contexto + sexo
+            const resultado = gerarPlanoTreino(atletaId, atleta.name, diag, pot, rec.objetivo, atleta.contexto, atleta.gender === 'FEMALE' ? 'F' : 'M');
             setPlano(resultado);
             setEstado('ready');
 

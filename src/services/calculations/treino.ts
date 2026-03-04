@@ -131,9 +131,11 @@ export const gerarPlanoTreino = (
     diagnostico: DiagnosticoDados,
     potencial: PotencialAtleta,
     objetivo: ObjetivoVitruvio = 'RECOMP',
-    contexto?: import('./potencial').ContextoAtleta
+    contexto?: import('./potencial').ContextoAtleta,
+    sexo: 'M' | 'F' = 'M'
 ): PlanoTreino => {
     const dataRef = new Date().toISOString();
+    const isFemale = sexo === 'F';
 
     // ═══════════════════════════════════════════════════════
     // G2 — RESTRIÇÕES FÍSICAS (dores_lesoes)
@@ -266,7 +268,17 @@ export const gerarPlanoTreino = (
     }
 
     // Bases de séries escaladas pelo nível E pelo objetivo
-    const gruposBase = [
+    const gruposBase = isFemale ? [
+        { grupo: 'Quadríceps', base: Math.round(16 * fatorVolumeEfetivo) },
+        { grupo: 'Posterior', base: Math.round(16 * fatorVolumeEfetivo) },
+        { grupo: 'Glúteo', base: Math.round(18 * fatorVolumeEfetivo) },
+        { grupo: 'Deltóide Lat.', base: Math.round(14 * fatorVolumeEfetivo) },
+        { grupo: 'Costas', base: Math.round(12 * fatorVolumeEfetivo) },
+        { grupo: 'Panturrilha', base: Math.round(12 * fatorVolumeEfetivo) },
+        { grupo: 'Peitoral', base: Math.round(4 * fatorVolumeEfetivo) }, // Baixo
+        { grupo: 'Bíceps', base: Math.round(6 * fatorVolumeEfetivo) },
+        { grupo: 'Tríceps', base: Math.round(8 * fatorVolumeEfetivo) }
+    ] : [
         { grupo: 'Peitoral', base: Math.round(14 * fatorVolumeEfetivo) },
         { grupo: 'Costas', base: Math.round(16 * fatorVolumeEfetivo) },
         { grupo: 'Deltóide Lat.', base: Math.round(12 * fatorVolumeEfetivo) },
@@ -300,7 +312,22 @@ export const gerarPlanoTreino = (
     });
 
 
-    const estruturaSemanal: EstruturaSemanal[] = isIniciante ? [
+    const estruturaSemanal: EstruturaSemanal[] = isFemale ? (isIniciante ? [
+        { letra: 'A', grupos: ['Membros Inferiores', 'Glúteo'], duracaoMinutos: 65 },
+        { letra: 'B', grupos: ['Superiores', 'Costas', 'Ombros'], duracaoMinutos: 55 },
+        { letra: 'C', grupos: ['Glúteo Isolado', 'Posterior'], duracaoMinutos: 60 },
+    ] : isIntermediario ? [
+        { letra: 'A', grupos: ['Quadríceps', 'Panturrilha'], duracaoMinutos: 65 },
+        { letra: 'B', grupos: ['Superiores', 'Ombros', 'Costas'], duracaoMinutos: 55 },
+        { letra: 'C', grupos: ['Glúteo', 'Posterior'], duracaoMinutos: 65 },
+        { letra: 'D', grupos: ['Ombros', 'Superiores'], duracaoMinutos: 55 },
+    ] : [
+        { letra: 'A', grupos: ['Quadríceps', 'Panturrilha'], duracaoMinutos: 65 },
+        { letra: 'B', grupos: ['Costas', 'Deltóide Posterior', 'Bíceps'], duracaoMinutos: 60 },
+        { letra: 'C', grupos: ['Glúteo Isolado', 'Panturrilha'], duracaoMinutos: 65 },
+        { letra: 'D', external: true, grupos: ['Ombros', 'Tríceps'], duracaoMinutos: 60 } as unknown as EstruturaSemanal,
+        { letra: 'E', grupos: ['Posterior de Coxa', 'Panturrilha'], duracaoMinutos: 60 },
+    ]) : (isIniciante ? [
         { letra: 'A', grupos: ['Peito', 'Ombros', 'Tríceps'], duracaoMinutos: 60 },
         { letra: 'B', grupos: ['Costas', 'Bíceps', 'Panturrilha'], duracaoMinutos: 60 },
         { letra: 'C', grupos: ['Pernas', 'Panturrilha'], duracaoMinutos: 65 },
@@ -315,7 +342,7 @@ export const gerarPlanoTreino = (
         { letra: 'C', grupos: ['Ombros', 'Panturrilha'], duracaoMinutos: 65 },
         { letra: 'D', grupos: ['Pernas', 'Panturrilha'], duracaoMinutos: 70 },
         { letra: 'E', grupos: ['Braços', 'Panturrilha'], duracaoMinutos: 55 },
-    ];
+    ]);
 
     // 5. Treinos Detalhados — séries alinhadas com o Checkmate
     // Helpers para buscar volume e prioridade dinâmicos
@@ -333,41 +360,71 @@ export const gerarPlanoTreino = (
         return Array.from({ length: numExercicios }, (_, i) => base + (i < resto ? 1 : 0));
     };
 
-    // --- Peitoral ---
+    // Helpers for dynamic arrays
+    const getTriSplit = (total: number) => {
+        const p1 = Math.ceil(total * 0.4);
+        const p2 = Math.ceil(total * 0.35);
+        return [p1, p2, total - p1 - p2];
+    };
+
+    // --- Valores Dinâmicos Femininos ---
+    const seriesGluteo = isFemale ? getSeries('Glúteo') : 0;
+    const seriesGlutC = isFemale ? Math.ceil(seriesGluteo * 0.6) : 0;
+    const seriesGlutE = isFemale ? seriesGluteo - seriesGlutC : 0;
+    const dGlutC = distribuirSeries(seriesGlutC || 2, 3);
+    const dGlutE = distribuirSeries(seriesGlutE || 2, 2);
+    const seriesQuadFemTotal = isFemale ? getSeries('Quadríceps') : 0;
+    const seriesQuadA = isFemale ? Math.ceil(seriesQuadFemTotal * 0.7) : 0;
+    const seriesQuadE = isFemale ? seriesQuadFemTotal - seriesQuadA : 0;
+    const dQuadA = distribuirSeries(seriesQuadA || 2, 4);
+    const dQuadE = distribuirSeries(seriesQuadE || 2, 2);
+    const seriesPostFemTotal = isFemale ? getSeries('Posterior') : 0;
+    const seriesPostC = isFemale ? Math.ceil(seriesPostFemTotal * 0.7) : 0;
+    const seriesPostE = isFemale ? seriesPostFemTotal - seriesPostC : 0;
+    const dPostC = distribuirSeries(seriesPostC || 2, 3);
+    const dPostFemE = distribuirSeries(seriesPostE || 2, 2);
+
+    // --- Peitoral (Mais Baixo para Fem) ---
     const seriesPeito = getSeries('Peitoral');
-    const dPeito = distribuirSeries(seriesPeito, 4);
-    // --- Triceps (aparece no A e E) ---
+    const dPeito = distribuirSeries(seriesPeito, isFemale ? 2 : 4);
+    // --- Triceps (aparece no A e E masc, no D fem) ---
     const seriesTotalTri = getSeries('Tríceps');
-    const seriesTriA = Math.ceil(seriesTotalTri * 0.6); // 60% no treino principal
-    const seriesTriE = seriesTotalTri - seriesTriA;     // 40% no treino de braços
-    const dTriA = distribuirSeries(seriesTriA, 3);
-    const dTriE = distribuirSeries(seriesTriE, 2);
+    const seriesTriA = isFemale ? seriesTotalTri : Math.ceil(seriesTotalTri * 0.6); // 60% no treino principal
+    const seriesTriE = isFemale ? 0 : seriesTotalTri - seriesTriA;     // 40% no treino de braços
+    const dTriA = distribuirSeries(seriesTriA, isFemale ? 2 : 3);
+    const dTriE = distribuirSeries(seriesTriE || 2, 2);
     // --- Costas ---
     const seriesCostas = getSeries('Costas');
-    const dCostas = distribuirSeries(seriesCostas, 4);
-    // --- Bíceps (aparece no B e E) ---
+    const dCostas = distribuirSeries(seriesCostas, isFemale ? 3 : 4);
+    // --- Bíceps ---
     const seriesTotalBi = getSeries('Bíceps');
-    const seriesBiB = Math.ceil(seriesTotalBi * 0.6);
-    const seriesBiE = seriesTotalBi - seriesBiB;
-    const dBiB = distribuirSeries(seriesBiB, 3);
-    const dBiE = distribuirSeries(seriesBiE, 2);
-    // --- Deltóide Lat. ---
+    const seriesBiB = isFemale ? seriesTotalBi : Math.ceil(seriesTotalBi * 0.6);
+    const seriesBiE = isFemale ? 0 : seriesTotalBi - seriesBiB;
+    const dBiB = distribuirSeries(seriesBiB, isFemale ? 2 : 3);
+    const dBiE = distribuirSeries(seriesBiE || 2, 2);
+    // --- Deltóide Lat/Post. ---
     const seriesOmbros = getSeries('Deltóide Lat.');
     const dOmbros = distribuirSeries(seriesOmbros, 4);
-    // --- Quadríceps ---
+    const dOmbrosFemD = distribuirSeries(seriesOmbros, 4);
+    // --- Quadríceps Masc ---
     const seriesQuad = getSeries('Quadríceps');
     const dQuad = distribuirSeries(seriesQuad, 4);
-    // --- Posterior ---
+    // --- Posterior Masc ---
     const seriesPost = getSeries('Posterior');
     const dPost = distribuirSeries(seriesPost, 3);
-    // --- Panturrilha (aparece em C, D, E) ---
+    // --- Panturrilha ---
     const seriesTotalPant = getSeries('Panturrilha');
-    const seriesPantC = Math.ceil(seriesTotalPant * 0.4);
-    const seriesPantD = Math.ceil(seriesTotalPant * 0.35);
-    const seriesPantE = seriesTotalPant - seriesPantC - seriesPantD;
+    const [seriesPantC, seriesPantD, seriesPantE] = getTriSplit(seriesTotalPant);
+    const seriesPantFemA = seriesPantC;
+    const seriesPantFemC = seriesPantD;
+    const seriesPantFemE = seriesPantE;
+
     const dPantC = distribuirSeries(seriesPantC, 2);
     const dPantD = distribuirSeries(seriesPantD, 2);
     const dPantE = distribuirSeries(seriesPantE, 2);
+    const dPantFemA = distribuirSeries(seriesPantFemA, 2);
+    const dPantFemC = distribuirSeries(seriesPantFemC, 2);
+    const dPantFemE = distribuirSeries(seriesPantFemE, 2);
 
     // Rep ranges e descanso variam pelo objetivo
     const rC = cfg.repComposto;
@@ -377,7 +434,169 @@ export const gerarPlanoTreino = (
     const dI = cfg.descIsolado;
     const dF = cfg.descFinalizador;
 
-    const treinos: TreinoDetalhado[] = [
+    const treinos: TreinoDetalhado[] = isFemale ? [
+        // FEMININO: A (Quadríceps), B (Superiores), C (Glúteo), D (Ombros/Braços), E (Posterior)
+        {
+            id: 'treino-a',
+            nome: 'Treino A - Quadríceps e Panturrilha',
+            letra: 'A',
+            duracaoMinutos: 60 + Math.round(seriesQuadFemTotal * 0.5),
+            blocos: [
+                {
+                    nomeGrupo: 'Quadríceps',
+                    seriesTotal: seriesQuadA,
+                    isPrioridade: getIsPrio('Quadríceps'),
+                    exercicios: [
+                        { ordem: 1, nome: 'Agachamento Livre / Hack', series: dQuadA[0], repeticoes: rC, descansoSegundos: dC },
+                        { ordem: 2, nome: 'Leg Press 45', series: dQuadA[1], repeticoes: rI, descansoSegundos: dI },
+                        { ordem: 3, nome: 'Cadeira Extensora', series: dQuadA[2], repeticoes: rF, descansoSegundos: dI },
+                        { ordem: 4, nome: 'Avanço / Passada', series: dQuadA[3], repeticoes: rI, descansoSegundos: dF }
+                    ]
+                },
+                {
+                    nomeGrupo: 'Panturrilha',
+                    seriesTotal: seriesPantFemA,
+                    isPrioridade: getIsPrio('Panturrilha'),
+                    exercicios: [
+                        { ordem: 5, nome: 'Panturrilha em Pé', series: dPantFemA[0], repeticoes: '15-20', descansoSegundos: dF },
+                        { ordem: 6, nome: 'Panturrilha Leg Press', series: dPantFemA[1], repeticoes: '15-20', descansoSegundos: dF }
+                    ]
+                }
+            ]
+        },
+        {
+            id: 'treino-b',
+            nome: 'Treino B - Costas e Braços',
+            letra: 'B',
+            duracaoMinutos: 55,
+            blocos: [
+                {
+                    nomeGrupo: 'Costas',
+                    seriesTotal: seriesCostas,
+                    isPrioridade: getIsPrio('Costas'),
+                    exercicios: [
+                        { ordem: 1, nome: 'Puxada Frontal Aberta', series: dCostas[0], repeticoes: rI, descansoSegundos: dI },
+                        { ordem: 2, nome: 'Remada Baixa Triângulo', series: dCostas[1], repeticoes: rI, descansoSegundos: dI },
+                        { ordem: 3, nome: 'Puxada Articulada Supinada', series: dCostas[2] || 0, repeticoes: rI, descansoSegundos: dF }
+                    ].filter(ex => ex.series > 0)
+                },
+                {
+                    nomeGrupo: 'Bíceps',
+                    seriesTotal: seriesBiB,
+                    isPrioridade: getIsPrio('Bíceps'),
+                    exercicios: [
+                        { ordem: 4, nome: 'Rosca Direta Halt.', series: dBiB[0], repeticoes: rI, descansoSegundos: dI },
+                        { ordem: 5, nome: 'Rosca Martelo', series: dBiB[1] || 0, repeticoes: rF, descansoSegundos: dF }
+                    ].filter(ex => ex.series > 0)
+                }
+            ]
+        },
+        {
+            id: 'treino-c',
+            nome: 'Treino C - Glúteo e Posterior',
+            letra: 'C',
+            duracaoMinutos: 65,
+            blocos: [
+                {
+                    nomeGrupo: 'Glúteo Isolado',
+                    seriesTotal: seriesGlutC,
+                    isPrioridade: getIsPrio('Glúteo'),
+                    exercicios: [
+                        { ordem: 1, nome: 'Elevação Pélvica', series: dGlutC[0], repeticoes: rC, descansoSegundos: dC },
+                        { ordem: 2, nome: 'Glúteo Cabo', series: dGlutC[1], repeticoes: rI, descansoSegundos: dI },
+                        { ordem: 3, nome: 'Cadeira Abdutora', series: dGlutC[2], repeticoes: rF, descansoSegundos: dF, tecnica: 'Drop-set' }
+                    ]
+                },
+                {
+                    nomeGrupo: 'Posterior',
+                    seriesTotal: seriesPostC,
+                    isPrioridade: getIsPrio('Posterior'),
+                    exercicios: [
+                        { ordem: 4, nome: 'Mesa Flexora', series: dPostC[0], repeticoes: rI, descansoSegundos: dI },
+                        { ordem: 5, nome: 'Stiff Unilateral', series: dPostC[1], repeticoes: rI, descansoSegundos: dI },
+                        { ordem: 6, nome: 'Cadeira Flexora', series: dPostC[2] || 0, repeticoes: rF, descansoSegundos: dF }
+                    ].filter(ex => ex.series > 0)
+                },
+                {
+                    nomeGrupo: 'Panturrilha',
+                    seriesTotal: seriesPantFemC,
+                    isPrioridade: getIsPrio('Panturrilha'),
+                    exercicios: [
+                        { ordem: 7, nome: 'Panturrilha Sentado', series: dPantFemC[0], repeticoes: '15-20', descansoSegundos: dF },
+                        { ordem: 8, nome: 'Panturrilha Unil.', series: dPantFemC[1], repeticoes: '15-20', descansoSegundos: dF }
+                    ]
+                }
+            ]
+        },
+        {
+            id: 'treino-d',
+            nome: 'Treino D - Ombros e Peito',
+            letra: 'D',
+            duracaoMinutos: 55,
+            blocos: [
+                {
+                    nomeGrupo: 'Deltóides',
+                    seriesTotal: seriesOmbros,
+                    isPrioridade: getIsPrio('Deltóide Lat.'),
+                    exercicios: temLesaoOmbro ? [
+                        { ordem: 1, nome: 'Desenvolvimento Neutro', series: dOmbrosFemD[0], repeticoes: rC, descansoSegundos: dC },
+                        { ordem: 2, nome: 'Elevação Lateral Cabo', series: dOmbrosFemD[1], repeticoes: rI, descansoSegundos: dI },
+                        { ordem: 3, nome: 'Face Pull', series: dOmbrosFemD[2], repeticoes: rF, descansoSegundos: dF }
+                    ] : [
+                        { ordem: 1, nome: 'Desenvolvimento Halt.', series: dOmbrosFemD[0], repeticoes: rC, descansoSegundos: dC },
+                        { ordem: 2, nome: 'Elevação Lateral Halt.', series: dOmbrosFemD[1], repeticoes: rI, descansoSegundos: dI },
+                        { ordem: 3, nome: 'Elevação Frontal', series: dOmbrosFemD[2], repeticoes: rF, descansoSegundos: dF }
+                    ]
+                },
+                {
+                    nomeGrupo: 'Tríceps',
+                    seriesTotal: seriesTriA,
+                    isPrioridade: getIsPrio('Tríceps'),
+                    exercicios: [
+                        { ordem: 4, nome: 'Tríceps Polia', series: dTriA[0], repeticoes: rI, descansoSegundos: dI },
+                        { ordem: 5, nome: 'Tríceps Testa / Francês', series: dTriA[1] || 0, repeticoes: rF, descansoSegundos: dF }
+                    ].filter(ex => ex.series > 0)
+                },
+                {
+                    nomeGrupo: 'Peitoral',
+                    seriesTotal: seriesPeito,
+                    isPrioridade: false,
+                    exercicios: [
+                        { ordem: 6, nome: 'Supino Inclinado Halt.', series: dPeito[0], repeticoes: rI, descansoSegundos: dI },
+                        { ordem: 7, nome: 'Crucifixo / Voador', series: dPeito[1] || 0, repeticoes: rI, descansoSegundos: dI }
+                    ].filter(ex => ex.series > 0)
+                }
+            ]
+        },
+        {
+            id: 'treino-e',
+            nome: 'Treino E - Posterior e Glúteo (Pico)',
+            letra: 'E',
+            duracaoMinutos: 60,
+            blocos: [
+                {
+                    nomeGrupo: 'Posterior e Mix',
+                    seriesTotal: seriesPostE + seriesQuadE,
+                    isPrioridade: getIsPrio('Posterior'),
+                    exercicios: [
+                        { ordem: 1, nome: 'Stiff', series: dPostFemE[0], repeticoes: rI, descansoSegundos: dI },
+                        { ordem: 2, nome: 'Elevação Pélvica / Hip Thrust Unilat', series: dGlutE[0], repeticoes: rI, descansoSegundos: dI },
+                        { ordem: 3, nome: 'Bulgaro / Agach. Unilateral', series: dQuadE[0], repeticoes: rI, descansoSegundos: dI }
+                    ]
+                },
+                {
+                    nomeGrupo: 'Panturrilha',
+                    seriesTotal: seriesPantFemE,
+                    isPrioridade: getIsPrio('Panturrilha'),
+                    exercicios: [
+                        { ordem: 4, nome: 'Panturrilha Leg / Hack', series: dPantFemE[0], repeticoes: '15-20', descansoSegundos: dF },
+                        { ordem: 5, nome: 'Panturrilha Tibial', series: dPantFemE[1], repeticoes: '15-20', descansoSegundos: dF }
+                    ]
+                }
+            ]
+        }
+    ].slice(0, freq) : [
+        // MASCULINO: A (Peito/Tri), B (Costas/Bi), C (Ombros), D (Pernas), E (Braços)
         {
             id: 'treino-a',
             nome: 'Treino A - Peito e Tríceps',
@@ -542,7 +761,7 @@ export const gerarPlanoTreino = (
                 }
             ]
         }
-    ];
+    ].slice(0, freq);
 
     // 6. Observações — alinhadas com o objetivo
     const alertasContexto = potencial.observacoesContexto;
