@@ -723,10 +723,17 @@ function projetarScoreMeta(
             const propsProj = projetarProporcoesParaHorizonte(fracao);
 
             // Mapear de volta para o formato AvaliacaoGeralInput.proporcoes
-            const findProp = (nome: string) => propsProj.find(p => p.grupo === nome);
+            // Suporte a nomes masculinos E femininos (vindos do banco)
+            const findPropByAliases = (...aliases: string[]) => {
+                for (const alias of aliases) {
+                    const found = propsProj.find(p => p.grupo === alias);
+                    if (found) return found;
+                }
+                return null;
+            };
 
-            const makeProportionData = (nome: string) => {
-                const p = findProp(nome);
+            const makeProportionData = (...aliases: string[]) => {
+                const p = findPropByAliases(...aliases);
                 if (!p) return null;
                 const pctDoIdeal = p.ideal > 0 ? Math.min(115, (p.atualProjetado / p.ideal) * 100) : 0;
                 return {
@@ -737,8 +744,8 @@ function projetarScoreMeta(
                 };
             };
 
-            const makeInverseProportionData = (nome: string) => {
-                const p = findProp(nome);
+            const makeInverseProportionData = (...aliases: string[]) => {
+                const p = findPropByAliases(...aliases);
                 if (!p) return null;
                 // Para proporções inversas, menor que ideal = bom
                 const pctDoIdeal = p.ideal > 0
@@ -753,7 +760,7 @@ function projetarScoreMeta(
             };
 
             // Tríade projetada: convergir para harmonia
-            const triadeAtual = findProp('Tríade');
+            const triadeAtual = findPropByAliases('Tríade', 'Ampulheta');
             const triadeProj = triadeAtual
                 ? Math.min(100, triadeAtual.atualProjetado)
                 : 85;
@@ -779,7 +786,7 @@ function projetarScoreMeta(
             // Cintura projetada em cm (interpolar entre atual e meta)
             const cinturaAtualCm = input.medidas.cintura;
             // Meta de cintura: se proporção Cintura está nas metas, usar; senão redução simples
-            const cinturaPropMeta = metasProporcoes.find(mp => mp.grupo === 'Cintura');
+            const cinturaPropMeta = metasProporcoes.find(mp => mp.grupo === 'Cintura' || mp.grupo === 'WHR');
             let cinturaProjetadaCm = cinturaAtualCm;
             if (cinturaPropMeta && input.medidas.pelvis > 0) {
                 // Ratio projetado * pélvis = cintura ideal projetada
@@ -790,26 +797,34 @@ function projetarScoreMeta(
                 cinturaProjetadaCm = cinturaAtualCm * (1 - fracao * 0.05);
             }
 
-            return {
-                proporcoes: {
-                    metodo: 'golden' as const,
-                    vTaper: makeProportionData('Shape-V'),
-                    peitoral: makeProportionData('Peitoral'),
-                    braco: makeProportionData('Braço') || makeProportionData('Proporção de Braço'),
-                    antebraco: makeProportionData('Antebraço'),
-                    triade: {
-                        harmoniaPercentual: triadeProj,
-                        pescoco: input.medidas.pescoco,
-                        braco: (input.medidas.bracoD + input.medidas.bracoE) / 2,
-                        panturrilha: (input.medidas.panturrilhaD + input.medidas.panturrilhaE) / 2,
-                    },
-                    cintura: makeInverseProportionData('Cintura') || makeInverseProportionData('WHR'),
-                    coxa: makeProportionData('Coxa') || makeProportionData('Desenvolvimento de Coxa'),
-                    coxaPanturrilha: makeProportionData('Coxa vs Pantur.') || makeProportionData('Proporção de Perna'),
-                    panturrilha: makeProportionData('Panturrilha') || makeProportionData('Desenvolvimento de Panturrilha'),
-                    costas: makeProportionData('Costas'),
-                    upperLower: makeInverseProportionData('Upper vs Lower'),
+            // Mapear slots com aliases (masculino | feminino)
+            const propsMapped = {
+                metodo: 'golden' as const,
+                vTaper: makeProportionData('Shape-V', 'SHR'),                                        // Masc: Shape-V | Fem: SHR (Shoulder-Hip Ratio)
+                peitoral: makeProportionData('Peitoral', 'Busto/Cintura'),                            // Masc: Peitoral | Fem: Busto/Cintura
+                braco: makeProportionData('Braço', 'Proporção de Braço'),                             // Ambos podem ter "Braço"
+                antebraco: makeProportionData('Antebraço'),
+                triade: {
+                    harmoniaPercentual: triadeProj,
+                    pescoco: input.medidas.pescoco,
+                    braco: (input.medidas.bracoD + input.medidas.bracoE) / 2,
+                    panturrilha: (input.medidas.panturrilhaD + input.medidas.panturrilhaE) / 2,
                 },
+                cintura: makeInverseProportionData('Cintura', 'WHR'),                                 // Masc: Cintura | Fem: WHR
+                coxa: makeProportionData('Coxa', 'Desenvolvimento de Coxa', 'Hip-Thigh'),             // Masc: Coxa | Fem: Hip-Thigh
+                coxaPanturrilha: makeProportionData('Coxa vs Pantur.', 'Proporção de Perna'),
+                panturrilha: makeProportionData('Panturrilha', 'Desenvolvimento de Panturrilha'),
+                costas: makeProportionData('Costas'),
+                upperLower: makeInverseProportionData('Upper vs Lower'),
+            };
+
+            // Debug: verificar quantos slots foram mapeados
+            const mappedCount = Object.entries(propsMapped)
+                .filter(([k, v]) => k !== 'metodo' && k !== 'triade' && v !== null).length;
+            console.log(`[ScoreMeta] Proporções mapeadas: ${mappedCount}/9 (${genero}, fração=${fracao})`);
+
+            return {
+                proporcoes: propsMapped,
                 composicao: {
                     peso: Math.round(pesoProj * 10) / 10,
                     altura,
