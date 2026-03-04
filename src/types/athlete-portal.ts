@@ -38,6 +38,9 @@ export interface WorkoutOfDay {
     // Se completo
     duracao?: number            // minutos
     intensidade?: 1 | 2 | 3 | 4 // 😫 Difícil, 😐 Normal, 💪 Bom, 🔥 Ótimo
+
+    // Histórico de sequência
+    indiceTreino?: number       // Índice deste treino no plano
 }
 
 export interface ExercicioTreino {

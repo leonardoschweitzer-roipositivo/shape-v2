@@ -123,14 +123,40 @@ export async function carregarContextoPortal(atletaId: string): Promise<PortalCo
     }
 }
 
+// ==== Função Helper Auxiliar para pegar o Histórico ====
+async function getUltimoTreinoIndex(atletaId: string): Promise<number> {
+    const { data } = await supabase
+        .from('registros_diarios')
+        .select('dados, data')
+        .eq('atleta_id', atletaId)
+        .eq('tipo', 'treino')
+        .order('data', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(30);
+
+    if (!data || data.length === 0) return -1;
+
+    // Procura o último treino completo ou pulado
+    for (const record of data) {
+        const d = (record as any).dados;
+        if (d && (d.status === 'completo' || d.status === 'pulado')) {
+            if (typeof d.treinoIndex === 'number') {
+                return d.treinoIndex;
+            }
+        }
+    }
+    return -1;
+}
+
 // ==========================================
 // TELA HOJE
 // ==========================================
 
 /**
- * Deriva o treino do dia a partir do PlanoTreino salvo
+ * Deriva o treino do dia (o próximo treino pendente na sequência) a partir do PlanoTreino.
+ * Pode receber `indiceFixo` para forçar a renderização de um treino específico (ex: o que o aluno acabou de fazer hoje).
  */
-export function derivarTreinoDoDia(plano: PlanoTreino | null): WorkoutOfDay {
+export function derivarTreinoDoDia(plano: PlanoTreino | null, lastCompletedIndex: number = -1, indiceFixo?: number): WorkoutOfDay & { indiceTreino?: number } {
     if (!plano) {
         return {
             id: 'no-plan',
@@ -142,42 +168,29 @@ export function derivarTreinoDoDia(plano: PlanoTreino | null): WorkoutOfDay {
         };
     }
 
-    const hoje = new Date();
-    const diaSemana = hoje.getDay(); // 0=Dom, 1=Seg, ...
-
-    // Mapear treinos da semana
     const treinos = plano.treinos || [];
     const diasTreinados = treinos.length;
 
-    // Domingo ou mais dias que treinos → descanso
-    if (diaSemana === 0 || diaSemana > diasTreinados) {
+    if (diasTreinados === 0) {
         return {
             id: 'descanso',
             titulo: 'DIA DE DESCANSO',
-            subtitulo: 'Recuperação é essencial para os ganhos!',
+            subtitulo: 'Curta o seu dia e relaxe para se recuperar!',
             diaAtual: 0,
-            diasTotal: diasTreinados,
+            diasTotal: 0,
             status: 'descanso',
         };
     }
 
-    // Selecionar treino pela posição na sequência de letras
-    // diaSemana 1(Seg)→treinos[0](A), 2(Ter)→treinos[1](B), etc.
-    const treinoHoje = treinos[diaSemana - 1];
-    if (!treinoHoje) {
-        return {
-            id: 'descanso',
-            titulo: 'DIA DE DESCANSO',
-            subtitulo: 'Recuperação é essencial para os ganhos!',
-            diaAtual: 0,
-            diasTotal: diasTreinados,
-            status: 'descanso',
-        };
+    // O próximo treino sempre será (último concluído + 1)
+    let nextIndex = (lastCompletedIndex + 1) % diasTreinados;
+    if (typeof indiceFixo === 'number' && indiceFixo >= 0) {
+        nextIndex = indiceFixo % diasTreinados;
     }
+    const treinoHoje = treinos[nextIndex];
 
-    // Extrair grupos do nome do treino
     const grupoNomes = treinoHoje.blocos.map(b => b.nomeGrupo).join(' + ');
-    const letra = (treinoHoje as any).letra || String.fromCharCode(65 + (diaSemana - 1));
+    const letra = (treinoHoje as any).letra || String.fromCharCode(65 + nextIndex);
 
     // Flatten exercícios de todos os blocos
     const todosExercicios = treinoHoje.blocos.flatMap((bloco, bIdx) =>
@@ -195,10 +208,11 @@ export function derivarTreinoDoDia(plano: PlanoTreino | null): WorkoutOfDay {
         id: `treino-${letra}`,
         titulo: grupoNomes || treinoHoje.nome || 'TREINO',
         subtitulo: `Treino ${letra} — ${treinoHoje.nome || ''}`,
-        diaAtual: diaSemana,
+        diaAtual: nextIndex + 1,
         diasTotal: diasTreinados,
         status: 'pendente',
         exercicios: todosExercicios,
+        indiceTreino: nextIndex,
     };
 }
 
@@ -220,56 +234,44 @@ export interface ProximoTreino {
 }
 
 /**
- * Deriva o próximo treino a partir do PlanoTreino salvo
+ * Deriva o próximo treino na sequência.
  */
-export function derivarProximoTreino(plano: PlanoTreino | null): ProximoTreino | null {
+export function derivarProximoTreino(plano: PlanoTreino | null, currentPendingIndex: number = 0): ProximoTreino | null {
     if (!plano) return null;
 
     const treinos = plano.treinos || [];
     if (treinos.length === 0) return null;
 
-    const hoje = new Date();
-    const diaSemana = hoje.getDay(); // 0=Dom, 1=Seg, ...
+    // O próximo treino será (treino atual pendente + 1) modulo o total
+    const proximoIndex = (currentPendingIndex + 1) % treinos.length;
+    const treino = treinos[proximoIndex];
+    if (!treino) return null;
+
+    const amanhã = new Date();
+    amanhã.setDate(amanhã.getDate() + 1);
     const diasSemanaLabels = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
     const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
-    // Procurar o próximo dia com treino
-    for (let offset = 1; offset <= 7; offset++) {
-        const futuroDiaSemana = (diaSemana + offset) % 7;
-        // Treinos são mapeados: 1=Seg → treinos[0], 2=Ter → treinos[1], etc.
-        if (futuroDiaSemana === 0 || futuroDiaSemana > treinos.length) continue;
+    const grupoNomes = treino.blocos.map(b => b.nomeGrupo).join(' + ');
+    const letra = (treino as any).letra || String.fromCharCode(65 + proximoIndex);
 
-        const treinoIndex = futuroDiaSemana - 1;
-        const treino = treinos[treinoIndex];
-        if (!treino) continue;
+    const exercicios = treino.blocos.flatMap((bloco, bIdx) =>
+        bloco.exercicios.map((ex: any, i: number) => ({
+            id: `next-ex-${bIdx}-${i}`,
+            nome: ex.nome || ex.exercicio || '',
+            series: ex.series || 0,
+            repeticoes: ex.repeticoes || ex.reps || '',
+            foco: bloco.nomeGrupo || '',
+        }))
+    );
 
-        // Calcular data
-        const futuraData = new Date(hoje);
-        futuraData.setDate(futuraData.getDate() + offset);
-
-        const grupoNomes = treino.blocos.map(b => b.nomeGrupo).join(' + ');
-        const letra = (treino as any).letra || String.fromCharCode(65 + treinoIndex);
-
-        const exercicios = treino.blocos.flatMap((bloco, bIdx) =>
-            bloco.exercicios.map((ex: any, i: number) => ({
-                id: `next-ex-${bIdx}-${i}`,
-                nome: ex.nome || ex.exercicio || '',
-                series: ex.series || 0,
-                repeticoes: ex.repeticoes || ex.reps || '',
-                foco: bloco.nomeGrupo || '',
-            }))
-        );
-
-        return {
-            data: `${diasSemanaLabels[futuroDiaSemana]}, ${futuraData.getDate().toString().padStart(2, '0')} ${meses[futuraData.getMonth()]}`,
-            letraLabel: `Treino ${letra}`,
-            grupoMuscular: grupoNomes,
-            nomeTreino: treino.nome || grupoNomes,
-            exercicios,
-        };
-    }
-
-    return null;
+    return {
+        data: `Amanhã / Pós-Treino`,
+        letraLabel: `Treino ${letra}`,
+        grupoMuscular: grupoNomes,
+        nomeTreino: treino.nome || grupoNomes,
+        exercicios,
+    };
 }
 export function derivarDietaDoDia(plano: PlanoDieta | null, isTreinoDay: boolean = true): DietOfDay {
     if (!plano) {
@@ -408,11 +410,9 @@ export function gerarDicaCoach(
  * OTIMIZADO: trackers e refeições carregam em paralelo
  */
 export async function montarDadosHoje(ctx: PortalContext): Promise<TodayScreenData> {
-    const treino = derivarTreinoDoDia(ctx.planoTreino);
-    const isTreinoDay = treino.status !== 'descanso';
-    const dieta = derivarDietaDoDia(ctx.planoDieta, isTreinoDay);
+    const lastCompletedIndex = await getUltimoTreinoIndex(ctx.atletaId);
 
-    // Buscar trackers, refeições e status do treino em PARALELO
+    // Buscar trackers, refeições e status do treino hoje em PARALELO
     const hoje = new Date().toISOString().split('T')[0];
     const [trackers, { data: refeicoes }, { data: treinoReg }] = await Promise.all([
         buscarRegistrosDoDia(ctx.atletaId),
@@ -433,13 +433,32 @@ export async function montarDadosHoje(ctx: PortalContext): Promise<TodayScreenDa
             .maybeSingle(),
     ]);
 
-    // Aplicar status do treino se existir registro hoje
-    if (treinoReg && (treinoReg as any).dados) {
-        const d = (treinoReg as any).dados;
-        treino.status = d.status || 'pendente';
-        if (d.duracao) treino.duracao = d.duracao;
-        if (d.intensidade) treino.intensidade = d.intensidade;
+    const dHoje = treinoReg ? (treinoReg as any).dados : null;
+    const jaFezTreinoHoje = dHoje && (dHoje.status === 'completo' || dHoje.status === 'pulado');
+
+    // Se ele já completou/pulou um treino HOJE, queremos renderizar exatamente esse treino
+    // na tela (para mostrar o card verde de "COMPLETO" ou card laranja de "PULADO").
+    // O índice dele normalmente está em `dHoje.treinoIndex` ou no próprio `lastCompletedIndex`.
+    let indiceRender = undefined;
+    if (jaFezTreinoHoje) {
+        indiceRender = (typeof dHoje.treinoIndex === 'number') ? dHoje.treinoIndex : lastCompletedIndex;
     }
+
+    const treinoResult = derivarTreinoDoDia(ctx.planoTreino, lastCompletedIndex, indiceRender);
+
+    // Convert to strict WorkoutOfDay type
+    const treino: WorkoutOfDay = {
+        ...treinoResult,
+    } as any;
+
+    if (jaFezTreinoHoje) {
+        treino.status = dHoje.status;
+        if (dHoje.duracao) treino.duracao = dHoje.duracao;
+        if (dHoje.intensidade) treino.intensidade = dHoje.intensidade;
+    }
+
+    const isTreinoDay = treino.status !== 'descanso';
+    const dieta = derivarDietaDoDia(ctx.planoDieta, isTreinoDay);
 
     const dicaCoach = gerarDicaCoach(dieta, treino, trackers);
 
@@ -922,7 +941,7 @@ export async function registrarTracker(
  */
 export async function completarTreino(
     atletaId: string,
-    dados: { intensidade: number; duracao: number; reportouDor: boolean }
+    dados: { intensidade: number; duracao: number; reportouDor: boolean; treinoIndex?: number }
 ): Promise<boolean> {
     return registrarTracker(atletaId, 'treino', {
         status: 'completo',
@@ -933,8 +952,11 @@ export async function completarTreino(
 /**
  * Marca treino como pulado
  */
-export async function pularTreino(atletaId: string): Promise<boolean> {
-    return registrarTracker(atletaId, 'treino', { status: 'pulado' });
+export async function pularTreino(atletaId: string, treinoIndex?: number): Promise<boolean> {
+    return registrarTracker(atletaId, 'treino', {
+        status: 'pulado',
+        treinoIndex,
+    });
 }
 
 // ==========================================

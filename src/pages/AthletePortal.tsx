@@ -77,7 +77,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                 const today = await montarDadosHoje(context)
                 setTodayData(today)
                 setDadosBasicos(extrairDadosBasicos(context))
-                setProximoTreino(derivarProximoTreino(context.planoTreino))
+                setProximoTreino(derivarProximoTreino(context.planoTreino, today?.treino?.indiceTreino))
             } catch (err) {
                 console.error('[AthletePortal] Erro ao carregar dados críticos:', err)
             }
@@ -124,19 +124,21 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
     }
 
     const handleCompletarTreino = async () => {
-        await completarTreino(atletaId, { intensidade: 3, duracao: 60, reportouDor: false })
+        await completarTreino(atletaId, { intensidade: 3, duracao: 60, reportouDor: false, treinoIndex: todayData?.treino?.indiceTreino })
         // Refresh today data
         if (ctx) {
             const today = await montarDadosHoje(ctx)
             setTodayData(today)
+            setProximoTreino(derivarProximoTreino(ctx.planoTreino, today?.treino?.indiceTreino))
         }
     }
 
     const handlePularTreino = async () => {
-        await pularTreino(atletaId)
+        await pularTreino(atletaId, todayData?.treino?.indiceTreino)
         if (ctx) {
             const today = await montarDadosHoje(ctx)
             setTodayData(today)
+            setProximoTreino(derivarProximoTreino(ctx.planoTreino, today?.treino?.indiceTreino))
         }
     }
 
