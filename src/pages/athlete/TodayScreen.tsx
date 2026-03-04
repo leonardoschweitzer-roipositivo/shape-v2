@@ -5,7 +5,7 @@
  */
 
 import React from 'react'
-import { HeaderHoje } from '../../components/molecules/HeaderHoje'
+import { HeaderIdentidade } from './components/HeaderIdentidade'
 import { CardTreino } from '../../components/organisms/CardTreino'
 import { CardDieta } from '../../components/organisms/CardDieta'
 import { TrackersRapidos } from '../../components/organisms/TrackersRapidos'
@@ -52,14 +52,14 @@ export function TodayScreen({
     return (
         <div className="min-h-screen bg-[#060B18] pb-20 relative">
             {/* Header */}
-            <HeaderHoje
-                nomeAtleta={data.atleta.nome}
-                dataFormatada={data.dataFormatada}
-                streak={data.atleta.streak}
-                sexo={sexo}
+            <HeaderIdentidade
+                nome={data.atleta.nome}
+                sexo={sexo === 'M' ? 'MASCULINO' : 'FEMININO'}
                 altura={altura}
                 peso={peso}
+                fotoUrl={undefined}
                 personalNome={personalNome}
+                personalRanking={3}
             />
 
             {/* Content */}

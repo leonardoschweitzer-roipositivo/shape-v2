@@ -340,6 +340,11 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                     <AssessmentScreen
                         avaliacao={avaliacaoDados}
                         isLoading={avaliacaoLoading}
+                        nomeAtleta={ctx?.atletaNome || atletaNome}
+                        sexo={ctx?.ficha?.sexo}
+                        altura={ctx?.ficha?.altura}
+                        peso={lastPeso}
+                        personalNome={ctx?.personalNome}
                     />
                 )
 

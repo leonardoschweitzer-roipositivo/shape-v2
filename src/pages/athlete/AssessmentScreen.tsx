@@ -16,11 +16,17 @@ import { ScoreGeralAvaliacao } from './components/ScoreGeralAvaliacao'
 import { DiagnosticoSection } from './components/DiagnosticoSection'
 import { ProporcoesSection } from './components/ProporcoesSection'
 import { AssimetriaSection } from './components/AssimetriaSection'
+import { HeaderIdentidade } from './components/HeaderIdentidade'
 import type { AvaliacaoDados } from '@/types/assessment-evaluation.types'
 
 interface AssessmentScreenProps {
     avaliacao: AvaliacaoDados | null
     isLoading?: boolean
+    nomeAtleta?: string
+    sexo?: string
+    altura?: number
+    peso?: number
+    personalNome?: string
 }
 
 function formatDate(date: Date): string {
@@ -49,6 +55,11 @@ function EmptyState() {
 export const AssessmentScreen = memo(function AssessmentScreen({
     avaliacao,
     isLoading = false,
+    nomeAtleta,
+    sexo,
+    altura,
+    peso,
+    personalNome,
 }: AssessmentScreenProps) {
     if (isLoading) {
         return (
@@ -64,17 +75,15 @@ export const AssessmentScreen = memo(function AssessmentScreen({
     return (
         <div className="min-h-screen bg-[#060B18] pb-20">
             {/* Header */}
-            <div className="bg-[#060B18] border-b border-white/5 px-6 py-4">
-                <h2 className="text-xl font-black text-white tracking-tight">
-                    AVALIAÇÃO
-                </h2>
-                <p className="text-sm text-gray-500 mt-1">
-                    {avaliacao
-                        ? `Última avaliação: ${formatDate(avaliacao.data)}`
-                        : 'Sua análise física completa'
-                    }
-                </p>
-            </div>
+            <HeaderIdentidade
+                nome={nomeAtleta || 'Atleta'}
+                sexo={sexo === 'M' ? 'MASCULINO' : 'FEMININO'}
+                altura={altura}
+                peso={peso}
+                fotoUrl={undefined}
+                personalNome={personalNome}
+                personalRanking={3}
+            />
 
             {/* Content */}
             {!avaliacao ? (
