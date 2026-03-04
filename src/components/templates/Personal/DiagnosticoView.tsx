@@ -912,7 +912,7 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
 
     // Enriquecer "Análise de Contexto" com IA ao montar
     useEffect(() => {
-        if (!atleta || isReadOnly) {
+        if (!atleta) {
             setContextLoading(false);
             return;
         }
