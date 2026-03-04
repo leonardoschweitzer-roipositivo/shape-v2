@@ -133,6 +133,17 @@ export function CardTreino({ treino, proximoTreino, onVerTreino, onCompletei, on
                                         ))}
                                     </div>
                                 </div>
+
+                                {/* Botão para treinar no dia de descanso */}
+                                <div className="pt-2">
+                                    <button
+                                        onClick={onPular}
+                                        className="w-full py-2.5 px-4 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 rounded-xl text-sm font-bold text-indigo-400 transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <Dumbbell size={16} />
+                                        TREINAR HOJE (PULAR DESCANSO)
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -273,8 +284,8 @@ export function CardTreino({ treino, proximoTreino, onVerTreino, onCompletei, on
                                 >
                                     {/* Custom Checkbox */}
                                     <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${exerciciosFeitos[ex.id]
-                                            ? 'bg-indigo-500 border-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]'
-                                            : 'border-white/10 bg-white/5 group-hover:border-white/20'
+                                        ? 'bg-indigo-500 border-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]'
+                                        : 'border-white/10 bg-white/5 group-hover:border-white/20'
                                         }`}>
                                         {exerciciosFeitos[ex.id] && <Check size={14} className="text-white" strokeWidth={3} />}
                                     </div>

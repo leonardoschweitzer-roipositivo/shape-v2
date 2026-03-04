@@ -92,7 +92,7 @@ export function TodayScreen({
                 />
             </div>
 
-            {/* Modal de Pular Treino */}
+            {/* Modal de Pular Treino/Descanso */}
             {modalPularOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
                     <div className="bg-[#0C1220] border border-white/10 rounded-3xl w-full max-w-sm p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
@@ -100,17 +100,19 @@ export function TodayScreen({
                             <div className="w-10 h-10 rounded-full bg-orange-500/20 flex flex-shrink-0 items-center justify-center">
                                 <span className="text-orange-500 text-lg">⏭️</span>
                             </div>
-                            <h3 className="text-lg font-black text-white uppercase tracking-wide">Pular Treino?</h3>
+                            <h3 className="text-lg font-black text-white uppercase tracking-wide">
+                                Avançar Calendário?
+                            </h3>
                         </div>
                         <p className="text-gray-400 text-sm mb-6 leading-relaxed">
-                            Você pode optar por <strong>descansar o resto do dia</strong> ou avançar para <strong>treinar o próximo treino da sequência hoje mesmo</strong>.
+                            Você pode optar por <strong>descansar o resto do dia</strong> (pulando a atividade atual) ou avançar para <strong>fazer o próximo treino da sequência hoje mesmo</strong>.
                         </p>
                         <div className="flex flex-col gap-3">
                             <button
                                 onClick={() => handleConfirmPular(true)}
                                 className="w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-sm transition-colors shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2"
                             >
-                                FAZER O PRÓXIMO HOJE
+                                FAZER O PRÓXIMO TREINO HOJE
                             </button>
                             <button
                                 onClick={() => handleConfirmPular(false)}
