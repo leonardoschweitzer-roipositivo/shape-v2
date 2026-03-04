@@ -37,7 +37,7 @@ export function CardScoreGeral({ score }: CardScoreGeralProps) {
             {/* Score */}
             <div className="text-center mb-4">
                 <div className="text-5xl font-bold text-white mb-1">
-                    {score.score}
+                    {typeof score.score === 'number' ? score.score.toFixed(1).replace('.0', '') : score.score}
                 </div>
                 <p className="text-sm text-gray-400">Score Geral</p>
             </div>
