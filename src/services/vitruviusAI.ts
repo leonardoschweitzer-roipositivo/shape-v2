@@ -5,7 +5,7 @@
  * Usado pelo Chat do Coach e pelos 4 processos core (Diagnóstico, Treino, Dieta, Avaliação).
  */
 
-import { GoogleGenerativeAI, type GenerativeModel, type ChatSession } from '@google/generative-ai'
+import { GoogleGenerativeAI, type GenerativeModel, type ChatSession, HarmCategory, HarmBlockThreshold } from '@google/generative-ai'
 
 // ==========================================
 // CONFIGURAÇÃO
@@ -15,6 +15,25 @@ const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || ''
 
 let genAI: GoogleGenerativeAI | null = null
 let model: GenerativeModel | null = null
+
+const safetySettings = [
+    {
+        category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+        category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+        category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+        category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+];
 
 function getModel(): GenerativeModel | null {
     if (!API_KEY) {
@@ -34,6 +53,7 @@ function getModel(): GenerativeModel | null {
                 topP: 0.9,
                 maxOutputTokens: 1024,
             },
+            safetySettings,
         })
     }
 
@@ -62,6 +82,7 @@ function getGenerateModel(): GenerativeModel | null {
                 maxOutputTokens: 4096,
                 responseMimeType: 'application/json',
             },
+            safetySettings,
         })
     }
 
