@@ -93,7 +93,7 @@ export function CardScoreMeta({
                     {/* Score Meta */}
                     <div className="text-right w-1/4">
                         <span className="text-[2.5rem] font-black leading-none text-gray-300">
-                            {Math.round(scoreMeta)}
+                            {scoreMeta.toFixed(1)}
                         </span>
                     </div>
                 </div>
