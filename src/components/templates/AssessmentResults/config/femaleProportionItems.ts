@@ -57,15 +57,39 @@ const calc12m = (currentCm: number, idealCm: number, part: string): number => {
 };
 
 /**
- * Baselines realistas para cada tipo de ratio feminino (valor médio destreinada).
+ * Baselines reais para proporções femininas (0% visual - Corpo Iniciante/Destreinado).
+ * Usado para escalar o preenchimento da barra de 0 a 100% de forma realista,
+ * em vez de usar o número bruto "0".
  */
-const RATIO_BASELINES = {
-    shr: 0.85,           // ombros/quadril destreinada
-    braco: 0.55,         // antebraco/braco destreinada
-    hipThigh: 0.40,      // coxa/quadril destreinada
-    coxaJoelho: 1.2,     // coxa/joelho destreinada
-    coxaPant: 1.2,       // coxa/panturrilha destreinada
-    pantTorn: 1.3,       // panturrilha/tornozelo destreinada
+const FEMALE_BASELINES = {
+    whr: 0.95,         // Cintura quase igual ao quadril (silhueta reta/maçã)
+    shr: 0.70,         // Ombros bem mais estreitos que o quadril (formato pera)
+    braco: 0.45,       // Antebraços finos e braços sem tônus
+    hipThigh: 0.30,    // Coxas muito finas em relação à bacia
+    coxaJoelho: 1.05,  // Perna com diâmetro semelhante à articulação (pouquíssima massa)
+    coxaPant: 0.90,    // Perna quase reta
+    pantTorn: 1.05,    // Panturrilha da largura da canela/tornozelo (tubular)
+    ampulheta: 30,     // Score inicial de quem tem corpo reto/tijolo
+};
+
+/**
+ * Interpolação realista usando Baselines: mapeia onde o "atual" está
+ * entre o Baseline (0%) e a Meta (100%).
+ */
+const calculateInterpolatedPercent = (current: number, target: number, baseline: number, isInverse: boolean = false): number => {
+    if (!target || target <= 0) return 0;
+
+    // Se for inverso (ex: WHR, onde objetivo é diminuir a medida)
+    if (isInverse) {
+        if (current <= target) return 100 + ((target - current) / target) * 50; // Passou da meta (Elite)
+        if (current >= baseline) return 0; // Pior que o baseline
+        return ((baseline - current) / (baseline - target)) * 100;
+    }
+
+    // Proporção normal (aumentar)
+    if (current >= target) return 100 + ((current - target) / target) * 50; // Passou da meta (Elite)
+    if (current <= baseline) return 0; // Pior que o baseline
+    return ((current - baseline) / (target - baseline)) * 100;
 };
 
 /** Generate calibrated analysis text using realistic baseline range */
@@ -101,17 +125,8 @@ export const extractFemaleProportionRatios = (
     const cat = comparisonMode === 'female_golden' ? 'golden_ratio' :
         comparisonMode as keyof typeof METAS_FEMININAS.whr;
 
-    const getRatioPercent = (current: number, target: number, inverse = false) => {
-        if (!target || target <= 0) return 0;
-        if (inverse) {
-            if (current <= target) {
-                const bonus = (target - current) / target;
-                return Math.min(110, 100 + (bonus * 50));
-            }
-            const excessoPercent = ((current - target) / target) * 100;
-            return Math.max(0, 100 - (excessoPercent * 1.5));
-        }
-        return Math.min(115, (current / target) * 100);
+    const getRatioPercent = (current: number, target: number, baseline: number, inverse = false) => {
+        return Math.min(115, calculateInterpolatedPercent(current, target, baseline, inverse));
     };
 
     const results: ProportionRatioSnapshot[] = [];
@@ -119,7 +134,7 @@ export const extractFemaleProportionRatios = (
     // 1. WHR (Waist-to-Hip Ratio) — INVERSO: menor = melhor
     const whrAtual = userMeasurements.cintura / userMeasurements.quadril;
     const whrTarget = METAS_FEMININAS.whr[cat];
-    const whrPct = Math.round(getRatioPercent(whrAtual, whrTarget, true));
+    const whrPct = Math.round(getRatioPercent(whrAtual, whrTarget, FEMALE_BASELINES.whr, true));
     results.push({ nome: 'WHR', atual: whrAtual, ideal: whrTarget, pct: whrPct, status: getStatus(whrPct) });
 
     // 2. Ampulheta (Harmonia Index)
@@ -133,43 +148,44 @@ export const extractFemaleProportionRatios = (
     const desvioBC = Math.abs(bustoCinturaRatio - idealBC) / idealBC;
     const desvioQC = Math.abs(quadrilCinturaRatio - idealQC) / idealQC;
     const desvioBQ = Math.abs(bustoQuadrilRatio - idealBQ) / idealBQ;
-    const hgScore = Math.max(0, Math.min(100, (1 - ((desvioBC * 0.3) + (desvioQC * 0.4) + (desvioBQ * 0.3))) * 100));
-    results.push({ nome: 'Ampulheta', atual: hgScore, ideal: 100, pct: Math.round(hgScore), status: getStatus(Math.round(hgScore)) });
+    const hgScoreTotalRaw = Math.max(0, Math.min(100, (1 - ((desvioBC * 0.3) + (desvioQC * 0.4) + (desvioBQ * 0.3))) * 100));
+    const hgScoreFinal = calculateInterpolatedPercent(hgScoreTotalRaw, 100, FEMALE_BASELINES.ampulheta);
+    results.push({ nome: 'Ampulheta', atual: hgScoreFinal, ideal: 100, pct: Math.round(hgScoreFinal), status: getStatus(Math.round(hgScoreFinal)) });
 
     // 3. SHR (Shoulder-Hip Ratio)
     const shrAtual = userMeasurements.ombros / userMeasurements.quadril;
     const shrTarget = METAS_FEMININAS.ombrosQuadril[cat];
-    const shrPct = Math.round(getRatioPercent(shrAtual, shrTarget));
+    const shrPct = Math.round(getRatioPercent(shrAtual, shrTarget, FEMALE_BASELINES.shr));
     results.push({ nome: 'SHR', atual: shrAtual, ideal: shrTarget, pct: shrPct, status: getStatus(shrPct) });
 
     // 4. Braço (Antebraço ÷ Braço)
     const brRatioAtual = userMeasurements.antebraco / userMeasurements.braco;
     const brRatioTarget = METAS_FEMININAS.antebracoBraco[cat];
-    const brPct = Math.round(getRatioPercent(brRatioAtual, brRatioTarget));
+    const brPct = Math.round(getRatioPercent(brRatioAtual, brRatioTarget, FEMALE_BASELINES.braco));
     results.push({ nome: 'Braço', atual: brRatioAtual, ideal: brRatioTarget, pct: brPct, status: getStatus(brPct) });
 
     // 5. Hip-Thigh (Coxa ÷ Quadril)
     const htrAtual = userMeasurements.coxa / userMeasurements.quadril;
     const htrTarget = METAS_FEMININAS.coxaQuadril[cat];
-    const htrPct = Math.round(getRatioPercent(htrAtual, htrTarget));
+    const htrPct = Math.round(getRatioPercent(htrAtual, htrTarget, FEMALE_BASELINES.hipThigh));
     results.push({ nome: 'Hip-Thigh', atual: htrAtual, ideal: htrTarget, pct: htrPct, status: getStatus(htrPct) });
 
     // 6. Coxa (Coxa ÷ Joelho)
     const cjAtual = userMeasurements.coxa / userMeasurements.joelho;
     const cjTarget = METAS_FEMININAS.coxaJoelho[cat];
-    const cjPct = Math.round(getRatioPercent(cjAtual, cjTarget));
+    const cjPct = Math.round(getRatioPercent(cjAtual, cjTarget, FEMALE_BASELINES.coxaJoelho));
     results.push({ nome: 'Coxa', atual: cjAtual, ideal: cjTarget, pct: cjPct, status: getStatus(cjPct) });
 
     // 7. Coxa vs Panturrilha
     const cpAtual = userMeasurements.coxa / userMeasurements.panturrilha;
     const cpTarget = METAS_FEMININAS.coxaPanturrilha[cat];
-    const cpPct = Math.round(getRatioPercent(cpAtual, cpTarget));
+    const cpPct = Math.round(getRatioPercent(cpAtual, cpTarget, FEMALE_BASELINES.coxaPant));
     results.push({ nome: 'Coxa vs Pantur.', atual: cpAtual, ideal: cpTarget, pct: cpPct, status: getStatus(cpPct) });
 
     // 8. Panturrilha (Panturrilha ÷ Tornozelo)
     const ptAtual = userMeasurements.panturrilha / userMeasurements.tornozelo;
     const ptTarget = METAS_FEMININAS.panturrilhaTornozelo[cat];
-    const ptPct = Math.round(getRatioPercent(ptAtual, ptTarget));
+    const ptPct = Math.round(getRatioPercent(ptAtual, ptTarget, FEMALE_BASELINES.pantTorn));
     results.push({ nome: 'Panturrilha', atual: ptAtual, ideal: ptTarget, pct: ptPct, status: getStatus(ptPct) });
 
     return results;
@@ -190,18 +206,9 @@ export const getFemaleProportionItems = (
     const cat = comparisonMode === 'female_golden' ? 'golden_ratio' :
         comparisonMode as keyof typeof METAS_FEMININAS.whr;
 
-    // Helper for percent calculation (v1.1 logic)
-    const getRatioPercent = (current: number, target: number, inverse = false) => {
-        if (!target || target <= 0) return 0;
-        if (inverse) {
-            if (current <= target) {
-                const bonus = (target - current) / target;
-                return Math.min(110, 100 + (bonus * 50));
-            }
-            const excessoPercent = ((current - target) / target) * 100;
-            return Math.max(0, 100 - (excessoPercent * 1.5));
-        }
-        return Math.min(115, (current / target) * 100);
+    // Helper for percent calculation using interpolated baselines
+    const getRatioPercent = (current: number, target: number, baseline: number, inverse = false) => {
+        return Math.min(115, calculateInterpolatedPercent(current, target, baseline, inverse));
     };
 
     // ─── Ratio Calculations ──────────────────────────────────
@@ -209,7 +216,7 @@ export const getFemaleProportionItems = (
     // 1. WHR (Waist-to-Hip Ratio)
     const whrAtual = userMeasurements.cintura / userMeasurements.quadril;
     const whrTarget = METAS_FEMININAS.whr[cat];
-    const whrPercentual = getRatioPercent(whrAtual, whrTarget, true);
+    const whrPercentual = getRatioPercent(whrAtual, whrTarget, FEMALE_BASELINES.whr, true);
 
     // 2. Ampulheta (Harmonia Index)
     const bustoCinturaRatio = (userMeasurements.busto || userMeasurements.peito) / userMeasurements.cintura;
@@ -224,37 +231,38 @@ export const getFemaleProportionItems = (
     const desvioQC = Math.abs(quadrilCinturaRatio - idealQC) / idealQC;
     const desvioBQ = Math.abs(bustoQuadrilRatio - idealBQ) / idealBQ;
 
-    const hgScore = Math.max(0, Math.min(100, (1 - ((desvioBC * 0.3) + (desvioQC * 0.4) + (desvioBQ * 0.3))) * 100));
+    const hgScoreTotalRaw = Math.max(0, Math.min(100, (1 - ((desvioBC * 0.3) + (desvioQC * 0.4) + (desvioBQ * 0.3))) * 100));
+    const hgScore = calculateInterpolatedPercent(hgScoreTotalRaw, 100, FEMALE_BASELINES.ampulheta);
 
     // 3. Shoulder-Hip Ratio
     const shrAtual = userMeasurements.ombros / userMeasurements.quadril;
     const shrTarget = METAS_FEMININAS.ombrosQuadril[cat];
-    const shrPercentual = getRatioPercent(shrAtual, shrTarget);
+    const shrPercentual = getRatioPercent(shrAtual, shrTarget, FEMALE_BASELINES.shr);
 
     // 4. Proporção de Braço (Antebraço ÷ Braço)
     const brRatioAtual = userMeasurements.antebraco / userMeasurements.braco;
     const brRatioTarget = METAS_FEMININAS.antebracoBraco[cat];
-    const brRatioPercentual = getRatioPercent(brRatioAtual, brRatioTarget);
+    const brRatioPercentual = getRatioPercent(brRatioAtual, brRatioTarget, FEMALE_BASELINES.braco);
 
     // 5. Hip-Thigh Ratio (Coxa ÷ Quadril)
     const htrAtual = userMeasurements.coxa / userMeasurements.quadril;
     const htrTarget = METAS_FEMININAS.coxaQuadril[cat];
-    const htrPercentual = getRatioPercent(htrAtual, htrTarget);
+    const htrPercentual = getRatioPercent(htrAtual, htrTarget, FEMALE_BASELINES.hipThigh);
 
     // 6. Desenvolvimento de Coxa (Coxa ÷ Joelho)
     const cjAtual = userMeasurements.coxa / userMeasurements.joelho;
     const cjTarget = METAS_FEMININAS.coxaJoelho[cat];
-    const cjPercentual = getRatioPercent(cjAtual, cjTarget);
+    const cjPercentual = getRatioPercent(cjAtual, cjTarget, FEMALE_BASELINES.coxaJoelho);
 
     // 7. Proporção de Perna (Coxa ÷ Panturrilha)
     const cpAtual = userMeasurements.coxa / userMeasurements.panturrilha;
     const cpTarget = METAS_FEMININAS.coxaPanturrilha[cat];
-    const cpPercentual = getRatioPercent(cpAtual, cpTarget);
+    const cpPercentual = getRatioPercent(cpAtual, cpTarget, FEMALE_BASELINES.coxaPant);
 
     // 8. Desenvolvimento de Panturrilha (Panturrilha ÷ Tornozelo)
     const ptAtual = userMeasurements.panturrilha / userMeasurements.tornozelo;
     const ptTarget = METAS_FEMININAS.panturrilhaTornozelo[cat];
-    const ptPercentual = getRatioPercent(ptAtual, ptTarget);
+    const ptPercentual = getRatioPercent(ptAtual, ptTarget, FEMALE_BASELINES.pantTorn);
 
     // ─── 12-Month Realistic Targets ──────────────────────────
 
@@ -344,7 +352,7 @@ export const getFemaleProportionItems = (
                 rawImage: true
             },
             ai: {
-                analysis: makeAnalysis(shrAtual, shrTarget, RATIO_BASELINES.shr),
+                analysis: makeAnalysis(shrAtual, shrTarget, FEMALE_BASELINES.shr),
                 suggestion: "Elevações laterais ajudam a equilibrar ombros com um quadril mais largo.",
                 goal12m: `Ombros: <strong>${cm(userMeasurements.ombros)} → ${cm(ombros12m)}cm</strong> | Quadril: <strong>${cm(userMeasurements.quadril)} → ${cm(quadril12m)}cm</strong> — Ratio projetado: <strong>${(ombros12m / quadril12m).toFixed(2)}</strong>`
             }
@@ -368,7 +376,7 @@ export const getFemaleProportionItems = (
                 rawImage: true
             },
             ai: {
-                analysis: makeAnalysis(brRatioAtual, brRatioTarget, RATIO_BASELINES.braco),
+                analysis: makeAnalysis(brRatioAtual, brRatioTarget, FEMALE_BASELINES.braco),
                 suggestion: "Rosca martelo e extensões de punho para melhorar a densidade dos antebraços.",
                 goal12m: `Braço: <strong>${cm(userMeasurements.braco)} → ${cm(braco12m)}cm</strong> | Antebraço: <strong>${cm(userMeasurements.antebraco)} → ${cm(antebraco12m)}cm</strong> — Ratio projetado: <strong>${brRatio12m}</strong>`
             }
@@ -392,7 +400,7 @@ export const getFemaleProportionItems = (
                 rawImage: true
             },
             ai: {
-                analysis: makeAnalysis(htrAtual, htrTarget, RATIO_BASELINES.hipThigh),
+                analysis: makeAnalysis(htrAtual, htrTarget, FEMALE_BASELINES.hipThigh),
                 suggestion: "Foque em glúteo médio para preencher a lateral do quadril.",
                 goal12m: `Coxa: <strong>${cm(userMeasurements.coxa)} → ${cm(coxa12m)}cm</strong> | Quadril: <strong>${cm(userMeasurements.quadril)} → ${cm(quadril12m)}cm</strong> — Ratio projetado: <strong>${(coxa12m / quadril12m).toFixed(2)}</strong>`
             }
@@ -416,7 +424,7 @@ export const getFemaleProportionItems = (
                 rawImage: true
             },
             ai: {
-                analysis: makeAnalysis(cjAtual, cjTarget, RATIO_BASELINES.coxaJoelho),
+                analysis: makeAnalysis(cjAtual, cjTarget, FEMALE_BASELINES.coxaJoelho),
                 suggestion: "Agachamento hack e extensora para isolar o quadríceps.",
                 goal12m: `Coxa: <strong>${cm(userMeasurements.coxa)} → ${cm(coxa12m)}cm</strong> — Ratio projetado: <strong>${(coxa12m / userMeasurements.joelho).toFixed(2)}</strong>`
             }
@@ -440,7 +448,7 @@ export const getFemaleProportionItems = (
                 rawImage: true
             },
             ai: {
-                analysis: makeAnalysis(cpAtual, cpTarget, RATIO_BASELINES.coxaPant),
+                analysis: makeAnalysis(cpAtual, cpTarget, FEMALE_BASELINES.coxaPant),
                 suggestion: "O equilíbrio aqui define o 'flow' das pernas em poses de frente.",
                 goal12m: `Coxa: <strong>${cm(userMeasurements.coxa)} → ${cm(coxa12m)}cm</strong> | Pant: <strong>${cm(userMeasurements.panturrilha)} → ${cm(pant12m)}cm</strong> — Ratio projetado: <strong>${(coxa12m / pant12m).toFixed(2)}</strong>`
             }
@@ -464,7 +472,7 @@ export const getFemaleProportionItems = (
                 rawImage: true
             },
             ai: {
-                analysis: makeAnalysis(ptAtual, ptTarget, RATIO_BASELINES.pantTorn),
+                analysis: makeAnalysis(ptAtual, ptTarget, FEMALE_BASELINES.pantTorn),
                 suggestion: "Trabalhe panturrilhas em pé e sentado para atingir gastrocnêmio e sóleo.",
                 goal12m: `Panturrilha: <strong>${cm(userMeasurements.panturrilha)} → ${cm(pant12m)}cm</strong> — Ratio projetado: <strong>${(pant12m / userMeasurements.tornozelo).toFixed(2)}</strong>`
             }
