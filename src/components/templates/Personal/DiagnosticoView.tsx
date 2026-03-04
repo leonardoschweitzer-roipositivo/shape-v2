@@ -917,6 +917,11 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
             return;
         }
 
+        if (!m) return;
+
+        // Impede re-chamadas se já houver texto
+        if (analiseContextoIA) return;
+
         const perfil: PerfilAtletaIA = {
             nome: atleta.name,
             sexo: atleta.gender === 'FEMALE' ? 'F' : 'M',
@@ -937,13 +942,15 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
         gerarConteudoIA<{ analiseContexto: string }>(prompt)
             .then(result => {
                 if (result?.analiseContexto) {
-                    console.info('[DiagnosticoView] 🤖 Análise de contexto IA gerada');
+                    console.info('[DiagnosticoView] 🤖 Análise de contexto IA gerada para ' + atleta.name);
                     setAnaliseContextoIA(result.analiseContexto);
+                } else {
+                    console.warn('[DiagnosticoView] IA retornou vazio para Análise de Contexto');
                 }
             })
             .catch(err => console.error('[DiagnosticoView] Erro contexto IA:', err))
             .finally(() => setContextLoading(false));
-    }, [atletaId]);
+    }, [atletaId, m, isReadOnly, atleta, analiseContextoIA]);
 
     /** Gera diagnóstico a partir dos dados reais do atleta */
     const handleGerar = () => {
