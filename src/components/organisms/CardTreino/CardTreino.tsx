@@ -366,10 +366,10 @@ export function CardTreino({ treino, proximoTreino, exerciciosFeitos, exercicioT
                     )}
                 </div>
 
-                {/* Lista de Exercícios com Timer */}
+                {/* Lista de Exercícios com Divisores */}
                 {treino.exercicios && treino.exercicios.length > 0 && (
-                    <div className="mb-6 space-y-3 animate-in fade-in duration-300">
-                        {treino.exercicios.map((ex) => {
+                    <div className="mb-6 -mx-6 border-y border-white/5 animate-in fade-in duration-300">
+                        {treino.exercicios.map((ex, idx) => {
                             const timer = exercicioTimers[ex.id]
                             const timerStatus = timer?.status || 'idle'
                             const tempoMs = getTempoAtual(timer)
@@ -380,79 +380,66 @@ export function CardTreino({ treino, proximoTreino, exerciciosFeitos, exercicioT
                             return (
                                 <div
                                     key={ex.id}
-                                    className={`rounded-xl p-3 transition-all duration-300 ${isDone
-                                        ? 'bg-emerald-500/5 border border-emerald-500/10'
-                                        : isRunning
-                                            ? 'bg-indigo-500/5 border border-indigo-500/20'
-                                            : 'bg-white/[0.02] border border-white/5'
-                                        }`}
+                                    className={`flex items-center gap-3 px-6 py-4 transition-all duration-300 ${idx !== treino.exercicios!.length - 1 ? 'border-b border-white/5' : ''
+                                        } ${isDone ? 'opacity-50' : ''}`}
                                 >
-                                    <div className="flex items-center gap-3">
-                                        {/* Botão de ação do timer */}
-                                        {isDone ? (
-                                            <button
-                                                onClick={() => handleUndoExercicio(ex.id)}
-                                                className="w-8 h-8 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 flex items-center justify-center flex-shrink-0 transition-colors group/undo"
-                                                title="Desmarcar exercício"
-                                            >
-                                                <Check size={16} className="text-emerald-400 group-hover/undo:scale-90 transition-transform" strokeWidth={3} />
-                                            </button>
-                                        ) : isRunning ? (
-                                            <button
-                                                onClick={() => handlePauseExercicio(ex.id)}
-                                                className="w-8 h-8 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 flex items-center justify-center flex-shrink-0 transition-colors"
-                                            >
-                                                <Pause size={16} className="text-amber-400" />
-                                            </button>
-                                        ) : (
-                                            <button
-                                                onClick={() => handlePlayExercicio(ex.id)}
-                                                className="w-8 h-8 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 flex items-center justify-center flex-shrink-0 transition-colors"
-                                            >
-                                                <Play size={14} className="text-indigo-400 ml-0.5" />
-                                            </button>
-                                        )}
+                                    {/* Botão de ação do timer */}
+                                    {isDone ? (
+                                        <button
+                                            onClick={() => handleUndoExercicio(ex.id)}
+                                            className="w-8 h-8 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 flex items-center justify-center flex-shrink-0 transition-colors group/undo"
+                                            title="Desmarcar exercício"
+                                        >
+                                            <Check size={16} className="text-emerald-400 group-hover/undo:scale-90 transition-transform" strokeWidth={3} />
+                                        </button>
+                                    ) : isRunning ? (
+                                        <button
+                                            onClick={() => handlePauseExercicio(ex.id)}
+                                            className="w-8 h-8 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 flex items-center justify-center flex-shrink-0 transition-colors"
+                                        >
+                                            <Pause size={16} className="text-amber-400" />
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() => handlePlayExercicio(ex.id)}
+                                            className="w-8 h-8 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 flex items-center justify-center flex-shrink-0 transition-colors"
+                                        >
+                                            <Play size={14} className="text-indigo-400 ml-0.5" />
+                                        </button>
+                                    )}
 
-                                        {/* Nome do exercício */}
-                                        <div className="flex-1 min-w-0">
-                                            <p className={`text-sm font-medium transition-colors ${isDone ? 'text-gray-500 line-through' : 'text-gray-200'
-                                                }`}>
-                                                {ex.nome}
-                                            </p>
-                                            {ex.foco && !isDone && (
-                                                <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">
-                                                    {ex.foco}
-                                                </p>
-                                            )}
-                                            {/* Input de Carga (kg) */}
-                                            {!isDone && treino.status === 'pendente' && (
-                                                <div className="flex items-center gap-1.5 mt-1.5">
-                                                    <Dumbbell size={10} className="text-gray-600 flex-shrink-0" />
-                                                    <input
-                                                        type="number"
-                                                        inputMode="decimal"
-                                                        step="0.5"
-                                                        min="0"
-                                                        placeholder="kg"
-                                                        value={timer?.carga ?? ''}
-                                                        onChange={e => {
-                                                            const val = e.target.value
-                                                            handleCargaChange(ex.id, val === '' ? undefined : Number(val))
-                                                        }}
-                                                        onClick={e => e.stopPropagation()}
-                                                        className="w-14 h-7 bg-white/[0.03] border border-white/10 rounded-md px-1 text-[11px] text-indigo-300 font-mono placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors text-center"
-                                                    />
-                                                    {timer?.carga !== undefined && timer.carga > 0 && (
-                                                        <span className="text-[10px] text-gray-500">kg</span>
-                                                    )}
-                                                </div>
-                                            )}
-                                            {isDone && timer?.carga !== undefined && timer.carga > 0 && (
-                                                <p className="text-[10px] text-emerald-400/60 mt-0.5 font-mono">
-                                                    {timer.carga}kg
-                                                </p>
-                                            )}
-                                        </div>
+                                    {/* Nome do exercício */}
+                                    <div className="flex-1 min-w-0">
+                                        <p className={`text-sm font-medium transition-colors ${isDone ? 'text-gray-500 line-through' : 'text-gray-200'
+                                            }`}>
+                                            {ex.nome}
+                                        </p>
+                                    </div>
+
+                                    {/* Controles e Info (Alinhados lateralmente) */}
+                                    <div className="flex items-center gap-2">
+                                        {/* Input de Carga (kg) - Próximo ao Vídeo */}
+                                        {!isDone && treino.status === 'pendente' && (
+                                            <input
+                                                type="number"
+                                                inputMode="decimal"
+                                                step="0.5"
+                                                min="0"
+                                                placeholder="kg"
+                                                value={timer?.carga ?? ''}
+                                                onChange={e => {
+                                                    const val = e.target.value
+                                                    handleCargaChange(ex.id, val === '' ? undefined : Number(val))
+                                                }}
+                                                onClick={e => e.stopPropagation()}
+                                                className="w-12 h-7 bg-white/[0.03] border border-white/10 rounded-lg text-[11px] text-indigo-300 font-mono placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors text-center"
+                                            />
+                                        )}
+                                        {isDone && timer?.carga !== undefined && timer.carga > 0 && (
+                                            <span className="text-[10px] text-emerald-400/60 font-mono mr-1">
+                                                {timer.carga}kg
+                                            </span>
+                                        )}
 
                                         {/* Botão de Vídeo 🎬 */}
                                         <button
@@ -490,7 +477,7 @@ export function CardTreino({ treino, proximoTreino, exerciciosFeitos, exercicioT
 
                                         {/* Timer ou Séries */}
                                         {(isRunning || isPaused || isDone) && tempoMs > 0 ? (
-                                            <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg ${isDone ? 'bg-emerald-500/10' : isRunning ? 'bg-indigo-500/10' : 'bg-white/5'
+                                            <div className={`flex items-center gap-1.5 h-7 px-2 rounded-lg ${isDone ? 'bg-emerald-500/10' : isRunning ? 'bg-indigo-500/10' : 'bg-white/5'
                                                 }`}>
                                                 <Timer size={12} className={isDone ? 'text-emerald-400' : isRunning ? 'text-indigo-400 animate-pulse' : 'text-gray-400'} />
                                                 <span className={`text-xs font-mono font-bold ${isDone ? 'text-emerald-400' : isRunning ? 'text-indigo-300' : 'text-gray-300'
@@ -499,8 +486,8 @@ export function CardTreino({ treino, proximoTreino, exerciciosFeitos, exercicioT
                                                 </span>
                                             </div>
                                         ) : (
-                                            <div className="px-2 py-1 rounded-md bg-white/5">
-                                                <span className="text-[11px] font-mono text-gray-400">
+                                            <div className="h-7 px-2 flex items-center rounded-lg bg-white/5">
+                                                <span className="text-[11px] font-mono text-gray-400 whitespace-nowrap">
                                                     {ex.series}×{ex.repeticoes}
                                                 </span>
                                             </div>
