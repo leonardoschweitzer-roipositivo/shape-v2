@@ -123,8 +123,8 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
         console.log('Ver treino completo')
     }
 
-    const handleCompletarTreino = async () => {
-        await completarTreino(atletaId, { intensidade: 3, duracao: 60, reportouDor: false, treinoIndex: todayData?.treino?.indiceTreino })
+    const handleCompletarTreino = async (dataOverride?: string) => {
+        await completarTreino(atletaId, { intensidade: 3, duracao: 60, reportouDor: false, treinoIndex: todayData?.treino?.indiceTreino }, dataOverride)
         // Refresh today data
         if (ctx) {
             const today = await montarDadosHoje(ctx)

@@ -8,8 +8,8 @@
  * - descanso: Dia de descanso (com accordion do próximo treino)
  */
 
-import React, { useState } from 'react'
-import { Dumbbell, Check, SkipForward, Moon, Play, ChevronDown, ChevronUp, Calendar } from 'lucide-react'
+import React, { useState, useRef, useEffect } from 'react'
+import { Dumbbell, Check, SkipForward, Moon, Play, ChevronDown, ChevronUp, Calendar, Clock } from 'lucide-react'
 import { WorkoutOfDay } from '../../../types/athlete-portal'
 import type { ProximoTreino } from '../../../services/portalDataService'
 
@@ -17,7 +17,7 @@ interface CardTreinoProps {
     treino: WorkoutOfDay
     proximoTreino?: ProximoTreino | null
     onVerTreino: () => void
-    onCompletei: () => void
+    onCompletei: (dataOverride?: string) => void
     onPular: () => void
 }
 
@@ -38,6 +38,27 @@ const INTENSIDADE_LABEL: Record<1 | 2 | 3 | 4, string> = {
 export function CardTreino({ treino, proximoTreino, onVerTreino, onCompletei, onPular }: CardTreinoProps) {
     const [accordionOpen, setAccordionOpen] = useState(treino.status === 'pendente')
     const [exerciciosFeitos, setExerciciosFeitos] = useState<Record<string, boolean>>({})
+    const [showCompleteiMenu, setShowCompleteiMenu] = useState(false)
+    const completeiMenuRef = useRef<HTMLDivElement>(null)
+
+    // Fechar menu ao clicar fora
+    useEffect(() => {
+        if (!showCompleteiMenu) return
+        const handleClickOutside = (e: MouseEvent) => {
+            if (completeiMenuRef.current && !completeiMenuRef.current.contains(e.target as Node)) {
+                setShowCompleteiMenu(false)
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [showCompleteiMenu])
+
+    // Data de ontem em 'YYYY-MM-DD'
+    const getOntemISO = (): string => {
+        const d = new Date()
+        d.setDate(d.getDate() - 1)
+        return d.toISOString().split('T')[0]
+    }
 
     const handleToggleExercicio = (id: string) => {
         const novoEstado = { ...exerciciosFeitos, [id]: !exerciciosFeitos[id] }
@@ -47,7 +68,7 @@ export function CardTreino({ treino, proximoTreino, onVerTreino, onCompletei, on
         if (treino.exercicios && treino.exercicios.length > 0) {
             const todosFeitos = treino.exercicios.every(ex => novoEstado[ex.id])
             if (todosFeitos) {
-                // Pequeno delay para o aluno ver o último checkbox marcar antes de completar
+                // Quando marca todos os exercícios, completa como hoje automaticamente
                 setTimeout(() => {
                     onCompletei()
                 }, 400)
@@ -317,13 +338,44 @@ export function CardTreino({ treino, proximoTreino, onVerTreino, onCompletei, on
             )}
 
             <div className="grid grid-cols-2 gap-3">
-                <button
-                    onClick={onCompletei}
-                    className="py-2.5 px-4 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-xl text-sm font-bold text-emerald-400 transition-colors flex items-center justify-center gap-2"
-                >
-                    <Check size={16} />
-                    COMPLETEI
-                </button>
+                {/* Botão COMPLETEI com mini-menu retroativo */}
+                <div className="relative" ref={completeiMenuRef}>
+                    <button
+                        onClick={() => setShowCompleteiMenu(!showCompleteiMenu)}
+                        className="w-full py-2.5 px-4 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-xl text-sm font-bold text-emerald-400 transition-colors flex items-center justify-center gap-2"
+                    >
+                        <Check size={16} />
+                        COMPLETEI
+                        <ChevronDown size={14} className={`transition-transform duration-200 ${showCompleteiMenu ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {/* Dropdown: HOJE / ONTEM */}
+                    {showCompleteiMenu && (
+                        <div className="absolute bottom-full left-0 right-0 mb-2 bg-[#0C1220] border border-white/10 rounded-xl overflow-hidden shadow-xl shadow-black/40 z-50 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                            <button
+                                onClick={() => {
+                                    setShowCompleteiMenu(false)
+                                    onCompletei()
+                                }}
+                                className="w-full px-4 py-3 flex items-center gap-3 hover:bg-emerald-500/10 transition-colors border-b border-white/5"
+                            >
+                                <Check size={16} className="text-emerald-400" />
+                                <span className="text-sm font-semibold text-white">HOJE</span>
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowCompleteiMenu(false)
+                                    onCompletei(getOntemISO())
+                                }}
+                                className="w-full px-4 py-3 flex items-center gap-3 hover:bg-indigo-500/10 transition-colors"
+                            >
+                                <Clock size={16} className="text-indigo-400" />
+                                <span className="text-sm font-semibold text-white">ONTEM</span>
+                                <span className="text-[10px] text-gray-500 ml-auto">Esqueci de marcar</span>
+                            </button>
+                        </div>
+                    )}
+                </div>
 
                 <button
                     onClick={onPular}

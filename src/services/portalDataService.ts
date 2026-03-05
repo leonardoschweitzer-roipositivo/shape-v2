@@ -930,13 +930,14 @@ export async function salvarMensagemChat(
 export async function registrarTracker(
     atletaId: string,
     tipo: 'agua' | 'sono' | 'peso' | 'treino' | 'dor' | 'refeicao',
-    dados: Record<string, any>
+    dados: Record<string, any>,
+    dataOverride?: string // 'YYYY-MM-DD' — para registros retroativos (ex: ontem)
 ): Promise<boolean> {
     const { error } = await supabase
         .from('registros_diarios')
         .insert({
             atleta_id: atletaId,
-            data: new Date().toISOString().split('T')[0],
+            data: dataOverride || new Date().toISOString().split('T')[0],
             tipo,
             dados,
         } as any);
@@ -953,12 +954,13 @@ export async function registrarTracker(
  */
 export async function completarTreino(
     atletaId: string,
-    dados: { intensidade: number; duracao: number; reportouDor: boolean; treinoIndex?: number }
+    dados: { intensidade: number; duracao: number; reportouDor: boolean; treinoIndex?: number },
+    dataOverride?: string // 'YYYY-MM-DD' — para registros retroativos
 ): Promise<boolean> {
     return registrarTracker(atletaId, 'treino', {
         status: 'completo',
         ...dados,
-    });
+    }, dataOverride);
 }
 
 /**

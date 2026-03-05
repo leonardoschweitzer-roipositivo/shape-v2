@@ -21,7 +21,7 @@ interface TodayScreenProps {
     peso?: number
     personalNome?: string
     onVerTreino: () => void
-    onCompletarTreino: () => void
+    onCompletarTreino: (dataOverride?: string) => void
     onPularTreino: (continuarHoje?: boolean) => void
     onRegistrarRefeicao: () => void
     onTrackerClick: (tipo: TrackerRapido['id']) => void
