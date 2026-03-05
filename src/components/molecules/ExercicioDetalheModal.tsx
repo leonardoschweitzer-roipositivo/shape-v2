@@ -43,12 +43,19 @@ export function ExercicioDetalheModal({ exercicio, onFechar }: ExercicioDetalheM
     const modalContent = (
         <div
             className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85"
-            style={{ WebkitBackdropFilter: 'blur(8px)', backdropFilter: 'blur(8px)' }}
+            style={{
+                WebkitBackdropFilter: 'blur(8px)',
+                backdropFilter: 'blur(8px)',
+                height: '100dvh',
+            }}
             onClick={onFechar}
         >
             <div
                 className="bg-[#0C1220] border border-white/10 rounded-t-3xl sm:rounded-3xl w-full sm:max-w-lg overflow-y-auto shadow-2xl animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300"
-                style={{ maxHeight: 'calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 40px)' }}
+                style={{
+                    maxHeight: '85dvh',
+                    WebkitOverflowScrolling: 'touch',
+                }}
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}
