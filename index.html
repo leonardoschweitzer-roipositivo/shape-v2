@@ -74,6 +74,22 @@
       border-color: rgba(0, 201, 167, 0.3);
       background: rgba(19, 27, 44, 0.9);
     }
+
+    /* Prevent iOS auto-zoom on focus */
+    @media screen and (max-width: 768px) {
+
+      input[type="text"],
+      input[type="number"],
+      input[type="email"],
+      input[type="password"],
+      input[type="search"],
+      input[type="tel"],
+      input[type="url"],
+      textarea,
+      select {
+        font-size: 16px !important;
+      }
+    }
   </style>
 </head>
 

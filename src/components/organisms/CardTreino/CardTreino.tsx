@@ -440,7 +440,7 @@ export function CardTreino({ treino, proximoTreino, exerciciosFeitos, exercicioT
                                                             handleCargaChange(ex.id, val === '' ? undefined : Number(val))
                                                         }}
                                                         onClick={e => e.stopPropagation()}
-                                                        className="w-16 bg-white/[0.03] border border-white/10 rounded-md px-1.5 py-0.5 text-[11px] text-indigo-300 font-mono placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors text-center"
+                                                        className="w-20 bg-white/[0.03] border border-white/10 rounded-md px-1.5 py-1 text-base sm:text-[11px] text-indigo-300 font-mono placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors text-center"
                                                     />
                                                     {timer?.carga !== undefined && timer.carga > 0 && (
                                                         <span className="text-[10px] text-gray-500">kg</span>
@@ -458,16 +458,26 @@ export function CardTreino({ treino, proximoTreino, exerciciosFeitos, exercicioT
                                         <button
                                             onClick={async (e) => {
                                                 e.stopPropagation()
-                                                // Busca na biblioteca pelo nome do exercício
                                                 const found = await exercicioBibliotecaService.buscarPorNomeSimilar(ex.nome)
                                                 setExercicioBiblioteca(found ?? {
                                                     id: ex.id,
                                                     nome: ex.nome,
-                                                    grupo_muscular: 'peito',
+                                                    grupo_muscular: (ex.foco?.toLowerCase().includes('peito') ? 'peito'
+                                                        : ex.foco?.toLowerCase().includes('costas') ? 'costas'
+                                                            : ex.foco?.toLowerCase().includes('ombro') ? 'ombros'
+                                                                : ex.foco?.toLowerCase().includes('bíceps') || ex.foco?.toLowerCase().includes('biceps') ? 'biceps'
+                                                                    : ex.foco?.toLowerCase().includes('tríceps') || ex.foco?.toLowerCase().includes('triceps') ? 'triceps'
+                                                                        : ex.foco?.toLowerCase().includes('perna') || ex.foco?.toLowerCase().includes('coxa') ? 'quadriceps'
+                                                                            : ex.foco?.toLowerCase().includes('glut') ? 'gluteos'
+                                                                                : ex.foco?.toLowerCase().includes('abd') ? 'abdomen'
+                                                                                    : 'peito') as any,
                                                     nivel: 'intermediario',
                                                     em_breve: true,
                                                     ativo: true,
                                                     descricao: ex.dica || undefined,
+                                                    instrucoes: [],
+                                                    dicas: [],
+                                                    erros_comuns: [],
                                                     created_at: new Date().toISOString(),
                                                     updated_at: new Date().toISOString(),
                                                 } as ExercicioBiblioteca)

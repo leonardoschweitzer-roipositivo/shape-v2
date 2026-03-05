@@ -185,6 +185,21 @@ export function ExercicioDetalheModal({ exercicio, onFechar }: ExercicioDetalheM
                 {/* Seções expansíveis */}
                 <div className="px-5 pb-24 sm:pb-5 space-y-2">
 
+                    {/* Empty state: sem dados técnicos */}
+                    {(!exercicio.instrucoes || exercicio.instrucoes.length === 0) &&
+                        (!exercicio.dicas || exercicio.dicas.length === 0) &&
+                        (!exercicio.erros_comuns || exercicio.erros_comuns.length === 0) && (
+                            <div className="bg-white/[0.02] rounded-xl border border-white/5 p-5 text-center space-y-2">
+                                <div className="w-10 h-10 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mx-auto">
+                                    <Lightbulb size={18} className="text-indigo-400" />
+                                </div>
+                                <p className="text-sm font-bold text-white">Instruções técnicas em breve</p>
+                                <p className="text-xs text-gray-500 leading-relaxed">
+                                    Estamos preparando o passo a passo, dicas de execução e erros comuns para este exercício. 📝
+                                </p>
+                            </div>
+                        )}
+
                     {/* Instruções */}
                     {exercicio.instrucoes && exercicio.instrucoes.length > 0 && (
                         <div className="bg-white/[0.03] rounded-xl border border-white/5 overflow-hidden">
