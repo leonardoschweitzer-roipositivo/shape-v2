@@ -11,6 +11,7 @@ import { CardDieta } from '../../components/organisms/CardDieta'
 import { TrackersRapidos } from '../../components/organisms/TrackersRapidos'
 import { DicaCoach } from '../../components/molecules/DicaCoach'
 import { TodayScreenData, TrackerRapido } from '../../types/athlete-portal'
+import type { ExercicioTimerState } from '../../types/athlete-portal'
 import type { ProximoTreino } from '../../services/portalDataService'
 
 interface TodayScreenProps {
@@ -21,7 +22,8 @@ interface TodayScreenProps {
     peso?: number
     personalNome?: string
     exerciciosFeitos: Record<string, boolean>
-    onExerciciosFeitosChange: (feitos: Record<string, boolean>) => void
+    exercicioTimers: Record<string, ExercicioTimerState>
+    onExercicioTimersChange: (timers: Record<string, ExercicioTimerState>) => void
     onVerTreino: () => void
     onCompletarTreino: (dataOverride?: string) => void
     onPularTreino: (continuarHoje?: boolean) => void
@@ -38,7 +40,8 @@ export function TodayScreen({
     peso,
     personalNome,
     exerciciosFeitos,
-    onExerciciosFeitosChange,
+    exercicioTimers,
+    onExercicioTimersChange,
     onVerTreino,
     onCompletarTreino,
     onPularTreino,
@@ -73,7 +76,8 @@ export function TodayScreen({
                     treino={data.treino}
                     proximoTreino={proximoTreino}
                     exerciciosFeitos={exerciciosFeitos}
-                    onExerciciosFeitosChange={onExerciciosFeitosChange}
+                    exercicioTimers={exercicioTimers}
+                    onExercicioTimersChange={onExercicioTimersChange}
                     onVerTreino={onVerTreino}
                     onCompletei={onCompletarTreino}
                     onPular={() => setModalPularOpen(true)}

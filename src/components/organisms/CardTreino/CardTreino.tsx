@@ -9,15 +9,17 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react'
-import { Dumbbell, Check, SkipForward, Moon, Play, ChevronDown, ChevronUp, Calendar, Clock } from 'lucide-react'
+import { Dumbbell, Check, SkipForward, Moon, Play, ChevronDown, ChevronUp, Calendar, Clock, Pause, Timer } from 'lucide-react'
 import { WorkoutOfDay } from '../../../types/athlete-portal'
+import type { ExercicioTimerState } from '../../../types/athlete-portal'
 import type { ProximoTreino } from '../../../services/portalDataService'
 
 interface CardTreinoProps {
     treino: WorkoutOfDay
     proximoTreino?: ProximoTreino | null
     exerciciosFeitos: Record<string, boolean>
-    onExerciciosFeitosChange: (feitos: Record<string, boolean>) => void
+    exercicioTimers: Record<string, ExercicioTimerState>
+    onExercicioTimersChange: (timers: Record<string, ExercicioTimerState>) => void
     onVerTreino: () => void
     onCompletei: (dataOverride?: string) => void
     onPular: () => void
@@ -37,10 +39,19 @@ const INTENSIDADE_LABEL: Record<1 | 2 | 3 | 4, string> = {
     4: 'Ótimo'
 }
 
-export function CardTreino({ treino, proximoTreino, exerciciosFeitos, onExerciciosFeitosChange, onVerTreino, onCompletei, onPular }: CardTreinoProps) {
+/** Formata milissegundos em mm:ss */
+function formatTime(ms: number): string {
+    const totalSec = Math.floor(ms / 1000)
+    const min = Math.floor(totalSec / 60)
+    const sec = totalSec % 60
+    return `${min}:${sec.toString().padStart(2, '0')}`
+}
+
+export function CardTreino({ treino, proximoTreino, exerciciosFeitos, exercicioTimers, onExercicioTimersChange, onVerTreino, onCompletei, onPular }: CardTreinoProps) {
     const [accordionOpen, setAccordionOpen] = useState(treino.status === 'pendente')
     const [showCompleteiMenu, setShowCompleteiMenu] = useState(false)
     const completeiMenuRef = useRef<HTMLDivElement>(null)
+    const [, forceUpdate] = useState(0) // for timer ticking
 
     // Fechar menu ao clicar fora
     useEffect(() => {
@@ -54,6 +65,14 @@ export function CardTreino({ treino, proximoTreino, exerciciosFeitos, onExercici
         return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [showCompleteiMenu])
 
+    // Tick interval para atualizar timers rodando
+    useEffect(() => {
+        const hasRunning = Object.values(exercicioTimers).some(t => t.status === 'running')
+        if (!hasRunning) return
+        const interval = setInterval(() => forceUpdate(n => n + 1), 1000)
+        return () => clearInterval(interval)
+    }, [exercicioTimers])
+
     // Data de ontem em 'YYYY-MM-DD'
     const getOntemISO = (): string => {
         const d = new Date()
@@ -61,18 +80,51 @@ export function CardTreino({ treino, proximoTreino, exerciciosFeitos, onExercici
         return d.toISOString().split('T')[0]
     }
 
-    const handleToggleExercicio = (id: string) => {
-        const novoEstado = { ...exerciciosFeitos, [id]: !exerciciosFeitos[id] }
-        onExerciciosFeitosChange(novoEstado)
+    // Calcular tempo atual de um exercício (incluindo tempo rodando)
+    const getTempoAtual = (timer: ExercicioTimerState | undefined): number => {
+        if (!timer) return 0
+        if (timer.status === 'running' && timer.inicioUltimoPlay) {
+            return timer.tempoAcumuladoMs + (Date.now() - timer.inicioUltimoPlay)
+        }
+        return timer.tempoAcumuladoMs
+    }
 
-        // Verificar se todos os exercícios do treino foram marcados
+    // Ações do timer
+    const handlePlayExercicio = (id: string) => {
+        const current = exercicioTimers[id] || { status: 'idle', tempoAcumuladoMs: 0 }
+        onExercicioTimersChange({
+            ...exercicioTimers,
+            [id]: { ...current, status: 'running', inicioUltimoPlay: Date.now() },
+        })
+    }
+
+    const handlePauseExercicio = (id: string) => {
+        const current = exercicioTimers[id]
+        if (!current || current.status !== 'running') return
+        const elapsed = current.inicioUltimoPlay ? Date.now() - current.inicioUltimoPlay : 0
+        onExercicioTimersChange({
+            ...exercicioTimers,
+            [id]: { ...current, status: 'paused', tempoAcumuladoMs: current.tempoAcumuladoMs + elapsed, inicioUltimoPlay: undefined },
+        })
+    }
+
+    const handleDoneExercicio = (id: string) => {
+        const current = exercicioTimers[id] || { status: 'idle', tempoAcumuladoMs: 0 }
+        let finalMs = current.tempoAcumuladoMs
+        if (current.status === 'running' && current.inicioUltimoPlay) {
+            finalMs += Date.now() - current.inicioUltimoPlay
+        }
+        const updated = {
+            ...exercicioTimers,
+            [id]: { status: 'done' as const, tempoAcumuladoMs: finalMs, inicioUltimoPlay: undefined },
+        }
+        onExercicioTimersChange(updated)
+
+        // Verificar se todos os exercícios foram concluídos
         if (treino.exercicios && treino.exercicios.length > 0) {
-            const todosFeitos = treino.exercicios.every(ex => novoEstado[ex.id])
+            const todosFeitos = treino.exercicios.every(ex => updated[ex.id]?.status === 'done')
             if (todosFeitos) {
-                // Quando marca todos os exercícios, completa como hoje automaticamente
-                setTimeout(() => {
-                    onCompletei()
-                }, 400)
+                setTimeout(() => onCompletei(), 600)
             }
         }
     }
@@ -290,49 +342,98 @@ export function CardTreino({ treino, proximoTreino, exerciciosFeitos, onExercici
                 )}
             </div>
 
-            {/* Lista de Exercícios (Fixa e com Checkboxes) */}
+            {/* Lista de Exercícios com Timer */}
             {treino.exercicios && treino.exercicios.length > 0 && (
                 <div className="mb-6 space-y-3 animate-in fade-in duration-300">
                     <div className="bg-white/[0.03] rounded-xl p-4 border border-white/5">
                         <h4 className="text-xs font-bold text-gray-500 mb-4 uppercase tracking-[0.2em]">
                             Lista de Exercícios
                         </h4>
-                        <div className="space-y-4">
-                            {treino.exercicios.map((ex, i) => (
-                                <div
-                                    key={ex.id}
-                                    className="flex items-center gap-4 group cursor-pointer"
-                                    onClick={() => handleToggleExercicio(ex.id)}
-                                >
-                                    {/* Custom Checkbox */}
-                                    <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${exerciciosFeitos[ex.id]
-                                        ? 'bg-indigo-500 border-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]'
-                                        : 'border-white/10 bg-white/5 group-hover:border-white/20'
-                                        }`}>
-                                        {exerciciosFeitos[ex.id] && <Check size={14} className="text-white" strokeWidth={3} />}
-                                    </div>
+                        <div className="space-y-3">
+                            {treino.exercicios.map((ex) => {
+                                const timer = exercicioTimers[ex.id]
+                                const timerStatus = timer?.status || 'idle'
+                                const tempoMs = getTempoAtual(timer)
+                                const isDone = timerStatus === 'done'
+                                const isRunning = timerStatus === 'running'
+                                const isPaused = timerStatus === 'paused'
 
-                                    <div className="flex-1">
-                                        <p className={`text-sm font-medium transition-colors ${exerciciosFeitos[ex.id] ? 'text-gray-500 line-through' : 'text-gray-200'
-                                            }`}>
-                                            {ex.nome}
-                                        </p>
-                                        {ex.foco && !exerciciosFeitos[ex.id] && (
-                                            <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">
-                                                {ex.foco}
-                                            </p>
-                                        )}
-                                    </div>
+                                return (
+                                    <div
+                                        key={ex.id}
+                                        className={`rounded-xl p-3 transition-all duration-300 ${isDone
+                                                ? 'bg-emerald-500/5 border border-emerald-500/10'
+                                                : isRunning
+                                                    ? 'bg-indigo-500/5 border border-indigo-500/20'
+                                                    : 'bg-white/[0.02] border border-white/5'
+                                            }`}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            {/* Botão de ação do timer */}
+                                            {isDone ? (
+                                                <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                                                    <Check size={16} className="text-emerald-400" strokeWidth={3} />
+                                                </div>
+                                            ) : isRunning ? (
+                                                <button
+                                                    onClick={() => handlePauseExercicio(ex.id)}
+                                                    className="w-8 h-8 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 flex items-center justify-center flex-shrink-0 transition-colors"
+                                                >
+                                                    <Pause size={16} className="text-amber-400" />
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handlePlayExercicio(ex.id)}
+                                                    className="w-8 h-8 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 flex items-center justify-center flex-shrink-0 transition-colors"
+                                                >
+                                                    <Play size={14} className="text-indigo-400 ml-0.5" />
+                                                </button>
+                                            )}
 
-                                    <div className={`px-2 py-1 rounded-md transition-colors ${exerciciosFeitos[ex.id] ? 'bg-white/[0.02]' : 'bg-white/5'
-                                        }`}>
-                                        <span className={`text-[11px] font-mono transition-colors ${exerciciosFeitos[ex.id] ? 'text-gray-700' : 'text-gray-400'
-                                            }`}>
-                                            {ex.series}×{ex.repeticoes}
-                                        </span>
+                                            {/* Nome do exercício */}
+                                            <div className="flex-1 min-w-0">
+                                                <p className={`text-sm font-medium transition-colors truncate ${isDone ? 'text-gray-500 line-through' : 'text-gray-200'
+                                                    }`}>
+                                                    {ex.nome}
+                                                </p>
+                                                {ex.foco && !isDone && (
+                                                    <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">
+                                                        {ex.foco}
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            {/* Timer ou Séries */}
+                                            {(isRunning || isPaused || isDone) && tempoMs > 0 ? (
+                                                <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg ${isDone ? 'bg-emerald-500/10' : isRunning ? 'bg-indigo-500/10' : 'bg-white/5'
+                                                    }`}>
+                                                    <Timer size={12} className={isDone ? 'text-emerald-400' : isRunning ? 'text-indigo-400 animate-pulse' : 'text-gray-400'} />
+                                                    <span className={`text-xs font-mono font-bold ${isDone ? 'text-emerald-400' : isRunning ? 'text-indigo-300' : 'text-gray-300'
+                                                        }`}>
+                                                        {formatTime(tempoMs)}
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <div className="px-2 py-1 rounded-md bg-white/5">
+                                                    <span className="text-[11px] font-mono text-gray-400">
+                                                        {ex.series}×{ex.repeticoes}
+                                                    </span>
+                                                </div>
+                                            )}
+
+                                            {/* Botão FEITO (só aparece quando running ou paused) */}
+                                            {(isRunning || isPaused) && (
+                                                <button
+                                                    onClick={() => handleDoneExercicio(ex.id)}
+                                                    className="w-8 h-8 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 flex items-center justify-center flex-shrink-0 transition-colors"
+                                                >
+                                                    <Check size={16} className="text-emerald-400" strokeWidth={3} />
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                )
+                            })}
                         </div>
                     </div>
                 </div>

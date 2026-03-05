@@ -53,6 +53,12 @@ export interface ExercicioTreino {
     foco?: string              // "Peitoral superior"
 }
 
+export interface ExercicioTimerState {
+    status: 'idle' | 'running' | 'paused' | 'done'
+    tempoAcumuladoMs: number        // tempo total acumulado em milissegundos
+    inicioUltimoPlay?: number       // timestamp (Date.now()) do último PLAY
+}
+
 export interface DietOfDay {
     // Metas
     metaCalorias: number

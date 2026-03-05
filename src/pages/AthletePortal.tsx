@@ -9,7 +9,7 @@ import React, { useState, useEffect } from 'react'
 import { BottomNavigation } from '../components/organisms/BottomNavigation'
 import { TodayScreen, CoachScreen, ProgressScreen, ProfileScreen, AssessmentScreen } from './athlete'
 import { AthletePortalTab } from '../types/athlete-portal'
-import type { TodayScreenData, ScoreGeral, GraficoEvolucaoData, ProporcaoResumo, ChatMessage, MeuPersonal, DadosBasicos } from '../types/athlete-portal'
+import type { TodayScreenData, ScoreGeral, GraficoEvolucaoData, ProporcaoResumo, ChatMessage, MeuPersonal, DadosBasicos, ExercicioTimerState } from '../types/athlete-portal'
 import { Loader2 } from 'lucide-react'
 import { RegistrarRefeicaoModal } from '../components/organisms/RegistrarRefeicaoModal'
 import { enviarMensagemIA, type AtletaContextoIA } from '../services/vitruviusAI'
@@ -60,22 +60,27 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
     const [avaliacaoDados, setAvaliacaoDados] = useState<any>(null)
     const [avaliacaoLoading, setAvaliacaoLoading] = useState(false)
 
-    // Checkboxes de exercícios persistidos via sessionStorage (sobrevive a troca de aba/rota)
-    const storageKey = `exerciciosFeitos_${atletaId}`
-    const [exerciciosFeitos, setExerciciosFeitosRaw] = useState<Record<string, boolean>>(() => {
+    // Timers de exercícios persistidos via sessionStorage (sobrevive a troca de aba/rota)
+    const timerStorageKey = `exercicioTimers_${atletaId}`
+    const [exercicioTimers, setExercicioTimersRaw] = useState<Record<string, ExercicioTimerState>>(() => {
         try {
-            const saved = sessionStorage.getItem(storageKey)
+            const saved = sessionStorage.getItem(timerStorageKey)
             return saved ? JSON.parse(saved) : {}
         } catch { return {} }
     })
-    const setExerciciosFeitos = (feitos: Record<string, boolean>) => {
-        setExerciciosFeitosRaw(feitos)
-        try { sessionStorage.setItem(storageKey, JSON.stringify(feitos)) } catch { }
+    const setExercicioTimers = (timers: Record<string, ExercicioTimerState>) => {
+        setExercicioTimersRaw(timers)
+        try { sessionStorage.setItem(timerStorageKey, JSON.stringify(timers)) } catch { }
     }
-    const clearExerciciosFeitos = () => {
-        setExerciciosFeitosRaw({})
-        try { sessionStorage.removeItem(storageKey) } catch { }
+    const clearExercicioTimers = () => {
+        setExercicioTimersRaw({})
+        try { sessionStorage.removeItem(timerStorageKey) } catch { }
     }
+
+    // exerciciosFeitos derivado dos timers (compatibilidade)
+    const exerciciosFeitos: Record<string, boolean> = Object.fromEntries(
+        Object.entries(exercicioTimers).filter(([, t]) => (t as ExercicioTimerState).status === 'done').map(([id]) => [id, true])
+    )
 
     // Phase 1: Load critical data (context + today) — show screen ASAP
     useEffect(() => {
@@ -141,8 +146,36 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
     }
 
     const handleCompletarTreino = async (dataOverride?: string) => {
-        await completarTreino(atletaId, { intensidade: 3, duracao: 60, reportouDor: false, treinoIndex: todayData?.treino?.indiceTreino }, dataOverride)
-        clearExerciciosFeitos() // Reset checkboxes após completar
+        // Calcular duração real a partir dos timers
+        let duracaoMinutos = 60 // fallback
+        const exerciciosDetalhes: Array<{ id: string; nome: string; tempoSegundos: number }> = []
+
+        if (todayData?.treino?.exercicios && Object.keys(exercicioTimers).length > 0) {
+            let totalMs = 0
+            for (const ex of todayData.treino.exercicios) {
+                const timer = exercicioTimers[ex.id]
+                if (timer) {
+                    totalMs += timer.tempoAcumuladoMs
+                    exerciciosDetalhes.push({
+                        id: ex.id,
+                        nome: ex.nome,
+                        tempoSegundos: Math.round(timer.tempoAcumuladoMs / 1000),
+                    })
+                }
+            }
+            if (totalMs > 0) {
+                duracaoMinutos = Math.max(1, Math.round(totalMs / 60000))
+            }
+        }
+
+        await completarTreino(atletaId, {
+            intensidade: 3,
+            duracao: duracaoMinutos,
+            reportouDor: false,
+            treinoIndex: todayData?.treino?.indiceTreino,
+            ...(exerciciosDetalhes.length > 0 ? { exercicios: exerciciosDetalhes } : {}),
+        } as any, dataOverride)
+        clearExercicioTimers() // Reset timers após completar
         // Refresh today data
         if (ctx) {
             const today = await montarDadosHoje(ctx)
@@ -153,7 +186,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
 
     const handlePularTreino = async (continuarHoje?: boolean) => {
         await pularTreino(atletaId, todayData?.treino?.indiceTreino, continuarHoje)
-        clearExerciciosFeitos() // Reset checkboxes após pular
+        clearExercicioTimers() // Reset timers após pular
         if (ctx) {
             const today = await montarDadosHoje(ctx)
             setTodayData(today)
@@ -321,7 +354,8 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                         peso={lastPeso}
                         personalNome={ctx?.personalNome}
                         exerciciosFeitos={exerciciosFeitos}
-                        onExerciciosFeitosChange={setExerciciosFeitos}
+                        exercicioTimers={exercicioTimers}
+                        onExercicioTimersChange={setExercicioTimers}
                         onVerTreino={handleVerTreino}
                         onCompletarTreino={handleCompletarTreino}
                         onPularTreino={handlePularTreino}
