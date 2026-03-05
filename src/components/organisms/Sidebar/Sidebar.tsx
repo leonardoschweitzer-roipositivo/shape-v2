@@ -16,7 +16,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Menu,
-  Bell
+  Bell,
+  Video
 } from 'lucide-react';
 import { type ProfileType } from '../../../components';
 import { useUIStore } from '../../../stores/uiStore';
@@ -93,6 +94,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           { icon: Activity, label: 'Avaliação IA', id: 'assessment' },
           { icon: Bot, label: 'Montar Plano', id: 'coach', isPro: true },
           { icon: TrendingUp, label: 'Evolução', id: 'evolution' },
+          { icon: Video, label: 'Biblioteca', id: 'exercicios-biblioteca' },
           { type: 'divider' as const },
           { icon: Dumbbell, label: 'Hall dos Deuses', id: 'hall' },
           { icon: Trophy, label: 'Ranking Personais', id: 'trainers-ranking' },

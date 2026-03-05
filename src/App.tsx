@@ -56,6 +56,7 @@ import { AthletePortal } from './pages/AthletePortal';
 import { PortalLanding } from './pages/athlete/PortalLanding';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { NotificationSettingsPage } from './pages/NotificationSettingsPage';
+import { BibliotecaExerciciosPage } from './pages/BibliotecaExerciciosPage';
 
 import { calculateAge } from '@/utils/dateUtils';
 import { useAthleteStore } from '@/stores/athleteStore';
@@ -69,7 +70,7 @@ import { buscarPlanoTreino, type PlanoTreino } from '@/services/calculations/tre
 import { buscarPlanoDieta, type PlanoDieta } from '@/services/calculations/dieta';
 import { supabase } from '@/services/supabase';
 
-type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details' | 'terms' | 'privacy' | 'my-record' | 'gamification' | 'athlete-portal' | 'personal-details' | 'student-details' | 'diagnostico' | 'treino-plano' | 'dieta-plano' | 'consulta-diagnostico' | 'consulta-treino' | 'consulta-dieta' | 'library' | 'library-golden-ratio' | 'library-metabolism' | 'library-training-volume' | 'library-protein' | 'library-energy-balance' | 'library-training-frequency' | 'library-periodization' | 'library-feminine-proportions' | 'notifications' | 'notification-settings';
+type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details' | 'terms' | 'privacy' | 'my-record' | 'gamification' | 'athlete-portal' | 'personal-details' | 'student-details' | 'diagnostico' | 'treino-plano' | 'dieta-plano' | 'consulta-diagnostico' | 'consulta-treino' | 'consulta-dieta' | 'library' | 'library-golden-ratio' | 'library-metabolism' | 'library-training-volume' | 'library-protein' | 'library-energy-balance' | 'library-training-frequency' | 'library-periodization' | 'library-feminine-proportions' | 'notifications' | 'notification-settings' | 'exercicios-biblioteca';
 
 const App: React.FC = () => {
   console.log('🎯 App component rendering...');
@@ -791,6 +792,12 @@ const App: React.FC = () => {
               onBack={() => setCurrentView('notifications')}
             />
           );
+        case 'exercicios-biblioteca':
+          return (
+            <BibliotecaExerciciosPage
+              onBack={() => setCurrentView('dashboard')}
+            />
+          );
         default:
           return (
             <div className="flex-1 flex items-center justify-center text-gray-500">
@@ -927,6 +934,7 @@ const App: React.FC = () => {
     if (currentView === 'library-training-frequency') return 'FONTE: FREQUÊNCIA DE TREINO';
     if (currentView === 'library-periodization') return 'FONTE: PERIODIZAÇÃO DE TREINO';
     if (currentView === 'library-feminine-proportions') return 'FONTE: PROPORÇÕES CORPORAIS FEMININAS';
+    if (currentView === 'exercicios-biblioteca') return 'BIBLIOTECA DE EXERCÍCIOS';
 
     if (userProfile === 'academia') {
       switch (currentView) {
