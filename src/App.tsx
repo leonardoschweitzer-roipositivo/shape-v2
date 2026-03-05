@@ -102,20 +102,30 @@ const App: React.FC = () => {
     recarregar: recarregarNotificacoes,
   } = useNotificacoes();
 
-  // Run inactivity check once per session for personals
+  // Run inactivity check + periodic summaries once per session for personals
   useEffect(() => {
     const personalId = entity?.personal?.id;
     if (!personalId) return;
-    const sessionKey = `inactivity-checked-${personalId}`;
+    const sessionKey = `startup-checks-${personalId}`;
     if (sessionStorage.getItem(sessionKey)) return;
 
     sessionStorage.setItem(sessionKey, 'true');
+
+    // 1. Inactivity check
     import('@/services/inactivityChecker').then(({ verificarInatividade }) => {
       verificarInatividade(personalId).then(count => {
         if (count > 0) {
           console.info(`[App] ${count} notificações de inatividade criadas`);
-          recarregarNotificacoes();
         }
+
+        // 2. Periodic summaries (após inatividade para manter ordem)
+        import('@/services/resumoNotificacoes').then(({ gerarResumosPendentes }) => {
+          gerarResumosPendentes(personalId).then(resumos => {
+            if (count > 0 || resumos > 0) {
+              recarregarNotificacoes();
+            }
+          }).catch(err => console.warn('[App] Erro ao gerar resumos:', err));
+        });
       }).catch(err => console.warn('[App] Erro ao verificar inatividade:', err));
     });
   }, [entity?.personal?.id, recarregarNotificacoes]);
@@ -765,7 +775,6 @@ const App: React.FC = () => {
         case 'notifications':
           return (
             <NotificationsPage
-              onBack={() => setCurrentView('dashboard')}
               onAcao={(url) => {
                 // Navegar para contexto — ex: /athlete-details?id=xxx
                 if (url.startsWith('/athlete-details/')) {
