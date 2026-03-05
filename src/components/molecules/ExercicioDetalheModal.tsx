@@ -32,11 +32,11 @@ export function ExercicioDetalheModal({ exercicio, onFechar }: ExercicioDetalheM
 
     return (
         <div
-            className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85 backdrop-blur-sm"
+            className="fixed inset-0 z-[999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85 backdrop-blur-sm"
             onClick={onFechar}
         >
             <div
-                className="bg-[#0C1220] border border-white/10 rounded-t-3xl sm:rounded-3xl w-full sm:max-w-lg max-h-[85vh] sm:max-h-[92vh] overflow-y-auto shadow-2xl animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300 pb-safe mb-safe"
+                className="bg-[#0C1220] border border-white/10 rounded-t-3xl sm:rounded-3xl w-full sm:max-w-lg max-h-[88vh] sm:max-h-[92vh] overflow-y-auto shadow-2xl animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300 pb-20 sm:pb-6"
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}
