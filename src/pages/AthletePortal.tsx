@@ -148,7 +148,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
     const handleCompletarTreino = async (dataOverride?: string) => {
         // Calcular duração real a partir dos timers
         let duracaoMinutos = 60 // fallback
-        const exerciciosDetalhes: Array<{ id: string; nome: string; tempoSegundos: number }> = []
+        const exerciciosDetalhes: Array<{ id: string; nome: string; tempoSegundos: number; carga?: number }> = []
 
         if (todayData?.treino?.exercicios && Object.keys(exercicioTimers).length > 0) {
             let totalMs = 0
@@ -160,6 +160,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                         id: ex.id,
                         nome: ex.nome,
                         tempoSegundos: Math.round(timer.tempoAcumuladoMs / 1000),
+                        carga: timer.carga,
                     })
                 }
             }
@@ -356,6 +357,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
             case 'hoje':
                 return todayData ? (
                     <TodayScreen
+                        atletaId={atletaId}
                         data={todayData}
                         proximoTreino={proximoTreino}
                         sexo={ctx?.ficha?.sexo}

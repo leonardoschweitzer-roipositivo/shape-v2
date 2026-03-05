@@ -9,7 +9,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react'
-import { Dumbbell, Check, SkipForward, Moon, Play, ChevronDown, ChevronUp, Calendar, Clock, Pause, Timer, Video } from 'lucide-react'
+import { Dumbbell, Check, SkipForward, Moon, Play, ChevronDown, ChevronUp, Calendar, Clock, Pause, Timer, Video, Weight } from 'lucide-react'
 import { WorkoutOfDay } from '../../../types/athlete-portal'
 import type { ExercicioTimerState } from '../../../types/athlete-portal'
 import type { ProximoTreino } from '../../../services/portalDataService'
@@ -140,6 +140,15 @@ export function CardTreino({ treino, proximoTreino, exerciciosFeitos, exercicioT
         onExercicioTimersChange({
             ...exercicioTimers,
             [id]: { ...current, status: 'paused', inicioUltimoPlay: undefined },
+        })
+    }
+
+    // Handler para registrar carga (kg) do exercício
+    const handleCargaChange = (id: string, carga: number | undefined) => {
+        const current = exercicioTimers[id] || { status: 'idle', tempoAcumuladoMs: 0 }
+        onExercicioTimersChange({
+            ...exercicioTimers,
+            [id]: { ...current, carga },
         })
     }
 
@@ -413,6 +422,34 @@ export function CardTreino({ treino, proximoTreino, exerciciosFeitos, exercicioT
                                             {ex.foco && !isDone && (
                                                 <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">
                                                     {ex.foco}
+                                                </p>
+                                            )}
+                                            {/* Input de Carga (kg) */}
+                                            {!isDone && treino.status === 'pendente' && (
+                                                <div className="flex items-center gap-1.5 mt-1.5">
+                                                    <Dumbbell size={10} className="text-gray-600 flex-shrink-0" />
+                                                    <input
+                                                        type="number"
+                                                        inputMode="decimal"
+                                                        step="0.5"
+                                                        min="0"
+                                                        placeholder="kg"
+                                                        value={timer?.carga ?? ''}
+                                                        onChange={e => {
+                                                            const val = e.target.value
+                                                            handleCargaChange(ex.id, val === '' ? undefined : Number(val))
+                                                        }}
+                                                        onClick={e => e.stopPropagation()}
+                                                        className="w-16 bg-white/[0.03] border border-white/10 rounded-md px-1.5 py-0.5 text-[11px] text-indigo-300 font-mono placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors text-center"
+                                                    />
+                                                    {timer?.carga !== undefined && timer.carga > 0 && (
+                                                        <span className="text-[10px] text-gray-500">kg</span>
+                                                    )}
+                                                </div>
+                                            )}
+                                            {isDone && timer?.carga !== undefined && timer.carga > 0 && (
+                                                <p className="text-[10px] text-emerald-400/60 mt-0.5 font-mono">
+                                                    {timer.carga}kg
                                                 </p>
                                             )}
                                         </div>

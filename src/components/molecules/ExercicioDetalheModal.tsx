@@ -5,7 +5,8 @@
  * instruções passo a passo, dicas e erros comuns.
  */
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { X, Play, Video, AlertCircle, CheckCircle, Lightbulb, ChevronDown, ChevronUp } from 'lucide-react'
 import type { ExercicioBiblioteca } from '@/types/exercicio-biblioteca'
 import { GRUPO_MUSCULAR_CONFIG, NIVEL_CONFIG, EQUIPAMENTO_CONFIG } from '@/types/exercicio-biblioteca'
@@ -23,6 +24,15 @@ export function ExercicioDetalheModal({ exercicio, onFechar }: ExercicioDetalheM
     const nivelConfig = NIVEL_CONFIG[exercicio.nivel]
     const equipConfig = exercicio.equipamento ? EQUIPAMENTO_CONFIG[exercicio.equipamento] : null
 
+    // Trava o scroll do body quando o modal está aberto
+    useEffect(() => {
+        const originalOverflow = document.body.style.overflow
+        document.body.style.overflow = 'hidden'
+        return () => {
+            document.body.style.overflow = originalOverflow
+        }
+    }, [])
+
     // Converte URL do YouTube para embed
     const getYouTubeEmbedUrl = (url: string): string => {
         const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/)
@@ -30,13 +40,15 @@ export function ExercicioDetalheModal({ exercicio, onFechar }: ExercicioDetalheM
         return url
     }
 
-    return (
+    const modalContent = (
         <div
-            className="fixed inset-0 z-[999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85 backdrop-blur-sm"
+            className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85"
+            style={{ WebkitBackdropFilter: 'blur(8px)', backdropFilter: 'blur(8px)' }}
             onClick={onFechar}
         >
             <div
-                className="bg-[#0C1220] border border-white/10 rounded-t-3xl sm:rounded-3xl w-full sm:max-w-lg max-h-[88vh] sm:max-h-[92vh] overflow-y-auto shadow-2xl animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300 pb-20 sm:pb-6"
+                className="bg-[#0C1220] border border-white/10 rounded-t-3xl sm:rounded-3xl w-full sm:max-w-lg overflow-y-auto shadow-2xl animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300"
+                style={{ maxHeight: 'calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 40px)' }}
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}
@@ -164,7 +176,7 @@ export function ExercicioDetalheModal({ exercicio, onFechar }: ExercicioDetalheM
                 )}
 
                 {/* Seções expansíveis */}
-                <div className="px-5 pb-5 space-y-2">
+                <div className="px-5 pb-24 sm:pb-5 space-y-2">
 
                     {/* Instruções */}
                     {exercicio.instrucoes && exercicio.instrucoes.length > 0 && (
@@ -260,4 +272,6 @@ export function ExercicioDetalheModal({ exercicio, onFechar }: ExercicioDetalheM
             </div>
         </div>
     )
+
+    return createPortal(modalContent, document.body)
 }

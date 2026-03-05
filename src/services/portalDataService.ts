@@ -929,7 +929,7 @@ export async function salvarMensagemChat(
  */
 export async function registrarTracker(
     atletaId: string,
-    tipo: 'agua' | 'sono' | 'peso' | 'treino' | 'dor' | 'refeicao',
+    tipo: 'agua' | 'sono' | 'peso' | 'treino' | 'dor' | 'refeicao' | 'feedback',
     dados: Record<string, any>,
     dataOverride?: string // 'YYYY-MM-DD' — para registros retroativos (ex: ontem)
 ): Promise<boolean> {

@@ -57,6 +57,7 @@ export interface ExercicioTimerState {
     status: 'idle' | 'running' | 'paused' | 'done'
     tempoAcumuladoMs: number        // tempo total acumulado em milissegundos
     inicioUltimoPlay?: number       // timestamp (Date.now()) do último PLAY
+    carga?: number                  // peso em kg registrado pelo aluno
 }
 
 export interface DietOfDay {

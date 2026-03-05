@@ -9,12 +9,14 @@ import { HeaderIdentidade } from './components/HeaderIdentidade'
 import { CardTreino } from '../../components/organisms/CardTreino'
 import { CardDieta } from '../../components/organisms/CardDieta'
 import { TrackersRapidos } from '../../components/organisms/TrackersRapidos'
+import { FeedbackTextual } from '../../components/organisms/FeedbackTextual'
 import { DicaCoach } from '../../components/molecules/DicaCoach'
 import { TodayScreenData, TrackerRapido } from '../../types/athlete-portal'
 import type { ExercicioTimerState } from '../../types/athlete-portal'
 import type { ProximoTreino } from '../../services/portalDataService'
 
 interface TodayScreenProps {
+    atletaId: string
     data: TodayScreenData
     proximoTreino?: ProximoTreino | null
     sexo?: string
@@ -33,6 +35,7 @@ interface TodayScreenProps {
 }
 
 export function TodayScreen({
+    atletaId,
     data,
     proximoTreino,
     sexo,
@@ -94,6 +97,9 @@ export function TodayScreen({
                     trackers={data.trackers}
                     onTrackerClick={onTrackerClick}
                 />
+
+                {/* Feedback Textual - Relato do dia */}
+                <FeedbackTextual atletaId={atletaId} />
 
                 {/* Dica do Coach */}
                 <DicaCoach
