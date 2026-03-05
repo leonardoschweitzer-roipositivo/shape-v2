@@ -59,7 +59,23 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
     const [showRefeicaoModal, setShowRefeicaoModal] = useState(false)
     const [avaliacaoDados, setAvaliacaoDados] = useState<any>(null)
     const [avaliacaoLoading, setAvaliacaoLoading] = useState(false)
-    const [exerciciosFeitos, setExerciciosFeitos] = useState<Record<string, boolean>>({})
+
+    // Checkboxes de exercícios persistidos via sessionStorage (sobrevive a troca de aba/rota)
+    const storageKey = `exerciciosFeitos_${atletaId}`
+    const [exerciciosFeitos, setExerciciosFeitosRaw] = useState<Record<string, boolean>>(() => {
+        try {
+            const saved = sessionStorage.getItem(storageKey)
+            return saved ? JSON.parse(saved) : {}
+        } catch { return {} }
+    })
+    const setExerciciosFeitos = (feitos: Record<string, boolean>) => {
+        setExerciciosFeitosRaw(feitos)
+        try { sessionStorage.setItem(storageKey, JSON.stringify(feitos)) } catch { }
+    }
+    const clearExerciciosFeitos = () => {
+        setExerciciosFeitosRaw({})
+        try { sessionStorage.removeItem(storageKey) } catch { }
+    }
 
     // Phase 1: Load critical data (context + today) — show screen ASAP
     useEffect(() => {
@@ -126,7 +142,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
 
     const handleCompletarTreino = async (dataOverride?: string) => {
         await completarTreino(atletaId, { intensidade: 3, duracao: 60, reportouDor: false, treinoIndex: todayData?.treino?.indiceTreino }, dataOverride)
-        setExerciciosFeitos({}) // Reset checkboxes após completar
+        clearExerciciosFeitos() // Reset checkboxes após completar
         // Refresh today data
         if (ctx) {
             const today = await montarDadosHoje(ctx)
@@ -137,7 +153,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
 
     const handlePularTreino = async (continuarHoje?: boolean) => {
         await pularTreino(atletaId, todayData?.treino?.indiceTreino, continuarHoje)
-        setExerciciosFeitos({}) // Reset checkboxes após pular
+        clearExerciciosFeitos() // Reset checkboxes após pular
         if (ctx) {
             const today = await montarDadosHoje(ctx)
             setTodayData(today)
