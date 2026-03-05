@@ -16,6 +16,8 @@ import type { ProximoTreino } from '../../../services/portalDataService'
 interface CardTreinoProps {
     treino: WorkoutOfDay
     proximoTreino?: ProximoTreino | null
+    exerciciosFeitos: Record<string, boolean>
+    onExerciciosFeitosChange: (feitos: Record<string, boolean>) => void
     onVerTreino: () => void
     onCompletei: (dataOverride?: string) => void
     onPular: () => void
@@ -35,9 +37,8 @@ const INTENSIDADE_LABEL: Record<1 | 2 | 3 | 4, string> = {
     4: 'Ótimo'
 }
 
-export function CardTreino({ treino, proximoTreino, onVerTreino, onCompletei, onPular }: CardTreinoProps) {
+export function CardTreino({ treino, proximoTreino, exerciciosFeitos, onExerciciosFeitosChange, onVerTreino, onCompletei, onPular }: CardTreinoProps) {
     const [accordionOpen, setAccordionOpen] = useState(treino.status === 'pendente')
-    const [exerciciosFeitos, setExerciciosFeitos] = useState<Record<string, boolean>>({})
     const [showCompleteiMenu, setShowCompleteiMenu] = useState(false)
     const completeiMenuRef = useRef<HTMLDivElement>(null)
 
@@ -62,7 +63,7 @@ export function CardTreino({ treino, proximoTreino, onVerTreino, onCompletei, on
 
     const handleToggleExercicio = (id: string) => {
         const novoEstado = { ...exerciciosFeitos, [id]: !exerciciosFeitos[id] }
-        setExerciciosFeitos(novoEstado)
+        onExerciciosFeitosChange(novoEstado)
 
         // Verificar se todos os exercícios do treino foram marcados
         if (treino.exercicios && treino.exercicios.length > 0) {

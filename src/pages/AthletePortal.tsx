@@ -59,6 +59,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
     const [showRefeicaoModal, setShowRefeicaoModal] = useState(false)
     const [avaliacaoDados, setAvaliacaoDados] = useState<any>(null)
     const [avaliacaoLoading, setAvaliacaoLoading] = useState(false)
+    const [exerciciosFeitos, setExerciciosFeitos] = useState<Record<string, boolean>>({})
 
     // Phase 1: Load critical data (context + today) — show screen ASAP
     useEffect(() => {
@@ -125,6 +126,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
 
     const handleCompletarTreino = async (dataOverride?: string) => {
         await completarTreino(atletaId, { intensidade: 3, duracao: 60, reportouDor: false, treinoIndex: todayData?.treino?.indiceTreino }, dataOverride)
+        setExerciciosFeitos({}) // Reset checkboxes após completar
         // Refresh today data
         if (ctx) {
             const today = await montarDadosHoje(ctx)
@@ -135,6 +137,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
 
     const handlePularTreino = async (continuarHoje?: boolean) => {
         await pularTreino(atletaId, todayData?.treino?.indiceTreino, continuarHoje)
+        setExerciciosFeitos({}) // Reset checkboxes após pular
         if (ctx) {
             const today = await montarDadosHoje(ctx)
             setTodayData(today)
@@ -301,6 +304,8 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                         altura={ctx?.ficha?.altura}
                         peso={lastPeso}
                         personalNome={ctx?.personalNome}
+                        exerciciosFeitos={exerciciosFeitos}
+                        onExerciciosFeitosChange={setExerciciosFeitos}
                         onVerTreino={handleVerTreino}
                         onCompletarTreino={handleCompletarTreino}
                         onPularTreino={handlePularTreino}

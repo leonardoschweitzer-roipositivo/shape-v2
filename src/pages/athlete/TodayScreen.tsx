@@ -20,6 +20,8 @@ interface TodayScreenProps {
     altura?: number
     peso?: number
     personalNome?: string
+    exerciciosFeitos: Record<string, boolean>
+    onExerciciosFeitosChange: (feitos: Record<string, boolean>) => void
     onVerTreino: () => void
     onCompletarTreino: (dataOverride?: string) => void
     onPularTreino: (continuarHoje?: boolean) => void
@@ -35,6 +37,8 @@ export function TodayScreen({
     altura,
     peso,
     personalNome,
+    exerciciosFeitos,
+    onExerciciosFeitosChange,
     onVerTreino,
     onCompletarTreino,
     onPularTreino,
@@ -68,6 +72,8 @@ export function TodayScreen({
                 <CardTreino
                     treino={data.treino}
                     proximoTreino={proximoTreino}
+                    exerciciosFeitos={exerciciosFeitos}
+                    onExerciciosFeitosChange={onExerciciosFeitosChange}
                     onVerTreino={onVerTreino}
                     onCompletei={onCompletarTreino}
                     onPular={() => setModalPularOpen(true)}
