@@ -338,4 +338,49 @@ export const portalService = {
         console.info(`[PortalService] ✅ Medidas salvas para atleta ${atletaId}`);
         return { success: true, medidaId: (data as any)?.id };
     },
+
+    /**
+     * Salva o contexto (anamnese) preenchido pelo próprio atleta via link público.
+     * Os dados são armazenados como JSONB no campo `contexto` da tabela `fichas`.
+     */
+    async saveContexto(
+        atletaId: string,
+        contexto: {
+            problemas_saude: string;
+            medicacoes: string;
+            dores_lesoes: string;
+            exames: string;
+            estilo_vida: string;
+            profissao: string;
+            historico_treino: string;
+            historico_dietas: string;
+        }
+    ): Promise<{ success: boolean }> {
+        const contextoComMeta = {
+            ...contexto,
+            atualizado_em: new Date().toISOString(),
+            atualizado_por: 'ALUNO',
+        };
+
+        const { error } = await supabase
+            .from('fichas')
+            .update({ contexto: contextoComMeta } as any)
+            .eq('atleta_id', atletaId);
+
+        if (error) {
+            console.error('[PortalService] Erro ao salvar contexto:', error);
+            return { success: false };
+        }
+
+        // Notificar o personal que o aluno preencheu o contexto
+        try {
+            const { onContextoPreenchido } = await import('./notificacaoTriggers');
+            await onContextoPreenchido(atletaId);
+        } catch (err) {
+            console.warn('[PortalService] Erro ao notificar contexto preenchido:', err);
+        }
+
+        console.info(`[PortalService] ✅ Contexto salvo para atleta ${atletaId}`);
+        return { success: true };
+    },
 };

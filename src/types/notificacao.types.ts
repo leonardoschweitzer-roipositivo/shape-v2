@@ -41,6 +41,7 @@ export type TipoNotificacao =
     | 'PORTAL_INATIVO_7D'
     | 'PORTAL_INATIVO_30D'
     | 'DOR_REPORTADA'
+    | 'CONTEXTO_PREENCHIDO'
     // Resumos
     | 'RESUMO_DIARIO'
     | 'RESUMO_SEMANAL'

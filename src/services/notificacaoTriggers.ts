@@ -321,3 +321,21 @@ export async function onDorReportada(
         // Dor NUNCA é deduplicada — cada reporte é individual
     })
 }
+
+/**
+ * Disparar quando aluno preenche o formulário de contexto via Portal.
+ */
+export async function onContextoPreenchido(atletaId: string): Promise<void> {
+    const nome = await buscarNomeAtleta(atletaId)
+
+    await criarNotificacaoParaAtleta(atletaId, {
+        tipo: 'CONTEXTO_PREENCHIDO',
+        categoria: 'portal',
+        prioridade: 'destaque',
+        titulo: `📝 <strong>${nome}</strong> preencheu o formulário de contexto`,
+        mensagem: 'Dados de saúde, lesões, rotina e histórico já disponíveis na ficha do atleta.',
+        acao_url: `/athlete-details/${atletaId}`,
+        acao_label: 'Ver contexto →',
+        grupo_id: `contexto-preenchido-${atletaId}`,
+    })
+}

@@ -23,6 +23,7 @@ import {
 import { portalService, PortalAthleteData } from '@/services/portalService';
 import { buscarDadosConsistencia, type DadosConsistencia } from '@/services/consistencia.service';
 import { SelfMeasurements } from './SelfMeasurements';
+import { ContextoFormPublico } from './ContextoFormPublico';
 import { AthletePortal } from '../AthletePortal';
 import { BottomNavigation } from '../../components/organisms/BottomNavigation/BottomNavigation';
 import { AthletePortalTab } from '../../types/athlete-portal';
@@ -40,7 +41,7 @@ interface PortalLandingProps {
     onClose: () => void;
 }
 
-type PortalView = 'home' | 'measurements' | 'portal';
+type PortalView = 'home' | 'measurements' | 'portal' | 'contexto';
 
 // ---- Helpers de classificação ----
 const CLASSIFICACOES = [
@@ -140,6 +141,16 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
         );
     }
 
+    if (view === 'contexto') {
+        return (
+            <ContextoFormPublico
+                atletaId={athleteData.id}
+                atletaNome={athleteData.nome}
+                onBack={() => setView('home')}
+            />
+        );
+    }
+
     if (view === 'measurements') {
         return (
             <SelfMeasurements
@@ -171,6 +182,7 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
                 setView('portal');
             }}
             onGoToMeasurements={() => setView('measurements')}
+            onGoToContexto={() => setView('contexto')}
         />
     );
 }
@@ -183,9 +195,10 @@ interface HomeAtletaV2Props {
     dadosConsistencia: DadosConsistencia | null;
     onGoToPortal: (tab: AthletePortalTab) => void;
     onGoToMeasurements: () => void;
+    onGoToContexto: () => void;
 }
 
-function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeasurements }: HomeAtletaV2Props) {
+function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeasurements, onGoToContexto }: HomeAtletaV2Props) {
 
     const lastAval = athleteData.avaliacoes?.[0];
     const lastMedida = athleteData.medidas?.[0];
@@ -362,13 +375,23 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
             )}
 
             {/* 3.3 Botão "VER TREINO DE HOJE" (Centralizado, estilo Primário) */}
-            <div className="max-w-2xl mx-auto px-6 mt-6 mb-6">
+            <div className="max-w-2xl mx-auto px-6 mt-6 mb-3">
                 <button
                     onClick={() => onGoToPortal('hoje')}
                     className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-4 rounded-xl font-black tracking-widest text-sm uppercase transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
                 >
                     <Play size={18} fill="white" />
                     VER TREINO DE HOJE
+                </button>
+            </div>
+
+            {/* Botão Preencher Contexto */}
+            <div className="max-w-2xl mx-auto px-6 mb-6">
+                <button
+                    onClick={onGoToContexto}
+                    className="w-full flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 hover:text-white py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all"
+                >
+                    📝 Preencher meu contexto
                 </button>
             </div>
 

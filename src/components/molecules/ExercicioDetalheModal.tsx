@@ -36,7 +36,7 @@ export function ExercicioDetalheModal({ exercicio, onFechar }: ExercicioDetalheM
             onClick={onFechar}
         >
             <div
-                className="bg-[#0C1220] border border-white/10 rounded-t-3xl sm:rounded-3xl w-full sm:max-w-lg max-h-[92vh] overflow-y-auto shadow-2xl animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300"
+                className="bg-[#0C1220] border border-white/10 rounded-t-3xl sm:rounded-3xl w-full sm:max-w-lg max-h-[85vh] sm:max-h-[92vh] overflow-y-auto shadow-2xl animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300 pb-safe mb-safe"
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}
@@ -69,10 +69,10 @@ export function ExercicioDetalheModal({ exercicio, onFechar }: ExercicioDetalheM
 
                     {/* Nível */}
                     <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${exercicio.nivel === 'iniciante'
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                            : exercicio.nivel === 'intermediario'
-                                ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                                : 'bg-red-500/10 text-red-400 border-red-500/20'
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                        : exercicio.nivel === 'intermediario'
+                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                            : 'bg-red-500/10 text-red-400 border-red-500/20'
                         }`}>
                         {nivelConfig?.label}
                     </span>
