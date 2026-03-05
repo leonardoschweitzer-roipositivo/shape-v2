@@ -14,7 +14,7 @@ interface TrackersRapidosProps {
 
 export function TrackersRapidos({ trackers, onTrackerClick }: TrackersRapidosProps) {
     return (
-        <div className="bg-[#0C1220] rounded-2xl p-6 border border-white/5">
+        <div className="bg-surface-deep rounded-2xl p-6 border border-white/5">
             <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">
                 ⚡ RÁPIDO
             </h3>

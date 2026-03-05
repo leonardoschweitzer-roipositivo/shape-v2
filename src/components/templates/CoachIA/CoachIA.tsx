@@ -161,7 +161,7 @@ export const CoachIA: React.FC<CoachIAProps> = ({
                     {/* Seção: Recursos Disponíveis */}
                     <div className="animate-fade-in-up">
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="p-2 bg-[#131B2C] rounded-xl border border-white/5 text-primary">
+                            <div className="p-2 bg-surface rounded-xl border border-white/5 text-primary">
                                 <MessageCircle size={18} />
                             </div>
                             <div>
@@ -174,7 +174,7 @@ export const CoachIA: React.FC<CoachIAProps> = ({
                             </div>
                         </div>
 
-                        <div className="bg-[#131B2C] border border-white/10 rounded-2xl overflow-hidden">
+                        <div className="bg-surface border border-white/10 rounded-2xl overflow-hidden">
                             {recursos.map((recurso, idx) => (
                                 <RecursoListItem
                                     key={recurso.id}
@@ -187,7 +187,7 @@ export const CoachIA: React.FC<CoachIAProps> = ({
 
                     {/* Seção: Montar Plano de Evolução */}
                     <div className="animate-fade-in-up">
-                        <div className="bg-[#131B2C] border border-white/10 rounded-2xl p-6 md:p-8 hover:border-primary/20 transition-all">
+                        <div className="bg-surface border border-white/10 rounded-2xl p-6 md:p-8 hover:border-primary/20 transition-all">
                             {/* Header da seção */}
                             <div className="flex items-start gap-4 mb-6">
                                 <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">

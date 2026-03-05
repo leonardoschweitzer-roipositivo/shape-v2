@@ -20,144 +20,16 @@ import {
     MetricConfig
 } from '@/components/organisms';
 
-// --- MOCK DATA ---
-
-const MOCK_PERIOD = {
-    label: '6 meses',
-    startDate: new Date('2023-01-01'),
-    endDate: new Date('2023-06-30'),
-};
-
-const MOCK_KPIS: PeriodKPIs = {
-    ratio: {
-        label: 'SHAPE-V RATIO',
-        startValue: 1.49,
-        endValue: 1.61,
-        change: 0.12,
-        changePercent: 8.05,
-        status: 'positive',
-    },
-    score: {
-        label: 'SCORE GERAL',
-        startValue: 72,
-        endValue: 80,
-        change: 8,
-        status: 'positive',
-    },
-    bestEvolution: {
-        label: 'MELHOR EVOLUÇÃO',
-        metric: 'Ombros',
-        change: 5,
-        changePercent: 4.3,
-        status: 'positive',
-    },
-    attention: {
-        label: 'ATENÇÃO',
-        metric: 'Cintura',
-        change: 1,
-        changePercent: 1.2,
-        status: 'warning',
-    },
-};
-
-const MOCK_INSIGHT: EvolutionInsightProps['insight'] = {
-    summary: 'Excelente progresso nos últimos 6 meses! Seu V-taper melhorou significativamente e você está cada vez mais próximo do Golden Ratio.',
-    highlights: {
-        positive: [
-            'Seu V-taper melhorou significativamente (+0.12 ratio)',
-            'Ombros foram sua melhor evolução (+5cm, 4.3%)',
-            'Score geral subiu de 72 para 80 pontos'
-        ],
-        attention: [
-            'Cintura aumentou levemente (+1cm). Considere revisar a dieta ou aumentar atividade cardiovascular.'
-        ]
-    },
-    projection: 'Se mantiver este ritmo, você atinge o Golden Ratio ideal (1.618) em aproximadamente 4 meses!',
-    generatedAt: new Date()
-};
-
-const MOCK_COMPARISON = {
-    before: {
-        date: new Date('2023-01-01'),
-        label: 'JANEIRO 2023',
-        measurements: { ombros: 115, cintura: 84, braco: 38, coxa: 58 },
-        ratio: 1.37,
-        score: 68
-    },
-    after: {
-        date: new Date('2023-06-30'),
-        label: 'JUNHO 2023',
-        measurements: { ombros: 120, cintura: 82, braco: 42, coxa: 62 },
-        ratio: 1.46,
-        score: 80
-    },
-    summary: {
-        periodLabel: '6 meses',
-        biggestGain: { metric: 'Ombros', change: 5 },
-        ratioImprovement: { change: 0.09, changePercent: 6.6 },
-        scoreImprovement: { change: 12, changePercent: 17.6 }
-    }
-};
-
-const MOCK_ASYMMETRY_DATA: AsymmetryData[] = [
-    { muscle: 'arm', muscleLabel: 'Braço', left: 41.0, right: 44.5, difference: 3.5, differencePercent: 8.5, dominantSide: 'right', status: 'asymmetric' },
-    { muscle: 'thigh', muscleLabel: 'Coxa', left: 62.0, right: 63.0, difference: 1.0, differencePercent: 1.6, dominantSide: 'right', status: 'symmetric' },
-    { muscle: 'calf', muscleLabel: 'Panturrilha', left: 38.5, right: 39.0, difference: 0.5, differencePercent: 1.3, dominantSide: 'right', status: 'symmetric' },
-];
-
-const MOCK_ASYMMETRY_HISTORY: AsymmetryHistory[] = [
-    { muscle: 'arm', date: new Date('2023-01-01'), dateLabel: 'Jan', differencePercent: 2.0 },
-    { muscle: 'arm', date: new Date('2023-02-01'), dateLabel: 'Fev', differencePercent: 3.5 },
-    { muscle: 'arm', date: new Date('2023-03-01'), dateLabel: 'Mar', differencePercent: 5.0 },
-    { muscle: 'arm', date: new Date('2023-04-01'), dateLabel: 'Abr', differencePercent: 6.5 },
-    { muscle: 'arm', date: new Date('2023-05-01'), dateLabel: 'Mai', differencePercent: 7.8 },
-    { muscle: 'arm', date: new Date('2023-06-01'), dateLabel: 'Jun', differencePercent: 8.5 },
-];
-
-const MOCK_ASYMMETRY_REC: AsymmetryRecommendation = {
-    muscle: 'arm',
-    severity: 'high',
-    message: 'Assimetria significativa detectada nos braços (8.5%).',
-    tips: [
-        'Iniciar exercícios pelo lado esquerdo (mais fraco)',
-        'Usar exercícios unilaterais: rosca concentrada, rosca scott unilateral',
-        'Manter mesmo peso e reps para ambos os lados',
-        'Considere 1-2 séries extras para o lado esquerdo'
-    ]
-};
-
-const AVAILABLE_METRICS: MetricConfig[] = [
-    { id: 'ratio', label: 'Shape-V Ratio', color: '#00C9A7', unit: '', idealValue: 1.618, yAxisId: 'left' },
-    { id: 'score', label: 'Score Geral', color: '#7C3AED', unit: 'pts', idealValue: 100, yAxisId: 'right' },
-    { id: 'ombros', label: 'Ombros', color: '#3B82F6', unit: 'cm', yAxisId: 'right' },
-    { id: 'cintura', label: 'Cintura', color: '#F59E0B', unit: 'cm', yAxisId: 'right' },
-    { id: 'braco', label: 'Braço', color: '#EC4899', unit: 'cm', yAxisId: 'right' },
-    { id: 'peitoral', label: 'Peitoral', color: '#8B5CF6', unit: 'cm', yAxisId: 'right' },
-    { id: 'coxa', label: 'Coxa', color: '#06B6D4', unit: 'cm', yAxisId: 'right' },
-    { id: 'panturrilha', label: 'Panturrilha', color: '#84CC16', unit: 'cm', yAxisId: 'right' },
-];
-
-const MOCK_CHART_DATA = [
-    { date: 'Jan', fullDate: new Date('2023-01-01'), ratio: 1.49, score: 72, ombros: 115, cintura: 84 },
-    { date: 'Fev', fullDate: new Date('2023-02-01'), ratio: 1.51, score: 73, ombros: 116, cintura: 83.5 },
-    { date: 'Mar', fullDate: new Date('2023-03-01'), ratio: 1.53, score: 75, ombros: 117, cintura: 83 },
-    { date: 'Abr', fullDate: new Date('2023-04-01'), ratio: 1.56, score: 77, ombros: 118, cintura: 82.5 },
-    { date: 'Mai', fullDate: new Date('2023-05-01'), ratio: 1.58, score: 79, ombros: 119, cintura: 82 },
-    { date: 'Jun', fullDate: new Date('2023-06-01'), ratio: 1.61, score: 80, ombros: 120, cintura: 82 },
-];
-
-const MOCK_WEIGHT_DATA = [
-    { date: 'Jan', total: 90, lean: 75, fat: 15 },
-    { date: 'Fev', total: 89.5, lean: 75.5, fat: 14 },
-    { date: 'Mar', total: 89, lean: 76, fat: 13 },
-    { date: 'Abr', total: 88.8, lean: 76.5, fat: 12.3 },
-    { date: 'Mai', total: 88.5, lean: 77, fat: 11.5 },
-    { date: 'Jun', total: 88.5, lean: 78, fat: 10.5 },
-];
-
+// Extracted mock data
+import {
+    MOCK_PERIOD, MOCK_KPIS, MOCK_INSIGHT, MOCK_COMPARISON,
+    MOCK_ASYMMETRY_DATA, MOCK_ASYMMETRY_HISTORY, MOCK_ASYMMETRY_REC,
+    AVAILABLE_METRICS, MOCK_CHART_DATA, MOCK_WEIGHT_DATA,
+} from './evolutionMockData';
 
 import { MeasurementHistory } from '@/mocks/personal';
 import { processEvolutionHistory } from '@/services/calculations';
+
 
 interface EvolutionProps {
     hideHeader?: boolean;
@@ -340,7 +212,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
                 startValue: s.kpis.score.startValue,
                 endValue: s.kpis.score.endValue,
                 change: Number(s.kpis.score.change.toFixed(1)),
-                status: s.kpis.score.status as any,
+                status: s.kpis.score.status as string,
             },
             bestEvolution: {
                 label: 'MELHOR EVOLUÇÃO',
@@ -372,7 +244,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
             right: a.direito || 0,
             difference: a.diferenca || 0,
             differencePercent: a.diferencaPercent || 0,
-            dominantSide: (a.ladoDominante || 'IGUAL').toLowerCase() as any,
+            dominantSide: (a.ladoDominante || 'IGUAL').toLowerCase() as string,
             status: (a.status || '').toLowerCase().includes('simetrico') ? 'symmetric' as const : 'asymmetric' as const
         }));
     }, [evolutionData]);
@@ -380,7 +252,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
     const asymmetryHistory = React.useMemo(() => {
         if (!evolutionData) return MOCK_ASYMMETRY_HISTORY;
 
-        const history: any[] = [];
+        const history: Record<string, unknown>[] = [];
         (evolutionData?.points || []).forEach(point => {
             const date = new Date(point.date);
             const ass = point.output?.scores?.simetria?.detalhes?.detalhes || [];
@@ -406,7 +278,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
 
         return {
             muscle: worst.grupo,
-            severity: (worst.diferencaPercent || 0) > 8 ? 'high' : 'moderate' as any,
+            severity: (worst.diferencaPercent || 0) > 8 ? 'high' : 'moderate' as string,
             message: `Assimetria detectada: ${worst.grupo} (${(worst.diferencaPercent || 0).toFixed(1)}%).`,
             tips: [
                 `Iniciar exercícios pelo lado ${(worst.ladoDominante || 'DIREITO') === 'DIREITO' ? 'esquerdo' : 'direito'} (mais fraco)`,
@@ -427,8 +299,8 @@ export const Evolution: React.FC<EvolutionProps> = ({
 
         const mapMeasure = (label: string, key: keyof typeof first | 'quadril') => {
             const getVal = (m: typeof first) => {
-                if (key === 'quadril') return (m as any)?.hips || m?.waist || 0;
-                return (m as any)[key] || 0;
+                if (key === 'quadril') return (m as unknown as Record<string, number>)?.hips || m?.waist || 0;
+                return (m as unknown as Record<string, number>)[key as string] || 0;
             };
 
             return {
@@ -459,7 +331,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
         const lower = [
             mapMeasure('Cintura', 'waist'),
             mapMeasure('Abdom.', 'abdomen'),
-            mapMeasure('Quadril', 'hips' as any),
+            mapMeasure('Quadril', 'hips' as string),
             {
                 name: 'Coxa (D)',
                 inicio: first?.thighRight || 0,
@@ -599,7 +471,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
                         valor = 495 / (1.0324 - 0.19077 * Math.log10(m.waist - m.neck) + 0.15456 * Math.log10(m.height)) - 450;
                     }
                 } else {
-                    const hips = (m as any).hips || m.waist; // Fallback
+                    const hips = (m as unknown as Record<string, number>).hips || m.waist; // Fallback
                     if (m.waist + hips - m.neck > 0) {
                         valor = 495 / (1.29579 - 0.35004 * Math.log10(m.waist + hips - m.neck) + 0.22100 * Math.log10(m.height)) - 450;
                     }
@@ -659,7 +531,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
 
                             <div className="flex flex-wrap items-center gap-4 mb-1">
                                 {/* Toggle View */}
-                                <div className="flex bg-[#131B2C] p-1 rounded-lg border border-white/10 shadow-lg">
+                                <div className="flex bg-surface p-1 rounded-lg border border-white/10 shadow-lg">
                                     <button
                                         onClick={() => setViewMode('charts')}
                                         className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs font-bold transition-all ${viewMode === 'charts'
@@ -681,7 +553,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
                                 </div>
 
                                 {/* Time Filter */}
-                                <div className="flex bg-[#131B2C] p-1 rounded-lg border border-white/10 shadow-lg">
+                                <div className="flex bg-surface p-1 rounded-lg border border-white/10 shadow-lg">
                                     {['3M', '6M', '1A', 'TOTAL'].map((p) => (
                                         <button
                                             key={p}
@@ -702,7 +574,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
                 {hideHeader && (
                     <div className="flex justify-end items-center gap-4 mb-1">
                         {/* Toggle View */}
-                        <div className="flex bg-[#131B2C] p-1 rounded-lg border border-white/10 shadow-lg">
+                        <div className="flex bg-surface p-1 rounded-lg border border-white/10 shadow-lg">
                             <button
                                 onClick={() => setViewMode('charts')}
                                 className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs font-bold transition-all ${viewMode === 'charts'
@@ -724,7 +596,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
                         </div>
 
                         {/* Time Filter */}
-                        <div className="flex bg-[#131B2C] p-1 rounded-lg border border-white/10 shadow-lg">
+                        <div className="flex bg-surface p-1 rounded-lg border border-white/10 shadow-lg">
                             {['3M', '6M', '1A', 'TOTAL'].map((p) => (
                                 <button
                                     key={p}
@@ -748,7 +620,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
                         {/* 2. SECTION: Evolution Charts */}
                         <div className="flex flex-col gap-4 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
                             <div className="flex items-center gap-3 ml-1">
-                                <div className="p-2 bg-[#131B2C] rounded-xl text-primary border border-white/10 shadow-lg">
+                                <div className="p-2 bg-surface rounded-xl text-primary border border-white/10 shadow-lg">
                                     <TrendingUp size={20} />
                                 </div>
                                 <div>
@@ -773,7 +645,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
                                     <div className="relative">
                                         <button
                                             onClick={() => setIsMetricMenuOpen(!isMetricMenuOpen)}
-                                            className="bg-[#131B2C] border border-white/10 text-white text-[10px] font-bold py-2 px-4 rounded-xl flex items-center gap-2 hover:bg-white/5 transition-all shadow-lg"
+                                            className="bg-surface border border-white/10 text-white text-[10px] font-bold py-2 px-4 rounded-xl flex items-center gap-2 hover:bg-white/5 transition-all shadow-lg"
                                         >
                                             <Activity size={12} className="text-primary" />
                                             COMPARAR MÉTRICAS
@@ -786,7 +658,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
                                                     className="fixed inset-0 z-40"
                                                     onClick={() => setIsMetricMenuOpen(false)}
                                                 />
-                                                <div className="absolute right-0 mt-2 w-64 bg-[#131B2C] border border-white/10 rounded-2xl shadow-2xl z-50 py-2 overflow-hidden animate-fade-in origin-top-right">
+                                                <div className="absolute right-0 mt-2 w-64 bg-surface border border-white/10 rounded-2xl shadow-2xl z-50 py-2 overflow-hidden animate-fade-in origin-top-right">
                                                     <div className="px-4 py-2 border-b border-white/5 mb-2">
                                                         <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Métricas Disponíveis</h4>
                                                     </div>
@@ -861,7 +733,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
                         {/* 4. SECTION: Body Composition */}
                         <div className="flex flex-col gap-4 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
                             <div className="flex items-center gap-3 ml-1">
-                                <div className="p-2 bg-[#131B2C] rounded-xl text-secondary border border-white/10 shadow-lg">
+                                <div className="p-2 bg-surface rounded-xl text-secondary border border-white/10 shadow-lg">
                                     <Scale size={20} />
                                 </div>
                                 <div>
@@ -879,7 +751,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
                                             <select
                                                 value={selectedWeightMetric}
                                                 onChange={(e) => setSelectedWeightMetric(e.target.value)}
-                                                className="appearance-none bg-[#0A0F1C] border border-white/10 text-white text-xs font-bold py-2 pl-3 pr-8 rounded-lg focus:outline-none focus:border-primary/50 cursor-pointer shadow-lg hover:bg-white/5 transition-colors"
+                                                className="appearance-none bg-background-dark border border-white/10 text-white text-xs font-bold py-2 pl-3 pr-8 rounded-lg focus:outline-none focus:border-primary/50 cursor-pointer shadow-lg hover:bg-white/5 transition-colors"
                                             >
                                                 <option value="all">Todos</option>
                                                 <option value="total">Peso Total</option>
@@ -890,7 +762,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
                                     </div>
 
                                     <div className="w-full h-[200px] mt-4">
-                                        <WeightChart data={weightData} selectedMetric={selectedWeightMetric as any} />
+                                        <WeightChart data={weightData} selectedMetric={selectedWeightMetric as string} />
                                     </div>
 
                                     <div className="flex gap-3 justify-center mt-6">
@@ -917,7 +789,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
                                             <select
                                                 value={selectedBfMethod}
                                                 onChange={(e) => setSelectedBfMethod(e.target.value)}
-                                                className="appearance-none bg-[#0A0F1C] border border-white/10 text-white text-[10px] font-bold py-1.5 pl-2 pr-6 rounded focus:outline-none focus:border-primary/50 cursor-pointer shadow-lg hover:bg-white/5 transition-colors uppercase"
+                                                className="appearance-none bg-background-dark border border-white/10 text-white text-[10px] font-bold py-1.5 pl-2 pr-6 rounded focus:outline-none focus:border-primary/50 cursor-pointer shadow-lg hover:bg-white/5 transition-colors uppercase"
                                             >
                                                 <option value="marinha">Marinha</option>
                                                 <option value="pollock">Pollock</option>
@@ -941,7 +813,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
                         {/* 6. SECTION: Linear Measures Evolution */}
                         <div className="flex flex-col gap-6 animate-fade-in-up mt-4" style={{ animationDelay: '0.4s' }}>
                             <div className="flex items-center gap-3 ml-1">
-                                <div className="p-2 bg-[#131B2C] rounded-xl text-primary border border-white/10 shadow-lg">
+                                <div className="p-2 bg-surface rounded-xl text-primary border border-white/10 shadow-lg">
                                     <Ruler size={20} />
                                 </div>
                                 <div>

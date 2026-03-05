@@ -41,7 +41,7 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
     const { entity } = useAuthStore();
     const { loadFromSupabase } = useDataStore();
 
-    const handleInputChange = (field: keyof RegistrationData, value: any) => {
+    const handleInputChange = (field: keyof RegistrationData, value: string | number | boolean) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
     };
 
@@ -84,7 +84,7 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                     email: formData.email.trim() || null,
                     telefone: formData.phone.trim() || null,
                     status: 'ATIVO',
-                } as any)
+                } as Record<string, unknown>)
                 .select()
                 .single();
 
@@ -103,7 +103,7 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                     altura: height,
                     objetivo: 'HIPERTROFIA',
                     objetivo_vitruvio: 'RECOMP',
-                } as any)
+                } as Record<string, unknown>)
                 .eq('atleta_id', atleta.id);
 
             if (fichaError) console.warn('[Cadastro Rápido] Aviso ficha:', fichaError.message);
@@ -139,7 +139,7 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
         return (
             <div className="flex-1 flex flex-col h-full overflow-hidden bg-background-dark animate-fade-in">
                 {/* Header */}
-                <div className="p-6 md:p-8 border-b border-white/5 bg-[#0A0F1C]/50 sticky top-0 z-20 backdrop-blur-md">
+                <div className="p-6 md:p-8 border-b border-white/5 bg-background-dark/50 sticky top-0 z-20 backdrop-blur-md">
                     <div className="max-w-3xl mx-auto flex items-center gap-4 w-full">
                         <button
                             onClick={() => onComplete()}
@@ -155,7 +155,7 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar">
                     <div className="max-w-3xl mx-auto p-6 md:p-8">
-                        <div className="bg-[#131B2C] border border-white/10 rounded-2xl p-8 md:p-12 shadow-2xl space-y-8">
+                        <div className="bg-surface border border-white/10 rounded-2xl p-8 md:p-12 shadow-2xl space-y-8">
                             {/* Success Icon */}
                             <div className="text-center space-y-4">
                                 <div className="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto animate-fade-in-up">
@@ -172,7 +172,7 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
 
                             {/* Portal Link (if generated) */}
                             {portalLink && (
-                                <div className="p-6 bg-[#0A0F1C] border border-primary/30 rounded-2xl space-y-4">
+                                <div className="p-6 bg-background-dark border border-primary/30 rounded-2xl space-y-4">
                                     <div className="flex items-center gap-2 mb-1">
                                         <Mail className="text-primary" size={16} />
                                         <span className="text-xs font-bold text-primary uppercase tracking-wider">Link de Convite</span>
@@ -256,7 +256,7 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
     return (
         <div className="flex-1 flex flex-col h-full overflow-hidden bg-background-dark animate-fade-in">
             {/* Header */}
-            <div className="p-6 md:p-8 border-b border-white/5 bg-[#0A0F1C]/50 sticky top-0 z-20 backdrop-blur-md">
+            <div className="p-6 md:p-8 border-b border-white/5 bg-background-dark/50 sticky top-0 z-20 backdrop-blur-md">
                 <div className="max-w-3xl mx-auto flex items-center gap-4 w-full">
                     <button
                         onClick={onBack}
@@ -274,7 +274,7 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
             {/* Main scrollable content */}
             <div className="flex-1 overflow-y-auto custom-scrollbar">
                 <div className="max-w-3xl mx-auto p-6 md:p-8">
-                    <div className="bg-[#131B2C] border border-white/10 rounded-2xl p-6 md:p-10 shadow-2xl relative overflow-hidden">
+                    <div className="bg-surface border border-white/10 rounded-2xl p-6 md:p-10 shadow-2xl relative overflow-hidden">
 
                         {/* Section: Dados Pessoais */}
                         <div className="space-y-8">
@@ -289,7 +289,7 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                                     <label className="text-xs font-bold text-gray-300 uppercase tracking-widest">Nome Completo *</label>
                                     <input
                                         type="text"
-                                        className="w-full bg-[#0A0F1C] border border-white/10 rounded-lg px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder-gray-700"
+                                        className="w-full bg-background-dark border border-white/10 rounded-lg px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder-gray-700"
                                         placeholder="Ex: Maria Oliveira Santos"
                                         value={formData.name}
                                         onChange={(e) => handleInputChange('name', e.target.value)}
@@ -302,7 +302,7 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                                     <label className="text-xs font-bold text-gray-300 uppercase tracking-widest">Data de Nascimento *</label>
                                     <input
                                         type="date"
-                                        className="w-full bg-[#0A0F1C] border border-white/10 rounded-lg px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all calendar-picker-indicator-white"
+                                        className="w-full bg-background-dark border border-white/10 rounded-lg px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all calendar-picker-indicator-white"
                                         value={formData.birthDate}
                                         onChange={(e) => handleInputChange('birthDate', e.target.value)}
                                     />
@@ -319,7 +319,7 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                                             type="button"
                                             className={`flex items-center justify-center gap-2 py-3 rounded-lg border transition-all font-bold text-sm uppercase tracking-wide ${formData.gender === 'MALE'
                                                 ? 'bg-primary/20 border-primary text-primary shadow-[0_0_15px_rgba(99,102,241,0.2)]'
-                                                : 'bg-[#0A0F1C] border-white/10 text-gray-500 hover:bg-white/5'
+                                                : 'bg-background-dark border-white/10 text-gray-500 hover:bg-white/5'
                                                 }`}
                                             onClick={() => handleInputChange('gender', 'MALE')}
                                         >
@@ -329,7 +329,7 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                                             type="button"
                                             className={`flex items-center justify-center gap-2 py-3 rounded-lg border transition-all font-bold text-sm uppercase tracking-wide ${formData.gender === 'FEMALE'
                                                 ? 'bg-pink-500/20 border-pink-500 text-pink-400 shadow-[0_0_15px_rgba(236,72,153,0.2)]'
-                                                : 'bg-[#0A0F1C] border-white/10 text-gray-500 hover:bg-white/5'
+                                                : 'bg-background-dark border-white/10 text-gray-500 hover:bg-white/5'
                                                 }`}
                                             onClick={() => handleInputChange('gender', 'FEMALE')}
                                         >
@@ -343,7 +343,7 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                                     <label className="text-xs font-bold text-gray-300 uppercase tracking-widest">Altura (cm)</label>
                                     <input
                                         type="number"
-                                        className="w-full bg-[#0A0F1C] border border-white/10 rounded-lg px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder-gray-700 font-mono"
+                                        className="w-full bg-background-dark border border-white/10 rounded-lg px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder-gray-700 font-mono"
                                         placeholder="Ex: 175"
                                         value={formData.height}
                                         onChange={(e) => handleInputChange('height', e.target.value)}
@@ -355,7 +355,7 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                                     <label className="text-xs font-bold text-gray-300 uppercase tracking-widest">Email</label>
                                     <input
                                         type="email"
-                                        className="w-full bg-[#0A0F1C] border border-white/10 rounded-lg px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder-gray-700"
+                                        className="w-full bg-background-dark border border-white/10 rounded-lg px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder-gray-700"
                                         placeholder="atleta@dominio.com"
                                         value={formData.email}
                                         onChange={(e) => handleInputChange('email', e.target.value)}
@@ -367,7 +367,7 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                                     <label className="text-xs font-bold text-gray-300 uppercase tracking-widest">Telefone / WhatsApp</label>
                                     <input
                                         type="tel"
-                                        className="w-full bg-[#0A0F1C] border border-white/10 rounded-lg px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder-gray-700"
+                                        className="w-full bg-background-dark border border-white/10 rounded-lg px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder-gray-700"
                                         placeholder="(00) 00000-0000"
                                         value={formData.phone}
                                         onChange={(e) => handleInputChange('phone', e.target.value)}
@@ -381,7 +381,7 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                             <label
                                 className={`flex items-center gap-4 p-5 rounded-xl border cursor-pointer transition-all ${formData.sendInvite
                                     ? 'bg-primary/10 border-primary/40 shadow-[0_0_15px_rgba(99,102,241,0.1)]'
-                                    : 'bg-[#0A0F1C] border-white/10 hover:bg-white/5'
+                                    : 'bg-background-dark border-white/10 hover:bg-white/5'
                                     }`}
                                 onClick={() => handleInputChange('sendInvite', !formData.sendInvite)}
                             >

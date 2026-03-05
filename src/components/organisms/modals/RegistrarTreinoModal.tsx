@@ -43,9 +43,9 @@ export const RegistrarTreinoModal: React.FC = () => {
 
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-            <div className="bg-[#131B2C] rounded-2xl max-w-lg w-full border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto animate-fade-in">
+            <div className="bg-surface rounded-2xl max-w-lg w-full border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto animate-fade-in">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-white/5 sticky top-0 bg-[#131B2C] z-10">
+                <div className="flex items-center justify-between p-6 border-b border-white/5 sticky top-0 bg-surface z-10">
                     <div>
                         <div className="flex items-center gap-2">
                             <Dumbbell size={20} className="text-purple-400" />
@@ -86,7 +86,7 @@ export const RegistrarTreinoModal: React.FC = () => {
                                         p-4 rounded-xl border transition-all font-bold uppercase tracking-tight text-xs
                                         ${seguiuPlano === opcao
                                             ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400 font-bold'
-                                            : 'border-white/5 bg-[#0D121F] text-gray-500 hover:border-white/20'
+                                            : 'border-white/5 bg-surface-alt text-gray-500 hover:border-white/20'
                                         }
                                     `}
                                 >
@@ -108,7 +108,7 @@ export const RegistrarTreinoModal: React.FC = () => {
                                         flex flex-col items-center justify-center p-4 rounded-xl border transition-all
                                         ${intensidade === nivel
                                             ? 'border-purple-500 bg-purple-500/10 text-purple-400'
-                                            : 'border-white/5 bg-[#0D121F] text-gray-500 hover:border-white/20'
+                                            : 'border-white/5 bg-surface-alt text-gray-500 hover:border-white/20'
                                         }
                                     `}
                                 >
@@ -129,7 +129,7 @@ export const RegistrarTreinoModal: React.FC = () => {
                             type="number"
                             value={duracao}
                             onChange={(e) => setDuracao(Number(e.target.value))}
-                            className="w-full bg-[#0D121F] border border-white/5 rounded-xl px-4 py-3
+                            className="w-full bg-surface-alt border border-white/5 rounded-xl px-4 py-3
                                 text-white focus:outline-none focus:border-purple-500/50 transition-all font-medium"
                         />
                     </div>
@@ -145,7 +145,7 @@ export const RegistrarTreinoModal: React.FC = () => {
                                     className="sr-only"
                                 />
                                 <div className={`w-6 h-6 rounded-lg border-2 transition-all flex items-center justify-center
-                                    ${temDor ? 'bg-red-600 border-red-600' : 'border-white/10 bg-[#0D121F] group-hover:border-white/20'}`}>
+                                    ${temDor ? 'bg-red-600 border-red-600' : 'border-white/10 bg-surface-alt group-hover:border-white/20'}`}>
                                     {temDor && <AlertCircle size={14} className="text-white" />}
                                 </div>
                             </div>
@@ -164,7 +164,7 @@ export const RegistrarTreinoModal: React.FC = () => {
                             onChange={(e) => setObservacoes(e.target.value)}
                             placeholder="Ex: Aumentei carga no supino, senti bem..."
                             rows={3}
-                            className="w-full bg-[#0D121F] border border-white/5 rounded-2xl px-5 py-4
+                            className="w-full bg-surface-alt border border-white/5 rounded-2xl px-5 py-4
                                 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500/50 
                                 resize-none transition-all text-base leading-relaxed"
                         />
@@ -172,7 +172,7 @@ export const RegistrarTreinoModal: React.FC = () => {
                 </div>
 
                 {/* Footer */}
-                <div className="flex gap-4 p-6 border-t border-white/5 sticky bottom-0 bg-[#131B2C]">
+                <div className="flex gap-4 p-6 border-t border-white/5 sticky bottom-0 bg-surface">
                     <button
                         onClick={fecharModal}
                         className="flex-1 px-6 py-4 rounded-xl border border-white/5 text-gray-400

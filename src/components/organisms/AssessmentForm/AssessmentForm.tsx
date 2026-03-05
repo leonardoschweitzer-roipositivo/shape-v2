@@ -61,7 +61,7 @@ const SymmetryRow: React.FC<SymmetryRowProps> = ({ label, leftValue, rightValue,
                 type="number"
                 value={leftValue || ''}
                 onChange={(e) => onLeftChange(e.target.value)}
-                className="w-full bg-[#0A0F1C] border border-white/10 rounded-lg px-4 py-2.5 text-right text-white placeholder-gray-700 focus:border-primary/50 focus:outline-none text-sm font-mono"
+                className="w-full bg-background-dark border border-white/10 rounded-lg px-4 py-2.5 text-right text-white placeholder-gray-700 focus:border-primary/50 focus:outline-none text-sm font-mono"
                 placeholder="00.0"
             />
         </div>
@@ -73,7 +73,7 @@ const SymmetryRow: React.FC<SymmetryRowProps> = ({ label, leftValue, rightValue,
                 type="number"
                 value={rightValue || ''}
                 onChange={(e) => onRightChange(e.target.value)}
-                className="w-full bg-[#0A0F1C] border border-white/10 rounded-lg px-4 py-2.5 text-left text-white placeholder-gray-700 focus:border-primary/50 focus:outline-none text-sm font-mono"
+                className="w-full bg-background-dark border border-white/10 rounded-lg px-4 py-2.5 text-left text-white placeholder-gray-700 focus:border-primary/50 focus:outline-none text-sm font-mono"
                 placeholder="00.0"
             />
         </div>
@@ -327,7 +327,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onConfirm, isMod
                     <h3 className="text-xs font-bold text-gray-300 uppercase tracking-widest flex items-center gap-2">
                         <GitCommit size={14} /> Simetria de Membros
                     </h3>
-                    <div className="bg-[#0A0F1C]/50 rounded-xl p-6 border border-white/5">
+                    <div className="bg-background-dark/50 rounded-xl p-6 border border-white/5">
                         <div className="grid grid-cols-[1fr_auto_1fr] gap-4 mb-4 px-1">
                             <span className="text-[10px] font-bold text-primary uppercase text-right">Esquerda (cm)</span>
                             <span className="text-[10px] font-bold text-gray-500 uppercase text-center w-32">Região</span>
@@ -433,7 +433,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onConfirm, isMod
             </div>
 
             {/* Footer Actions */}
-            <div className={`border-t border-white/5 flex items-center justify-end gap-4 ${isModal ? 'p-6 bg-[#131B2C]' : 'mt-10 pt-6'}`}>
+            <div className={`border-t border-white/5 flex items-center justify-end gap-4 ${isModal ? 'p-6 bg-surface' : 'mt-10 pt-6'}`}>
                 {/* DEV BUTTON */}
                 <button
                     onClick={handleDevFillAndSubmit}

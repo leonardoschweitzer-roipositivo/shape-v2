@@ -142,7 +142,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
 
     // Handlers para a tela HOJE
     const handleVerTreino = () => {
-        console.log('Ver treino completo')
+        // Noop: detalhes já são mostrados via accordion no CardTreino
     }
 
     const handleCompletarTreino = async (dataOverride?: string) => {
@@ -310,7 +310,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
             altura: ctx?.ficha?.altura,
             peso: lastPeso || ctx?.ficha?.peso,
             gorduraPct: ctx?.ficha?.gordura_percentual,
-            score: undefined, // TODO: pegar do scoreGeral
+            score: scoreGeral?.scoreAtual,
             objetivo: ctx?.ficha?.objetivo,
             personalNome: ctx?.personalNome,
             // Dados de hoje

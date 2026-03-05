@@ -353,7 +353,7 @@ export function analisarProporcoes(
 
     // ─── Se recebeu dados do banco, usar atual/ideal/pct já calculados (preserva regras de sexo) ───
     if (proporcoesPreCalculadas?.length && proporcoesPreCalculadas[0]?.nome) {
-        console.log('[Diagnostico] ✅ USANDO ratios do banco (preservando % e status femininos/masculinos)');
+        console.info('[Diagnostico] ✅ USANDO ratios do banco (preservando % e status femininos/masculinos)');
         return proporcoesPreCalculadas.map(p => {
             return {
                 grupo: p.nome,
@@ -365,7 +365,7 @@ export function analisarProporcoes(
         });
     }
 
-    console.log('[Diagnostico] ⚠️ FALLBACK: calculando proporções localmente');
+    console.info('[Diagnostico] ⚠️ FALLBACK: calculando proporções localmente');
     // ─── Fallback: cálculo local (atletas sem dados gravados) ───
     const proporcoes: ProporcoesGrupo[] = [];
 
@@ -780,7 +780,7 @@ function projetarScoreMeta(
         // 6 meses = ~55% do ganho total (front-loaded para novatos)
         const deltaTotal6M = deltaTotal12M * 0.55;
 
-        console.log(`[ScoreMeta] Deltas calculados (${isFemale ? 'F' : 'M'}):`,
+        console.info(`[ScoreMeta] Deltas calculados (${isFemale ? 'F' : 'M'}):`,
             `Composição=${deltaComposicao.toFixed(1)} (BF:${deltaBF.toFixed(1)}, FFMI:${deltaFFMI.toFixed(1)}, PR:${deltaPesoRel.toFixed(1)})`,
             `| Proporções=${deltaProportionScore.toFixed(1)} (avg +${avgPctImprovement.toFixed(1)}%, ${countGroupsWithImprovement} grupos)`,
             `| Simetria=${deltaSymmetry.toFixed(1)} (${currentSymScore} → ${projectedSymScore.toFixed(1)})`,

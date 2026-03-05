@@ -232,7 +232,7 @@ const NotificationsSection: React.FC = () => {
                         <select
                             value={notifs.medicaoLembrete.frequency}
                             onChange={(e) => updateNotifications({
-                                medicaoLembrete: { ...notifs.medicaoLembrete, frequency: e.target.value as any }
+                                medicaoLembrete: { ...notifs.medicaoLembrete, frequency: e.target.value as 'weekly' | 'off' | 'daily' | 'monthly' }
                             })}
                             className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-primary/50"
                         >
@@ -295,8 +295,8 @@ const AppearanceSection: React.FC = () => {
 
     const colorOptions = [
         { name: 'Teal (Original)', value: '#00C9A7', class: 'bg-[#00C9A7]' },
-        { name: 'Azul', value: '#3b82f6', class: 'bg-[#3b82f6]' },
-        { name: 'Roxo', value: '#7C3AED', class: 'bg-[#7C3AED]' },
+        { name: 'Azul', value: '#3b82f6', class: 'bg-status-info' },
+        { name: 'Roxo', value: '#7C3AED', class: 'bg-secondary' },
         { name: 'Amarelo', value: '#eab308', class: 'bg-[#eab308]' },
         { name: 'Verde', value: '#22c55e', class: 'bg-[#22c55e]' },
         { name: 'Vermelho', value: '#ef4444', class: 'bg-[#ef4444]' },

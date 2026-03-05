@@ -690,7 +690,7 @@ export async function salvarPlanoDieta(
                 diagnostico_id: diagnosticoId ?? null,
                 dados: safeDados,
                 status: 'ativo',
-            } as any)
+            } as Record<string, unknown>)
             .select('id')
             .single();
 

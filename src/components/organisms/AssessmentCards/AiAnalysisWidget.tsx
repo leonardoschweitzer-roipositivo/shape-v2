@@ -16,7 +16,7 @@ export const AiAnalysisWidget: React.FC<AiAnalysisWidgetProps> = ({
     onMacros
 }) => {
     return (
-        <div className="w-full rounded-2xl bg-gradient-to-r from-[#1E293B] to-[#131B2C] border border-white/10 p-8 relative overflow-hidden group">
+        <div className="w-full rounded-2xl bg-gradient-to-r from-[#1E293B] to-surface border border-white/10 p-8 relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-64 h-full bg-primary/5 -skew-x-12 translate-x-16"></div>
 
             <div className="flex flex-col md:flex-row gap-6 relative z-10">

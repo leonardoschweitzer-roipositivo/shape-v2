@@ -14,8 +14,6 @@ export const CoachModal: React.FC<CoachModalProps> = ({ isOpen, onClose }) => {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!question.trim()) return;
-        // Simulate sending
-        console.log('Question sent:', question);
         setQuestion('');
         onClose();
     };
@@ -24,15 +22,15 @@ export const CoachModal: React.FC<CoachModalProps> = ({ isOpen, onClose }) => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-[#050810]/80 backdrop-blur-sm transition-opacity"
+                className="absolute inset-0 bg-backdrop/80 backdrop-blur-sm transition-opacity"
                 onClick={onClose}
             ></div>
 
             {/* Modal Content */}
-            <div className="relative bg-[#131B2C] border border-white/10 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-fade-in-up">
+            <div className="relative bg-surface border border-white/10 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-fade-in-up">
 
                 {/* Header with Vitrúvio */}
-                <div className="p-6 border-b border-white/5 flex items-start justify-between bg-[#131B2C]">
+                <div className="p-6 border-b border-white/5 flex items-start justify-between bg-surface">
                     <div className="flex items-start gap-4 group">
                         <div className="relative shrink-0">
                             <div className="absolute inset-0 bg-primary/20 rounded-full blur-md group-hover:blur-lg transition-all"></div>
@@ -41,8 +39,8 @@ export const CoachModal: React.FC<CoachModalProps> = ({ isOpen, onClose }) => {
                                 alt="Vitrúvio Coach"
                                 className="relative w-12 h-12 rounded-full border border-primary/30 object-cover"
                             />
-                            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-primary rounded-full border-2 border-[#131B2C] flex items-center justify-center">
-                                <div className="w-1.5 h-1.5 bg-[#131B2C] rounded-full animate-pulse"></div>
+                            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-primary rounded-full border-2 border-surface flex items-center justify-center">
+                                <div className="w-1.5 h-1.5 bg-surface rounded-full animate-pulse"></div>
                             </div>
                         </div>
                         <div className="flex flex-col gap-1">

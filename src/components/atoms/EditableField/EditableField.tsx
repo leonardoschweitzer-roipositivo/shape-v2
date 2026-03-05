@@ -98,7 +98,7 @@ export const EditableField: React.FC<EditableFieldProps> = (props) => {
                     className={`${inputCn} cursor-pointer`}
                 >
                     {props.options.map((opt) => (
-                        <option key={opt.value} value={opt.value} className="bg-[#131B2C] text-white">
+                        <option key={opt.value} value={opt.value} className="bg-surface text-white">
                             {opt.label}
                         </option>
                     ))}

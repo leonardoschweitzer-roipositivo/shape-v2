@@ -22,7 +22,7 @@ export function gerarInsightPrincipal(dados: ResumoDiario): Insight {
             mensagem: `Proteína crítica: apenas ${dados.nutricao.totalProteina}g de ${dados.nutricao.metaProteina}g. Você pode perder massa muscular!`,
             acao: {
                 label: 'Ver sugestões',
-                callback: () => console.log('Mostrar sugestões de proteína'),
+                callback: () => console.debug('Mostrar sugestões de proteína'),
             },
         })
     }
@@ -37,7 +37,7 @@ export function gerarInsightPrincipal(dados: ResumoDiario): Insight {
             mensagem: `Treino de ${dados.treino.tipo || 'hoje'} ainda pendente. Vai conseguir treinar?`,
             acao: {
                 label: 'Registrar',
-                callback: () => console.log('Abrir modal de treino'),
+                callback: () => console.debug('Abrir modal de treino'),
             },
         })
     }
@@ -51,7 +51,7 @@ export function gerarInsightPrincipal(dados: ResumoDiario): Insight {
             mensagem: `Você dormiu apenas ${dados.sono.horas}h. Sugiro reduzir a intensidade do treino hoje para evitar lesões.`,
             acao: {
                 label: 'Ajustar treino',
-                callback: () => console.log('Ajustar intensidade'),
+                callback: () => console.debug('Ajustar intensidade'),
             },
         })
     }
@@ -105,7 +105,7 @@ export function gerarInsightPrincipal(dados: ResumoDiario): Insight {
             mensagem: `Hidratação em ${Math.round(dados.hidratacao.aderenciaPercentual)}%. Beba água para melhorar performance e recuperação.`,
             acao: {
                 label: '+500ml',
-                callback: () => console.log('Adicionar 500ml'),
+                callback: () => console.debug('Adicionar 500ml'),
             },
         })
     }
@@ -212,7 +212,7 @@ export function gerarInsightHidratacao(
             mensagem: `Hidratação muito baixa! Você está em apenas ${Math.round(percentual)}% da meta.`,
             acao: {
                 label: '+500ml',
-                callback: () => console.log('Adicionar água'),
+                callback: () => console.debug('Adicionar água'),
             },
         }
     } else if (percentual < 60 && horaTreino) {
@@ -223,7 +223,7 @@ export function gerarInsightHidratacao(
             mensagem: `Você treina às ${horaTreino}. Beba pelo menos 500ml antes do treino!`,
             acao: {
                 label: '+500ml',
-                callback: () => console.log('Adicionar água'),
+                callback: () => console.debug('Adicionar água'),
             },
         }
     } else if (percentual >= 100) {
@@ -303,7 +303,7 @@ export function gerarInsightTreino(
                 mensagem: `Treino de ${treino.grupamento || 'hoje'} ainda pendente. Vai conseguir treinar?`,
                 acao: {
                     label: 'Registrar',
-                    callback: () => console.log('Abrir modal treino'),
+                    callback: () => console.debug('Abrir modal treino'),
                 },
             }
         }

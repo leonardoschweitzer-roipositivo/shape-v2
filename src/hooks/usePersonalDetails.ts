@@ -26,7 +26,7 @@ export function usePersonalDetails(personalId: string, academiaId: string) {
         async function carregarDados() {
             setIsLoading(true)
             try {
-                // TODO: Substituir por chamada API real
+                // NOTA: Módulo Academy usa mock data por design (MVP — ainda não integrado ao Supabase)
                 // const response = await fetch(`/api/academia/${academiaId}/personais/${personalId}`)
                 // const dadosAPI = await response.json()
 

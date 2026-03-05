@@ -96,14 +96,14 @@ Qualquer dúvida, estou à disposição!`);
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div
-                className="absolute inset-0 bg-[#050810]/80 backdrop-blur-sm transition-opacity"
+                className="absolute inset-0 bg-backdrop/80 backdrop-blur-sm transition-opacity"
                 onClick={onClose}
             ></div>
 
-            <div className="relative bg-[#131B2C] border border-white/10 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-fade-in-up h-[600px]">
+            <div className="relative bg-surface border border-white/10 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-fade-in-up h-[600px]">
 
                 {/* Header */}
-                <div className="p-6 border-b border-white/5 flex items-center justify-between bg-[#131B2C]">
+                <div className="p-6 border-b border-white/5 flex items-center justify-between bg-surface">
                     <div className="flex flex-col gap-1">
                         <h2 className="text-sm font-bold text-primary uppercase tracking-widest flex items-center gap-2">
                             CONVIDAR NOVO ALUNO
@@ -118,7 +118,7 @@ Qualquer dúvida, estou à disposição!`);
 
                 <div className="flex flex-1 overflow-hidden">
                     {/* Sidebar Tabs */}
-                    <div className="w-48 bg-[#0A0F1C] border-r border-white/5 flex flex-col p-4 gap-2">
+                    <div className="w-48 bg-background-dark border-r border-white/5 flex flex-col p-4 gap-2">
                         <button
                             onClick={() => setActiveTab('WHATSAPP')}
                             className={`flex items-center gap-3 p-3 rounded-xl text-sm font-medium transition-all ${activeTab === 'WHATSAPP' ? 'bg-primary/10 text-primary border border-primary/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
@@ -153,11 +153,11 @@ Qualquer dúvida, estou à disposição!`);
                     </div>
 
                     {/* Content Area */}
-                    <div className="flex-1 overflow-y-auto p-6 bg-[#131B2C]">
+                    <div className="flex-1 overflow-y-auto p-6 bg-surface">
 
                         {activeTab === 'WHATSAPP' && (
                             <div className="space-y-6">
-                                <div className="bg-[#0A0F1C] p-4 rounded-xl border border-white/5">
+                                <div className="bg-background-dark p-4 rounded-xl border border-white/5">
                                     <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">Prévia da Mensagem</label>
                                     <textarea
                                         value={whatsappMessage}
@@ -210,7 +210,7 @@ Qualquer dúvida, estou à disposição!`);
                                     </button>
                                 ) : (
                                     <div className="space-y-4 animate-fade-in">
-                                        <div className="bg-[#0A0F1C] p-4 rounded-xl border border-primary/20 flex items-center justify-between gap-4">
+                                        <div className="bg-background-dark p-4 rounded-xl border border-primary/20 flex items-center justify-between gap-4">
                                             <code className="text-primary text-sm truncate">{generatedLink}</code>
                                             <button onClick={copyLink} className="text-white hover:text-primary transition-colors text-sm font-bold whitespace-nowrap">
                                                 COPIAR

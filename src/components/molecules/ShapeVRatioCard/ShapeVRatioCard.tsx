@@ -25,7 +25,7 @@ export const ShapeVRatioCard: React.FC<ShapeVRatioCardProps> = ({ data }) => {
     const progressPercent = Math.min(100, Math.max(0, ((current - minRatio) / (maxRatio - minRatio)) * 100));
 
     return (
-        <div className="bg-[#131B2C] rounded-2xl p-6 border border-white/5 shadow-lg flex flex-col justify-between h-full relative overflow-hidden group hover:border-[#00C9A7]/30 transition-colors">
+        <div className="bg-surface rounded-2xl p-6 border border-white/5 shadow-lg flex flex-col justify-between h-full relative overflow-hidden group hover:border-[#00C9A7]/30 transition-colors">
 
             {/* Header */}
             <div className="flex justify-between items-start mb-4 relative z-10">

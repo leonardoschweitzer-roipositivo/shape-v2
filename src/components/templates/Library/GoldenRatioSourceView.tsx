@@ -35,7 +35,7 @@ interface GoldenRatioSourceViewProps {
 
 export const GoldenRatioSourceView: React.FC<GoldenRatioSourceViewProps> = ({ onBack }) => {
     return (
-        <div className="flex-1 w-full bg-[#0A0F1C] p-4 md:p-8 pb-32">
+        <div className="flex-1 w-full bg-background-dark p-4 md:p-8 pb-32">
             <div className="max-w-4xl mx-auto">
                 {/* Navigation */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">

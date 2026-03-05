@@ -51,7 +51,7 @@ export const BodyHeatmap: React.FC<BodyHeatmapProps> = ({ data }) => {
     };
 
     return (
-        <div className="bg-[#131B2C] rounded-2xl p-6 border border-white/5 shadow-lg relative flex flex-col items-center h-[380px]">
+        <div className="bg-surface rounded-2xl p-6 border border-white/5 shadow-lg relative flex flex-col items-center h-[380px]">
 
             {/* Header */}
             <div className="w-full flex justify-between items-start mb-4 z-10">

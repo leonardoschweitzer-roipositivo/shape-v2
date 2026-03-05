@@ -169,7 +169,7 @@ const ContextField: React.FC<ContextFieldProps> = ({
     };
 
     return (
-        <div className={`bg-[#0A0F1C] rounded-xl border transition-all ${isEditing
+        <div className={`bg-background-dark rounded-xl border transition-all ${isEditing
             ? 'border-primary/30 shadow-[0_0_10px_rgba(0,201,167,0.05)]'
             : hasContent
                 ? 'border-white/10 hover:border-white/20'
@@ -283,7 +283,7 @@ export const AthleteContextSection: React.FC<AthleteContextSectionProps> = ({
 
             await atletaService.atualizarFicha(athleteId, {
                 contexto: updatedContexto as unknown as Record<string, unknown>,
-            } as any);
+            } as Record<string, unknown>);
 
             setDraft(updatedContexto);
             onContextoUpdated?.(updatedContexto);

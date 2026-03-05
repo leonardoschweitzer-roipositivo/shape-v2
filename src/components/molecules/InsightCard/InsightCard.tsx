@@ -48,7 +48,7 @@ export const InsightCard: React.FC<InsightCardProps> = ({ insight }) => {
             {/* Header */}
             <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg bg-[#0A0F1C] border border-white/5`}>
+                    <div className={`p-2 rounded-lg bg-background-dark border border-white/5`}>
                         {styles.icon}
                     </div>
                     <div>

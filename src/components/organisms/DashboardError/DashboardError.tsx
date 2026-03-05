@@ -16,7 +16,7 @@ export const DashboardError: React.FC<DashboardErrorProps> = ({ onRetry }) => {
 
             <button
                 onClick={onRetry || (() => window.location.reload())}
-                className="flex items-center gap-2 bg-[#0A0F1C] hover:bg-[#131B2C] text-white px-6 py-3 rounded-lg border border-white/10 transition-colors font-bold"
+                className="flex items-center gap-2 bg-background-dark hover:bg-surface text-white px-6 py-3 rounded-lg border border-white/10 transition-colors font-bold"
             >
                 <RefreshCw size={18} />
                 Tentar novamente

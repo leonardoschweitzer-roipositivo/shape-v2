@@ -59,7 +59,7 @@ export function CardTreino({ treino, proximoTreino, exerciciosFeitos, exercicioT
 
     // Fechar menu ao clicar fora
     useEffect(() => {
-        if (!showCompleteiMenu) return
+        if (!showCompleteiMenu) return undefined
         const handleClickOutside = (e: MouseEvent) => {
             if (completeiMenuRef.current && !completeiMenuRef.current.contains(e.target as Node)) {
                 setShowCompleteiMenu(false)
@@ -72,7 +72,7 @@ export function CardTreino({ treino, proximoTreino, exerciciosFeitos, exercicioT
     // Tick interval para atualizar timers rodando
     useEffect(() => {
         const hasRunning = Object.values(exercicioTimers).some(t => t.status === 'running')
-        if (!hasRunning) return
+        if (!hasRunning) return undefined
         const interval = setInterval(() => forceUpdate(n => n + 1), 1000)
         return () => clearInterval(interval)
     }, [exercicioTimers])
@@ -155,7 +155,7 @@ export function CardTreino({ treino, proximoTreino, exerciciosFeitos, exercicioT
     // Estado: DESCANSO (mesmo código anterior)
     if (treino.status === 'descanso') {
         return (
-            <div className="bg-[#0C1220] rounded-2xl border border-white/5 overflow-hidden">
+            <div className="bg-surface-deep rounded-2xl border border-white/5 overflow-hidden">
                 <div className="p-6">
                     <div className="flex items-center gap-3 mb-3">
                         <div className="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center">
@@ -342,7 +342,7 @@ export function CardTreino({ treino, proximoTreino, exerciciosFeitos, exercicioT
     // Estado: PENDENTE (padrão)
     return (
         <>
-            <div className="bg-[#0C1220] rounded-2xl p-6 border border-white/5">
+            <div className="bg-surface-deep rounded-2xl p-6 border border-white/5">
                 <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center">
                         <Dumbbell size={20} className="text-indigo-400" />
@@ -523,7 +523,7 @@ export function CardTreino({ treino, proximoTreino, exerciciosFeitos, exercicioT
 
                         {/* Dropdown: HOJE / ONTEM */}
                         {showCompleteiMenu && (
-                            <div className="absolute bottom-full left-0 right-0 mb-2 bg-[#0C1220] border border-white/10 rounded-xl overflow-hidden shadow-xl shadow-black/40 z-50 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                            <div className="absolute bottom-full left-0 right-0 mb-2 bg-surface-deep border border-white/10 rounded-xl overflow-hidden shadow-xl shadow-black/40 z-50 animate-in fade-in slide-in-from-bottom-2 duration-200">
                                 <button
                                     onClick={() => {
                                         setShowCompleteiMenu(false)

@@ -76,9 +76,9 @@ export const RegistrarSonoModal: React.FC = () => {
 
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-            <div className="bg-[#131B2C] rounded-2xl max-w-lg w-full border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto animate-fade-in">
+            <div className="bg-surface rounded-2xl max-w-lg w-full border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto animate-fade-in">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-white/5 sticky top-0 bg-[#131B2C] z-10">
+                <div className="flex items-center justify-between p-6 border-b border-white/5 sticky top-0 bg-surface z-10">
                     <div>
                         <div className="flex items-center gap-2">
                             <Moon size={20} className="text-indigo-400" />
@@ -107,7 +107,7 @@ export const RegistrarSonoModal: React.FC = () => {
                                 type="time"
                                 value={horarioDormiu}
                                 onChange={(e) => setHorarioDormiu(e.target.value)}
-                                className="w-full bg-[#0D121F] border border-white/5 rounded-xl px-4 py-3
+                                className="w-full bg-surface-alt border border-white/5 rounded-xl px-4 py-3
                                     text-white focus:outline-none focus:border-indigo-500/50 transition-all font-medium"
                             />
                         </div>
@@ -120,7 +120,7 @@ export const RegistrarSonoModal: React.FC = () => {
                                 type="time"
                                 value={horarioAcordou}
                                 onChange={(e) => setHorarioAcordou(e.target.value)}
-                                className="w-full bg-[#0D121F] border border-white/5 rounded-xl px-4 py-3
+                                className="w-full bg-surface-alt border border-white/5 rounded-xl px-4 py-3
                                     text-white focus:outline-none focus:border-indigo-500/50 transition-all font-medium"
                             />
                         </div>
@@ -154,7 +154,7 @@ export const RegistrarSonoModal: React.FC = () => {
                                         flex flex-col items-center justify-center p-4 rounded-xl border transition-all
                                         ${qualidade === nivel
                                             ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                                            : 'border-white/5 bg-[#0D121F] text-gray-500 hover:border-white/20'
+                                            : 'border-white/5 bg-surface-alt text-gray-500 hover:border-white/20'
                                         }
                                     `}
                                 >
@@ -176,7 +176,7 @@ export const RegistrarSonoModal: React.FC = () => {
                                     className="sr-only"
                                 />
                                 <div className={`w-6 h-6 rounded-lg border-2 transition-all flex items-center justify-center
-                                    ${acordouNoite ? 'bg-indigo-600 border-indigo-600' : 'border-white/10 bg-[#0D121F] group-hover:border-white/20'}`}>
+                                    ${acordouNoite ? 'bg-indigo-600 border-indigo-600' : 'border-white/10 bg-surface-alt group-hover:border-white/20'}`}>
                                     {acordouNoite && <BedDouble size={14} className="text-white" />}
                                 </div>
                             </div>
@@ -196,7 +196,7 @@ export const RegistrarSonoModal: React.FC = () => {
                                             className={`p-2 w-10 h-10 rounded-xl border transition-all text-xs font-bold
                                                 ${vezesAcordou === v
                                                     ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400'
-                                                    : 'border-white/5 bg-[#0D121F] text-gray-500 hover:border-white/20'
+                                                    : 'border-white/5 bg-surface-alt text-gray-500 hover:border-white/20'
                                                 }`}
                                         >
                                             {v === 10 ? '5+' : v}
@@ -222,7 +222,7 @@ export const RegistrarSonoModal: React.FC = () => {
                             max={10}
                             value={energiaAoAcordar}
                             onChange={(e) => setEnergiaAoAcordar(Number(e.target.value))}
-                            className="w-full h-2 bg-[#0D121F] rounded-full appearance-none cursor-pointer accent-indigo-500
+                            className="w-full h-2 bg-surface-alt rounded-full appearance-none cursor-pointer accent-indigo-500
                                 border border-white/5"
                         />
                         <div className="flex justify-between text-[10px] font-bold text-gray-600 mt-3 uppercase tracking-widest">
@@ -233,7 +233,7 @@ export const RegistrarSonoModal: React.FC = () => {
                 </div>
 
                 {/* Footer */}
-                <div className="flex gap-4 p-6 border-t border-white/5 sticky bottom-0 bg-[#131B2C]">
+                <div className="flex gap-4 p-6 border-t border-white/5 sticky bottom-0 bg-surface">
                     <button
                         onClick={fecharModal}
                         className="flex-1 px-6 py-4 rounded-xl border border-white/5 text-gray-400

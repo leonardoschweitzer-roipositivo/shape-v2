@@ -9,6 +9,81 @@
 
 import { supabase } from '@/services/supabase';
 
+// ==========================================
+// SUPABASE ROW TYPES
+// ==========================================
+
+interface SupaAtletaRow {
+    id: string;
+    nome: string;
+    email: string | null;
+    telefone: string | null;
+    personal_id: string;
+    portal_token?: string;
+    portal_token_expira?: string;
+    portal_acessos?: number;
+    portal_ultimo_acesso?: string;
+    [key: string]: unknown;
+}
+
+interface SupaFichaRow {
+    id: string;
+    atleta_id: string;
+    sexo: string;
+    altura: number | null;
+    data_nascimento: string | null;
+    objetivo: string | null;
+    punho: number | null;
+    tornozelo: number | null;
+    joelho: number | null;
+    pelve: number | null;
+    [key: string]: unknown;
+}
+
+interface SupaMedidaRow {
+    id: string;
+    data: string;
+    peso: number | null;
+    pescoco: number | null;
+    ombros: number | null;
+    peitoral: number | null;
+    cintura: number | null;
+    quadril: number | null;
+    braco_direito: number | null;
+    braco_esquerdo: number | null;
+    antebraco_direito: number | null;
+    antebraco_esquerdo: number | null;
+    coxa_direita: number | null;
+    coxa_esquerda: number | null;
+    panturrilha_direita: number | null;
+    panturrilha_esquerda: number | null;
+    [key: string]: unknown;
+}
+
+interface SupaAssessmentRow {
+    id: string;
+    date: string;
+    score: number;
+    results: Record<string, unknown>;
+    measurements: Record<string, unknown>;
+    body_fat?: number;
+    weight?: number;
+    ratio?: number;
+    [key: string]: unknown;
+}
+
+interface SupaPersonalRow {
+    id?: string;
+    nome: string;
+    [key: string]: unknown;
+}
+
+interface SupaDiagnosticoRow {
+    id: string;
+    dados: Record<string, unknown>;
+    [key: string]: unknown;
+}
+
 // Gera um token alfanumérico único (URL-safe)
 function generatePortalToken(length = 32): string {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
@@ -62,13 +137,13 @@ export interface PortalAthleteData {
         data: string;
         score_geral: number | null;
         classificacao_geral: string | null;
-        results?: any;
-        measurements?: any;
+        results?: Record<string, unknown>;
+        measurements?: Record<string, unknown>;
         gordura?: number;
     }>;
     diagnostico?: {
         id: string;
-        dados: any;
+        dados: Record<string, unknown>;
     } | null;
 }
 
@@ -90,7 +165,7 @@ export const portalService = {
             .update({
                 portal_token: token,
                 portal_token_expira: expiresAt.toISOString(),
-            } as any)
+            } as Record<string, unknown>)
             .eq('id', atletaId);
 
         if (error) {
@@ -123,27 +198,28 @@ export const portalService = {
             console.warn('[PortalService] Token inválido ou não encontrado');
             return null;
         }
+        const a = atleta as unknown as SupaAtletaRow;
 
         // 2. Verificar expiração
-        const expira = (atleta as any).portal_token_expira;
+        const expira = a.portal_token_expira;
         if (expira && new Date(expira) < new Date()) {
             console.warn('[PortalService] Token expirado');
             return null;
         }
 
-        const atletaId = (atleta as any).id;
-        const personalId = (atleta as any).personal_id;
+        const atletaId = a.id;
+        const personalId = a.personal_id;
 
         // 3. Incrementar acessos + notificar personal (fire-and-forget)
         (async () => {
             try {
-                const acessosAnteriores = (atleta as any).portal_acessos || 0;
+                const acessosAnteriores = a.portal_acessos || 0;
                 await supabase
                     .from('atletas')
                     .update({
                         portal_acessos: acessosAnteriores + 1,
                         portal_ultimo_acesso: new Date().toISOString(),
-                    } as any)
+                    } as Record<string, unknown>)
                     .eq('id', atletaId);
 
                 // Primeiro acesso ao portal? Notificar personal!
@@ -201,27 +277,33 @@ export const portalService = {
                 .single(),
         ]);
 
-        console.info(`[PortalService] ✅ Atleta validado: ${(atleta as any).nome}`);
+        console.info(`[PortalService] ✅ Atleta validado: ${a.nome}`);
+
+        const fichaTyped = ficha as unknown as SupaFichaRow | null;
+        const personalTyped = personal as unknown as SupaPersonalRow | null;
+        const medidasTyped = (medidas || []) as unknown as SupaMedidaRow[];
+        const assessmentsTyped = (assessments || []) as unknown as SupaAssessmentRow[];
+        const diagnosticoTyped = diagnostico as unknown as SupaDiagnosticoRow | null;
 
         return {
             id: atletaId,
-            nome: (atleta as any).nome,
-            email: (atleta as any).email,
-            telefone: (atleta as any).telefone,
+            nome: a.nome,
+            email: a.email,
+            telefone: a.telefone,
             personal_id: personalId,
-            personalNome: (personal as any)?.nome || 'Personal',
-            ficha: ficha ? {
-                id: (ficha as any).id,
-                sexo: (ficha as any).sexo,
-                altura: (ficha as any).altura,
-                data_nascimento: (ficha as any).data_nascimento,
-                objetivo: (ficha as any).objetivo,
-                punho: (ficha as any).punho,
-                tornozelo: (ficha as any).tornozelo,
-                joelho: (ficha as any).joelho,
-                pelve: (ficha as any).pelve,
+            personalNome: personalTyped?.nome || 'Personal',
+            ficha: fichaTyped ? {
+                id: fichaTyped.id,
+                sexo: fichaTyped.sexo,
+                altura: fichaTyped.altura,
+                data_nascimento: fichaTyped.data_nascimento,
+                objetivo: fichaTyped.objetivo,
+                punho: fichaTyped.punho,
+                tornozelo: fichaTyped.tornozelo,
+                joelho: fichaTyped.joelho,
+                pelve: fichaTyped.pelve,
             } : null,
-            medidas: (medidas || []).map((m: any) => ({
+            medidas: medidasTyped.map(m => ({
                 id: m.id,
                 data: m.data,
                 peso: m.peso,
@@ -239,20 +321,25 @@ export const portalService = {
                 panturrilha_direita: m.panturrilha_direita,
                 panturrilha_esquerda: m.panturrilha_esquerda,
             })),
-            avaliacoes: (assessments || []).map((a: any) => ({
-                id: a.id,
-                data: a.date,
-                score_geral: a.score,
-                classificacao_geral: a.results?.classificacao?.nivel || '',
-                results: a.results,
-                measurements: a.measurements,
-                gordura: a.results?.composicao?.gorduraPct || 0,
-                ratio: a.ratio,
-                peso: a.weight,
-            })),
-            diagnostico: diagnostico ? {
-                id: diagnostico.id,
-                dados: diagnostico.dados,
+            avaliacoes: assessmentsTyped.map(av => {
+                const res = av.results || {};
+                const classif = res?.classificacao as Record<string, unknown> | undefined;
+                const comp = res?.composicao as Record<string, unknown> | undefined;
+                return {
+                    id: av.id,
+                    data: av.date,
+                    score_geral: av.score,
+                    classificacao_geral: (classif?.nivel as string) || '',
+                    results: av.results,
+                    measurements: av.measurements,
+                    gordura: Number(comp?.gorduraPct) || 0,
+                    ratio: av.ratio,
+                    peso: av.weight,
+                };
+            }),
+            diagnostico: diagnosticoTyped ? {
+                id: diagnosticoTyped.id,
+                dados: diagnosticoTyped.dados,
             } : null,
         };
     },
@@ -303,7 +390,7 @@ export const portalService = {
 
         // Se o atleta preencheu a altura ou medidas ósseas, salva na ficha dele
         if (altura !== undefined || punhoMedia !== undefined || joelhoMedia !== undefined || tornozeloMedia !== undefined) {
-            const updates: any = {};
+            const updates: Record<string, unknown> = {};
             if (altura !== undefined) updates.altura = altura;
             if (punhoMedia !== undefined) updates.punho = punhoMedia;
             if (joelhoMedia !== undefined) updates.joelho = joelhoMedia;
@@ -326,7 +413,7 @@ export const portalService = {
                 data: new Date().toISOString().split('T')[0],
                 ...medidasRestantes,
                 registrado_por: 'APP', // Registrado pelo próprio atleta
-            } as any)
+            } as Record<string, unknown>)
             .select()
             .single();
 
@@ -336,7 +423,7 @@ export const portalService = {
         }
 
         console.info(`[PortalService] ✅ Medidas salvas para atleta ${atletaId}`);
-        return { success: true, medidaId: (data as any)?.id };
+        return { success: true, medidaId: (data as Record<string, unknown>)?.id as string };
     },
 
     /**
@@ -364,7 +451,7 @@ export const portalService = {
 
         const { error } = await supabase
             .from('fichas')
-            .update({ contexto: contextoComMeta } as any)
+            .update({ contexto: contextoComMeta } as Record<string, unknown>)
             .eq('atleta_id', atletaId);
 
         if (error) {

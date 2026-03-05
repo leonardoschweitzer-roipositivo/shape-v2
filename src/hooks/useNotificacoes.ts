@@ -120,7 +120,7 @@ export function useNotificacoes(): UseNotificacoesReturn {
 
     // ===== Carga inicial + polling =====
     useEffect(() => {
-        if (!personalId) return
+        if (!personalId) return undefined
 
         // Carga inicial
         buscar(filtro)

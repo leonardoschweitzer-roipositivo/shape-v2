@@ -117,7 +117,7 @@ export function RegistrarRefeicaoModal({ isOpen, onClose, onSave }: RegistrarRef
             />
 
             {/* Modal */}
-            <div className="relative w-full max-w-lg mx-auto bg-[#0A0F1C] border border-white/10 rounded-t-3xl sm:rounded-3xl max-h-[85vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 duration-300">
+            <div className="relative w-full max-w-lg mx-auto bg-background-dark border border-white/10 rounded-t-3xl sm:rounded-3xl max-h-[85vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 duration-300">
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
                     <div className="flex items-center gap-3">

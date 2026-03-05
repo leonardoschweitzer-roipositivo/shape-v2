@@ -19,7 +19,7 @@ export function AcoesRapidas({ acoes }: AcoesRapidasProps) {
                         disabled={acao.desabilitada}
                         className={`relative flex flex-col items-center gap-2 py-4 px-3 rounded-xl border transition-all ${acao.desabilitada
                                 ? 'bg-white/[0.02] border-white/5 opacity-40 cursor-not-allowed'
-                                : 'bg-[#0A0F1C] border-white/5 hover:bg-indigo-500/10 hover:border-indigo-500/20 active:scale-95'
+                                : 'bg-background-dark border-white/5 hover:bg-indigo-500/10 hover:border-indigo-500/20 active:scale-95'
                             }`}
                     >
                         <span className="text-2xl">{acao.icone}</span>

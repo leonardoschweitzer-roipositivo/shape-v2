@@ -2,7 +2,7 @@ import { ManualRegistrationData } from '@/types/invites';
 import { UserRole } from '@/types/auth';
 
 // Mock database
-const MOCK_USERS: any[] = [];
+const MOCK_USERS: Record<string, unknown>[] = [];
 
 export const registrationService = {
     async registerManual(role: UserRole, data: ManualRegistrationData): Promise<{ success: boolean; userId: string; message: string }> {
@@ -23,7 +23,7 @@ export const registrationService = {
 
         // Simulate sending email logic
         if (data.sendInviteEmail && data.email) {
-            console.log(`[MOCK EMAIL SERVICE] Sending invite email to ${data.email} with temp credentials...`);
+            console.debug(`[MOCK EMAIL SERVICE] Sending invite email to ${data.email} with temp credentials...`);
         }
 
         return {

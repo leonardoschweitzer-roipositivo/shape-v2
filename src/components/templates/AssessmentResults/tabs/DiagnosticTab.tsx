@@ -200,7 +200,7 @@ export const DiagnosticTab: React.FC<DiagnosticTabProps> = ({ assessment, gender
             score: metrics.score,
             classificacao: metrics.classificacao?.nivel || 'N/A',
             medidas: m as Record<string, number>,
-            contexto: owner?.contexto as any,
+            contexto: owner?.contexto as unknown as Record<string, unknown>,
         };
 
         setIaLoading(true);

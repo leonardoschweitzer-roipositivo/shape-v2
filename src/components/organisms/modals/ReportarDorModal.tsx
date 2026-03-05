@@ -58,9 +58,9 @@ export const ReportarDorModal: React.FC = () => {
 
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-            <div className="bg-[#131B2C] rounded-2xl max-w-2xl w-full border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto animate-fade-in">
+            <div className="bg-surface rounded-2xl max-w-2xl w-full border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto animate-fade-in">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-white/5 sticky top-0 bg-[#131B2C] z-10">
+                <div className="flex items-center justify-between p-6 border-b border-white/5 sticky top-0 bg-surface z-10">
                     <div>
                         <div className="flex items-center gap-2">
                             <Activity size={20} className="text-red-400" />
@@ -90,7 +90,7 @@ export const ReportarDorModal: React.FC = () => {
                                         flex flex-col items-center justify-center p-3 rounded-xl border transition-all
                                         ${localDor === local.value
                                             ? 'border-red-500 bg-red-500/10 text-red-400'
-                                            : 'border-white/5 bg-[#0D121F] text-gray-500 hover:border-white/20'
+                                            : 'border-white/5 bg-surface-alt text-gray-500 hover:border-white/20'
                                         }
                                     `}
                                 >
@@ -113,7 +113,7 @@ export const ReportarDorModal: React.FC = () => {
                             max={10}
                             value={intensidade}
                             onChange={(e) => setIntensidade(Number(e.target.value))}
-                            className="w-full h-3 bg-[#0D121F] rounded-full appearance-none cursor-pointer accent-red-500
+                            className="w-full h-3 bg-surface-alt rounded-full appearance-none cursor-pointer accent-red-500
                                 border border-white/5"
                         />
                         <div className="flex justify-between text-[10px] font-bold text-gray-600 mt-3 uppercase tracking-widest">
@@ -148,7 +148,7 @@ export const ReportarDorModal: React.FC = () => {
                                         p-4 rounded-xl border-2 transition-all text-xs font-bold uppercase tracking-tight
                                         ${tipo === tipoDor.value
                                             ? `border-${tipoDor.color}-500 bg-${tipoDor.color}-500/10 text-${tipoDor.color}-400`
-                                            : 'border-white/5 bg-[#0D121F] text-gray-500 hover:border-white/10'
+                                            : 'border-white/5 bg-surface-alt text-gray-500 hover:border-white/10'
                                         }
                                     `}
                                 >
@@ -168,7 +168,7 @@ export const ReportarDorModal: React.FC = () => {
                             <select
                                 value={quandoComecou}
                                 onChange={(e) => setQuandoComecou(e.target.value)}
-                                className="w-full bg-[#0D121F] border border-white/5 rounded-xl px-4 py-3
+                                className="w-full bg-surface-alt border border-white/5 rounded-xl px-4 py-3
                                     text-white focus:outline-none focus:border-red-500/50 appearance-none font-medium"
                             >
                                 <option value="agora">Agora</option>
@@ -191,7 +191,7 @@ export const ReportarDorModal: React.FC = () => {
                                 value={oquePiora}
                                 onChange={(e) => setOquePiora(e.target.value)}
                                 placeholder="Ex: movimento específico..."
-                                className="w-full bg-[#0D121F] border border-white/5 rounded-xl px-4 py-3
+                                className="w-full bg-surface-alt border border-white/5 rounded-xl px-4 py-3
                                     text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50 font-medium"
                             />
                         </div>
@@ -207,7 +207,7 @@ export const ReportarDorModal: React.FC = () => {
                             onChange={(e) => setDescricao(e.target.value)}
                             placeholder="Descreva melhor a dor..."
                             rows={3}
-                            className="w-full bg-[#0D121F] border border-white/5 rounded-2xl px-5 py-4
+                            className="w-full bg-surface-alt border border-white/5 rounded-2xl px-5 py-4
                                 text-white placeholder-gray-600 focus:outline-none focus:border-red-500/50 
                                 resize-none transition-all text-base leading-relaxed"
                         />
@@ -223,7 +223,7 @@ export const ReportarDorModal: React.FC = () => {
                 </div>
 
                 {/* Footer */}
-                <div className="flex gap-4 p-6 border-t border-white/5 sticky bottom-0 bg-[#131B2C]">
+                <div className="flex gap-4 p-6 border-t border-white/5 sticky bottom-0 bg-surface">
                     <button
                         onClick={fecharModal}
                         className="flex-1 px-6 py-4 rounded-xl border border-white/5 text-gray-400

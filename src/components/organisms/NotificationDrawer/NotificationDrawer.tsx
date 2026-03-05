@@ -70,7 +70,7 @@ export const NotificationDrawer = memo(function NotificationDrawer({
 
     // Fechar ao clicar fora
     useEffect(() => {
-        if (!isOpen) return
+        if (!isOpen) return undefined
         const handleClickOutside = (e: MouseEvent) => {
             if (drawerRef.current && !drawerRef.current.contains(e.target as Node)) {
                 onClose()
@@ -88,7 +88,7 @@ export const NotificationDrawer = memo(function NotificationDrawer({
 
     // Escape para fechar
     useEffect(() => {
-        if (!isOpen) return
+        if (!isOpen) return undefined
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') onClose()
         }
@@ -114,7 +114,7 @@ export const NotificationDrawer = memo(function NotificationDrawer({
             <div
                 ref={drawerRef}
                 className={`
-          fixed top-0 right-0 h-full w-full max-w-md bg-[#0A0F1C] border-l border-white/10
+          fixed top-0 right-0 h-full w-full max-w-md bg-background-dark border-l border-white/10
           z-50 flex flex-col transition-transform duration-300 ease-out
           ${isOpen ? 'translate-x-0' : 'translate-x-full'}
         `}

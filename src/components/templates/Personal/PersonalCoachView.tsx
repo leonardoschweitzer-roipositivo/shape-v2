@@ -310,7 +310,7 @@ export const PersonalCoachView: React.FC<PersonalCoachViewProps> = ({ onStartDia
                     </div>
 
                     {/* Athletes Table */}
-                    <div className="bg-[#131B2C] border border-white/10 rounded-2xl overflow-hidden animate-fade-in-up">
+                    <div className="bg-surface border border-white/10 rounded-2xl overflow-hidden animate-fade-in-up">
                         <div className="overflow-x-auto">
                             <table className="w-full">
                                 <thead className="bg-white/5 border-b border-white/5">
@@ -367,7 +367,7 @@ export const PersonalCoachView: React.FC<PersonalCoachViewProps> = ({ onStartDia
                     ══════════════════════════════════════════════════ */}
                     <div
                         ref={planBlockRef}
-                        className={`bg-[#131B2C] border rounded-2xl p-6 md:p-8 transition-all duration-500 ${selectedAthlete
+                        className={`bg-surface border rounded-2xl p-6 md:p-8 transition-all duration-500 ${selectedAthlete
                             ? 'border-primary/30 shadow-[0_0_20px_rgba(0,201,167,0.08)]'
                             : 'border-white/10 opacity-60'
                             }`}
@@ -478,7 +478,7 @@ export const PersonalCoachView: React.FC<PersonalCoachViewProps> = ({ onStartDia
                         Aparece quando o atleta selecionado tem planos no banco
                     ══════════════════════════════════════════════════ */}
                     {selectedAthlete && (
-                        <div className={`bg-[#131B2C] border rounded-2xl p-6 md:p-8 transition-all duration-500 animate-fade-in-up ${savedPlans && (savedPlans.diagnostico.exists || savedPlans.treino.exists || savedPlans.dieta.exists)
+                        <div className={`bg-surface border rounded-2xl p-6 md:p-8 transition-all duration-500 animate-fade-in-up ${savedPlans && (savedPlans.diagnostico.exists || savedPlans.treino.exists || savedPlans.dieta.exists)
                             ? 'border-white/15'
                             : 'border-white/10 opacity-70'
                             }`}>

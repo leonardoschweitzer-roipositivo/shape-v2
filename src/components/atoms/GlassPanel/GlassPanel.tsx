@@ -28,8 +28,8 @@ export const GlassPanel: React.FC<GlassPanelProps> = ({
     hoverEffect = true,
     ...props
 }) => {
-    const baseClasses = 'bg-[#131B2C]/70 backdrop-blur-md border border-white/10 transition-all duration-300'
-    const hoverClasses = hoverEffect ? 'hover:border-primary/30 hover:bg-[#131B2C]/90' : ''
+    const baseClasses = 'bg-surface/70 backdrop-blur-md border border-white/10 transition-all duration-300'
+    const hoverClasses = hoverEffect ? 'hover:border-primary/30 hover:bg-surface/90' : ''
 
     return (
         <div className={`${baseClasses} ${hoverClasses} ${className}`} {...props}>

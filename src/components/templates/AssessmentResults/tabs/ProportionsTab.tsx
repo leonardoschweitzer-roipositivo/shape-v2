@@ -172,7 +172,7 @@ export const ProportionsTab: React.FC<ProportionsTabProps> = ({
             score: profile?.latestScore?.overall || 0,
             classificacao: 'N/A',
             medidas: activeMeasurements as Record<string, number>,
-            contexto: athlete?.contexto as any,
+            contexto: athlete?.contexto as unknown as Record<string, unknown>,
         };
 
         setIaLoading(true);

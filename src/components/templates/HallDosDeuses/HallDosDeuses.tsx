@@ -180,7 +180,7 @@ export const HallDosDeuses: React.FC = () => {
                                 // json.proporcoes.detalhes.detalhes = ProporcaoDetalhe[]
                                 const detalhes = json?.proporcoes?.detalhes?.detalhes || json?.proporcoes?.detalhes;
                                 if (Array.isArray(detalhes)) {
-                                    const triade = detalhes.find((d: any) => d.proporcao === 'triade');
+                                    const triade = detalhes.find((d: Record<string, unknown>) => d.proporcao === 'triade');
                                     valor = triade?.percentualDoIdeal || triade?.valor || 0;
                                 }
                             }

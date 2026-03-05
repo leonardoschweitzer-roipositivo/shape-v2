@@ -44,7 +44,7 @@ export const LinearMeasuresChart: React.FC<LinearMeasuresChartProps> = ({ data, 
                             itemStyle={{ fontSize: '11px', fontWeight: 'bold' }}
                             labelStyle={{ color: '#9CA3AF', fontSize: '10px', textTransform: 'uppercase', marginBottom: '8px', fontWeight: 'bold' }}
                             cursor={{ fill: 'rgba(255,255,255,0.02)' }}
-                            formatter={(value: any) => [`${value} cm`, '']}
+                            formatter={(value: string | number) => [`${value} cm`, '']}
                         />
                         <Legend
                             verticalAlign="top"

@@ -58,13 +58,14 @@ export function FeedbackTextual({ atletaId }: FeedbackTextualProps) {
                     .single()
 
                 if (atleta) {
+                    const atletaTyped = atleta as unknown as { personal_id: string; nome: string };
                     await notificacaoService.criar({
-                        personal_id: (atleta as any).personal_id,
+                        personal_id: atletaTyped.personal_id,
                         atleta_id: atletaId,
                         tipo: 'DOR_REPORTADA',
                         categoria: 'portal',
                         prioridade: 'urgente',
-                        titulo: `⚠️ <strong>${(atleta as any).nome}</strong> reportou algo que requer atenção`,
+                        titulo: `⚠️ <strong>${atletaTyped.nome}</strong> reportou algo que requer atenção`,
                         mensagem: texto.trim().substring(0, 200),
                         acao_url: `/athlete-details/${atletaId}`,
                         acao_label: 'Ver detalhes →',
@@ -84,7 +85,7 @@ export function FeedbackTextual({ atletaId }: FeedbackTextualProps) {
     }
 
     return (
-        <div className="bg-[#0C1220] rounded-2xl p-5 border border-white/5">
+        <div className="bg-surface-deep rounded-2xl p-5 border border-white/5">
             {/* Header */}
             <div className="flex items-center gap-2 mb-3">
                 <MessageSquare size={14} className="text-indigo-400" />

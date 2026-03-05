@@ -121,7 +121,7 @@ export const mockTodayData: TodayScreenData = {
         mensagem: 'Faltam 100g de proteína hoje. Que tal um shake pós-treino com 2 scoops de whey?',
         acao: {
             label: 'FALAR COM O COACH',
-            callback: () => console.log('Navegando para o chat...')
+            callback: () => { /* noop */ }
         }
     }
 }

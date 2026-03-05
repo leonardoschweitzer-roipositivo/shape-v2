@@ -28,7 +28,7 @@ export const DailyScoreCard: React.FC<DailyScoreCardProps> = ({
     }
 
     return (
-        <div className="bg-[#131B2C] rounded-xl p-6 border border-white/5">
+        <div className="bg-surface rounded-xl p-6 border border-white/5">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-white font-bold uppercase tracking-wider text-sm">Score do Dia</h3>
             </div>

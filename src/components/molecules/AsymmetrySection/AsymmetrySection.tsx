@@ -68,7 +68,7 @@ export const AsymmetrySection: React.FC<AsymmetrySectionProps> = ({ data, histor
     return (
         <section className="flex flex-col gap-4 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
             <div className="flex items-center gap-3 ml-1">
-                <div className="p-2 bg-[#131B2C] rounded-xl text-primary border border-white/10 shadow-lg">
+                <div className="p-2 bg-surface rounded-xl text-primary border border-white/10 shadow-lg">
                     <Accessibility size={20} />
                 </div>
                 <div>

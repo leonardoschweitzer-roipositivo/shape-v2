@@ -163,7 +163,7 @@ export const ConversationalInput: React.FC = () => {
         <div className="flex flex-col gap-6">
             {/* Coach IA Header */}
             <div className="flex items-center gap-4">
-                <div className="p-2.5 bg-[#0D121F] rounded-xl border border-white/5 text-blue-400 shadow-lg">
+                <div className="p-2.5 bg-surface-alt rounded-xl border border-white/5 text-blue-400 shadow-lg">
                     <Bot size={22} className="animate-pulse" />
                 </div>
                 <div>
@@ -176,10 +176,10 @@ export const ConversationalInput: React.FC = () => {
                 </div>
             </div>
 
-            <div className="bg-[#0D121F] rounded-2xl border border-white/5 overflow-hidden shadow-2xl">
+            <div className="bg-surface-alt rounded-2xl border border-white/5 overflow-hidden shadow-2xl">
                 {/* Histórico de Mensagens */}
                 {messages.length > 0 && (
-                    <div className="max-h-64 overflow-y-auto p-6 space-y-4 border-b border-white/5 bg-[#131B2C]/30 custom-scrollbar">
+                    <div className="max-h-64 overflow-y-auto p-6 space-y-4 border-b border-white/5 bg-surface/30 custom-scrollbar">
                         {messages.map((msg) => (
                             <div
                                 key={msg.id}
@@ -190,7 +190,7 @@ export const ConversationalInput: React.FC = () => {
                                         max-w-[85%] rounded-2xl px-5 py-3 text-sm leading-relaxed
                                         ${msg.type === 'user'
                                             ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20'
-                                            : 'bg-[#131B2C] text-gray-300 border border-white/5 shadow-inner'
+                                            : 'bg-surface text-gray-300 border border-white/5 shadow-inner'
                                         }
                                     `}
                                 >
@@ -204,7 +204,7 @@ export const ConversationalInput: React.FC = () => {
 
                 {/* Input Form */}
                 <form onSubmit={handleSubmit} className="p-4 flex gap-4 items-center">
-                    <div className="flex-1 flex items-center gap-4 bg-[#131B2C] rounded-xl px-6 py-5 border border-white/5 focus-within:border-blue-500/50 transition-all shadow-inner group">
+                    <div className="flex-1 flex items-center gap-4 bg-surface rounded-xl px-6 py-5 border border-white/5 focus-within:border-blue-500/50 transition-all shadow-inner group">
                         <Sparkles size={20} className="text-blue-400 group-focus-within:scale-110 transition-transform" />
                         <input
                             ref={inputRef}
@@ -239,7 +239,7 @@ export const ConversationalInput: React.FC = () => {
                             <button
                                 key={suggestion}
                                 onClick={() => setInput(suggestion)}
-                                className="text-[10px] uppercase tracking-widest font-bold px-4 py-2 rounded-lg bg-[#131B2C] text-gray-500 
+                                className="text-[10px] uppercase tracking-widest font-bold px-4 py-2 rounded-lg bg-surface text-gray-500 
                                     border border-white/5 hover:border-blue-500/30 hover:text-blue-400 transition-all"
                             >
                                 {suggestion}

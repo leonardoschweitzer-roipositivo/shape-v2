@@ -25,7 +25,7 @@ export const RegistrarAguaModal: React.FC = () => {
 
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-            <div className="bg-[#131B2C] rounded-2xl max-w-md w-full border border-white/10 shadow-2xl animate-fade-in">
+            <div className="bg-surface rounded-2xl max-w-md w-full border border-white/10 shadow-2xl animate-fade-in">
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-white/5">
                     <div>
@@ -82,7 +82,7 @@ export const RegistrarAguaModal: React.FC = () => {
                                         p-3 rounded-xl border transition-all
                                         ${quantidade === valor
                                             ? 'border-blue-500 bg-blue-500/10 text-blue-400'
-                                            : 'border-white/5 bg-[#0D121F] text-gray-400 hover:border-white/20'
+                                            : 'border-white/5 bg-surface-alt text-gray-400 hover:border-white/20'
                                         }
                                     `}
                                 >
@@ -103,7 +103,7 @@ export const RegistrarAguaModal: React.FC = () => {
                             value={quantidade || ''}
                             onChange={(e) => setQuantidade(Number(e.target.value))}
                             placeholder="Ex: 350"
-                            className="w-full bg-[#0D121F] border border-white/5 rounded-xl px-4 py-4
+                            className="w-full bg-surface-alt border border-white/5 rounded-xl px-4 py-4
                                 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/50 
                                 transition-all text-lg font-medium"
                         />

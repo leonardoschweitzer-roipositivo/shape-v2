@@ -38,7 +38,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
                 <label className="block text-xs font-semibold text-gray-400 mb-2">STATUS</label>
                 <select
                     value={filtros.status}
-                    onChange={(e) => handleChange('status', e.target.value as any)}
+                    onChange={(e) => handleChange('status', e.target.value as string)}
                     className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-primary/50 transition-all font-light"
                 >
                     <option value="todos">Todos</option>
@@ -69,7 +69,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
                 <label className="block text-xs font-semibold text-gray-400 mb-2">ORDENAR POR</label>
                 <select
                     value={filtros.ordenarPor}
-                    onChange={(e) => handleChange('ordenarPor', e.target.value as any)}
+                    onChange={(e) => handleChange('ordenarPor', e.target.value as string)}
                     className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-primary/50 transition-all font-light"
                 >
                     <option value="ultima_avaliacao_desc">Última avaliação (mais recente)</option>
@@ -86,7 +86,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
                 <label className="block text-xs font-semibold text-gray-400 mb-2">PERÍODO</label>
                 <select
                     value={filtros.periodo}
-                    onChange={(e) => handleChange('periodo', e.target.value as any)}
+                    onChange={(e) => handleChange('periodo', e.target.value as string)}
                     className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-primary/50 transition-all font-light"
                 >
                     <option value="todos">Todos</option>

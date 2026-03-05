@@ -27,7 +27,7 @@ export const ScoreBreakdown: React.FC<ScoreBreakdownProps> = ({ data }) => {
     };
 
     return (
-        <div className="bg-[#131B2C] rounded-2xl p-6 border border-white/5 shadow-lg flex flex-col h-[380px] relative overflow-hidden">
+        <div className="bg-surface rounded-2xl p-6 border border-white/5 shadow-lg flex flex-col h-[380px] relative overflow-hidden">
 
             {/* Header */}
             <div className="flex justify-between items-start mb-6 z-10">
@@ -35,7 +35,7 @@ export const ScoreBreakdown: React.FC<ScoreBreakdownProps> = ({ data }) => {
                     <h4 className="text-gray-400 text-xs font-bold tracking-wider uppercase mb-1">BREAKDOWN DO SCORE</h4>
                     <div className="text-xs text-gray-500 font-medium">Método: <span className="text-white">{getMethodLabel(method)}</span></div>
                 </div>
-                <div className="bg-[#0A0F1C] px-3 py-1 rounded-lg border border-white/5">
+                <div className="bg-background-dark px-3 py-1 rounded-lg border border-white/5">
                     <span className="text-xs text-gray-400 font-bold">TOTAL: <span className="text-white text-base">{totalScore}/100</span></span>
                 </div>
             </div>
@@ -54,11 +54,11 @@ export const ScoreBreakdown: React.FC<ScoreBreakdownProps> = ({ data }) => {
                             </div>
                         </div>
                         {/* Progress Bar */}
-                        <div className="h-2 bg-[#0A0F1C] rounded-full overflow-hidden border border-white/5 relative">
+                        <div className="h-2 bg-background-dark rounded-full overflow-hidden border border-white/5 relative">
                             {/* Background segments for visual texture */}
                             <div className="absolute inset-0 flex">
                                 {[...Array(10)].map((_, i) => (
-                                    <div key={i} className="flex-1 border-r border-[#131B2C]/50 last:border-0"></div>
+                                    <div key={i} className="flex-1 border-r border-surface/50 last:border-0"></div>
                                 ))}
                             </div>
                             {/* Bar */}

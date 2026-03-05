@@ -80,8 +80,8 @@ export const DesignSystem: React.FC = () => {
             {/* Backgrounds */}
             <GlassPanel className="p-4 rounded-xl flex flex-col gap-3">
               <div className="flex flex-1 gap-2 h-32">
-                <div className="flex-1 bg-[#0A0F1C] rounded-lg border border-white/10 flex items-center justify-center text-[10px] text-gray-500">Dark</div>
-                <div className="flex-1 bg-[#131B2C] rounded-lg border border-white/10 flex items-center justify-center text-[10px] text-gray-500">Card</div>
+                <div className="flex-1 bg-background-dark rounded-lg border border-white/10 flex items-center justify-center text-[10px] text-gray-500">Dark</div>
+                <div className="flex-1 bg-surface rounded-lg border border-white/10 flex items-center justify-center text-[10px] text-gray-500">Card</div>
               </div>
               <div>
                 <p className="text-white font-bold">Backgrounds</p>

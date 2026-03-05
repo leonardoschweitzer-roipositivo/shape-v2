@@ -122,7 +122,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   return (
-    <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} flex-shrink-0 hidden md:flex flex-col justify-between border-r border-card-border bg-[#0A0F1C] h-full overflow-y-auto overflow-x-hidden custom-scrollbar transition-all duration-300 relative`}>
+    <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-64'} flex-shrink-0 hidden md:flex flex-col justify-between border-r border-card-border bg-background-dark h-full overflow-y-auto overflow-x-hidden custom-scrollbar transition-all duration-300 relative`}>
       <div className={`flex flex-col ${isSidebarCollapsed ? 'p-4' : 'p-6'} gap-8`}>
         {/* Logo and Toggle */}
         <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} gap-3`}>
@@ -170,7 +170,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* System Nav */}
-      <div className={`flex flex-col ${isSidebarCollapsed ? 'p-4' : 'p-6'} gap-2 border-t border-card-border bg-[#0A0F1C]`}>
+      <div className={`flex flex-col ${isSidebarCollapsed ? 'p-4' : 'p-6'} gap-2 border-t border-card-border bg-background-dark`}>
         {!isSidebarCollapsed && (
           <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 px-2">Sistema</p>
         )}

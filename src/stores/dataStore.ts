@@ -150,7 +150,7 @@ export const useDataStore = create<DataState>()(
 
                 // Encontrar o ratio físico (V-Taper) nos detalhes
                 const vTaperDetail = result.scores.proporcoes.detalhes.detalhes.find(
-                    (d: any) => d.proporcao === 'vTaper' || d.proporcao === 'shapeV'
+                    d => d.proporcao === 'vTaper' || d.proporcao === 'shapeV'
                 );
                 const physicalRatio = vTaperDetail?.valor || 0;
 
@@ -263,7 +263,7 @@ export const useDataStore = create<DataState>()(
                                 : measurements.height;
 
                             // Determinar método de BF usado
-                            const hasSkinfolds = skinfolds && Object.values(skinfolds).some((v: any) => v > 0);
+                            const hasSkinfolds = skinfolds && Object.values(skinfolds).some((v) => Number(v) > 0);
                             const bfMethod = hasSkinfolds ? 'POLLOCK_7' : 'NAVY';
 
                             const assessmentInsert = {
@@ -287,7 +287,7 @@ export const useDataStore = create<DataState>()(
 
                             const { data: insertedData, error: assessmentError } = await supabase
                                 .from('assessments')
-                                .insert(assessmentInsert as any)
+                                .insert(assessmentInsert as Record<string, unknown>)
                                 .select('id')
                                 .single();
 
@@ -348,7 +348,7 @@ export const useDataStore = create<DataState>()(
                                 score: Math.round(result.avaliacaoGeral * 10) / 10,
                                 ratio: Math.round(physicalRatio * 100) / 100,
                             };
-                            await supabase.from('medidas').insert(medidaInsert as any);
+                            await supabase.from('medidas').insert(medidaInsert as Record<string, unknown>);
 
                         } catch (err) {
                             console.error('[DataStore] ❌ Exceção ao persistir no Supabase:', err);

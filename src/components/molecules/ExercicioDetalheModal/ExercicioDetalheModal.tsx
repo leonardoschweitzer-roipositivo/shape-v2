@@ -51,7 +51,7 @@ export function ExercicioDetalheModal({ exercicio, onFechar }: ExercicioDetalheM
             onClick={onFechar}
         >
             <div
-                className="bg-[#0C1220] border border-white/10 rounded-t-3xl sm:rounded-3xl w-full sm:max-w-lg overflow-y-auto shadow-2xl animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300"
+                className="bg-surface-deep border border-white/10 rounded-t-3xl sm:rounded-3xl w-full sm:max-w-lg overflow-y-auto shadow-2xl animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300"
                 style={{
                     maxHeight: '85dvh',
                     WebkitOverflowScrolling: 'touch',
@@ -59,7 +59,7 @@ export function ExercicioDetalheModal({ exercicio, onFechar }: ExercicioDetalheM
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="sticky top-0 z-10 bg-[#0C1220] border-b border-white/5 px-5 py-4 flex items-center justify-between">
+                <div className="sticky top-0 z-10 bg-surface-deep border-b border-white/5 px-5 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <span className="text-lg">{grupoConfig?.emoji}</span>
                         <div>

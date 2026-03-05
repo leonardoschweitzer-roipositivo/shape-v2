@@ -1,6 +1,6 @@
 import React from 'react';
 import { TrendingUp, User } from 'lucide-react';
-import { BarraScore } from './BarraScore';
+import { BarraScore } from '../BarraScore/BarraScore';
 
 export interface CardAlunoListaProps {
     aluno: {

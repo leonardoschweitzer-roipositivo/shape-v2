@@ -19,7 +19,7 @@ export const RadarChart: React.FC = () => {
     return (
         <div className="relative w-full h-full flex flex-col items-center justify-center">
             <h4 className="absolute top-4 left-6 text-xs text-gray-400 font-bold uppercase tracking-widest">Radar de Simetria</h4>
-            <span className="absolute top-4 right-6 text-lg font-bold text-[#7C3AED]">94%</span>
+            <span className="absolute top-4 right-6 text-lg font-bold text-secondary">94%</span>
 
             <div className="relative w-[260px] h-[220px] mt-4">
                 <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`} className="overflow-visible">
@@ -42,7 +42,7 @@ export const RadarChart: React.FC = () => {
 
             <div className="flex gap-4 mt-2">
                 <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-[#7C3AED]"></span>
+                    <span className="w-2 h-2 rounded-full bg-secondary"></span>
                     <span className="text-[10px] text-gray-400">Esquerdo</span>
                 </div>
                 <div className="flex items-center gap-2">

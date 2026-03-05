@@ -30,7 +30,7 @@ export function CardPersonal({
 
     return (
         <div className="max-w-2xl mx-auto px-6 mt-4">
-            <div className="flex items-center justify-between gap-3 px-4 py-3 bg-[#0A0F1C] rounded-xl border border-white/5">
+            <div className="flex items-center justify-between gap-3 px-4 py-3 bg-background-dark rounded-xl border border-white/5">
                 <div className="flex items-center gap-2">
                     <Shield className="text-indigo-400 shrink-0" size={14} />
                     <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">

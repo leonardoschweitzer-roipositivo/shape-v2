@@ -191,7 +191,7 @@ export const ChatPlanoEvolucao: React.FC<ChatPlanoEvolucaoProps> = ({
     const tipoLabel = tipo === 'treino' ? 'Treino' : tipo === 'dieta' ? 'Dieta' : 'Diagnóstico';
 
     return (
-        <div className="bg-[#131B2C] border border-white/10 rounded-2xl overflow-hidden mb-6">
+        <div className="bg-surface border border-white/10 rounded-2xl overflow-hidden mb-6">
             {/* Header */}
             <button
                 onClick={() => setIsExpanded(!isExpanded)}
@@ -201,7 +201,7 @@ export const ChatPlanoEvolucao: React.FC<ChatPlanoEvolucaoProps> = ({
                     <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 relative">
                         <MessageSquare size={22} className="text-primary" />
                         {hasConversation && (
-                            <span className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-[#131B2C]" />
+                            <span className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-surface" />
                         )}
                     </div>
                     <div className="text-left">

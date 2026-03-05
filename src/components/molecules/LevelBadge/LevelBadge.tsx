@@ -66,7 +66,7 @@ export const LevelBadge: React.FC<LevelBadgeProps> = ({
                         className="
               absolute -bottom-1 -right-1
               w-6 h-6 rounded-full
-              bg-[#131B2C] border-2
+              bg-surface border-2
               flex items-center justify-center
               text-xs font-bold text-white
             "

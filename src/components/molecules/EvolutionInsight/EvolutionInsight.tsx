@@ -26,7 +26,7 @@ export const EvolutionInsight: React.FC<EvolutionInsightProps> = ({ insight, onV
     return (
         <section className="flex flex-col gap-4 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
             <div className="flex items-center gap-3 ml-1">
-                <div className="p-2 bg-[#131B2C] rounded-xl text-primary border border-white/10 shadow-lg">
+                <div className="p-2 bg-surface rounded-xl text-primary border border-white/10 shadow-lg">
                     <Bot size={20} />
                 </div>
                 <div>

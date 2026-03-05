@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { DashboardResponse, ScoreClassification, MetricCardData } from '../types';
+import { DashboardResponse, ScoreClassification, MetricCardData, Grade, EvolutionMetric, SymmetryItem } from '../types';
 import { mockDashboardData } from '../services/mockDashboardData';
 import { useAthleteStore } from '@/stores/athleteStore';
 import { useDataStore } from '@/stores/dataStore';
@@ -41,7 +41,7 @@ const mapAthleteToDashboard = (athlete: PersonalAthlete): DashboardResponse => {
     const weightTrend = previous ? m.weight - previous.measurements.weight : 0;
 
     // Calculate Evolution Metrics for the dashboard summary
-    const evolutionMetrics: any[] = [];
+    const evolutionMetrics: EvolutionMetric[] = [];
     if (previous) {
         // Ombros
         const ombrosDiff = m.shoulders - previous.measurements.shoulders;
@@ -126,7 +126,7 @@ const mapAthleteToDashboard = (athlete: PersonalAthlete): DashboardResponse => {
                     score: Math.round(d.percentualDoIdeal),
                     maxScore: 100,
                     percentage: Math.min(100, d.percentualDoIdeal),
-                    status: d.percentualDoIdeal >= 90 ? 'excellent' : d.percentualDoIdeal >= 80 ? 'good' : 'attention' as any
+                    status: d.percentualDoIdeal >= 90 ? 'excellent' : d.percentualDoIdeal >= 80 ? 'good' : 'attention' as 'excellent' | 'good' | 'attention'
                 }))
             },
             ideals: {
@@ -155,14 +155,14 @@ const mapAthleteToDashboard = (athlete: PersonalAthlete): DashboardResponse => {
                 changePeriod: 'vs avaliação anterior',
                 grades: currentResults.scores.proporcoes.detalhes.detalhes.reduce((acc, d) => {
                     const grade = d.percentualDoIdeal >= 95 ? 'A+' : d.percentualDoIdeal >= 90 ? 'A' : d.percentualDoIdeal >= 80 ? 'B+' : 'B';
-                    (acc as any)[d.proporcao] = grade;
+                    (acc as Record<string, Grade>)[d.proporcao] = grade;
                     return acc;
                 }, {
-                    simetria: 'A+',
-                    proporcao: 'A',
-                    estetica: 'A+',
-                    evolucao: 'A+'
-                } as any),
+                    simetria: 'A+' as Grade,
+                    proporcao: 'A' as Grade,
+                    estetica: 'A+' as Grade,
+                    evolucao: 'A+' as Grade
+                }),
                 classification: currentResults.classificacao.nivel as ScoreClassification,
                 aiSummary: currentResults.insights.pontoForte.mensagem
             }
@@ -223,7 +223,7 @@ const mapAthleteToDashboard = (athlete: PersonalAthlete): DashboardResponse => {
                 right: d.direito,
                 diff: d.diferenca,
                 diffPercent: d.diferencaPercent,
-                status: d.status.toLowerCase() as any
+                status: d.status.toLowerCase() as 'symmetric' | 'asymmetric'
             })) || []
         },
 

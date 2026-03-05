@@ -61,7 +61,7 @@ function MacroBar({ label, atual, meta, percentual, unidade, color }: MacroBarPr
 
 export function CardDieta({ dieta, onRegistrarRefeicao }: CardDietaProps) {
     return (
-        <div className="bg-[#0C1220] rounded-2xl p-6 border border-white/5">
+        <div className="bg-surface-deep rounded-2xl p-6 border border-white/5">
             <div className="flex items-center gap-3 mb-5">
                 <div className="w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center">
                     <UtensilsCrossed size={20} className="text-teal-400" />

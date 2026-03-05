@@ -133,7 +133,7 @@ export function mapAtletaToPersonalAthlete(
         assessments: mappedAssessments,
         birthDate: ficha?.data_nascimento || undefined,
         phone: atleta.telefone || undefined,
-        contexto: (ficha?.contexto as any) || null,
+        contexto: (ficha?.contexto as unknown as PersonalAthlete['contexto']) || null,
     };
 }
 

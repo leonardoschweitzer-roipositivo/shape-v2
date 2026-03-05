@@ -28,7 +28,7 @@ export const SymmetryWidget: React.FC<SymmetryWidgetProps> = ({ data }) => {
     }
 
     return (
-        <div className="bg-[#131B2C] rounded-2xl p-6 border border-white/5 shadow-lg relative overflow-hidden flex flex-col h-full group hover:border-pink-500/30 transition-colors">
+        <div className="bg-surface rounded-2xl p-6 border border-white/5 shadow-lg relative overflow-hidden flex flex-col h-full group hover:border-pink-500/30 transition-colors">
 
             {/* Header */}
             <div className="flex justify-between items-start mb-6">
@@ -67,7 +67,7 @@ export const SymmetryWidget: React.FC<SymmetryWidgetProps> = ({ data }) => {
 
             {/* Footer */}
             <div className="mt-auto pt-4 border-t border-white/10">
-                <button className="w-full flex items-center justify-center gap-2 text-xs font-bold text-gray-400 hover:text-white transition-colors bg-[#0A0F1C] py-2 rounded-lg border border-white/5 hover:border-white/20">
+                <button className="w-full flex items-center justify-center gap-2 text-xs font-bold text-gray-400 hover:text-white transition-colors bg-background-dark py-2 rounded-lg border border-white/5 hover:border-white/20">
                     ANÁLISE COMPLETA
                     <ChevronRight size={14} />
                 </button>

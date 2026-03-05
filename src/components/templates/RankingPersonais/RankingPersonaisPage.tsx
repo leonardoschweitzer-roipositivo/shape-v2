@@ -18,7 +18,7 @@ const SectionHeader: React.FC<{ icon: React.ReactNode; title: string; subtitle: 
     subtitle,
 }) => (
     <div className="flex items-center gap-3 mb-4 animate-fade-in-up">
-        <div className="p-2 bg-[#131B2C] rounded-xl text-primary border border-white/10 shadow-lg">
+        <div className="p-2 bg-surface rounded-xl text-primary border border-white/10 shadow-lg">
             {icon}
         </div>
         <div>

@@ -27,7 +27,7 @@ interface TermsOfUseProps {
 
 export const TermsOfUse: React.FC<TermsOfUseProps> = ({ onBack }) => {
     return (
-        <div className="flex-1 p-4 md:p-8 pb-20 bg-[#0A0F1C]">
+        <div className="flex-1 p-4 md:p-8 pb-20 bg-background-dark">
             <div className="max-w-4xl mx-auto">
                 {/* Header */}
                 <button

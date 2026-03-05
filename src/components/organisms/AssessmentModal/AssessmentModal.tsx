@@ -15,15 +15,15 @@ export const AssessmentModal: React.FC<AssessmentModalProps> = ({ isOpen, onClos
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-[#050810]/80 backdrop-blur-sm transition-opacity"
+        className="absolute inset-0 bg-backdrop/80 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       ></div>
 
       {/* Modal Content */}
-      <div className="bg-[#131B2C] border border-white/10 w-full max-w-4xl h-[90vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-fade-in-up">
+      <div className="bg-surface border border-white/10 w-full max-w-4xl h-[90vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-fade-in-up">
 
         {/* Header */}
-        <div className="p-6 border-b border-white/5 flex items-start justify-between bg-[#131B2C] z-10 shrink-0">
+        <div className="p-6 border-b border-white/5 flex items-start justify-between bg-surface z-10 shrink-0">
           <div>
             <div className="flex items-center gap-3 mb-1">
               <Activity className="text-primary" size={20} />

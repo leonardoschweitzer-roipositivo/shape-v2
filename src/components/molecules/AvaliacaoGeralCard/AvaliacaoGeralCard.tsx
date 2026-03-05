@@ -24,7 +24,7 @@ export const AvaliacaoGeralCard: React.FC<AvaliacaoChartProps> = ({ data }) => {
     };
 
     return (
-        <div className="bg-[#131B2C] rounded-2xl p-6 border border-white/5 shadow-lg relative overflow-hidden h-full flex flex-col justify-between group hover:border-blue-500/30 transition-colors">
+        <div className="bg-surface rounded-2xl p-6 border border-white/5 shadow-lg relative overflow-hidden h-full flex flex-col justify-between group hover:border-blue-500/30 transition-colors">
 
             {/* Header */}
             <div className="flex justify-between items-start mb-6 z-10 relative">
@@ -60,25 +60,25 @@ export const AvaliacaoGeralCard: React.FC<AvaliacaoChartProps> = ({ data }) => {
 
             {/* Grades Grid */}
             <div className="grid grid-cols-2 gap-3 z-10 relative">
-                <div className="bg-[#0A0F1C]/50 rounded-lg p-2.5 border border-white/5 flex justify-between items-center">
+                <div className="bg-background-dark/50 rounded-lg p-2.5 border border-white/5 flex justify-between items-center">
                     <span className="text-[10px] text-gray-400 uppercase font-medium">SIMETRIA</span>
                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${getGradeColor(grades.simetria)}`}>
                         {grades.simetria}
                     </span>
                 </div>
-                <div className="bg-[#0A0F1C]/50 rounded-lg p-2.5 border border-white/5 flex justify-between items-center">
+                <div className="bg-background-dark/50 rounded-lg p-2.5 border border-white/5 flex justify-between items-center">
                     <span className="text-[10px] text-gray-400 uppercase font-medium">PROPORÇÃO</span>
                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${getGradeColor(grades.proporcao)}`}>
                         {grades.proporcao}
                     </span>
                 </div>
-                <div className="bg-[#0A0F1C]/50 rounded-lg p-2.5 border border-white/5 flex justify-between items-center">
+                <div className="bg-background-dark/50 rounded-lg p-2.5 border border-white/5 flex justify-between items-center">
                     <span className="text-[10px] text-gray-400 uppercase font-medium">ESTÉTICA</span>
                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${getGradeColor(grades.estetica)}`}>
                         {grades.estetica}
                     </span>
                 </div>
-                <div className="bg-[#0A0F1C]/50 rounded-lg p-2.5 border border-white/5 flex justify-between items-center">
+                <div className="bg-background-dark/50 rounded-lg p-2.5 border border-white/5 flex justify-between items-center">
                     <span className="text-[10px] text-gray-400 uppercase font-medium">EVOLUÇÃO</span>
                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${getGradeColor(grades.evolucao)}`}>
                         {grades.evolucao}

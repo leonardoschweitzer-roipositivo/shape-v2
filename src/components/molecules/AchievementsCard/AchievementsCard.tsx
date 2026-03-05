@@ -12,7 +12,7 @@ export const AchievementsCard: React.FC<AchievementsCardProps> = ({ data }) => {
     const xpPercentage = Math.min(100, (currentXp / nextLevelXp) * 100);
 
     return (
-        <div className="bg-[#131B2C] rounded-2xl p-6 border border-white/5 shadow-lg relative overflow-hidden flex flex-col h-full group hover:border-yellow-500/30 transition-colors">
+        <div className="bg-surface rounded-2xl p-6 border border-white/5 shadow-lg relative overflow-hidden flex flex-col h-full group hover:border-yellow-500/30 transition-colors">
 
             {/* Header */}
             <div className="flex justify-between items-start mb-6">
@@ -20,7 +20,7 @@ export const AchievementsCard: React.FC<AchievementsCardProps> = ({ data }) => {
                     <Trophy size={14} className="text-yellow-500" />
                     CONQUISTAS
                 </h4>
-                <div className="flex items-center gap-2 bg-[#0A0F1C] px-3 py-1 rounded-full border border-yellow-500/20">
+                <div className="flex items-center gap-2 bg-background-dark px-3 py-1 rounded-full border border-yellow-500/20">
                     <span className="text-[10px] text-yellow-500 font-bold uppercase">Nível {level}</span>
                     <div className="w-16 h-1.5 bg-gray-800 rounded-full overflow-hidden">
                         <div className="h-full bg-yellow-500 rounded-full" style={{ width: `${xpPercentage}%` }}></div>
@@ -39,7 +39,7 @@ export const AchievementsCard: React.FC<AchievementsCardProps> = ({ data }) => {
                             </div>
                             <span className="text-xs font-mono text-gray-500">{ach.progress}%</span>
                         </div>
-                        <div className="h-1.5 bg-[#0A0F1C] rounded-full overflow-hidden">
+                        <div className="h-1.5 bg-background-dark rounded-full overflow-hidden">
                             <div
                                 className="h-full bg-gradient-to-r from-yellow-600 to-yellow-400 rounded-full transition-all duration-1000"
                                 style={{ width: `${ach.progress}%` }}

@@ -80,273 +80,14 @@ interface DietaViewProps {
 
 type DietaState = 'idle' | 'generating' | 'ready' | 'saving' | 'saved';
 
+
 // ═══════════════════════════════════════════════════════════
-// SUBCOMPONENTS
+// EXTRACTED SHARED + SECTIONS
 // ═══════════════════════════════════════════════════════════
+import { EvolutionStepper, SectionCard, InsightBox } from './PlanoEvolucaoShared';
+import { MacroCard, MacroBar, TabelaRefeicoes } from './dieta/DietaSections';
+import { getClassificacao, buildPerfilIA, buildDiagnosticoInput } from './PlanoEvolucaoHelpers';
 
-const EvolutionStepper: React.FC<{ etapaAtual: number }> = ({ etapaAtual }) => {
-    const steps = [
-        { num: 1, label: 'Diagnóstico', icon: Stethoscope },
-        { num: 2, label: 'Treino', icon: Dumbbell },
-        { num: 3, label: 'Dieta', icon: Salad },
-    ];
-    return (
-        <div className="flex items-center justify-between w-full my-8">
-            {steps.map((step, idx) => {
-                const Icon = step.icon;
-                const isActive = step.num === etapaAtual;
-                const isDone = step.num < etapaAtual;
-                return (
-                    <React.Fragment key={step.num}>
-                        <div className={`flex flex-col items-center gap-2 ${isActive ? 'opacity-100' : isDone ? 'opacity-70' : 'opacity-30'}`}>
-                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center border-2 transition-all ${isActive ? 'bg-primary/20 border-primary text-primary shadow-[0_0_20px_rgba(0,201,167,0.3)]' : isDone ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400' : 'bg-white/5 border-white/10 text-gray-500'}`}>
-                                {isDone ? <CheckCircle size={20} /> : <Icon size={20} />}
-                            </div>
-                            <span className={`text-xs font-bold uppercase tracking-widest ${isActive ? 'text-primary' : isDone ? 'text-emerald-400' : 'text-gray-600'}`}>{step.label}</span>
-                        </div>
-                        {idx < steps.length - 1 && (
-                            <div className={`flex-1 h-px mx-4 ${isDone ? 'bg-emerald-500/40' : 'bg-white/10'}`} />
-                        )}
-                    </React.Fragment>
-                );
-            })}
-        </div>
-    );
-};
-
-/** Card de seção — Gold Standard alinhado com DiagnosticoView */
-const SectionCard: React.FC<{
-    icon: React.ElementType;
-    title: string;
-    subtitle?: string;
-    children: React.ReactNode;
-}> = ({ icon: Icon, title, subtitle, children }) => (
-    <div className="bg-[#131B2C] border border-white/10 rounded-2xl overflow-hidden mb-6">
-        <div className="px-6 py-5 border-b border-white/10 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                <Icon size={22} className="text-primary" />
-            </div>
-            <div>
-                <h3 className="text-lg font-bold text-white uppercase tracking-wider">{title}</h3>
-                {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
-            </div>
-        </div>
-        <div className="p-6">{children}</div>
-    </div>
-);
-
-/** Box de insight do Vitrúvio — Gold Standard */
-const InsightBox: React.FC<{ text: string; title?: string; isLoading?: boolean }> = ({ text, title = 'Análise Vitrúvio IA', isLoading }) => (
-    <div className="bg-primary/5 border border-primary/20 rounded-xl p-6 mt-4">
-        <div className="flex items-start gap-4">
-            <Bot size={26} className={`text-primary mt-0.5 shrink-0 ${isLoading ? 'animate-pulse' : ''}`} />
-            <div className="flex-1">
-                <p className="text-base font-bold text-primary mb-2 uppercase tracking-wider">{title}</p>
-                {isLoading ? (
-                    <div className="space-y-2">
-                        <div className="h-4 bg-primary/10 rounded animate-pulse w-full" />
-                        <div className="h-4 bg-primary/10 rounded animate-pulse w-5/6" />
-                        <div className="h-4 bg-primary/10 rounded animate-pulse w-4/6" />
-                        <p className="text-xs text-primary/60 mt-3 animate-pulse">Vitrúvio IA analisando plano de dieta...</p>
-                    </div>
-                ) : (
-                    <>
-                        <p className="text-lg text-gray-300 leading-relaxed">"{text}"</p>
-                        <p className="text-xs text-gray-600 mt-3 text-right">— VITRÚVIO IA</p>
-                    </>
-                )}
-            </div>
-        </div>
-    </div>
-);
-
-const MacroCard: React.FC<{
-    label: string;
-    emoji: string;
-    gramas: number;
-    gKg: number;
-    kcal: number;
-    pct: number;
-    color: string;
-}> = ({ label, emoji, gramas, gKg, kcal, pct, color }) => (
-    <div className={`bg-white/[0.03] rounded-xl border ${color} p-5 text-center`}>
-        <p className="text-2xl mb-2">{emoji}</p>
-        <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">{label}</p>
-        <p className="text-3xl font-black text-white mb-1">{gramas}g</p>
-        <p className="text-xs text-gray-500 mb-3">{gKg} g/kg</p>
-        <div className="border-t border-white/5 pt-3 space-y-1">
-            <p className="text-sm font-bold text-gray-400">{kcal} kcal</p>
-            <p className="text-xs text-gray-600">{pct}%</p>
-        </div>
-    </div>
-);
-
-const MacroBar: React.FC<{ macros: MacroSet }> = ({ macros }) => (
-    <div className="flex rounded-full overflow-hidden h-3 mt-4">
-        <div className="bg-blue-500/70 transition-all" style={{ width: `${macros.proteina.pct}%` }} title={`Proteína ${macros.proteina.pct}%`} />
-        <div className="bg-amber-500/70 transition-all" style={{ width: `${macros.carboidrato.pct}%` }} title={`Carbo ${macros.carboidrato.pct}%`} />
-        <div className="bg-rose-500/70 transition-all" style={{ width: `${macros.gordura.pct}%` }} title={`Gordura ${macros.gordura.pct}%`} />
-    </div>
-);
-
-const TabelaRefeicoes: React.FC<{
-    refeicoes: RefeicaoEstrutura[];
-    isEditing?: boolean;
-    onUpdateRefeicoes?: (refeicoes: RefeicaoEstrutura[]) => void;
-}> = ({ refeicoes, isEditing = false, onUpdateRefeicoes }) => {
-    const updateRefeicao = (idx: number, field: keyof RefeicaoEstrutura, value: any) => {
-        if (!onUpdateRefeicoes) return;
-        const updated = refeicoes.map((r, i) => {
-            if (i !== idx) return r;
-            const newR = { ...r, [field]: value };
-            // Auto-recalcular kcal quando macros mudam
-            if (['proteina', 'carboidrato', 'gordura'].includes(field)) {
-                newR.kcal = Math.round(newR.proteina * 4 + newR.carboidrato * 4 + newR.gordura * 9);
-            }
-            return newR;
-        });
-        onUpdateRefeicoes(updated);
-    };
-
-    const addRefeicao = () => {
-        if (!onUpdateRefeicoes) return;
-        const nova: RefeicaoEstrutura = {
-            numero: refeicoes.length + 1,
-            nome: 'Nova Refeição',
-            emoji: '🍽️',
-            horario: '12:00',
-            proteina: 30,
-            carboidrato: 40,
-            gordura: 10,
-            kcal: 370,
-        };
-        onUpdateRefeicoes([...refeicoes, nova]);
-    };
-
-    const removeRefeicao = (idx: number) => {
-        if (!onUpdateRefeicoes || refeicoes.length <= 2) return;
-        const updated = refeicoes.filter((_, i) => i !== idx).map((r, i) => ({ ...r, numero: i + 1 }));
-        onUpdateRefeicoes(updated);
-    };
-
-    return (
-        <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-                <thead>
-                    <tr className="border-b border-white/5">
-                        <th className="text-left text-[10px] text-gray-600 uppercase tracking-widest font-bold pb-3 pr-4">#</th>
-                        <th className="text-left text-[10px] text-gray-600 uppercase tracking-widest font-bold pb-3 pr-4">Refeição</th>
-                        <th className="text-left text-[10px] text-gray-600 uppercase tracking-widest font-bold pb-3 pr-4">Horário</th>
-                        <th className="text-right text-[10px] text-gray-600 uppercase tracking-widest font-bold pb-3 pr-4">Prot.</th>
-                        <th className="text-right text-[10px] text-gray-600 uppercase tracking-widest font-bold pb-3 pr-4">Carb.</th>
-                        <th className="text-right text-[10px] text-gray-600 uppercase tracking-widest font-bold pb-3 pr-4">Gord.</th>
-                        <th className="text-right text-[10px] text-gray-600 uppercase tracking-widest font-bold pb-3">Kcal</th>
-                        {isEditing && <th className="w-8" />}
-                    </tr>
-                </thead>
-                <tbody className="divide-y divide-white/[0.03]">
-                    {refeicoes.map((r, idx) => (
-                        <tr key={r.numero} className={`transition-colors ${isEditing ? 'bg-primary/[0.02]' : 'hover:bg-white/[0.02]'}`}>
-                            <td className="py-3 pr-4 text-gray-500">{r.numero}</td>
-                            <td className="py-3 pr-4">
-                                {isEditing ? (
-                                    <input
-                                        type="text"
-                                        value={r.nome}
-                                        onChange={(e) => updateRefeicao(idx, 'nome', e.target.value)}
-                                        className="bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-sm text-gray-300 font-medium w-full focus:border-primary/50 focus:outline-none"
-                                    />
-                                ) : (
-                                    <>
-                                        <span className="mr-2">{r.emoji}</span>
-                                        <span className="text-gray-300 font-medium">{r.nome}</span>
-                                        {r.observacao && (
-                                            <p className="text-[10px] text-gray-600 mt-0.5">{r.observacao}</p>
-                                        )}
-                                    </>
-                                )}
-                            </td>
-                            <td className="py-3 pr-4 text-gray-500 text-xs">
-                                {isEditing ? (
-                                    <input
-                                        type="text"
-                                        value={r.horario}
-                                        onChange={(e) => updateRefeicao(idx, 'horario', e.target.value)}
-                                        className="bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-xs text-gray-500 w-16 text-center focus:border-primary/50 focus:outline-none"
-                                    />
-                                ) : r.horario}
-                            </td>
-                            <td className="py-3 pr-4 text-right text-blue-400 font-bold">
-                                {isEditing ? (
-                                    <input
-                                        type="number"
-                                        value={r.proteina}
-                                        onChange={(e) => updateRefeicao(idx, 'proteina', Number(e.target.value))}
-                                        className="bg-white/5 border border-white/10 rounded-lg px-1 py-1 text-sm text-blue-400 font-bold w-14 text-center focus:border-primary/50 focus:outline-none"
-                                        min={0}
-                                    />
-                                ) : <>{r.proteina}g</>}
-                            </td>
-                            <td className="py-3 pr-4 text-right text-amber-400 font-bold">
-                                {isEditing ? (
-                                    <input
-                                        type="number"
-                                        value={r.carboidrato}
-                                        onChange={(e) => updateRefeicao(idx, 'carboidrato', Number(e.target.value))}
-                                        className="bg-white/5 border border-white/10 rounded-lg px-1 py-1 text-sm text-amber-400 font-bold w-14 text-center focus:border-primary/50 focus:outline-none"
-                                        min={0}
-                                    />
-                                ) : <>{r.carboidrato}g</>}
-                            </td>
-                            <td className="py-3 pr-4 text-right text-rose-400 font-bold">
-                                {isEditing ? (
-                                    <input
-                                        type="number"
-                                        value={r.gordura}
-                                        onChange={(e) => updateRefeicao(idx, 'gordura', Number(e.target.value))}
-                                        className="bg-white/5 border border-white/10 rounded-lg px-1 py-1 text-sm text-rose-400 font-bold w-14 text-center focus:border-primary/50 focus:outline-none"
-                                        min={0}
-                                    />
-                                ) : <>{r.gordura}g</>}
-                            </td>
-                            <td className="py-3 text-right text-gray-400 font-bold">{r.kcal}</td>
-                            {isEditing && (
-                                <td className="py-3 pl-2">
-                                    {refeicoes.length > 2 && (
-                                        <button
-                                            onClick={() => removeRefeicao(idx)}
-                                            className="p-1 text-gray-600 hover:text-red-400 transition-colors"
-                                            title="Remover refeição"
-                                        >
-                                            <Trash2 size={12} />
-                                        </button>
-                                    )}
-                                </td>
-                            )}
-                        </tr>
-                    ))}
-                    <tr className="border-t border-white/10">
-                        <td colSpan={3} className="pt-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest">TOTAL</td>
-                        <td className="pt-3 text-right text-blue-400 font-black">{refeicoes.reduce((s, r) => s + r.proteina, 0)}g</td>
-                        <td className="pt-3 text-right text-amber-400 font-black">{refeicoes.reduce((s, r) => s + r.carboidrato, 0)}g</td>
-                        <td className="pt-3 text-right text-rose-400 font-black">{refeicoes.reduce((s, r) => s + r.gordura, 0)}g</td>
-                        <td className="pt-3 text-right text-white font-black">{refeicoes.reduce((s, r) => s + r.kcal, 0)}</td>
-                        {isEditing && <td />}
-                    </tr>
-                </tbody>
-            </table>
-            {isEditing && (
-                <button
-                    onClick={addRefeicao}
-                    className="flex items-center gap-2 mt-3 text-xs font-bold text-primary uppercase tracking-wider hover:bg-primary/10 px-4 py-2 rounded-xl transition-all"
-                >
-                    <Plus size={14} />
-                    Adicionar Refeição
-                </button>
-            )}
-        </div>
-    );
-};
 
 // ═══════════════════════════════════════════════════════════
 // MAIN COMPONENT
@@ -366,14 +107,11 @@ export const DietaView: React.FC<DietaViewProps> = ({
     // Recomendação de objetivo imediata para o Header
     const recomendacaoPadrao = useMemo(() => {
         if (!atleta || !ultimaAvaliacao) return null;
-        const classificacao = atleta.score >= 90 ? 'ELITE'
-            : atleta.score >= 80 ? 'AVANÇADO'
-                : atleta.score >= 70 ? 'ATLÉTICO'
-                    : atleta.score >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE';
+        const classificacao = getClassificacao(atleta.score);
 
         return recomendarObjetivo({
             bf: ultimaAvaliacao.bf ?? 15,
-            ffmi: (ultimaAvaliacao as any).ffmi ?? 20,
+            ffmi: ultimaAvaliacao?.ffmi ?? 20,
             sexo: atleta.gender === 'FEMALE' ? 'F' : 'M',
             score: atleta.score,
             nivel: classificacao,
@@ -449,45 +187,21 @@ export const DietaView: React.FC<DietaViewProps> = ({
     const handleGerar = () => {
         setEstado('generating');
         setTimeout(() => {
-            // 1. Calcular Potencial (mesmo padrão do TreinoView)
-            const classificacao = atleta.score >= 90 ? 'ELITE'
-                : atleta.score >= 80 ? 'AVANÇADO'
-                    : atleta.score >= 70 ? 'ATLÉTICO'
-                        : atleta.score >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE';
+            // 1. Calcular Potencial
+            const classificacao = getClassificacao(atleta.score);
             const pot = calcularPotencialAtleta(classificacao, atleta.score, atleta.contexto);
             setPotencial(pot);
 
-            // 2. Calcular Diagnóstico
-            const m = ultimaAvaliacao.measurements;
-            const anyM = m as any;
+            // 2. Calcular Diagnóstico (usando helper compartilhado)
             const nivelAtiv = inferirNivelAtividade(atleta.contexto);
-            const input: DiagnosticoInput = {
-                peso: m.weight, altura: m.height,
-                idade: atleta.birthDate ? Math.floor((Date.now() - new Date(atleta.birthDate).getTime()) / 31557600000) : 30,
-                sexo: atleta.gender === 'FEMALE' ? 'F' : 'M',
-                gorduraPct: ultimaAvaliacao.bf ?? 15,
-                score: atleta.score, classificacao, ratio: atleta.ratio,
-                freqTreino: pot.frequenciaSemanal,
-                nivelAtividade: nivelAtiv,
-                usaAnabolizantes: /testosterona|trt|anaboliz|durateston/i.test(atleta.contexto?.medicacoesUso?.descricao || atleta.contexto?.medicacoes || ''),
-                usaTermogenicos: false,
-                nomeAtleta: atleta.name,
-                medidas: {
-                    ombros: m.shoulders, cintura: m.waist,
-                    peitoral: m.chest || anyM.peito,
-                    costas: anyM.costas || m.chest || m.shoulders * 0.9,
-                    bracoD: m.armRight || anyM.braco, bracoE: m.armLeft || anyM.braco,
-                    antebracoD: m.forearmRight || anyM.antebraco, antebracoE: m.forearmLeft || anyM.antebraco,
-                    coxaD: m.thighRight || anyM.coxa, coxaE: m.thighLeft || anyM.coxa,
-                    panturrilhaD: m.calfRight || anyM.panturrilha, panturrilhaE: m.calfLeft || anyM.panturrilha,
-                    punho: m.wrist || 17.5,
-                    joelho: m.knee || 38,
-                    tornozelo: m.ankle || 22,
-                    pelvis: m.pelvis || m.waist * 1.1,
-                    pescoco: m.neck || 40,
-                },
-                proporcoesPreCalculadas: Array.isArray(ultimaAvaliacao.proporcoes) ? ultimaAvaliacao.proporcoes : undefined,
-            };
+            const input = buildDiagnosticoInput(
+                atleta,
+                ultimaAvaliacao.measurements as Record<string, unknown>,
+                ultimaAvaliacao.bf ?? 15,
+                pot,
+                nivelAtiv,
+                ultimaAvaliacao.proporcoes,
+            );
             const diag = gerarDiagnosticoCompleto(input, pot);
             setDiagnostico(diag);
 
@@ -512,18 +226,7 @@ export const DietaView: React.FC<DietaViewProps> = ({
 
             // Enriquecer com IA em background
             setIaEnriching(true);
-            const perfil = {
-                nome: atleta.name,
-                sexo: (atleta.gender === 'FEMALE' ? 'F' : 'M') as 'M' | 'F',
-                idade: atleta.birthDate ? Math.floor((Date.now() - new Date(atleta.birthDate).getTime()) / 31557600000) : 30,
-                altura: m.height,
-                peso: m.weight,
-                gorduraPct: ultimaAvaliacao.bf ?? 15,
-                score: atleta.score,
-                classificacao: classificacao,
-                medidas: m as Record<string, number>,
-                contexto: atleta.contexto as any,
-            };
+            const perfil = buildPerfilIA(atleta.name, atleta.gender, atleta.birthDate, ultimaAvaliacao.measurements as Record<string, number>, ultimaAvaliacao.bf ?? 15, atleta.score, atleta.contexto);
             console.info('[DietaView] 🚀 Iniciando enriquecimento IA...');
             enriquecerDietaComIA(resultado, perfil)
                 .then(enriquecido => {
@@ -577,23 +280,7 @@ export const DietaView: React.FC<DietaViewProps> = ({
         setIaEnriching(true);
 
         try {
-            const classificacao = atleta.score >= 90 ? 'ELITE'
-                : atleta.score >= 80 ? 'AVANÇADO'
-                    : atleta.score >= 70 ? 'ATLÉTICO'
-                        : atleta.score >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE';
-
-            const perfil = {
-                nome: atleta.name,
-                sexo: (atleta.gender === 'FEMALE' ? 'F' : 'M') as 'M' | 'F',
-                idade: atleta.birthDate ? Math.floor((Date.now() - new Date(atleta.birthDate).getTime()) / 31557600000) : 30,
-                altura: ultimaAvaliacao.measurements.height,
-                peso: ultimaAvaliacao.measurements.weight,
-                gorduraPct: ultimaAvaliacao.bf ?? 15,
-                score: atleta.score,
-                classificacao: classificacao,
-                medidas: ultimaAvaliacao.measurements as Record<string, number>,
-                contexto: atleta.contexto as any,
-            };
+            const perfil = buildPerfilIA(atleta.name, atleta.gender, atleta.birthDate, ultimaAvaliacao.measurements as Record<string, number>, ultimaAvaliacao.bf ?? 15, atleta.score, atleta.contexto);
 
             const diretrizes = await extrairDiretrizesDoChat(atletaId, 'dieta');
             if (diretrizes) {
@@ -644,7 +331,7 @@ export const DietaView: React.FC<DietaViewProps> = ({
                 <EvolutionStepper etapaAtual={3} />
 
                 {/* Card info atleta + botão gerar */}
-                <div className="bg-[#131B2C] border border-white/10 rounded-2xl p-6">
+                <div className="bg-surface border border-white/10 rounded-2xl p-6">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                         <div className="flex items-center gap-5">
                             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 shadow-[0_0_15px_rgba(0,201,167,0.1)]">
@@ -699,7 +386,7 @@ export const DietaView: React.FC<DietaViewProps> = ({
 
                 {/* Estado: Ainda não gerou */}
                 {estado === 'idle' && (
-                    <div className="bg-[#131B2C] border border-white/10 rounded-2xl p-10 text-center">
+                    <div className="bg-surface border border-white/10 rounded-2xl p-10 text-center">
                         <Salad size={48} className="text-primary mx-auto mb-5" />
                         <h3 className="text-xl font-bold text-white mb-3">Gerar Plano de Dieta Completo</h3>
                         <p className="text-base text-gray-500 mb-8 max-w-lg mx-auto">
@@ -716,7 +403,7 @@ export const DietaView: React.FC<DietaViewProps> = ({
 
                 {/* Estado: Gerando */}
                 {estado === 'generating' && (
-                    <div className="bg-[#131B2C] border border-white/10 rounded-2xl p-10 text-center">
+                    <div className="bg-surface border border-white/10 rounded-2xl p-10 text-center">
                         <Loader2 size={48} className="text-primary mx-auto mb-5 animate-spin" />
                         <h3 className="text-xl font-bold text-white mb-3">Vitrúvio calculando seu plano alimentar...</h3>
                         <p className="text-base text-gray-500">Cruzando TDEE, contexto e metas de composição corporal.</p>
@@ -1146,7 +833,7 @@ export const DietaView: React.FC<DietaViewProps> = ({
                                 score: atleta.score,
                                 classificacao: atleta.score >= 90 ? 'ELITE' : atleta.score >= 80 ? 'AVANÇADO' : atleta.score >= 70 ? 'ATLÉTICO' : atleta.score >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE',
                                 medidas: (ultimaAvaliacao?.measurements as Record<string, number>) || {},
-                                contexto: atleta.contexto as any,
+                                contexto: atleta.contexto as Record<string, unknown>,
                             })}
                             fontesCientificas={getFontesCientificas('dieta')}
                         />

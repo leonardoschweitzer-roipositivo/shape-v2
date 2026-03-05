@@ -32,7 +32,7 @@ const ProfileHeader: React.FC<{ profile: PersonalProfile }> = ({ profile }) => {
         .toUpperCase();
 
     return (
-        <div className="flex items-center gap-6 p-6 bg-[#131B2C] rounded-2xl border border-white/10 shadow-xl animate-fade-in-up">
+        <div className="flex items-center gap-6 p-6 bg-surface rounded-2xl border border-white/10 shadow-xl animate-fade-in-up">
             {/* Avatar */}
             <div className="relative">
                 <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 border-2 border-primary/30 flex items-center justify-center">
@@ -90,7 +90,7 @@ const InfoCard: React.FC<{
     children: React.ReactNode;
     onEdit?: () => void;
 }> = ({ title, icon: Icon, children, onEdit }) => (
-    <div className="bg-[#131B2C] border border-white/10 rounded-2xl p-6 shadow-lg hover:border-white/20 transition-all">
+    <div className="bg-surface border border-white/10 rounded-2xl p-6 shadow-lg hover:border-white/20 transition-all">
         <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10">

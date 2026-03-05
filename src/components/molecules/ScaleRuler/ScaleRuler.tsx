@@ -49,7 +49,7 @@ export const ScaleRuler: React.FC<ScaleRulerProps> = ({
     return (
         <div className="relative w-full py-6">
             {/* The Track */}
-            <div className="relative h-2.5 w-full rounded-full overflow-hidden flex border border-white/5 bg-[#050810]/50">
+            <div className="relative h-2.5 w-full rounded-full overflow-hidden flex border border-white/5 bg-backdrop/50">
                 {zones.map((zone, idx) => {
                     const zoneStart = getPercentage(zone.min);
                     const zoneEnd = getPercentage(zone.max);

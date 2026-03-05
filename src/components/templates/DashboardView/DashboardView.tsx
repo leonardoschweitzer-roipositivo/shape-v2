@@ -30,7 +30,7 @@ const SectionHeader: React.FC<{
 }> = ({ icon, title, subtitle, action }) => (
     <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-            <div className="p-2.5 bg-[#131B2C] rounded-xl border border-white/5 text-primary shadow-lg">
+            <div className="p-2.5 bg-surface rounded-xl border border-white/5 text-primary shadow-lg">
                 {icon}
             </div>
             <div>

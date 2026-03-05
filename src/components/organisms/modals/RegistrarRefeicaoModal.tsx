@@ -49,9 +49,9 @@ export const RegistrarRefeicaoModal: React.FC = () => {
 
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-            <div className="bg-[#131B2C] rounded-2xl max-w-2xl w-full border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto animate-fade-in">
+            <div className="bg-surface rounded-2xl max-w-2xl w-full border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto animate-fade-in">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-white/5 sticky top-0 bg-[#131B2C] z-10">
+                <div className="flex items-center justify-between p-6 border-b border-white/5 sticky top-0 bg-surface z-10">
                     <div>
                         <div className="flex items-center gap-2">
                             <Utensils size={20} className="text-emerald-400" />
@@ -81,7 +81,7 @@ export const RegistrarRefeicaoModal: React.FC = () => {
                                         flex flex-col items-center justify-center p-3 rounded-xl border transition-all
                                         ${tipo === t.value
                                             ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
-                                            : 'border-white/5 bg-[#0D121F] text-gray-400 hover:border-white/20'
+                                            : 'border-white/5 bg-surface-alt text-gray-400 hover:border-white/20'
                                         }
                                     `}
                                 >
@@ -102,7 +102,7 @@ export const RegistrarRefeicaoModal: React.FC = () => {
                                     p-6 rounded-2xl border transition-all text-center group
                                     ${metodo === 'texto'
                                         ? 'border-amber-500 bg-amber-500/10 text-amber-400'
-                                        : 'border-white/5 bg-[#0D121F] text-gray-400 hover:border-white/20'
+                                        : 'border-white/5 bg-surface-alt text-gray-400 hover:border-white/20'
                                     }
                                 `}
                             >
@@ -119,7 +119,7 @@ export const RegistrarRefeicaoModal: React.FC = () => {
                                     p-6 rounded-2xl border transition-all text-center group
                                     ${metodo === 'foto'
                                         ? 'border-amber-500 bg-amber-500/10 text-amber-400'
-                                        : 'border-white/5 bg-[#0D121F] text-gray-400 hover:border-white/20'
+                                        : 'border-white/5 bg-surface-alt text-gray-400 hover:border-white/20'
                                     }
                                 `}
                             >
@@ -136,7 +136,7 @@ export const RegistrarRefeicaoModal: React.FC = () => {
                                     p-6 rounded-2xl border transition-all text-center group
                                     ${metodo === 'busca'
                                         ? 'border-amber-500 bg-amber-500/10 text-amber-400'
-                                        : 'border-white/5 bg-[#0D121F] text-gray-400 hover:border-white/20'
+                                        : 'border-white/5 bg-surface-alt text-gray-400 hover:border-white/20'
                                     }
                                 `}
                             >
@@ -160,7 +160,7 @@ export const RegistrarRefeicaoModal: React.FC = () => {
                                 onChange={(e) => setDescricao(e.target.value)}
                                 placeholder="Ex: 200g de frango grelhado, 150g de arroz integral, salada..."
                                 rows={4}
-                                className="w-full bg-[#0D121F] border border-white/5 rounded-2xl px-5 py-4
+                                className="w-full bg-surface-alt border border-white/5 rounded-2xl px-5 py-4
                                     text-white placeholder-gray-600 focus:outline-none focus:border-amber-500/50 
                                     resize-none transition-all text-base leading-relaxed"
                             />
@@ -172,7 +172,7 @@ export const RegistrarRefeicaoModal: React.FC = () => {
                     )}
 
                     {metodo === 'foto' && (
-                        <div className="border-2 border-dashed border-white/5 rounded-2xl p-12 text-center bg-[#0D121F]/50">
+                        <div className="border-2 border-dashed border-white/5 rounded-2xl p-12 text-center bg-surface-alt/50">
                             <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <Camera className="text-gray-500" size={32} />
                             </div>
@@ -191,7 +191,7 @@ export const RegistrarRefeicaoModal: React.FC = () => {
                                 <input
                                     type="text"
                                     placeholder="Buscar alimento..."
-                                    className="w-full bg-[#0D121F] border border-white/5 rounded-2xl pl-12 pr-6 py-4
+                                    className="w-full bg-surface-alt border border-white/5 rounded-2xl pl-12 pr-6 py-4
                                         text-white placeholder-gray-600 focus:outline-none focus:border-amber-500/50 transition-all font-medium"
                                 />
                             </div>
@@ -215,7 +215,7 @@ export const RegistrarRefeicaoModal: React.FC = () => {
                                         type="number"
                                         value={calorias}
                                         onChange={(e) => setCalorias(Number(e.target.value))}
-                                        className="w-full bg-[#131B2C] border border-white/10 rounded-xl px-3 py-2 text-white text-sm font-bold focus:border-amber-500/50 outline-none"
+                                        className="w-full bg-surface border border-white/10 rounded-xl px-3 py-2 text-white text-sm font-bold focus:border-amber-500/50 outline-none"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -224,7 +224,7 @@ export const RegistrarRefeicaoModal: React.FC = () => {
                                         type="number"
                                         value={proteina}
                                         onChange={(e) => setProteina(Number(e.target.value))}
-                                        className="w-full bg-[#131B2C] border border-white/10 rounded-xl px-3 py-2 text-white text-sm font-bold focus:border-amber-500/50 outline-none"
+                                        className="w-full bg-surface border border-white/10 rounded-xl px-3 py-2 text-white text-sm font-bold focus:border-amber-500/50 outline-none"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -233,7 +233,7 @@ export const RegistrarRefeicaoModal: React.FC = () => {
                                         type="number"
                                         value={carboidrato}
                                         onChange={(e) => setCarboidrato(Number(e.target.value))}
-                                        className="w-full bg-[#131B2C] border border-white/10 rounded-xl px-3 py-2 text-white text-sm font-bold focus:border-amber-500/50 outline-none"
+                                        className="w-full bg-surface border border-white/10 rounded-xl px-3 py-2 text-white text-sm font-bold focus:border-amber-500/50 outline-none"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -242,7 +242,7 @@ export const RegistrarRefeicaoModal: React.FC = () => {
                                         type="number"
                                         value={gordura}
                                         onChange={(e) => setGordura(Number(e.target.value))}
-                                        className="w-full bg-[#131B2C] border border-white/10 rounded-xl px-3 py-2 text-white text-sm font-bold focus:border-amber-500/50 outline-none"
+                                        className="w-full bg-surface border border-white/10 rounded-xl px-3 py-2 text-white text-sm font-bold focus:border-amber-500/50 outline-none"
                                     />
                                 </div>
                             </div>
@@ -254,7 +254,7 @@ export const RegistrarRefeicaoModal: React.FC = () => {
                 </div>
 
                 {/* Footer */}
-                <div className="flex gap-4 p-6 border-t border-white/5 sticky bottom-0 bg-[#131B2C]">
+                <div className="flex gap-4 p-6 border-t border-white/5 sticky bottom-0 bg-surface">
                     <button
                         onClick={fecharModal}
                         className="flex-1 px-6 py-4 rounded-xl border border-white/5 text-gray-400

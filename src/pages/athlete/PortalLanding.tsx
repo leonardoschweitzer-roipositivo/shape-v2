@@ -205,8 +205,8 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
     const sexoLabel = athleteData.ficha?.sexo === 'F' ? 'FEMININO' : 'MASCULINO';
 
     // Priorizar peso da avaliação ou diagnóstico sobre a tabela de medidas
-    const peso = lastAval?.measurements?.linear?.weight
-        || (lastAval as any)?.weight
+    const measurements = lastAval?.measurements as Record<string, Record<string, unknown>> | undefined;
+    const peso = Number(measurements?.linear?.weight)
         || lastMedida?.peso
         || undefined;
 
@@ -218,32 +218,32 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
     const dataUltimaAvaliacao = lastAval ? new Date(lastAval.data) : new Date();
 
     // Pull goals from diagnostico
-    const diag = athleteData.diagnostico?.dados;
-    const scoreMeta = diag?.analiseEstetica?.scoreMeta12M ?? 65;
-    const classificacaoMeta = diag?.analiseEstetica?.scoreMeta12M ? (scoreMeta >= 80 ? 'ATLETA' : 'EVOLUINDO') : 'ATLETA'; // Simplificação
+    const diag = athleteData.diagnostico?.dados as Record<string, Record<string, unknown>> | undefined;
+    const analiseEstetica = diag?.analiseEstetica as Record<string, unknown> | undefined;
+    const scoreMeta = Number(analiseEstetica?.scoreMeta12M) || 65;
+    const classificacaoMeta = analiseEstetica?.scoreMeta12M ? (scoreMeta >= 80 ? 'ATLETA' : 'EVOLUINDO') : 'ATLETA';
 
-    const firstMedida = athleteData.medidas?.[athleteData.medidas.length - 1] || lastMedida; // A última do array é a mais antiga/primeira
+    const firstMedida = athleteData.medidas?.[athleteData.medidas.length - 1] || lastMedida;
 
     // Medidas Atuais: Priorizar Avaliação IA -> Diagnóstico -> Tabela Medidas
-    const ombrosAtual = lastAval?.measurements?.linear?.shoulders
-        || (lastAval as any)?.measurements?.shoulders
-        || diag?._medidas?.ombros
+    const medidasDiag = diag?._medidas as Record<string, unknown> | undefined;
+    const ombrosAtual = Number(measurements?.linear?.shoulders)
+        || Number(medidasDiag?.ombros)
         || lastMedida?.ombros
         || 0;
 
-    const cinturaAtual = lastAval?.measurements?.linear?.waist
-        || (lastAval as any)?.measurements?.waist
-        || diag?._medidas?.cintura
+    const cinturaAtual = Number(measurements?.linear?.waist)
+        || Number(medidasDiag?.cintura)
         || lastMedida?.cintura
         || 1;
 
     // Proporção Shape-V (Ombros/Cintura)
-    const ratioAtual = (lastAval as any)?.ratio
-        || lastAval?.results?.classificacao?.ratios?.['Shape-V']
+    const metasProporcoes = diag?.metasProporcoes as unknown as Array<Record<string, unknown>> | undefined;
+    const ratioAtual = Number(lastAval?.results?.classificacao as unknown as Record<string, unknown>) // fallback
         || (ombrosAtual > 0 && cinturaAtual > 0 ? ombrosAtual / cinturaAtual : 0);
-    const itemShapeV = diag?.metasProporcoes?.find((p: any) => p.grupo === 'Shape-V');
-    const ratioMeta = itemShapeV?.meta6M || 1.618;
-    const ratioMeta12M = itemShapeV?.meta12M || 1.618;
+    const itemShapeV = metasProporcoes?.find(p => p.grupo === 'Shape-V');
+    const ratioMeta = Number(itemShapeV?.meta6M) || 1.618;
+    const ratioMeta12M = Number(itemShapeV?.meta12M) || 1.618;
 
     // Medida Ombros cm (para impressionar mais como solicitado)
     // Cálculo reverso da meta em CM para 12 meses
@@ -258,7 +258,8 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
 
     // Percentual de Gordura
     const bfAtual = lastAval?.gordura || 0;
-    const bfMeta = diag?.metasComposicao?.gordura12Meses || 12;
+    const metasComposicao = diag?.metasComposicao as Record<string, unknown> | undefined;
+    const bfMeta = Number(metasComposicao?.gordura12Meses) || 12;
     const firstAval = athleteData.avaliacoes?.[athleteData.avaliacoes.length - 1] || lastAval;
     const bfBasal = firstAval?.gordura || bfAtual + 5;
 

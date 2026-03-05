@@ -15,7 +15,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload || !payload.length) return null;
 
     return (
-        <div className="bg-[#131B2C] border border-white/10 p-3 rounded-lg shadow-xl cursor-default select-none pointer-events-none z-50">
+        <div className="bg-surface border border-white/10 p-3 rounded-lg shadow-xl cursor-default select-none pointer-events-none z-50">
             <p className="text-gray-400 text-[10px] font-bold uppercase mb-2">{label}</p>
             {payload.map((entry: any, index: number) => (
                 <div key={index} className="flex items-center gap-2 mb-1">

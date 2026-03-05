@@ -36,7 +36,7 @@ export const AcademyPersonalDetails: React.FC<AcademyPersonalDetailsProps> = ({
     personalId = 'personal-1', // Default para demo
     onBack
 }) => {
-    const academiaId = 'academy-1' // TODO: pegar do contexto de autenticação  
+    const academiaId = 'academy-1' // NOTA: Academy com mock data — será substituído quando integrado  
 
     const { isLoading, dados, dadosGraficos, periodoGraficos, setPeriodoGraficos } = usePersonalDetails(
         personalId,
@@ -70,9 +70,8 @@ export const AcademyPersonalDetails: React.FC<AcademyPersonalDetailsProps> = ({
 
     const alunosExibidos = mostrarTodosAlunos ? alunosFiltrados : alunosFiltrados.slice(0, 5)
 
-    const handleVerAluno = (alunoId: string) => {
-        // TODO: Implementar navegação para detalhes do aluno
-        console.log('Ver aluno:', alunoId)
+    const handleVerAluno = (_alunoId: string) => {
+        // NOTA: Navegação de aluno ficará disponível na integração Academy
     }
 
     const formatarData = (data: Date) => {
@@ -389,7 +388,7 @@ export const AcademyPersonalDetails: React.FC<AcademyPersonalDetailsProps> = ({
 
                             <select
                                 value={ordenarPor}
-                                onChange={(e) => setOrdenarPor(e.target.value as any)}
+                                onChange={(e) => setOrdenarPor(e.target.value as string)}
                                 className="bg-white/5 border border-white/10 text-white rounded-xl py-2 px-4 text-xs font-bold uppercase tracking-wider focus:outline-none focus:border-primary/50 transition-all appearance-none cursor-pointer"
                             >
                                 <option value="score_desc">Classificar: Score</option>

@@ -25,7 +25,7 @@ export const EvolutionCard: React.FC<EvolutionCardProps> = ({ data }) => {
     };
 
     return (
-        <div className="bg-[#131B2C] rounded-2xl p-6 border border-white/5 shadow-lg relative overflow-hidden h-full flex flex-col group hover:border-purple-500/30 transition-colors">
+        <div className="bg-surface rounded-2xl p-6 border border-white/5 shadow-lg relative overflow-hidden h-full flex flex-col group hover:border-purple-500/30 transition-colors">
 
             {/* Header with Period Selector */}
             <div className="flex justify-between items-start mb-6 z-10 relative">
@@ -33,7 +33,7 @@ export const EvolutionCard: React.FC<EvolutionCardProps> = ({ data }) => {
                     <TrendingUp size={14} className="text-purple-500" />
                     EVOLUÇÃO
                 </h4>
-                <div className="flex bg-[#0A0F1C] rounded-lg p-0.5 border border-white/5">
+                <div className="flex bg-background-dark rounded-lg p-0.5 border border-white/5">
                     {(['7d', '30d', '90d'] as const).map((p) => (
                         <button
                             key={p}

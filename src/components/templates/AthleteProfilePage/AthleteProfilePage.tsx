@@ -353,15 +353,15 @@ const CreateProfileModal: React.FC<CreateProfileModalProps> = ({ isOpen, onClose
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-[#050810]/80 backdrop-blur-sm transition-opacity"
+                className="absolute inset-0 bg-backdrop/80 backdrop-blur-sm transition-opacity"
                 onClick={onClose}
             ></div>
 
             {/* Modal Content */}
-            <div className="relative bg-[#131B2C] border border-white/10 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-fade-in-up">
+            <div className="relative bg-surface border border-white/10 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-fade-in-up">
 
                 {/* Header */}
-                <div className="p-6 border-b border-white/5 flex items-center justify-between bg-[#131B2C]">
+                <div className="p-6 border-b border-white/5 flex items-center justify-between bg-surface">
                     <div className="flex flex-col gap-1">
                         <h2 className="text-sm font-bold text-primary uppercase tracking-widest flex items-center gap-2">
                             Criar Perfil

@@ -663,15 +663,15 @@ export const ProgressiveProfilingModal: React.FC<ProgressiveProfilingModalProps>
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-[#050810]/80 backdrop-blur-sm transition-opacity"
+                className="absolute inset-0 bg-backdrop/80 backdrop-blur-sm transition-opacity"
                 onClick={onClose}
             ></div>
 
             {/* Modal Content */}
-            <div className="relative bg-[#131B2C] border border-white/10 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-fade-in-up">
+            <div className="relative bg-surface border border-white/10 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-fade-in-up">
 
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-white/5 bg-[#131B2C]">
+                <div className="flex items-center justify-between p-6 border-b border-white/5 bg-surface">
                     <div className="flex flex-col gap-2 w-full max-w-md">
                         <div className="flex items-center justify-between text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">
                             <span>Passo {currentStepIndex + 1} de {STEPS.length}</span>
@@ -714,7 +714,7 @@ export const ProgressiveProfilingModal: React.FC<ProgressiveProfilingModalProps>
                 </div>
 
                 {/* Footer */}
-                <div className="p-6 border-t border-white/5 flex justify-between items-center bg-[#0A0F1C]/30 rounded-b-2xl">
+                <div className="p-6 border-t border-white/5 flex justify-between items-center bg-background-dark/30 rounded-b-2xl">
                     <button
                         onClick={handleBack}
                         disabled={isFirstStep}

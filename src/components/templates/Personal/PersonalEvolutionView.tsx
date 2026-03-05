@@ -45,7 +45,7 @@ export const PersonalEvolutionView: React.FC<PersonalEvolutionViewProps> = ({ in
 
                 {!selectedAthlete ? (
                     /* Step 1: Select Athlete */
-                    <div className="bg-[#131B2C] border border-white/10 rounded-2xl shadow-2xl p-6 md:p-10 animate-fade-in-up">
+                    <div className="bg-surface border border-white/10 rounded-2xl shadow-2xl p-6 md:p-10 animate-fade-in-up">
                         <div className="mb-10 flex items-start justify-between">
                             <div>
                                 <div className="flex items-center gap-3 mb-1">
@@ -61,7 +61,7 @@ export const PersonalEvolutionView: React.FC<PersonalEvolutionViewProps> = ({ in
                 ) : (
                     /* Step 2: Evolution Charts */
                     <div className="flex flex-col gap-8 animate-fade-in">
-                        <div className="bg-[#131B2C] border border-white/10 rounded-2xl p-4 flex items-center justify-between">
+                        <div className="bg-surface border border-white/10 rounded-2xl p-4 flex items-center justify-between">
                             <div className="flex items-center gap-4">
                                 <button
                                     onClick={() => setSelectedAthlete(null)}

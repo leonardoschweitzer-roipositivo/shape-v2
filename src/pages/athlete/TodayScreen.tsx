@@ -111,7 +111,7 @@ export function TodayScreen({
             {/* Modal de Pular Treino/Descanso */}
             {modalPularOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-                    <div className="bg-[#0C1220] border border-white/10 rounded-3xl w-full max-w-sm p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+                    <div className="bg-surface-deep border border-white/10 rounded-3xl w-full max-w-sm p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-10 h-10 rounded-full bg-orange-500/20 flex flex-shrink-0 items-center justify-center">
                                 <span className="text-orange-500 text-lg">⏭️</span>

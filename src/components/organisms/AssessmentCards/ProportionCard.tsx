@@ -29,15 +29,15 @@ export const ProportionCard: React.FC<ProportionCardProps> = ({
     return (
         <GlassPanel className="rounded-2xl overflow-hidden border border-white/5 flex flex-col md:flex-row h-auto md:h-72" hoverEffect={false}>
             {/* Visual Section */}
-            <div className="w-full md:w-1/4 relative bg-[#050810] flex items-center justify-center overflow-hidden group">
-                <div className="absolute inset-0 flex items-center justify-center bg-[#050810]">
+            <div className="w-full md:w-1/4 relative bg-backdrop flex items-center justify-center overflow-hidden group">
+                <div className="absolute inset-0 flex items-center justify-center bg-backdrop">
                     <img
                         src={image}
                         alt={title}
                         className={`h-full w-full object-contain transition-opacity duration-500 ${rawImage ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'}`}
                     />
                 </div>
-                {!rawImage && <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#050810]/20 to-[#131B2C]/90"></div>}
+                {!rawImage && <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#050810]/20 to-surface/90"></div>}
             </div>
 
             {/* Data Section */}

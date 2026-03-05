@@ -25,7 +25,7 @@ export const CoachPillarCard: React.FC<CoachPillarCardProps> = ({
     isDisabled = false,
 }) => {
     return (
-        <div className="group relative bg-[#131B2C] border border-white/10 rounded-2xl p-6 transition-all hover:border-primary/30 hover:shadow-[0_0_30px_rgba(0,201,167,0.1)]">
+        <div className="group relative bg-surface border border-white/10 rounded-2xl p-6 transition-all hover:border-primary/30 hover:shadow-[0_0_30px_rgba(0,201,167,0.1)]">
             {/* PRO Badge */}
             {isPro && (
                 <div className="absolute top-4 right-4 px-2 py-1 rounded-md text-[10px] font-bold bg-secondary/20 text-secondary border border-secondary/20 flex items-center gap-1">
@@ -41,7 +41,7 @@ export const CoachPillarCard: React.FC<CoachPillarCardProps> = ({
                     <div className="w-12 h-12 rounded-full bg-primary/10 border border-white/10 flex items-center justify-center">
                         <span className="text-primary font-bold text-lg">{number}</span>
                     </div>
-                    <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#131B2C] border border-primary/30 flex items-center justify-center">
+                    <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-surface border border-primary/30 flex items-center justify-center">
                         <Icon size={12} className="text-primary" />
                     </div>
                 </div>

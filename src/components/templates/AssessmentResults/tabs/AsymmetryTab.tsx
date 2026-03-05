@@ -163,7 +163,7 @@ export const AsymmetryTab: React.FC<AsymmetryTabProps> = ({ assessment }) => {
             score: 0,
             classificacao: 'N/A',
             medidas: m as Record<string, number>,
-            contexto: owner?.contexto as any,
+            contexto: owner?.contexto as unknown as Record<string, unknown>,
         };
 
         const dataForAI = asymmetryItems.map(item => ({
@@ -238,7 +238,7 @@ export const AsymmetryTab: React.FC<AsymmetryTabProps> = ({ assessment }) => {
                                 leftVal={item.leftVal}
                                 rightVal={item.rightVal}
                                 diff={item.diff}
-                                status={item.status as any}
+                                status={item.status as string}
                             />
                             {/* AI insight per group */}
                             {assimetriasIA?.analisePorGrupo?.[item.id] && (

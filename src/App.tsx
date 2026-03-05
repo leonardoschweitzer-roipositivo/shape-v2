@@ -1,62 +1,66 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import {
   Sidebar,
   Header,
   Footer,
   AssessmentModal,
-  AssessmentResults,
-  DesignSystem,
-  Evolution,
-  HallDosDeuses,
   Login,
   AssessmentPage,
   CoachModal,
-  CoachIA,
   DashboardView,
-  AthleteProfilePage,
-  AthleteSettingsPage,
-  RankingPersonaisPage,
   PersonalDashboard,
   PersonalCoachDashboard,
   PersonalAthletesList,
-  PersonalAssessmentView,
-  PersonalEvolutionView,
-  PersonalCoachView,
   PersonalProfilePage,
-  DiagnosticoView,
-  TreinoView,
-  DietaView,
-  AthleteDetailsView,
-  AcademyDashboard,
-  AcademyPersonalsList,
-  AcademyPersonalDetails,
-  AcademyProfilePage,
-  AcademyAthletesList,
-  AcademyAthleteDetails,
   AthleteInvitationModal,
   PersonalInvitationModal,
   StudentRegistration,
   DebugAccess,
   TermsOfUse,
   PrivacyPolicy,
-  LibraryView,
-  GoldenRatioSourceView,
-  MetabolismSourceView,
-  TrainingVolumeSourceView,
-  ProteinSourceView,
-  EnergyBalanceSourceView,
-  TrainingFrequencySourceView,
-  PeriodizationSourceView,
-  FeminineProportionsSourceView,
   NotificationDrawer,
   type ProfileType
 } from '@/components';
+
+// Lazy-loaded components for code splitting
+import {
+  LazyAssessmentResults as AssessmentResults,
+  LazyDesignSystem as DesignSystem,
+  LazyEvolution as Evolution,
+  LazyHallDosDeuses as HallDosDeuses,
+  LazyCoachIA as CoachIA,
+  LazyAthleteProfilePage as AthleteProfilePage,
+  LazyAthleteSettingsPage as AthleteSettingsPage,
+  LazyRankingPersonaisPage as RankingPersonaisPage,
+  LazyPersonalAssessmentView as PersonalAssessmentView,
+  LazyPersonalEvolutionView as PersonalEvolutionView,
+  LazyPersonalCoachView as PersonalCoachView,
+  LazyDiagnosticoView as DiagnosticoView,
+  LazyTreinoView as TreinoView,
+  LazyDietaView as DietaView,
+  LazyAthleteDetailsView as AthleteDetailsView,
+  LazyAcademyDashboard as AcademyDashboard,
+  LazyAcademyPersonalsList as AcademyPersonalsList,
+  LazyAcademyPersonalDetails as AcademyPersonalDetails,
+  LazyAcademyProfilePage as AcademyProfilePage,
+  LazyAcademyAthletesList as AcademyAthletesList,
+  LazyAcademyAthleteDetails as AcademyAthleteDetails,
+  LazyLibraryView as LibraryView,
+  LazyGoldenRatioSourceView as GoldenRatioSourceView,
+  LazyMetabolismSourceView as MetabolismSourceView,
+  LazyTrainingVolumeSourceView as TrainingVolumeSourceView,
+  LazyProteinSourceView as ProteinSourceView,
+  LazyEnergyBalanceSourceView as EnergyBalanceSourceView,
+  LazyTrainingFrequencySourceView as TrainingFrequencySourceView,
+  LazyPeriodizationSourceView as PeriodizationSourceView,
+  LazyFeminineProportionsSourceView as FeminineProportionsSourceView,
+  LazyAthletePortal as AthletePortal,
+  LazyPortalLanding as PortalLanding,
+  LazyNotificationsPage as NotificationsPage,
+  LazyNotificationSettingsPage as NotificationSettingsPage,
+  LazyBibliotecaExerciciosPage as BibliotecaExerciciosPage,
+} from '@/lazyPages';
 // import { GamificationPage } from './pages/GamificationPage'; // DISABLED - Feature para depois
-import { AthletePortal } from './pages/AthletePortal';
-import { PortalLanding } from './pages/athlete/PortalLanding';
-import { NotificationsPage } from './pages/NotificationsPage';
-import { NotificationSettingsPage } from './pages/NotificationSettingsPage';
-import { BibliotecaExerciciosPage } from './pages/BibliotecaExerciciosPage';
 
 import { calculateAge } from '@/utils/dateUtils';
 import { useAthleteStore } from '@/stores/athleteStore';
@@ -69,11 +73,9 @@ import { buscarDiagnostico, type DiagnosticoDados } from '@/services/calculation
 import { buscarPlanoTreino, type PlanoTreino } from '@/services/calculations/treino';
 import { buscarPlanoDieta, type PlanoDieta } from '@/services/calculations/dieta';
 import { supabase } from '@/services/supabase';
-
-type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details' | 'terms' | 'privacy' | 'my-record' | 'gamification' | 'athlete-portal' | 'personal-details' | 'student-details' | 'diagnostico' | 'treino-plano' | 'dieta-plano' | 'consulta-diagnostico' | 'consulta-treino' | 'consulta-dieta' | 'library' | 'library-golden-ratio' | 'library-metabolism' | 'library-training-volume' | 'library-protein' | 'library-energy-balance' | 'library-training-frequency' | 'library-periodization' | 'library-feminine-proportions' | 'notifications' | 'notification-settings' | 'exercicios-biblioteca';
+import { getPageTitle, type ViewState } from '@/utils/getPageTitle';
 
 const App: React.FC = () => {
-  console.log('🎯 App component rendering...');
 
   // Auth Store
   const { isAuthenticated, profile: authProfile, signOut, checkSession, isLoading: isAuthLoading, entity } = useAuthStore();
@@ -134,10 +136,7 @@ const App: React.FC = () => {
   // Derived user profile from Auth Store
   const userProfile: ProfileType = (authProfile?.role?.toLowerCase() as ProfileType) || 'atleta';
 
-  console.log('📊 Initializing stores...');
   const { settings, profile, initializeProfile } = useAthleteStore();
-
-  console.log('✅ Store initialized:', { settings, profile });
 
   // Check Session on Mount
   useEffect(() => {
@@ -367,7 +366,7 @@ const App: React.FC = () => {
     setCurrentView('dashboard');
   };
 
-  const handleQuickLogin = (user: any) => {
+  const handleQuickLogin = (user: Record<string, unknown>) => {
     // Legacy mock login support for DebugAccess
     // In a real scenario, this would likely bypass AuthStore or mock it
     // For now we just don't use it or implement a mockSignIn in AuthStore
@@ -922,90 +921,26 @@ const App: React.FC = () => {
   };
 
 
-  const getPageTitle = () => {
-    if (currentView === 'terms') return 'TERMOS DE USO';
-    if (currentView === 'privacy') return 'POLÍTICA DE PRIVACIDADE';
-    if (currentView === 'library') return 'BIBLIOTECA CIENTÍFICA';
-    if (currentView === 'library-golden-ratio') return 'FONTE: PROPORÇÕES ÁUREAS';
-    if (currentView === 'library-metabolism') return 'FONTE: METABOLISMO E GASTO ENERGÉTICO';
-    if (currentView === 'library-training-volume') return 'FONTE: VOLUME DE TREINO';
-    if (currentView === 'library-protein') return 'FONTE: PROTEÍNA PARA HIPERTROFIA';
-    if (currentView === 'library-energy-balance') return 'FONTE: DÉFICIT E SUPERÁVIT CALÓRICO';
-    if (currentView === 'library-training-frequency') return 'FONTE: FREQUÊNCIA DE TREINO';
-    if (currentView === 'library-periodization') return 'FONTE: PERIODIZAÇÃO DE TREINO';
-    if (currentView === 'library-feminine-proportions') return 'FONTE: PROPORÇÕES CORPORAIS FEMININAS';
-    if (currentView === 'exercicios-biblioteca') return 'BIBLIOTECA DE EXERCÍCIOS';
-
-    if (userProfile === 'academia') {
-      switch (currentView) {
-        case 'dashboard': return 'DASHBOARD ACADEMIA';
-        case 'trainers': return 'PERSONAIS DA ACADEMIA';
-        case 'personal-details': return 'DETALHES DO PERSONAL';
-        case 'students': return 'TODOS OS ALUNOS';
-        case 'student-details': return 'DETALHES DO ALUNO';
-        case 'hall': return 'HALL DOS DEUSES';
-        case 'design-system': return 'DESIGN SYSTEM';
-        case 'trainers-ranking': return 'RANKING PERSONAIS';
-        case 'profile': return 'PERFIL DA ACADEMIA';
-        case 'settings': return 'CONFIGURAÇÕES';
-        default: return currentView.toUpperCase();
-      }
-    }
-
-    if (userProfile === 'personal') {
-      switch (currentView) {
-        case 'dashboard': return 'DASHBOARD PERSONAL';
-        case 'students': return 'MEUS ALUNOS';
-        case 'assessment': return 'AVALIAÇÃO IA';
-        case 'evolution': return 'EVOLUÇÃO DOS ALUNOS';
-        case 'coach': return 'VITRÚVIO IA';
-        case 'diagnostico': return 'DIAGNÓSTICO — PLANO DE EVOLUÇÃO';
-        case 'treino-plano': return 'PLANO DE TREINO — PLANO DE EVOLUÇÃO';
-        case 'hall': return 'HALL DOS DEUSES';
-        case 'results': return 'RESULTADOS DA AVALIAÇÃO IA';
-        case 'design-system': return 'DESIGN SYSTEM';
-        case 'trainers-ranking': return 'RANKING PERSONAIS';
-        case 'profile': return 'MEU PERFIL';
-        case 'settings': return 'CONFIGURAÇÕES';
-        case 'student-registration': return 'CADASTRO DE ALUNO';
-        case 'athlete-details': return 'DETALHES DO ATLETA';
-        case 'notifications': return 'NOTIFICAÇÕES';
-        case 'notification-settings': return 'CONFIGURAR NOTIFICAÇÕES';
-        default: return currentView.toUpperCase();
-      }
-    }
-
-    switch (currentView) {
-      case 'dashboard': return 'INÍCIO';
-      case 'results': return 'RESULTADOS';
-      case 'evolution': return 'EVOLUÇÃO';
-      case 'hall': return 'HALL DOS DEUSES';
-      case 'assessment': return 'AVALIAÇÃO';
-      case 'design-system': return 'DESIGN SYSTEM';
-      case 'trainers': return 'PERSONAIS';
-      case 'students': return 'ALUNOS';
-      case 'trainers-ranking': return 'RANKING PERSONAIS';
-      case 'profile': return 'MEU PERFIL';
-      case 'settings': return 'CONFIGURAÇÕES';
-      case 'my-record': return 'MINHA FICHA';
-      case 'athlete-portal': return 'PORTAL DO ATLETA';
-      default: return currentView.toUpperCase();
-    }
-  }
+  // getPageTitle extracted to @/utils/getPageTitle.ts
 
   // Portal do Atleta via token (bypass auth — atleta acessa via link de convite)
   if (portalToken) {
     return (
-      <PortalLanding
-        token={portalToken}
-        onClose={() => {
-          setPortalToken(null);
-          // Remove token from URL
-          const url = new URL(window.location.href);
-          url.searchParams.delete('token');
-          window.history.replaceState({}, '', url.pathname);
-        }}
-      />
+      <Suspense fallback={
+        <div className="flex h-screen w-full items-center justify-center bg-background-dark text-white">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      }>
+        <PortalLanding
+          token={portalToken}
+          onClose={() => {
+            setPortalToken(null);
+            const url = new URL(window.location.href);
+            url.searchParams.delete('token');
+            window.history.replaceState({}, '', url.pathname);
+          }}
+        />
+      </Suspense>
     );
   }
 
@@ -1048,14 +983,14 @@ const App: React.FC = () => {
           onRegisterStudent={() => setCurrentView('student-registration')}
           onInvitePersonal={handleInvitePersonal}
           onOpenNotifications={() => setIsNotificationDrawerOpen(true)}
-          title={getPageTitle()}
+          title={getPageTitle(currentView, userProfile)}
           userProfile={userProfile}
           notificacoesNaoLidas={notificacoesNaoLidas}
         />
 
         {/* Content Area - Flex container to manage scrolling independently */}
         <div className="flex-1 overflow-y-auto relative flex flex-col custom-scrollbar">
-          {renderContent()}
+          <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>}>{renderContent()}</Suspense>
 
           <Footer
             onOpenDesignSystem={() => setCurrentView('design-system')}
@@ -1082,7 +1017,7 @@ const App: React.FC = () => {
         isOpen={isInviteModalOpen}
         onClose={() => setIsInviteModalOpen(false)}
         onInvite={(data) => {
-          console.log('Inviting athlete:', data);
+
           alert(`Convite enviado/Gerado! (Verifique o console para detalhes)`);
         }}
       />
@@ -1090,7 +1025,7 @@ const App: React.FC = () => {
         isOpen={isPersonalInviteModalOpen}
         onClose={() => setIsPersonalInviteModalOpen(false)}
         onInvite={(data) => {
-          console.log('Inviting personal:', data);
+
           alert(`Convite de Personal enviado/Gerado!`);
         }}
       />

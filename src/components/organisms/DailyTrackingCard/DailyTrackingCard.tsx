@@ -152,7 +152,7 @@ export const DailyTrackingCard: React.FC<DailyTrackingCardProps> = ({
                 abrirModal(trackerId)
                 break
             default:
-                console.log(`Clicked tracker: ${trackerId}`)
+                break
         }
     }
 
@@ -161,7 +161,7 @@ export const DailyTrackingCard: React.FC<DailyTrackingCardProps> = ({
             {/* Top Section: Header & Score */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Header Card */}
-                <div className="bg-[#0D121F] border border-white/5 rounded-xl p-6 flex flex-col justify-center">
+                <div className="bg-surface-alt border border-white/5 rounded-xl p-6 flex flex-col justify-center">
                     <DailyTrackerHeader
                         nomeAtleta={nomeAtleta}
                         streak={resumoDiario.streakAtual}
@@ -182,7 +182,7 @@ export const DailyTrackingCard: React.FC<DailyTrackingCardProps> = ({
 
             {/* Section Header: Metas do Dia */}
             <div className="flex items-center gap-4">
-                <div className="p-2.5 bg-[#131B2C] rounded-xl border border-white/5 text-blue-400 shadow-lg">
+                <div className="p-2.5 bg-surface rounded-xl border border-white/5 text-blue-400 shadow-lg">
                     <Target size={22} />
                 </div>
                 <div>
@@ -207,11 +207,11 @@ export const DailyTrackingCard: React.FC<DailyTrackingCardProps> = ({
             </div>
 
             {/* Resumo Nutricional Section */}
-            <div className="p-6 bg-[#0D121F] rounded-2xl border border-white/5">
+            <div className="p-6 bg-surface-alt rounded-2xl border border-white/5">
                 {/* Section Header */}
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-4">
-                        <div className="p-2.5 bg-[#131B2C] rounded-xl border border-white/5 text-emerald-400 shadow-lg">
+                        <div className="p-2.5 bg-surface rounded-xl border border-white/5 text-emerald-400 shadow-lg">
                             <Apple size={22} />
                         </div>
                         <div>

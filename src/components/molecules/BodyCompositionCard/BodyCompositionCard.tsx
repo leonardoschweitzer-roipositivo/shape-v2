@@ -33,12 +33,12 @@ export const BodyCompositionCard: React.FC<BodyCompositionCardProps> = ({
     const isPositiveTrend = trend > 0;
 
     return (
-        <div className="bg-[#131B2C] rounded-2xl p-5 border border-white/5 shadow-lg flex flex-col justify-between h-full relative overflow-hidden group hover:border-blue-500/30 transition-colors">
+        <div className="bg-surface rounded-2xl p-5 border border-white/5 shadow-lg flex flex-col justify-between h-full relative overflow-hidden group hover:border-blue-500/30 transition-colors">
 
             {/* Header */}
             <div className="flex justify-between items-start mb-2 relative z-10">
                 <div className="flex items-center gap-2">
-                    <div className="p-1.5 bg-[#0A0F1C] rounded-lg border border-white/5 text-gray-400 group-hover:text-blue-400 transition-colors">
+                    <div className="p-1.5 bg-background-dark rounded-lg border border-white/5 text-gray-400 group-hover:text-blue-400 transition-colors">
                         {icon || <Activity size={16} />}
                     </div>
                     <h4 className="text-gray-400 text-xs font-bold tracking-wider uppercase">{title}</h4>
@@ -72,7 +72,7 @@ export const BodyCompositionCard: React.FC<BodyCompositionCardProps> = ({
                     <span>Meta: <span className="text-white font-medium">{goal}{unit}</span></span>
                     <span>{progress.toFixed(0)}%</span>
                 </div>
-                <div className="h-1.5 bg-[#0A0F1C] rounded-full overflow-hidden border border-white/5">
+                <div className="h-1.5 bg-background-dark rounded-full overflow-hidden border border-white/5">
                     <div
                         className="h-full bg-blue-500 rounded-full transition-all duration-1000"
                         style={{ width: `${progress}%` }}

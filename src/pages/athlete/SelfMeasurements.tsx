@@ -203,9 +203,9 @@ export function SelfMeasurements({ atletaId, atletaNome, sexo, onSave, onBack }:
                                                     type="number"
                                                     step="0.1"
                                                     value={values[field.key] || ''}
-                                                    onChange={(e) => handleChange(field.key, e.target.value as any)}
+                                                    onChange={(e) => handleChange(field.key, e.target.value as string)}
                                                     placeholder={field.placeholder}
-                                                    className="w-full bg-[#0A0F1C] border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-700 focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/20 text-sm font-mono transition-all"
+                                                    className="w-full bg-background-dark border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-700 focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/20 text-sm font-mono transition-all"
                                                 />
                                                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-gray-600 font-bold">
                                                     {field.unit}

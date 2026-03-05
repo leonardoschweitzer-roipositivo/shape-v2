@@ -53,118 +53,15 @@ interface AthleteDetailsViewProps {
     onConsultAssessment: (assessmentId: string) => void;
     hideStatusControl?: boolean;
     onDeleteAthlete?: (athleteId: string) => void;
-    onViewPlan?: (plano: any) => void;
+    onViewPlan?: (plano: Record<string, unknown>) => void;
 }
 
-const SectionHeader = ({ icon: Icon, title, subtitle, rightElement }: { icon: any, title: string, subtitle: string, rightElement?: React.ReactNode }) => (
-    <div className="flex items-center justify-between mb-8 group">
-        <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-primary group-hover:border-primary/50 transition-all shadow-lg backdrop-blur-sm">
-                <Icon size={24} />
-            </div>
-            <div>
-                <h2 className="text-2xl font-bold text-white uppercase tracking-tight leading-none mb-1">{title}</h2>
-                <p className="text-gray-500 text-sm font-medium">{subtitle}</p>
-            </div>
-        </div>
-        {rightElement}
-    </div>
-);
 
-const InfoCard = ({ icon: Icon, label, value }: { icon: any, label: string, value: string }) => (
-    <div className="bg-[#0A0F1C] p-4 rounded-xl border border-white/5 flex items-center gap-4 group hover:border-primary/30 transition-all">
-        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary/20 transition-all">
-            <Icon size={20} />
-        </div>
-        <div>
-            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{label}</p>
-            <p className="text-white font-semibold">{value}</p>
-        </div>
-    </div>
-);
+// ═══════════════════════════════════════════════════════════
+// EXTRACTED SUBCOMPONENTS
+// ═══════════════════════════════════════════════════════════
+import { SectionHeader, InfoCard, MeasurementItem, Accordion, StatusSelector, calculateAge } from './athlete-details/AthleteDetailsSections';
 
-const MeasurementItem = ({ label, value, unit, isEditing, onChange }: { label: string, value: number, unit: string, isEditing?: boolean, onChange?: (val: number) => void }) => (
-    <div className="bg-[#0A0F1C]/50 p-3 rounded-lg border border-white/5 flex justify-between items-center group hover:bg-[#0A0F1C] transition-all">
-        <span className="text-gray-400 text-xs font-bold uppercase tracking-wider">{label}</span>
-        {isEditing ? (
-            <div className="flex items-center gap-1">
-                <input
-                    type="number"
-                    value={value || ''}
-                    onChange={(e) => onChange?.(parseFloat(e.target.value) || 0)}
-                    className="w-16 bg-transparent text-right text-white font-mono font-bold outline-none border-b border-primary/50 focus:border-primary px-1"
-                />
-                <span className="text-[10px] text-gray-500 font-normal">{unit}</span>
-            </div>
-        ) : (
-            <span className="text-white font-mono font-bold">
-                {value} <span className="text-[10px] text-gray-500 font-normal">{unit}</span>
-            </span>
-        )}
-    </div>
-);
-
-const Accordion = ({ title, icon: Icon, children, isOpen, onToggle, rightElement }: { title: string, icon: any, children: React.ReactNode, isOpen: boolean, onToggle: () => void, rightElement?: React.ReactNode }) => (
-    <div className="border border-white/10 rounded-2xl overflow-hidden bg-[#131B2C] shadow-lg transition-all">
-        <div className="flex items-center w-full hover:bg-white/[0.02] transition-colors group">
-            <button
-                onClick={onToggle}
-                className="flex-1 flex items-center justify-between p-6 text-left"
-            >
-                <div className="flex items-center gap-4">
-                    <div className={`p-2 rounded-lg transition-all ${isOpen ? 'bg-primary text-[#0A0F1C]' : 'bg-white/5 text-gray-400'}`}>
-                        <Icon size={20} />
-                    </div>
-                    <h3 className="text-lg font-bold text-white uppercase tracking-wide">{title}</h3>
-                </div>
-            </button>
-            <div className="flex items-center gap-4 pr-6">
-                {rightElement}
-                <button onClick={onToggle} className="p-2">
-                    {isOpen ? <ChevronUp className="text-primary" /> : <ChevronDown className="text-gray-500 group-hover:text-white" />}
-                </button>
-            </div>
-        </div>
-        {isOpen && (
-            <div className="p-6 pt-0 border-t border-white/5 animate-fade-in">
-                {children}
-            </div>
-        )}
-    </div>
-);
-
-const StatusSelector = ({ status, onChange }: { status: string, onChange: (s: string) => void }) => (
-    <div className="flex bg-white/5 border border-white/10 rounded-xl p-1">
-        {[
-            { id: 'active', label: 'Ativo', icon: Check, color: 'text-green-500' },
-            { id: 'inactive', label: 'Inativo', icon: X, color: 'text-gray-400' },
-            { id: 'archived', label: 'Arquivar', icon: Archive, color: 'text-amber-500' }
-        ].map((s) => (
-            <button
-                key={s.id}
-                onClick={() => onChange(s.id)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${status === s.id ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300'
-                    }`}
-            >
-                <s.icon size={12} className={status === s.id ? s.color : ''} />
-                {s.label}
-            </button>
-        ))}
-    </div>
-);
-
-const calculateAge = (birthDateStr?: string): number | null => {
-    if (!birthDateStr) return null;
-    const birth = new Date(birthDateStr);
-    if (isNaN(birth.getTime())) return null;
-    const today = new Date();
-    let age = today.getFullYear() - birth.getFullYear();
-    const m = today.getMonth() - birth.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-        age--;
-    }
-    return age;
-};
 
 export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete, onBack, onNewAssessment, onConsultAssessment, hideStatusControl = false, onDeleteAthlete, onViewPlan }) => {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -305,10 +202,10 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
 
             // 3. Fallback: tentar por diagnostico_id
             deletePromises.push(
-                supabase.from('planos_treino').delete().eq('diagnostico_id' as any, planoId)
+                supabase.from('planos_treino').delete().eq('diagnostico_id' as string, planoId)
             );
             deletePromises.push(
-                supabase.from('planos_dieta').delete().eq('diagnostico_id' as any, planoId)
+                supabase.from('planos_dieta').delete().eq('diagnostico_id' as string, planoId)
             );
 
             // Executar tudo em paralelo (allSettled = não bloqueia se um falhar)
@@ -338,7 +235,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
 
     const latestAssessment = draftAthlete.assessments?.[0];
 
-    const updateMeasurement = (field: any, value: number) => {
+    const updateMeasurement = (field: string, value: number) => {
         if (!latestAssessment) return;
         setDraftAthlete(prev => {
             const newAssessments = [...prev.assessments];
@@ -350,7 +247,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
         });
     };
 
-    const updateSkinfold = (field: any, value: number) => {
+    const updateSkinfold = (field: string, value: number) => {
         if (!latestAssessment) return;
         setDraftAthlete(prev => {
             const newAssessments = [...prev.assessments];
@@ -401,7 +298,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
             await atletaService.atualizarFicha(draftAthlete.id, {
                 sexo: draftAthlete.gender === 'FEMALE' ? 'F' : 'M',
                 data_nascimento: draftAthlete.birthDate || null,
-                contexto: draftAthlete.contexto as any,
+                contexto: draftAthlete.contexto as Record<string, unknown>,
                 ...(latestAssessment ? {
                     altura: latestAssessment.measurements.height,
                     pelve: latestAssessment.measurements.pelvis,
@@ -573,7 +470,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                     {!hideStatusControl && (
                                         <StatusSelector
                                             status={draftAthlete.status}
-                                            onChange={(s) => setDraftAthlete({ ...draftAthlete, status: s as any })}
+                                            onChange={(s) => setDraftAthlete({ ...draftAthlete, status: s as string })}
                                         />
                                     )}
                                     {onDeleteAthlete && (
@@ -593,7 +490,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                 <>
                                     {/* Linha 1: Nome, Email, Telefone */}
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div className="bg-[#0A0F1C] p-4 rounded-xl border border-primary/30 flex flex-col gap-1">
+                                        <div className="bg-background-dark p-4 rounded-xl border border-primary/30 flex flex-col gap-1">
                                             <label className="text-[10px] font-bold text-primary uppercase tracking-widest">Nome Completo</label>
                                             <input
                                                 value={draftAthlete.name}
@@ -601,7 +498,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                                 className="bg-transparent text-white font-semibold outline-none border-b border-white/10 focus:border-primary transition-colors py-1"
                                             />
                                         </div>
-                                        <div className="bg-[#0A0F1C] p-4 rounded-xl border border-primary/30 flex flex-col gap-1">
+                                        <div className="bg-background-dark p-4 rounded-xl border border-primary/30 flex flex-col gap-1">
                                             <label className="text-[10px] font-bold text-primary uppercase tracking-widest">Email para Contato</label>
                                             <input
                                                 type="email"
@@ -610,7 +507,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                                 className="bg-transparent text-white font-semibold outline-none border-b border-white/10 focus:border-primary transition-colors py-1"
                                             />
                                         </div>
-                                        <div className="bg-[#0A0F1C] p-4 rounded-xl border border-primary/30 flex flex-col gap-1">
+                                        <div className="bg-background-dark p-4 rounded-xl border border-primary/30 flex flex-col gap-1">
                                             <label className="text-[10px] font-bold text-primary uppercase tracking-widest">Telefone</label>
                                             <input
                                                 type="tel"
@@ -623,19 +520,19 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                     </div>
                                     {/* Linha 2: Gênero, Data de Nascimento, Vinculado desde */}
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div className="bg-[#0A0F1C] p-4 rounded-xl border border-primary/30 flex flex-col gap-1">
+                                        <div className="bg-background-dark p-4 rounded-xl border border-primary/30 flex flex-col gap-1">
                                             <label className="text-[10px] font-bold text-primary uppercase tracking-widest">Gênero</label>
                                             <select
                                                 className="bg-transparent text-white font-semibold outline-none cursor-pointer py-1"
                                                 value={draftAthlete.gender}
-                                                onChange={e => setDraftAthlete({ ...draftAthlete, gender: e.target.value as any })}
+                                                onChange={e => setDraftAthlete({ ...draftAthlete, gender: e.target.value as string })}
                                             >
-                                                <option value="MALE" className="bg-[#131B2C]">Masculino</option>
-                                                <option value="FEMALE" className="bg-[#131B2C]">Feminino</option>
-                                                <option value="OTHER" className="bg-[#131B2C]">Outro</option>
+                                                <option value="MALE" className="bg-surface">Masculino</option>
+                                                <option value="FEMALE" className="bg-surface">Feminino</option>
+                                                <option value="OTHER" className="bg-surface">Outro</option>
                                             </select>
                                         </div>
-                                        <div className="bg-[#0A0F1C] p-4 rounded-xl border border-primary/30 flex flex-col gap-1">
+                                        <div className="bg-background-dark p-4 rounded-xl border border-primary/30 flex flex-col gap-1">
                                             <label className="text-[10px] font-bold text-primary uppercase tracking-widest">Data de Nascimento</label>
                                             <input
                                                 type="date"
@@ -644,7 +541,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                                 className="bg-transparent text-white font-semibold outline-none border-b border-white/10 focus:border-primary transition-colors py-1 [color-scheme:dark]"
                                             />
                                         </div>
-                                        <div className="bg-[#0A0F1C] p-4 rounded-xl border border-white/5 opacity-50 flex items-center gap-4">
+                                        <div className="bg-background-dark p-4 rounded-xl border border-white/5 opacity-50 flex items-center gap-4">
                                             <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-gray-500">
                                                 <Calendar size={20} />
                                             </div>
@@ -755,7 +652,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                                 <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
                                                     <GitCommit size={12} /> Simetria de Membros
                                                 </h4>
-                                                <div className="bg-[#0A0F1C] rounded-xl border border-white/5 p-4 space-y-3">
+                                                <div className="bg-background-dark rounded-xl border border-white/5 p-4 space-y-3">
                                                     <div className="grid grid-cols-[1fr_auto_1fr] gap-4 mb-2">
                                                         <span className="text-[8px] font-bold text-primary uppercase text-right">Esq (cm)</span>
                                                         <span className="text-[8px] font-bold text-gray-600 uppercase text-center w-24">Região</span>
@@ -773,13 +670,13 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                                         <div key={idx} className="grid grid-cols-[1fr_auto_1fr] gap-4 items-center">
                                                             <div className="bg-white/5 px-2 py-1 rounded text-right text-white font-mono text-sm">
                                                                 {isEditing ? (
-                                                                    <input type="number" value={item.left || ''} onChange={(e) => updateMeasurement(item.kLeft as any, parseFloat(e.target.value) || 0)} className="w-16 bg-transparent text-right outline-none border-b border-primary/50 focus:border-primary px-1" />
+                                                                    <input type="number" value={item.left || ''} onChange={(e) => updateMeasurement(item.kLeft as string, parseFloat(e.target.value) || 0)} className="w-16 bg-transparent text-right outline-none border-b border-primary/50 focus:border-primary px-1" />
                                                                 ) : item.left}
                                                             </div>
                                                             <div className="text-[10px] font-medium text-gray-400 w-24 text-center">{item.label}</div>
                                                             <div className="bg-white/5 px-2 py-1 rounded text-left text-white font-mono text-sm">
                                                                 {isEditing ? (
-                                                                    <input type="number" value={item.right || ''} onChange={(e) => updateMeasurement(item.kRight as any, parseFloat(e.target.value) || 0)} className="w-16 bg-transparent text-left outline-none border-b border-primary/50 focus:border-primary px-1" />
+                                                                    <input type="number" value={item.right || ''} onChange={(e) => updateMeasurement(item.kRight as string, parseFloat(e.target.value) || 0)} className="w-16 bg-transparent text-left outline-none border-b border-primary/50 focus:border-primary px-1" />
                                                                 ) : item.right}
                                                             </div>
                                                         </div>
@@ -830,7 +727,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                             }
                         />
 
-                        <div className="bg-[#131B2C] border border-white/10 rounded-2xl overflow-hidden shadow-xl">
+                        <div className="bg-surface border border-white/10 rounded-2xl overflow-hidden shadow-xl">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left border-collapse">
                                     <thead>
@@ -874,7 +771,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                                             Consultar
                                                         </button>
                                                         <button
-                                                            onClick={() => handleDeleteAssessment(ass.id, (ass as any)._source)}
+                                                            onClick={() => handleDeleteAssessment(ass.id, (ass as Record<string, unknown>)._source)}
                                                             className="p-2 hover:bg-red-500/20 rounded-lg text-gray-500 hover:text-red-400 transition-all flex items-center gap-2 text-[10px] font-bold uppercase"
                                                         >
                                                             <Trash2 size={16} />
@@ -904,11 +801,11 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                         />
 
                         {loadingPlans ? (
-                            <div className="flex items-center justify-center p-12 bg-[#131B2C] border border-white/10 rounded-2xl">
+                            <div className="flex items-center justify-center p-12 bg-surface border border-white/10 rounded-2xl">
                                 <Loader2 className="text-primary animate-spin" size={24} />
                             </div>
                         ) : evolutionPlans.length > 0 ? (
-                            <div className="bg-[#131B2C] border border-white/10 rounded-2xl overflow-hidden shadow-xl">
+                            <div className="bg-surface border border-white/10 rounded-2xl overflow-hidden shadow-xl">
                                 <table className="w-full text-left border-collapse">
                                     <thead>
                                         <tr className="bg-white/5 border-b border-white/10">
@@ -976,7 +873,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                 </table>
                             </div>
                         ) : (
-                            <div className="bg-[#131B2C] border border-dashed border-white/10 rounded-2xl p-12 text-center">
+                            <div className="bg-surface border border-dashed border-white/10 rounded-2xl p-12 text-center">
                                 <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4 text-gray-600">
                                     <History size={32} />
                                 </div>
@@ -1026,7 +923,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                 {!hideStatusControl && (
                                     <StatusSelector
                                         status={draftAthlete.status}
-                                        onChange={(s) => setDraftAthlete({ ...draftAthlete, status: s as any })}
+                                        onChange={(s) => setDraftAthlete({ ...draftAthlete, status: s as string })}
                                     />
                                 )}
                                 {onDeleteAthlete && (
@@ -1047,7 +944,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
             {/* Delete Confirmation Modal */}
             {showDeleteConfirm && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-[#131B2C] border border-white/10 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
+                    <div className="bg-surface border border-white/10 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
                         <div className="flex flex-col items-center text-center gap-4">
                             <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center">
                                 <Trash2 className="text-red-400" size={28} />
@@ -1088,7 +985,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
             {/* Modal: Portal do Aluno */}
             {showPortalModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-[#131B2C] border border-white/10 rounded-2xl shadow-2xl max-w-lg w-full mx-4 overflow-hidden animate-in zoom-in-95 duration-200">
+                    <div className="bg-surface border border-white/10 rounded-2xl shadow-2xl max-w-lg w-full mx-4 overflow-hidden animate-in zoom-in-95 duration-200">
                         {/* Header */}
                         <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
                             <div className="flex items-center gap-3">

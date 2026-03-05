@@ -68,6 +68,6 @@ export const mockInsight: Insight = {
     mensagem: 'Proteína crítica: apenas 80g de 180g. Você pode perder massa muscular!',
     acao: {
         label: 'Ver sugestões',
-        callback: () => console.log('Ver sugestões de proteína'),
+        callback: () => { /* noop */ },
     },
 }

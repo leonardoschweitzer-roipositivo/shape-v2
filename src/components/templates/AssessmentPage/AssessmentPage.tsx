@@ -20,7 +20,7 @@ export const AssessmentPage: React.FC<AssessmentPageProps> = ({ onConfirm, initi
                 <div className="h-px w-full bg-white/10" />
 
                 {/* Form Card */}
-                <div className="bg-[#131B2C] border border-white/10 rounded-2xl shadow-2xl p-6 md:p-10 animate-fade-in-up">
+                <div className="bg-surface border border-white/10 rounded-2xl shadow-2xl p-6 md:p-10 animate-fade-in-up">
                     {/* Internal Form Header - Match design from Image 0 */}
                     <div className="mb-10 flex items-start justify-between">
                         <div>

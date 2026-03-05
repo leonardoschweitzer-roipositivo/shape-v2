@@ -11,7 +11,7 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({ onOpenDesignSystem, onOpenTerms, onOpenPrivacy, onOpenLibrary, onOpenAthletePortal }) => {
   return (
-    <footer className="w-full border-t border-card-border bg-[#0A0F1C] py-6 px-8 mt-auto z-10">
+    <footer className="w-full border-t border-card-border bg-background-dark py-6 px-8 mt-auto z-10">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
         <p className="text-xs text-gray-500 font-medium">
           &copy; 2023 VITRU IA Analytics. Todos os direitos reservados.

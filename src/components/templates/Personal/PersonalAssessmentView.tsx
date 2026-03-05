@@ -50,7 +50,7 @@ export const PersonalAssessmentView: React.FC<PersonalAssessmentViewProps> = ({ 
 
                 {!selectedAthlete ? (
                     /* Step 1: Select Athlete */
-                    <div className="bg-[#131B2C] border border-white/10 rounded-2xl shadow-2xl p-6 md:p-10 animate-fade-in-up">
+                    <div className="bg-surface border border-white/10 rounded-2xl shadow-2xl p-6 md:p-10 animate-fade-in-up">
                         <div className="mb-10 flex items-start justify-between">
                             <div>
                                 <div className="flex items-center gap-3 mb-1">
@@ -118,7 +118,7 @@ const AssessmentFormStep: React.FC<AssessmentFormStepProps> = ({ athlete, athlet
     } : undefined;
 
     return (
-        <div className="bg-[#131B2C] border border-white/10 rounded-2xl shadow-2xl p-6 md:p-10 animate-fade-in-up">
+        <div className="bg-surface border border-white/10 rounded-2xl shadow-2xl p-6 md:p-10 animate-fade-in-up">
             {/* Header */}
             <div className="mb-8 flex items-start justify-between flex-wrap gap-4">
                 <div className="flex items-center gap-4">

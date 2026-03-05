@@ -203,7 +203,7 @@ export const useDailyTrackingStore = create<DailyTrackingState>()(
                 //     const novosIds = novosBadges.map(b => b.id)
                 //     set({ badgesConquistados: [...state.badgesConquistados, ...novosIds] })
                 //
-                //     // TODO: Mostrar notificação de badge conquistado
+                //     // NOTA: Notificação de badge será implementada com sistema de gamificação
                 //     console.log('🏆 Novos badges conquistados:', novosBadges)
                 // }
             },

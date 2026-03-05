@@ -21,9 +21,3 @@ export const supabase = createSupabaseClient<Database>(
     import.meta.env.VITE_SUPABASE_ANON_KEY!
 )
 
-/**
- * @deprecated Use 'supabase' directly instead
- */
-export function createClient() {
-    return supabase
-}

@@ -70,7 +70,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     };
 
     return (
-        <div className="flex min-h-screen w-full bg-[#0A0F1C] text-white font-sans overflow-hidden">
+        <div className="flex min-h-screen w-full bg-background-dark text-white font-sans overflow-hidden">
             {/* Left Side - Hero Section */}
             <div className="hidden lg:flex w-1/2 relative bg-gradient-to-br from-[#0A0F1C] to-[#1a1f2e] items-center justify-center overflow-hidden">
                 {/* Background Image */}
