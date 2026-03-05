@@ -360,125 +360,118 @@ export function CardTreino({ treino, proximoTreino, exerciciosFeitos, exercicioT
                 {/* Lista de Exercícios com Timer */}
                 {treino.exercicios && treino.exercicios.length > 0 && (
                     <div className="mb-6 space-y-3 animate-in fade-in duration-300">
-                        <div className="bg-white/[0.03] rounded-xl p-4 border border-white/5">
-                            <h4 className="text-xs font-bold text-gray-500 mb-4 uppercase tracking-[0.2em]">
-                                Lista de Exercícios
-                            </h4>
-                            <div className="space-y-3">
-                                {treino.exercicios.map((ex) => {
-                                    const timer = exercicioTimers[ex.id]
-                                    const timerStatus = timer?.status || 'idle'
-                                    const tempoMs = getTempoAtual(timer)
-                                    const isDone = timerStatus === 'done'
-                                    const isRunning = timerStatus === 'running'
-                                    const isPaused = timerStatus === 'paused'
+                        {treino.exercicios.map((ex) => {
+                            const timer = exercicioTimers[ex.id]
+                            const timerStatus = timer?.status || 'idle'
+                            const tempoMs = getTempoAtual(timer)
+                            const isDone = timerStatus === 'done'
+                            const isRunning = timerStatus === 'running'
+                            const isPaused = timerStatus === 'paused'
 
-                                    return (
-                                        <div
-                                            key={ex.id}
-                                            className={`rounded-xl p-3 transition-all duration-300 ${isDone
-                                                ? 'bg-emerald-500/5 border border-emerald-500/10'
-                                                : isRunning
-                                                    ? 'bg-indigo-500/5 border border-indigo-500/20'
-                                                    : 'bg-white/[0.02] border border-white/5'
-                                                }`}
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                {/* Botão de ação do timer */}
-                                                {isDone ? (
-                                                    <button
-                                                        onClick={() => handleUndoExercicio(ex.id)}
-                                                        className="w-8 h-8 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 flex items-center justify-center flex-shrink-0 transition-colors group/undo"
-                                                        title="Desmarcar exercício"
-                                                    >
-                                                        <Check size={16} className="text-emerald-400 group-hover/undo:scale-90 transition-transform" strokeWidth={3} />
-                                                    </button>
-                                                ) : isRunning ? (
-                                                    <button
-                                                        onClick={() => handlePauseExercicio(ex.id)}
-                                                        className="w-8 h-8 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 flex items-center justify-center flex-shrink-0 transition-colors"
-                                                    >
-                                                        <Pause size={16} className="text-amber-400" />
-                                                    </button>
-                                                ) : (
-                                                    <button
-                                                        onClick={() => handlePlayExercicio(ex.id)}
-                                                        className="w-8 h-8 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 flex items-center justify-center flex-shrink-0 transition-colors"
-                                                    >
-                                                        <Play size={14} className="text-indigo-400 ml-0.5" />
-                                                    </button>
-                                                )}
+                            return (
+                                <div
+                                    key={ex.id}
+                                    className={`rounded-xl p-3 transition-all duration-300 ${isDone
+                                        ? 'bg-emerald-500/5 border border-emerald-500/10'
+                                        : isRunning
+                                            ? 'bg-indigo-500/5 border border-indigo-500/20'
+                                            : 'bg-white/[0.02] border border-white/5'
+                                        }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        {/* Botão de ação do timer */}
+                                        {isDone ? (
+                                            <button
+                                                onClick={() => handleUndoExercicio(ex.id)}
+                                                className="w-8 h-8 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 flex items-center justify-center flex-shrink-0 transition-colors group/undo"
+                                                title="Desmarcar exercício"
+                                            >
+                                                <Check size={16} className="text-emerald-400 group-hover/undo:scale-90 transition-transform" strokeWidth={3} />
+                                            </button>
+                                        ) : isRunning ? (
+                                            <button
+                                                onClick={() => handlePauseExercicio(ex.id)}
+                                                className="w-8 h-8 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 flex items-center justify-center flex-shrink-0 transition-colors"
+                                            >
+                                                <Pause size={16} className="text-amber-400" />
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={() => handlePlayExercicio(ex.id)}
+                                                className="w-8 h-8 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 flex items-center justify-center flex-shrink-0 transition-colors"
+                                            >
+                                                <Play size={14} className="text-indigo-400 ml-0.5" />
+                                            </button>
+                                        )}
 
-                                                {/* Nome do exercício */}
-                                                <div className="flex-1 min-w-0">
-                                                    <p className={`text-sm font-medium transition-colors ${isDone ? 'text-gray-500 line-through' : 'text-gray-200'
-                                                        }`}>
-                                                        {ex.nome}
-                                                    </p>
-                                                    {ex.foco && !isDone && (
-                                                        <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">
-                                                            {ex.foco}
-                                                        </p>
-                                                    )}
-                                                </div>
-
-                                                {/* Botão de Vídeo 🎬 */}
-                                                <button
-                                                    onClick={async (e) => {
-                                                        e.stopPropagation()
-                                                        // Busca na biblioteca pelo nome do exercício
-                                                        const found = await exercicioBibliotecaService.buscarPorNomeSimilar(ex.nome)
-                                                        setExercicioBiblioteca(found ?? {
-                                                            id: ex.id,
-                                                            nome: ex.nome,
-                                                            grupo_muscular: 'peito',
-                                                            nivel: 'intermediario',
-                                                            em_breve: true,
-                                                            ativo: true,
-                                                            descricao: ex.dica || undefined,
-                                                            created_at: new Date().toISOString(),
-                                                            updated_at: new Date().toISOString(),
-                                                        } as ExercicioBiblioteca)
-                                                    }}
-                                                    className="w-7 h-7 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 flex items-center justify-center flex-shrink-0 transition-colors"
-                                                    title="Ver vídeo"
-                                                >
-                                                    <Video size={13} className="text-indigo-400" />
-                                                </button>
-
-                                                {/* Timer ou Séries */}
-                                                {(isRunning || isPaused || isDone) && tempoMs > 0 ? (
-                                                    <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg ${isDone ? 'bg-emerald-500/10' : isRunning ? 'bg-indigo-500/10' : 'bg-white/5'
-                                                        }`}>
-                                                        <Timer size={12} className={isDone ? 'text-emerald-400' : isRunning ? 'text-indigo-400 animate-pulse' : 'text-gray-400'} />
-                                                        <span className={`text-xs font-mono font-bold ${isDone ? 'text-emerald-400' : isRunning ? 'text-indigo-300' : 'text-gray-300'
-                                                            }`}>
-                                                            {formatTime(tempoMs)}
-                                                        </span>
-                                                    </div>
-                                                ) : (
-                                                    <div className="px-2 py-1 rounded-md bg-white/5">
-                                                        <span className="text-[11px] font-mono text-gray-400">
-                                                            {ex.series}×{ex.repeticoes}
-                                                        </span>
-                                                    </div>
-                                                )}
-
-                                                {/* Botão FEITO (só aparece quando running ou paused) */}
-                                                {(isRunning || isPaused) && (
-                                                    <button
-                                                        onClick={() => handleDoneExercicio(ex.id)}
-                                                        className="w-8 h-8 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 flex items-center justify-center flex-shrink-0 transition-colors"
-                                                    >
-                                                        <Check size={16} className="text-emerald-400" strokeWidth={3} />
-                                                    </button>
-                                                )}
-                                            </div>
+                                        {/* Nome do exercício */}
+                                        <div className="flex-1 min-w-0">
+                                            <p className={`text-sm font-medium transition-colors ${isDone ? 'text-gray-500 line-through' : 'text-gray-200'
+                                                }`}>
+                                                {ex.nome}
+                                            </p>
+                                            {ex.foco && !isDone && (
+                                                <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">
+                                                    {ex.foco}
+                                                </p>
+                                            )}
                                         </div>
-                                    )
-                                })}
-                            </div>
-                        </div>
+
+                                        {/* Botão de Vídeo 🎬 */}
+                                        <button
+                                            onClick={async (e) => {
+                                                e.stopPropagation()
+                                                // Busca na biblioteca pelo nome do exercício
+                                                const found = await exercicioBibliotecaService.buscarPorNomeSimilar(ex.nome)
+                                                setExercicioBiblioteca(found ?? {
+                                                    id: ex.id,
+                                                    nome: ex.nome,
+                                                    grupo_muscular: 'peito',
+                                                    nivel: 'intermediario',
+                                                    em_breve: true,
+                                                    ativo: true,
+                                                    descricao: ex.dica || undefined,
+                                                    created_at: new Date().toISOString(),
+                                                    updated_at: new Date().toISOString(),
+                                                } as ExercicioBiblioteca)
+                                            }}
+                                            className="w-7 h-7 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 flex items-center justify-center flex-shrink-0 transition-colors"
+                                            title="Ver vídeo"
+                                        >
+                                            <Video size={13} className="text-indigo-400" />
+                                        </button>
+
+                                        {/* Timer ou Séries */}
+                                        {(isRunning || isPaused || isDone) && tempoMs > 0 ? (
+                                            <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg ${isDone ? 'bg-emerald-500/10' : isRunning ? 'bg-indigo-500/10' : 'bg-white/5'
+                                                }`}>
+                                                <Timer size={12} className={isDone ? 'text-emerald-400' : isRunning ? 'text-indigo-400 animate-pulse' : 'text-gray-400'} />
+                                                <span className={`text-xs font-mono font-bold ${isDone ? 'text-emerald-400' : isRunning ? 'text-indigo-300' : 'text-gray-300'
+                                                    }`}>
+                                                    {formatTime(tempoMs)}
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            <div className="px-2 py-1 rounded-md bg-white/5">
+                                                <span className="text-[11px] font-mono text-gray-400">
+                                                    {ex.series}×{ex.repeticoes}
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        {/* Botão FEITO (só aparece quando running ou paused) */}
+                                        {(isRunning || isPaused) && (
+                                            <button
+                                                onClick={() => handleDoneExercicio(ex.id)}
+                                                className="w-8 h-8 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 flex items-center justify-center flex-shrink-0 transition-colors"
+                                            >
+                                                <Check size={16} className="text-emerald-400" strokeWidth={3} />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            )
+                        })}
                     </div>
                 )}
 
