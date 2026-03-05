@@ -957,21 +957,41 @@ export async function completarTreino(
     dados: { intensidade: number; duracao: number; reportouDor: boolean; treinoIndex?: number },
     dataOverride?: string // 'YYYY-MM-DD' — para registros retroativos
 ): Promise<boolean> {
-    return registrarTracker(atletaId, 'treino', {
+    const result = await registrarTracker(atletaId, 'treino', {
         status: 'completo',
         ...dados,
     }, dataOverride);
+
+    // Disparar notificação para o Personal (fire-and-forget)
+    if (result) {
+        import('./notificacaoTriggers').then(({ onTreinoCompleto }) => {
+            onTreinoCompleto(atletaId, {
+                duracao: dados.duracao ? `${dados.duracao}min` : undefined,
+            }).catch(err => console.warn('[completarTreino] Erro ao notificar:', err));
+        });
+    }
+
+    return result;
 }
 
 /**
  * Marca treino como pulado
  */
 export async function pularTreino(atletaId: string, treinoIndex?: number, continuarHoje: boolean = false): Promise<boolean> {
-    return registrarTracker(atletaId, 'treino', {
+    const result = await registrarTracker(atletaId, 'treino', {
         status: 'pulado',
         treinoIndex,
         continuarHoje,
     });
+
+    // Disparar notificação para o Personal (fire-and-forget)
+    if (result && !continuarHoje) {
+        import('./notificacaoTriggers').then(({ onTreinoPulado }) => {
+            onTreinoPulado(atletaId).catch(err => console.warn('[pularTreino] Erro ao notificar:', err));
+        });
+    }
+
+    return result;
 }
 
 // ==========================================

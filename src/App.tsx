@@ -48,30 +48,34 @@ import {
   TrainingFrequencySourceView,
   PeriodizationSourceView,
   FeminineProportionsSourceView,
+  NotificationDrawer,
   type ProfileType
 } from '@/components';
 // import { GamificationPage } from './pages/GamificationPage'; // DISABLED - Feature para depois
 import { AthletePortal } from './pages/AthletePortal';
 import { PortalLanding } from './pages/athlete/PortalLanding';
+import { NotificationsPage } from './pages/NotificationsPage';
+import { NotificationSettingsPage } from './pages/NotificationSettingsPage';
 
 import { calculateAge } from '@/utils/dateUtils';
 import { useAthleteStore } from '@/stores/athleteStore';
 import { useDataStore } from '@/stores/dataStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useSupabaseSync } from '@/hooks/useSupabaseSync';
+import { useNotificacoes } from '@/hooks/useNotificacoes';
 import { PersonalAthlete, MeasurementHistory } from '@/mocks/personal';
 import { buscarDiagnostico, type DiagnosticoDados } from '@/services/calculations/diagnostico';
 import { buscarPlanoTreino, type PlanoTreino } from '@/services/calculations/treino';
 import { buscarPlanoDieta, type PlanoDieta } from '@/services/calculations/dieta';
 import { supabase } from '@/services/supabase';
 
-type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details' | 'terms' | 'privacy' | 'my-record' | 'gamification' | 'athlete-portal' | 'personal-details' | 'student-details' | 'diagnostico' | 'treino-plano' | 'dieta-plano' | 'consulta-diagnostico' | 'consulta-treino' | 'consulta-dieta' | 'library' | 'library-golden-ratio' | 'library-metabolism' | 'library-training-volume' | 'library-protein' | 'library-energy-balance' | 'library-training-frequency' | 'library-periodization' | 'library-feminine-proportions';
+type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details' | 'terms' | 'privacy' | 'my-record' | 'gamification' | 'athlete-portal' | 'personal-details' | 'student-details' | 'diagnostico' | 'treino-plano' | 'dieta-plano' | 'consulta-diagnostico' | 'consulta-treino' | 'consulta-dieta' | 'library' | 'library-golden-ratio' | 'library-metabolism' | 'library-training-volume' | 'library-protein' | 'library-energy-balance' | 'library-training-frequency' | 'library-periodization' | 'library-feminine-proportions' | 'notifications' | 'notification-settings';
 
 const App: React.FC = () => {
   console.log('🎯 App component rendering...');
 
   // Auth Store
-  const { isAuthenticated, profile: authProfile, signOut, checkSession, isLoading: isAuthLoading } = useAuthStore();
+  const { isAuthenticated, profile: authProfile, signOut, checkSession, isLoading: isAuthLoading, entity } = useAuthStore();
 
   // Local UI State
   const [isAssessmentOpen, setIsAssessmentOpen] = useState(false);
@@ -86,6 +90,35 @@ const App: React.FC = () => {
   const [consultaTreinoData, setConsultaTreinoData] = useState<PlanoTreino | null>(null);
   const [consultaDietaData, setConsultaDietaData] = useState<PlanoDieta | null>(null);
   const [consultaPlanoCompleto, setConsultaPlanoCompleto] = useState<any | null>(null);
+  const [isNotificationDrawerOpen, setIsNotificationDrawerOpen] = useState(false);
+
+  // Notifications hook (polling + state)
+  const {
+    notificacoes,
+    naoLidas: notificacoesNaoLidas,
+    loading: notificacoesLoading,
+    marcarComoLida: marcarNotificacaoLida,
+    marcarTodasComoLidas: marcarTodasNotificacoesLidas,
+    recarregar: recarregarNotificacoes,
+  } = useNotificacoes();
+
+  // Run inactivity check once per session for personals
+  useEffect(() => {
+    const personalId = entity?.personal?.id;
+    if (!personalId) return;
+    const sessionKey = `inactivity-checked-${personalId}`;
+    if (sessionStorage.getItem(sessionKey)) return;
+
+    sessionStorage.setItem(sessionKey, 'true');
+    import('@/services/inactivityChecker').then(({ verificarInatividade }) => {
+      verificarInatividade(personalId).then(count => {
+        if (count > 0) {
+          console.info(`[App] ${count} notificações de inatividade criadas`);
+          recarregarNotificacoes();
+        }
+      }).catch(err => console.warn('[App] Erro ao verificar inatividade:', err));
+    });
+  }, [entity?.personal?.id, recarregarNotificacoes]);
 
   // Derived user profile from Auth Store
   const userProfile: ProfileType = (authProfile?.role?.toLowerCase() as ProfileType) || 'atleta';
@@ -729,6 +762,26 @@ const App: React.FC = () => {
               }}
             />
           );
+        case 'notifications':
+          return (
+            <NotificationsPage
+              onBack={() => setCurrentView('dashboard')}
+              onAcao={(url) => {
+                // Navegar para contexto — ex: /athlete-details?id=xxx
+                if (url.startsWith('/athlete-details/')) {
+                  const id = url.replace('/athlete-details/', '');
+                  setSelectedAthleteId(id);
+                  setCurrentView('athlete-details');
+                }
+              }}
+            />
+          );
+        case 'notification-settings':
+          return (
+            <NotificationSettingsPage
+              onBack={() => setCurrentView('notifications')}
+            />
+          );
         default:
           return (
             <div className="flex-1 flex items-center justify-center text-gray-500">
@@ -899,6 +952,8 @@ const App: React.FC = () => {
         case 'settings': return 'CONFIGURAÇÕES';
         case 'student-registration': return 'CADASTRO DE ALUNO';
         case 'athlete-details': return 'DETALHES DO ATLETA';
+        case 'notifications': return 'NOTIFICAÇÕES';
+        case 'notification-settings': return 'CONFIGURAR NOTIFICAÇÕES';
         default: return currentView.toUpperCase();
       }
     }
@@ -975,8 +1030,10 @@ const App: React.FC = () => {
           onOpenCoach={() => setIsCoachModalOpen(true)}
           onRegisterStudent={() => setCurrentView('student-registration')}
           onInvitePersonal={handleInvitePersonal}
+          onOpenNotifications={() => setIsNotificationDrawerOpen(true)}
           title={getPageTitle()}
           userProfile={userProfile}
+          notificacoesNaoLidas={notificacoesNaoLidas}
         />
 
         {/* Content Area - Flex container to manage scrolling independently */}
@@ -1021,6 +1078,28 @@ const App: React.FC = () => {
         }}
       />
 
+      {/* Notification Drawer */}
+      <NotificationDrawer
+        isOpen={isNotificationDrawerOpen}
+        onClose={() => setIsNotificationDrawerOpen(false)}
+        notificacoes={notificacoes.slice(0, 20)}
+        naoLidas={notificacoesNaoLidas}
+        loading={notificacoesLoading}
+        onMarcarLida={marcarNotificacaoLida}
+        onMarcarTodasLidas={marcarTodasNotificacoesLidas}
+        onVerTodas={() => {
+          setIsNotificationDrawerOpen(false);
+          setCurrentView('notifications');
+        }}
+        onAcao={(url) => {
+          setIsNotificationDrawerOpen(false);
+          if (url.startsWith('/athlete-details/')) {
+            const id = url.replace('/athlete-details/', '');
+            setSelectedAthleteId(id);
+            setCurrentView('athlete-details');
+          }
+        }}
+      />
 
 
       <DebugAccess

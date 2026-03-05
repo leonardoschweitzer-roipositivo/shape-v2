@@ -275,6 +275,15 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                         quantidade: Number(intensidade),
                         local,
                     })
+
+                    // Notificar personal sobre dor reportada (fire-and-forget)
+                    import('../services/notificacaoTriggers').then(({ onDorReportada }) => {
+                        onDorReportada(atletaId, {
+                            local,
+                            intensidade: Number(intensidade),
+                        }).catch(err => console.warn('[AthletePortal] Erro ao notificar dor:', err))
+                    })
+
                     if (ctx) {
                         const today = await montarDadosHoje(ctx)
                         setTodayData(today)

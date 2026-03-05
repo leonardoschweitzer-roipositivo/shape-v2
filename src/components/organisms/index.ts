@@ -17,3 +17,4 @@ export * from './ScoreBreakdown';
 export * from './Sidebar';
 export * from './PersonalInvitationModal';
 export * from './EvolutionPlanWizard';
+export * from './NotificationDrawer';

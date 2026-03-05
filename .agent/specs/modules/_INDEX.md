@@ -13,6 +13,7 @@ VITRU IA
 ├── 📈 Evolution         → Acompanhamento de evolução
 ├── 🤖 AI Coach          → Vitruvius - Coach IA
 ├── 🏆 Gamification      → Hall dos Deuses, Rankings
+├── 🔔 Notifications     → Notificações do Personal
 └── ⚙️ Settings          → Configurações
 ```
 
@@ -53,3 +54,6 @@ VITRU IA
 
 ### ⚙️ Settings (`./settings/`)
 - `settings.md` - Configurações do sistema
+
+### 🔔 Notifications (`./notifications/`)
+- `SPEC-notificacoes-personal.md` - Notificações do Personal (✅ Implementado)

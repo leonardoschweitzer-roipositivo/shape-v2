@@ -134,16 +134,26 @@ export const portalService = {
         const atletaId = (atleta as any).id;
         const personalId = (atleta as any).personal_id;
 
-        // 3. Incrementar acessos (fire-and-forget — não bloqueia UI)
+        // 3. Incrementar acessos + notificar personal (fire-and-forget)
         (async () => {
             try {
+                const acessosAnteriores = (atleta as any).portal_acessos || 0;
                 await supabase
                     .from('atletas')
                     .update({
-                        portal_acessos: ((atleta as any).portal_acessos || 0) + 1,
+                        portal_acessos: acessosAnteriores + 1,
                         portal_ultimo_acesso: new Date().toISOString(),
                     } as any)
                     .eq('id', atletaId);
+
+                // Primeiro acesso ao portal? Notificar personal!
+                if (acessosAnteriores === 0) {
+                    import('./notificacaoTriggers').then(({ onPrimeiroAcessoPortal }) => {
+                        onPrimeiroAcessoPortal(atletaId).catch(err =>
+                            console.warn('[PortalService] Erro ao notificar primeiro acesso:', err)
+                        );
+                    });
+                }
             } catch (err) {
                 console.warn('[PortalService] Erro ao incrementar acessos:', err);
             }

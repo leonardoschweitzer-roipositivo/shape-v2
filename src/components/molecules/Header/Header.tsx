@@ -7,8 +7,10 @@ interface HeaderProps {
   onOpenCoach?: () => void;
   onRegisterStudent?: () => void;
   onInvitePersonal?: () => void;
+  onOpenNotifications?: () => void;
   title?: string;
   userProfile?: ProfileType;
+  notificacoesNaoLidas?: number;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -16,8 +18,10 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenCoach,
   onRegisterStudent,
   onInvitePersonal,
+  onOpenNotifications,
   title = "INÍCIO",
-  userProfile = 'atleta'
+  userProfile = 'atleta',
+  notificacoesNaoLidas = 0,
 }) => {
 
   const renderAction = () => {
@@ -63,8 +67,18 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="flex items-center gap-4">
-        <button className="relative p-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-white/5">
-          <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full animate-pulse"></span>
+        <button
+          className="relative p-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-white/5"
+          onClick={onOpenNotifications}
+          title="Notificações"
+        >
+          {notificacoesNaoLidas > 0 ? (
+            <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center px-1 bg-red-500 text-white text-[10px] font-bold rounded-full shadow-sm shadow-red-500/50">
+              {notificacoesNaoLidas > 99 ? '99+' : notificacoesNaoLidas}
+            </span>
+          ) : (
+            <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full animate-pulse"></span>
+          )}
           <Bell size={20} />
         </button>
 
