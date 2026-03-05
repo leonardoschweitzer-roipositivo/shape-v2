@@ -362,10 +362,10 @@ export function CardTreino({ treino, proximoTreino, exerciciosFeitos, exercicioT
                                     <div
                                         key={ex.id}
                                         className={`rounded-xl p-3 transition-all duration-300 ${isDone
-                                                ? 'bg-emerald-500/5 border border-emerald-500/10'
-                                                : isRunning
-                                                    ? 'bg-indigo-500/5 border border-indigo-500/20'
-                                                    : 'bg-white/[0.02] border border-white/5'
+                                            ? 'bg-emerald-500/5 border border-emerald-500/10'
+                                            : isRunning
+                                                ? 'bg-indigo-500/5 border border-indigo-500/20'
+                                                : 'bg-white/[0.02] border border-white/5'
                                             }`}
                                     >
                                         <div className="flex items-center gap-3">
@@ -392,7 +392,7 @@ export function CardTreino({ treino, proximoTreino, exerciciosFeitos, exercicioT
 
                                             {/* Nome do exercício */}
                                             <div className="flex-1 min-w-0">
-                                                <p className={`text-sm font-medium transition-colors truncate ${isDone ? 'text-gray-500 line-through' : 'text-gray-200'
+                                                <p className={`text-sm font-medium transition-colors ${isDone ? 'text-gray-500 line-through' : 'text-gray-200'
                                                     }`}>
                                                     {ex.nome}
                                                 </p>
