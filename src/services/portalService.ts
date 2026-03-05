@@ -253,9 +253,12 @@ export const portalService = {
     async saveMeasurements(atletaId: string, measurements: {
         peso?: number;
         altura?: number;
-        punho?: number;
-        joelho?: number;
-        tornozelo?: number;
+        punho_direito?: number;
+        punho_esquerdo?: number;
+        joelho_direito?: number;
+        joelho_esquerdo?: number;
+        tornozelo_direito?: number;
+        tornozelo_esquerdo?: number;
         pescoco?: number;
         ombros?: number;
         peitoral?: number;
@@ -271,15 +274,30 @@ export const portalService = {
         panturrilha_direita?: number;
         panturrilha_esquerda?: number;
     }): Promise<{ success: boolean; medidaId?: string }> {
-        const { altura, punho, joelho, tornozelo, ...medidasRestantes } = measurements;
+        const {
+            altura,
+            punho_direito, punho_esquerdo,
+            joelho_direito, joelho_esquerdo,
+            tornozelo_direito, tornozelo_esquerdo,
+            ...medidasRestantes
+        } = measurements;
+
+        const calcMean = (valA?: number, valB?: number) => {
+            if (valA !== undefined && valB !== undefined) return (valA + valB) / 2;
+            return valA ?? valB;
+        };
+
+        const punhoMedia = calcMean(punho_direito, punho_esquerdo);
+        const joelhoMedia = calcMean(joelho_direito, joelho_esquerdo);
+        const tornozeloMedia = calcMean(tornozelo_direito, tornozelo_esquerdo);
 
         // Se o atleta preencheu a altura ou medidas ósseas, salva na ficha dele
-        if (altura !== undefined || punho !== undefined || joelho !== undefined || tornozelo !== undefined) {
+        if (altura !== undefined || punhoMedia !== undefined || joelhoMedia !== undefined || tornozeloMedia !== undefined) {
             const updates: any = {};
             if (altura !== undefined) updates.altura = altura;
-            if (punho !== undefined) updates.punho = punho;
-            if (joelho !== undefined) updates.joelho = joelho;
-            if (tornozelo !== undefined) updates.tornozelo = tornozelo;
+            if (punhoMedia !== undefined) updates.punho = punhoMedia;
+            if (joelhoMedia !== undefined) updates.joelho = joelhoMedia;
+            if (tornozeloMedia !== undefined) updates.tornozelo = tornozeloMedia;
 
             const { error: fichaError } = await supabase
                 .from('fichas')

@@ -52,10 +52,13 @@ const FIELDS: MeasurementField[] = [
     { key: 'panturrilha_direita', label: 'Panturrilha Direita', unit: 'cm', placeholder: '0.0', section: 'membros' },
     { key: 'panturrilha_esquerda', label: 'Panturrilha Esquerda', unit: 'cm', placeholder: '0.0', section: 'membros' },
 
-    // Estrutura Óssea
-    { key: 'punho', label: 'Punho', unit: 'cm', placeholder: '0.0', section: 'estrutura' },
-    { key: 'joelho', label: 'Joelho', unit: 'cm', placeholder: '0.0', section: 'estrutura' },
-    { key: 'tornozelo', label: 'Tornozelo', unit: 'cm', placeholder: '0.0', section: 'estrutura' },
+    // Estrutura Óssea (bilaterais)
+    { key: 'punho_direito', label: 'Punho Direito', unit: 'cm', placeholder: '0.0', section: 'estrutura' },
+    { key: 'punho_esquerdo', label: 'Punho Esquerdo', unit: 'cm', placeholder: '0.0', section: 'estrutura' },
+    { key: 'joelho_direito', label: 'Joelho Direito', unit: 'cm', placeholder: '0.0', section: 'estrutura' },
+    { key: 'joelho_esquerdo', label: 'Joelho Esquerdo', unit: 'cm', placeholder: '0.0', section: 'estrutura' },
+    { key: 'tornozelo_direito', label: 'Tornozelo Direito', unit: 'cm', placeholder: '0.0', section: 'estrutura' },
+    { key: 'tornozelo_esquerdo', label: 'Tornozelo Esquerdo', unit: 'cm', placeholder: '0.0', section: 'estrutura' },
 ];
 
 const SECTIONS = [
