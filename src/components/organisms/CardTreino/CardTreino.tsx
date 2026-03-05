@@ -440,7 +440,7 @@ export function CardTreino({ treino, proximoTreino, exerciciosFeitos, exercicioT
                                                             handleCargaChange(ex.id, val === '' ? undefined : Number(val))
                                                         }}
                                                         onClick={e => e.stopPropagation()}
-                                                        className="w-20 bg-white/[0.03] border border-white/10 rounded-md px-1.5 py-1 text-base sm:text-[11px] text-indigo-300 font-mono placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors text-center"
+                                                        className="w-14 h-7 bg-white/[0.03] border border-white/10 rounded-md px-1 text-[11px] text-indigo-300 font-mono placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors text-center"
                                                     />
                                                     {timer?.carga !== undefined && timer.carga > 0 && (
                                                         <span className="text-[10px] text-gray-500">kg</span>
