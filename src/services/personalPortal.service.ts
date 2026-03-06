@@ -77,17 +77,31 @@ export async function carregarContextoPersonal(
     let inativos = 0
 
     if (atletaIds.length > 0) {
-        const { data: medidas } = await supabase
-            .from('medidas')
-            .select('atleta_id, created_at')
-            .in('atleta_id', atletaIds)
-            .order('created_at', { ascending: false })
+        // Buscar última atividade de AMBAS as tabelas
+        const [{ data: medidas }, { data: assessments }] = await Promise.all([
+            supabase
+                .from('medidas')
+                .select('atleta_id, created_at')
+                .in('atleta_id', atletaIds)
+                .order('created_at', { ascending: false }),
+            supabase
+                .from('assessments')
+                .select('atleta_id, created_at')
+                .in('atleta_id', atletaIds)
+                .order('created_at', { ascending: false }),
+        ])
 
-        // Agrupar por atleta e pegar a mais recente
+        // Agrupar e pegar a data mais recente entre medidas e assessments
         const ultimaPorAtleta = new Map<string, string>()
         for (const m of medidas ?? []) {
             if (!ultimaPorAtleta.has(m.atleta_id)) {
                 ultimaPorAtleta.set(m.atleta_id, m.created_at)
+            }
+        }
+        for (const a of assessments ?? []) {
+            const atual = ultimaPorAtleta.get(a.atleta_id)
+            if (!atual || new Date(a.created_at) > new Date(atual)) {
+                ultimaPorAtleta.set(a.atleta_id, a.created_at)
             }
         }
 
@@ -135,20 +149,32 @@ export async function listarAlunos(personalId: string): Promise<AlunoCard[]> {
 
     const atletaIds = atletas.map(a => a.id)
 
-    // 2. Buscar medidas de todos os atletas
-    const { data: todasMedidas } = await supabase
-        .from('medidas')
-        .select('id, atleta_id, created_at, score')
-        .in('atleta_id', atletaIds)
-        .order('created_at', { ascending: false })
+    // 2. Buscar medidas E assessments de todos os atletas (em paralelo)
+    const [{ data: todasMedidas }, { data: todosAssessments }] = await Promise.all([
+        supabase
+            .from('medidas')
+            .select('id, atleta_id, created_at, score')
+            .in('atleta_id', atletaIds)
+            .order('created_at', { ascending: false }),
+        supabase
+            .from('assessments')
+            .select('id, atleta_id, created_at, score, date')
+            .in('atleta_id', atletaIds)
+            .order('date', { ascending: false }),
+    ])
 
     // Agrupar medidas por atleta
-    const medidasPorAtleta = new Map<string, typeof todasMedidas>()
+    const medidasPorAtleta = new Map<string, { created_at: string; score: number | null }[]>()
     for (const m of todasMedidas ?? []) {
-        if (!medidasPorAtleta.has(m.atleta_id)) {
-            medidasPorAtleta.set(m.atleta_id, [])
-        }
-        medidasPorAtleta.get(m.atleta_id)!.push(m)
+        if (!medidasPorAtleta.has(m.atleta_id)) medidasPorAtleta.set(m.atleta_id, [])
+        medidasPorAtleta.get(m.atleta_id)!.push({ created_at: m.created_at, score: m.score })
+    }
+
+    // Agrupar assessments por atleta
+    const assessmentsPorAtleta = new Map<string, { date: string; score: number | null; created_at: string }[]>()
+    for (const a of (todosAssessments ?? []) as { id: string; atleta_id: string; created_at: string; score: number | null; date: string }[]) {
+        if (!assessmentsPorAtleta.has(a.atleta_id)) assessmentsPorAtleta.set(a.atleta_id, [])
+        assessmentsPorAtleta.get(a.atleta_id)!.push({ date: a.date, score: a.score, created_at: a.created_at })
     }
 
     const hoje = new Date()
@@ -157,14 +183,21 @@ export async function listarAlunos(personalId: string): Promise<AlunoCard[]> {
 
     return atletas.map((atleta) => {
         const medidas = medidasPorAtleta.get(atleta.id) ?? []
-        const ultimaMedicao = medidas[0]?.created_at ?? null
-        const scoreAtual = medidas[0]?.score ?? 0
+        const assessments = assessmentsPorAtleta.get(atleta.id) ?? []
 
-        // Calcula evolução semanal
-        const medidasSemana = medidas.filter(m => new Date(m.created_at) >= inicioSemana)
-        const scoreSemanaAnterior = medidasSemana.length > 1
-            ? medidasSemana[medidasSemana.length - 1].score ?? 0
-            : 0
+        // Última avaliação: a data mais recente entre medidas e assessments
+        const ultimaMed = medidas[0]?.created_at ?? null
+        const ultimaAssess = assessments[0]?.created_at ?? null
+        let ultimaMedicao = ultimaMed
+        if (ultimaAssess && (!ultimaMedicao || new Date(ultimaAssess) > new Date(ultimaMedicao))) {
+            ultimaMedicao = ultimaAssess
+        }
+
+        // Score: prioridade para assessment (fonte principal), senão medidas
+        const scoreAtual = assessments[0]?.score ?? medidas[0]?.score ?? 0
+
+        // Evolução semanal via assessments
+        const scoreSemanaAnterior = assessments.length > 1 ? assessments[1]?.score ?? 0 : 0
         const evolucaoSemana = scoreAtual - scoreSemanaAnterior
 
         return {
@@ -207,20 +240,30 @@ export async function buscarFichaAluno(atletaId: string): Promise<FichaAlunoResu
 
     const ficha = fichaData?.[0]
 
-    // 3. Buscar medidas (últimas 2 para comparação antes/depois)
-    const { data: medidasData } = await supabase
-        .from('medidas')
-        .select('created_at, score, ombros, peitoral, cintura, quadril, braco_direito, coxa_direita')
-        .eq('atleta_id', atletaId)
-        .order('created_at', { ascending: false })
-        .limit(5)
+    // 3. Buscar medidas e assessments em paralelo
+    const [{ data: medidasData }, { data: assessData }] = await Promise.all([
+        supabase
+            .from('medidas')
+            .select('created_at, score, ombros, peitoral, cintura, quadril, braco_direito, coxa_direita')
+            .eq('atleta_id', atletaId)
+            .order('created_at', { ascending: false })
+            .limit(5),
+        supabase
+            .from('assessments')
+            .select('score, date, created_at')
+            .eq('atleta_id', atletaId)
+            .order('date', { ascending: false })
+            .limit(2),
+    ])
 
     const medidas = medidasData ?? []
+    const assessments = assessData ?? []
     const ultima = medidas[0]
     const penultima = medidas[1]
 
-    const scoreAtual = ultima?.score ?? 0
-    const scoreSemanaAnterior = penultima?.score ?? 0
+    // Score: prioridade para assessments
+    const scoreAtual = (assessments[0] as { score: number | null })?.score ?? ultima?.score ?? 0
+    const scoreSemanaAnterior = (assessments[1] as { score: number | null })?.score ?? penultima?.score ?? 0
     const evolucaoSemana = Math.round((scoreAtual - scoreSemanaAnterior) * 10) / 10
 
     // Proporções resumidas com valor anterior para comparação
