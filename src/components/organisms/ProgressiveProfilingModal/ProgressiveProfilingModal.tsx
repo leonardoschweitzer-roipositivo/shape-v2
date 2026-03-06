@@ -30,7 +30,7 @@ import {
 // Common Styles
 const INPUT_CLASS = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-gray-600 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all";
 const LABEL_CLASS = "block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2";
-const BUTTON_PRIMARY_CLASS = "flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-[#0A0F1C] font-bold rounded-xl transition-all shadow-[0_0_15px_rgba(0,201,167,0.2)] hover:shadow-[0_0_20px_rgba(0,201,167,0.4)]";
+const BUTTON_PRIMARY_CLASS = "flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-black font-bold rounded-xl transition-all shadow-[0_0_15px_rgba(0,201,167,0.2)] hover:shadow-[0_0_20px_rgba(0,201,167,0.4)]";
 const BUTTON_SECONDARY_CLASS = "flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-bold text-gray-400 hover:text-white hover:bg-white/5 transition-colors uppercase tracking-widest";
 
 // ============================================

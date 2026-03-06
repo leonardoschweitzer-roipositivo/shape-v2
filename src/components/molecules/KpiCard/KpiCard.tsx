@@ -104,8 +104,8 @@ export const ScoreCard: React.FC = () => {
             <circle cx="50%" cy="50%" r="70" fill="none" stroke="url(#gradient)" strokeWidth="12" strokeDasharray="440" strokeDashoffset="88" strokeLinecap="round" className="drop-shadow-[0_0_10px_rgba(0,201,167,0.3)]" />
             <defs>
               <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#00C9A7" />
-                <stop offset="100%" stopColor="#7C3AED" />
+                <stop offset="0%" stopColor="var(--color-accent)" />
+                <stop offset="100%" stopColor="var(--color-secondary)" />
               </linearGradient>
             </defs>
           </svg>

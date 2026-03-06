@@ -92,9 +92,9 @@ export function PersonalPortal({ personalId, onLogout }: PersonalPortalProps) {
     // Loading state
     if (loading || !contexto) {
         return (
-            <div className="min-h-screen bg-[#060B18] flex items-center justify-center">
+            <div className="min-h-screen bg-background-dark flex items-center justify-center">
                 <div className="text-center space-y-4">
-                    <Loader2 className="text-[var(--color-gold)] mx-auto animate-spin" size={40} />
+                    <Loader2 className="text-[var(--color-accent)] mx-auto animate-spin" size={40} />
                     <p className="text-gray-500 text-sm">Carregando seu portal...</p>
                 </div>
             </div>

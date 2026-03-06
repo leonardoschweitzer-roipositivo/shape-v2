@@ -219,7 +219,7 @@ export const SecaoTreinosSemanais: React.FC<{ treinos: TreinoDetalhado[] }> = ({
                         key={t.id}
                         onClick={() => setActiveTab(t.id)}
                         className={`flex-1 min-w-[120px] px-4 py-3 rounded-xl font-bold text-sm uppercase transition-all ${activeTab === t.id
-                            ? 'bg-primary text-[#0A0F1C] shadow-lg shadow-primary/20'
+                            ? 'bg-primary text-black shadow-lg shadow-primary/20'
                             : 'text-gray-500 hover:text-white hover:bg-white/5'
                             }`}
                     >

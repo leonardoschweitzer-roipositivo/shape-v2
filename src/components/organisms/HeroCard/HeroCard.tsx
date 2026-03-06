@@ -38,7 +38,7 @@ export const HeroCard: React.FC<HeroCardProps> = ({ content }) => {
       </div>
 
       {/* Gradient Overlays */}
-      <div className="absolute inset-0 bg-gradient-to-r from-[#0A0F1C] via-[#0A0F1C]/80 to-transparent"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-background-dark via-background-dark/80 to-transparent"></div>
 
       {/* Decorative Grid */}
       <div className="absolute right-0 top-0 h-full w-1/2 opacity-10" style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>

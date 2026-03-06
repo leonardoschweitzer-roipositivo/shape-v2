@@ -346,7 +346,7 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
                             <button
                                 onClick={handleGerar}
                                 disabled={estado === 'generating'}
-                                className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary text-[#0A0F1C] font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(0,201,167,0.3)] transition-all disabled:opacity-50"
+                                className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary text-black font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(0,201,167,0.3)] transition-all disabled:opacity-50"
                             >
                                 {estado === 'generating' ? <Loader2 size={18} className="animate-spin" /> : <Dumbbell size={18} />}
                                 Gerar Plano de Treino
@@ -396,7 +396,7 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
                         </p>
                         <button
                             onClick={handleGerar}
-                            className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary text-[#0A0F1C] font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(0,201,167,0.3)] transition-all"
+                            className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary text-black font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(0,201,167,0.3)] transition-all"
                         >
                             <Dumbbell size={18} /> Gerar Plano de Treino
                         </button>
@@ -511,7 +511,7 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
                                         </button>
                                     )}
                                     {estado === 'saved' && (
-                                        <button onClick={onNext} className="flex items-center gap-3 px-8 py-3.5 bg-primary text-[#0A0F1C] font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(0,201,167,0.3)] transition-all">
+                                        <button onClick={onNext} className="flex items-center gap-3 px-8 py-3.5 bg-primary text-black font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(0,201,167,0.3)] transition-all">
                                             Próximo: Plano de Dieta <ArrowRight size={18} />
                                         </button>
                                     )}
@@ -519,7 +519,7 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
                             ) : (
                                 <button
                                     onClick={onNext}
-                                    className="flex items-center gap-3 px-8 py-3.5 bg-primary text-[#0A0F1C] font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(0,201,167,0.3)] transition-all"
+                                    className="flex items-center gap-3 px-8 py-3.5 bg-primary text-black font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(0,201,167,0.3)] transition-all"
                                 >
                                     Próximo: Plano de Dieta
                                     <ArrowRight size={18} />

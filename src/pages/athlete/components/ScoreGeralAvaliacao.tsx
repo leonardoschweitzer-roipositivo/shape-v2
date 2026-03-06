@@ -68,7 +68,7 @@ export const ScoreGeralAvaliacao = memo(function ScoreGeralAvaliacao({
     }
 
     return (
-        <div className="bg-gradient-to-br from-[#0D1425] to-[#0A0F1C] rounded-2xl border border-white/5 p-6">
+        <div className="bg-gradient-to-br from-surface-deep to-background-dark rounded-2xl border border-white/5 p-6">
             {/* Score Circular */}
             <div className="flex flex-col items-center mb-4">
                 <div className="relative w-32 h-32">

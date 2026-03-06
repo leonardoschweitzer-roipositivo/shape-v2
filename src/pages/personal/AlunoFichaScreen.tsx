@@ -107,17 +107,17 @@ Responda APENAS com o insight em português brasileiro, sem saudação, sem form
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#060B18] flex items-center justify-center">
-                <Loader2 className="text-[var(--color-gold)] animate-spin" size={36} />
+            <div className="min-h-screen bg-background-dark flex items-center justify-center">
+                <Loader2 className="text-[var(--color-accent)] animate-spin" size={36} />
             </div>
         )
     }
 
     if (!ficha) {
         return (
-            <div className="min-h-screen bg-[#060B18] flex flex-col items-center justify-center px-6">
+            <div className="min-h-screen bg-background-dark flex flex-col items-center justify-center px-6">
                 <p className="text-gray-500 text-sm">Não foi possível carregar os dados do aluno.</p>
-                <button onClick={onVoltar} className="mt-4 text-[var(--color-gold)] text-sm font-bold">
+                <button onClick={onVoltar} className="mt-4 text-[var(--color-accent)] text-sm font-bold">
                     ← Voltar
                 </button>
             </div>
@@ -129,9 +129,9 @@ Responda APENAS com o insight em português brasileiro, sem saudação, sem form
         : 0
 
     return (
-        <div className="min-h-screen bg-[#060B18] pb-24">
+        <div className="min-h-screen bg-background-dark pb-24">
             {/* Header */}
-            <div className="sticky top-0 bg-[#060B18] px-4 pt-5 pb-3 border-b border-white/5 z-10">
+            <div className="sticky top-0 bg-background-dark px-4 pt-5 pb-3 border-b border-white/5 z-10">
                 <button onClick={onVoltar} className="flex items-center gap-1.5 text-gray-400 text-sm mb-3 hover:text-white transition-colors">
                     <ChevronLeft size={18} />
                     <span>Alunos</span>
@@ -148,7 +148,7 @@ Responda APENAS com o insight em português brasileiro, sem saudação, sem form
                                     onChange={handleAvatarUpload}
                                     disabled={uploading}
                                 />
-                                <div className="w-14 h-14 rounded-full bg-[var(--color-surface)] flex items-center justify-center border-2 border-white/10 overflow-hidden relative overflow-hidden">
+                                <div className="w-14 h-14 rounded-full bg-[var(--bg-card)] flex items-center justify-center border-2 border-white/10 overflow-hidden relative overflow-hidden">
                                     {uploading ? (
                                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10 text-white animate-spin">
                                             <Loader2 size={20} />
@@ -165,7 +165,7 @@ Responda APENAS com o insight em português brasileiro, sem saudação, sem form
                                     )}
                                 </div>
                                 {/* Badge de edição no mobile (Always Visible) */}
-                                <div className="absolute -bottom-1 -right-1 bg-[var(--color-gold)] text-black p-1 rounded-full border-2 border-[#060B18]">
+                                <div className="absolute -bottom-1 -right-1 bg-[var(--color-accent)] text-black p-1 rounded-full border-2 border-background-dark">
                                     <Camera size={10} />
                                 </div>
                             </label>
@@ -181,11 +181,11 @@ Responda APENAS com o insight em português brasileiro, sem saudação, sem form
 
             <div className="px-4 pt-5 space-y-4">
                 {/* Score */}
-                <div className="bg-[#111827] rounded-2xl p-4 border border-white/5">
+                <div className="bg-surface rounded-2xl p-4 border border-white/5">
                     <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-3">📊 Score Shape-V</p>
                     <div className="flex items-end justify-between">
                         <div>
-                            <p className="text-[var(--color-gold)] text-4xl font-black">{ficha.score}</p>
+                            <p className="text-[var(--color-accent)] text-4xl font-black">{ficha.score}</p>
                             <p className="text-gray-500 text-xs mt-0.5">pontos</p>
                         </div>
                         <div className={`flex items-center gap-1 text-sm font-bold ${ficha.evolucaoSemana > 0 ? 'text-emerald-400' : ficha.evolucaoSemana < 0 ? 'text-red-400' : 'text-gray-500'}`}>
@@ -204,7 +204,7 @@ Responda APENAS com o insight em português brasileiro, sem saudação, sem form
 
                 {/* Proporções */}
                 {ficha.proporcoes.length > 0 && (
-                    <div className="bg-[#111827] rounded-2xl p-4 border border-white/5">
+                    <div className="bg-surface rounded-2xl p-4 border border-white/5">
                         <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-3">📐 Proporções</p>
                         <div className="space-y-4">
                             {ficha.proporcoes.map(prop => {
@@ -237,7 +237,7 @@ Responda APENAS com o insight em português brasileiro, sem saudação, sem form
                                         </div>
                                         <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
                                             <div
-                                                className="h-full bg-[var(--color-gold)] rounded-full transition-all"
+                                                className="h-full bg-[var(--color-accent)] rounded-full transition-all"
                                                 style={{ width: `${Math.min(100, prop.percentual)}%` }}
                                             />
                                         </div>
@@ -253,7 +253,7 @@ Responda APENAS com o insight em português brasileiro, sem saudação, sem form
                 )}
 
                 {/* Consistência */}
-                <div className="bg-[#111827] rounded-2xl p-4 border border-white/5">
+                <div className="bg-surface rounded-2xl p-4 border border-white/5">
                     <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-3">📅 Consistência</p>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -275,13 +275,13 @@ Responda APENAS com o insight em português brasileiro, sem saudação, sem form
                 </div>
 
                 {/* Insight IA */}
-                <div className="bg-[#111827] rounded-2xl p-4 border border-white/5">
+                <div className="bg-surface rounded-2xl p-4 border border-white/5">
                     <div className="flex items-center justify-between mb-3">
                         <p className="text-gray-400 text-xs font-bold uppercase tracking-wider">🤖 Insight do Vitrúvio</p>
                         {!insight && !insightLoading && (
                             <button
                                 onClick={gerarInsight}
-                                className="flex items-center gap-1.5 bg-[var(--color-gold)]/10 text-[var(--color-gold)] text-xs font-bold px-3 py-1.5 rounded-full border border-[var(--color-gold)]/30 hover:bg-[var(--color-gold)]/20 transition-colors"
+                                className="flex items-center gap-1.5 bg-[var(--color-accent)]/10 text-[var(--color-accent)] text-xs font-bold px-3 py-1.5 rounded-full border border-[var(--color-accent)]/30 hover:bg-[var(--color-accent)]/20 transition-colors"
                             >
                                 <Sparkles size={12} />
                                 Gerar

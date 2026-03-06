@@ -97,7 +97,7 @@ const BodyOutline: React.FC<{ measurements: ComparisonSnapshot['measurements'] }
             <line
                 x1={centerX - shoulderW} y1={shoulderY}
                 x2={centerX + shoulderW} y2={shoulderY}
-                stroke="#00C9A7"
+                stroke="var(--color-accent)"
                 strokeWidth="2"
                 strokeOpacity="0.5"
             />

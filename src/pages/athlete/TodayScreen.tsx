@@ -66,7 +66,7 @@ export function TodayScreen({
     }
 
     return (
-        <div className="min-h-screen bg-[#060B18] pb-20 relative">
+        <div className="min-h-screen bg-background-dark pb-20 relative">
             {/* Header */}
             <HeaderIdentidade
                 nome={data.atleta.nome}

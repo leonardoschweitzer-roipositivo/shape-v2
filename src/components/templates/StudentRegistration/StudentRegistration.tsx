@@ -182,7 +182,7 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                                             type="text"
                                             readOnly
                                             value={portalLink}
-                                            className="flex-1 bg-[#060B18] border border-white/10 rounded-lg px-4 py-3 text-white text-xs font-mono truncate"
+                                            className="flex-1 bg-background-dark border border-white/10 rounded-lg px-4 py-3 text-white text-xs font-mono truncate"
                                         />
                                         <button
                                             onClick={() => {
@@ -192,7 +192,7 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                                             }}
                                             className={`px-5 py-3 rounded-lg font-bold text-xs uppercase tracking-wider transition-all ${linkCopied
                                                 ? 'bg-emerald-500 text-white'
-                                                : 'bg-primary hover:bg-primary/80 text-[#0A0F1C]'
+                                                : 'bg-primary hover:bg-primary/80 text-black'
                                                 }`}
                                         >
                                             {linkCopied ? '✓ Copiado!' : 'Copiar'}
@@ -232,7 +232,7 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                             <div className="flex flex-col sm:flex-row gap-4 pt-4">
                                 <button
                                     onClick={() => onComplete(createdAtletaId)}
-                                    className="flex-1 flex items-center justify-center gap-3 px-8 py-4 rounded-xl font-bold text-sm uppercase tracking-widest bg-primary hover:bg-primary/90 text-[#0A0F1C] transition-all shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:shadow-[0_0_30px_rgba(99,102,241,0.5)]"
+                                    className="flex-1 flex items-center justify-center gap-3 px-8 py-4 rounded-xl font-bold text-sm uppercase tracking-widest bg-primary hover:bg-primary/90 text-black transition-all shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:shadow-[0_0_30px_rgba(99,102,241,0.5)]"
                                 >
                                     <Activity size={18} strokeWidth={2.5} />
                                     Realizar Avaliação IA
@@ -385,7 +385,7 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                                     }`}
                                 onClick={() => handleInputChange('sendInvite', !formData.sendInvite)}
                             >
-                                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${formData.sendInvite ? 'border-primary bg-primary text-[#0A0F1C]' : 'border-gray-700'
+                                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${formData.sendInvite ? 'border-primary bg-primary text-black' : 'border-gray-700'
                                     }`}>
                                     {formData.sendInvite && <Check size={12} strokeWidth={3} />}
                                 </div>
@@ -418,7 +418,7 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                                 disabled={isSubmitting || !isFormValid}
                                 className={`flex items-center gap-3 px-10 py-4 rounded-xl font-bold text-sm uppercase tracking-widest transition-all transform active:scale-[0.98] ${isSubmitting || !isFormValid
                                     ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                                    : 'bg-primary hover:bg-primary/90 text-[#0A0F1C] shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:shadow-[0_0_30px_rgba(99,102,241,0.5)] hover:scale-[1.02]'
+                                    : 'bg-primary hover:bg-primary/90 text-black shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:shadow-[0_0_30px_rgba(99,102,241,0.5)] hover:scale-[1.02]'
                                     }`}
                             >
                                 {isSubmitting ? (

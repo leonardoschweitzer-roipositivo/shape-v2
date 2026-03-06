@@ -23,8 +23,8 @@ export const BodyFatChart = ({ method = 'marinha', data: propData, meta = 8.0 }:
                 <AreaChart data={data} margin={{ top: 5, right: 0, left: -60, bottom: 0 }}>
                     <defs>
                         <linearGradient id="colorBf" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#7C3AED" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="#7C3AED" stopOpacity={0} />
+                            <stop offset="5%" stopColor="var(--color-secondary)" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="var(--color-secondary)" stopOpacity={0} />
                         </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
@@ -52,7 +52,7 @@ export const BodyFatChart = ({ method = 'marinha', data: propData, meta = 8.0 }:
                     <Area
                         type="monotone"
                         dataKey="v"
-                        stroke="#7C3AED"
+                        stroke="var(--color-secondary)"
                         strokeWidth={2}
                         fill="url(#colorBf)"
                         activeDot={{ r: 4, strokeWidth: 0, fill: '#fff' }}

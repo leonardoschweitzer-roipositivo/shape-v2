@@ -38,7 +38,7 @@ export class TokenStyles {
     static card(customBg?: string) {
         const tokens = useTokens(); // Assuming useTokens can be called here or tokens are passed
         return {
-            backgroundColor: customBg || ((tokens?.colors?.background as Record<string, string> | undefined))?.card || '#0A0F1C',
+            backgroundColor: customBg || ((tokens?.colors?.background as Record<string, string> | undefined))?.card || 'var(--bg-primary)',
             borderRadius: borders.radius.lg,
             padding: spacing[4],
             border: `1px solid ${(!tokens?.colors?.border) ? 'rgba(255, 255, 255, 0.1)' : (tokens.colors.border as Record<string, string>).lighter || 'rgba(255, 255, 255, 0.1)'}`,

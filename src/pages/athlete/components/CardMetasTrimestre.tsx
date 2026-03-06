@@ -279,7 +279,7 @@ export function CardMetasTrimestre({
     if (top3Proporcoes.length === 0 && pesoMeta3M === null) return null;
 
     return (
-        <div className="mx-4 mb-6 bg-gradient-to-br from-[#0C1220] to-[#0A0F1C] rounded-2xl border border-white/5 shadow-xl overflow-hidden">
+        <div className="mx-4 mb-6 bg-gradient-to-br from-surface-deep to-background-dark rounded-2xl border border-white/5 shadow-xl overflow-hidden">
 
             {/* Header */}
             <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-white/5">

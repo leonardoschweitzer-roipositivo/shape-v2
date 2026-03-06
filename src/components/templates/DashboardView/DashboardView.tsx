@@ -169,7 +169,7 @@ export const DashboardView: React.FC<{ userProfile?: ProfileType }> = ({ userPro
                         title="Métricas de Medição"
                         subtitle="Acompanhamento detalhado das suas medidas corporais"
                         action={
-                            <button className="text-[#00C9A7] text-xs font-bold hover:underline uppercase tracking-wider transition-colors pt-1">
+                            <button className="text-primary text-xs font-bold hover:underline uppercase tracking-wider transition-colors pt-1">
                                 Ver todas medidas
                             </button>
                         }

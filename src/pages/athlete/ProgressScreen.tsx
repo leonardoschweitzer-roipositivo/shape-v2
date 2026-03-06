@@ -32,9 +32,9 @@ export function ProgressScreen({
     onVerDetalhesAvaliacao
 }: ProgressScreenProps) {
     return (
-        <div className="min-h-screen bg-[#060B18] pb-20">
+        <div className="min-h-screen bg-background-dark pb-20">
             {/* Header */}
-            <div className="bg-[#060B18] border-b border-white/5 px-6 py-4">
+            <div className="bg-background-dark border-b border-white/5 px-6 py-4">
                 <h2 className="text-xl font-black text-white tracking-tight">PROGRESSO</h2>
                 <p className="text-sm text-gray-500 mt-1">Acompanhe sua evolução</p>
             </div>

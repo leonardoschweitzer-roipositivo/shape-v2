@@ -72,7 +72,7 @@ export const LinearMeasuresChart: React.FC<LinearMeasuresChartProps> = ({ data, 
                         <Bar
                             name="Atual"
                             dataKey="atual"
-                            fill="#00C9A7"
+                            fill="var(--color-accent)"
                             radius={[4, 4, 0, 0]}
                             barSize={hasAnterior ? 8 : 12}
                         />

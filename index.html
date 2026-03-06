@@ -20,27 +20,29 @@
             sans: ['Space Grotesk', 'sans-serif'],
           },
           colors: {
-            primary: "var(--color-primary, #00C9A7)", // Dynamic Primary
-            secondary: "#7C3AED", // Purple
-            "background-dark": "#0A0F1C",
-            "card-dark": "rgba(19, 27, 44, 0.7)",
-            "card-border": "rgba(255, 255, 255, 0.08)",
+            // === Dynamic Theme Colors (CSS Variables) ===
+            primary: "var(--color-accent, #00C9A7)",
+            secondary: "var(--color-secondary, #7C3AED)",
+            "background-dark": "var(--bg-primary, #0A0F1C)",
+            "card-bg": "var(--bg-card, #131B2C)",
+            "card-dark": "var(--bg-card-alpha, rgba(19, 27, 44, 0.7))",
+            "card-border": "var(--bg-card-border, rgba(255, 255, 255, 0.08))",
+            "backdrop": "var(--bg-backdrop, #050810)",
             // === Semantic Surface Colors ===
-            "surface": "#131B2C",          // Cards, panels, elevated elements
-            "surface-alt": "#0D121F",      // Slightly darker surface variant
-            "surface-deep": "#0C1220",     // Deepest surface
-            "surface-mid": "#0F1623",      // Mid-tone surface
-            "surface-raised": "#1F2937",   // Raised elements, hover states
-            // === Semantic Status Colors ===
-            "status-success": "#10B981",   // Green - positive
-            "status-warning": "#F59E0B",   // Amber - warnings
-            "status-error": "#EF4444",     // Red - errors
-            "status-info": "#3B82F6",      // Blue - info
-            // === UI Colors ===
-            "text-muted": "#6B7280",       // Muted text, labels
-            "text-subtle": "#9CA3AF",      // Subtle text
-            "text-dim": "#374151",         // Dimmed text
-            "backdrop": "#050810",         // Modal backdrops
+            "surface": "var(--bg-card, #131B2C)",
+            "surface-alt": "#0D121F",
+            "surface-deep": "#0C1220",
+            "surface-mid": "#0F1623",
+            "surface-raised": "var(--bg-surface-raised, #1F2937)",
+            // === Semantic Status Colors (fixed across themes) ===
+            "status-success": "#10B981",
+            "status-warning": "#F59E0B",
+            "status-error": "#EF4444",
+            "status-info": "#3B82F6",
+            // === UI Text Colors ===
+            "text-muted": "var(--text-disabled, #6B7280)",
+            "text-subtle": "var(--text-muted, #9CA3AF)",
+            "text-dim": "#374151",
           },
           animation: {
             'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
@@ -51,12 +53,29 @@
   </script>
   <style>
     :root {
-      --color-primary: #00C9A7;
+      /* === Theme Variables (Default: VITRU Original) === */
+      --bg-primary: #0A0F1C;
+      --bg-card: #131B2C;
+      --bg-card-alpha: rgba(19, 27, 44, 0.7);
+      --bg-card-border: rgba(255, 255, 255, 0.08);
+      --bg-backdrop: #050810;
+      --bg-surface-raised: #1F2937;
+      --color-accent: #00C9A7;
+      --color-secondary: #7C3AED;
+      --text-primary: #FFFFFF;
+      --text-secondary: #D1D5DB;
+      --text-muted: #9CA3AF;
+      --text-disabled: #6B7280;
+
+      /* === Backward Compatibility Aliases === */
+      --color-primary: var(--color-accent);
+      --color-gold: var(--color-accent);
+      --color-surface: var(--bg-card);
     }
 
     body {
-      background-color: #0A0F1C;
-      color: white;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
     }
 
     /* Custom Scrollbar */
@@ -79,16 +98,16 @@
     }
 
     .glass-panel {
-      background: rgba(19, 27, 44, 0.7);
+      background: var(--bg-card-alpha);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--bg-card-border);
       transition: all 0.3s ease;
     }
 
     .glass-panel:hover {
-      border-color: rgba(0, 201, 167, 0.3);
-      background: rgba(19, 27, 44, 0.9);
+      border-color: color-mix(in srgb, var(--color-accent) 30%, transparent);
+      background: var(--bg-card);
     }
 
     /* Prevent iOS auto-zoom on focus */
@@ -109,13 +128,23 @@
 
     /* Keyframes for Notifications Modal */
     @keyframes slideUp {
-      from { transform: translateY(100%); }
-      to { transform: translateY(0); }
+      from {
+        transform: translateY(100%);
+      }
+
+      to {
+        transform: translateY(0);
+      }
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
     }
 
     .animate-slide-up {

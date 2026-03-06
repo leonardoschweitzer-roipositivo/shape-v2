@@ -99,7 +99,7 @@ export function RegistrarTrackerModal({ isOpen, onClose, tipo, onSave }: Registr
             />
 
             {/* Modal */}
-            <div className="relative w-full max-w-sm bg-[#111827] border border-white/10 rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8 duration-300">
+            <div className="relative w-full max-w-sm bg-surface border border-white/10 rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8 duration-300">
                 {/* Header */}
                 <div className="px-6 pt-6 pb-2 flex justify-between items-start">
                     <div className="flex gap-4">

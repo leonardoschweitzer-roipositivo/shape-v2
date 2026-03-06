@@ -116,8 +116,8 @@ export const MOCK_ASYMMETRY_REC: AsymmetryRecommendation = {
 };
 
 export const AVAILABLE_METRICS: MetricConfig[] = [
-    { id: 'ratio', label: 'Shape-V Ratio', color: '#00C9A7', unit: '', idealValue: 1.618, yAxisId: 'left' },
-    { id: 'score', label: 'Score Geral', color: '#7C3AED', unit: 'pts', idealValue: 100, yAxisId: 'right' },
+    { id: 'ratio', label: 'Shape-V Ratio', color: 'var(--color-accent)', unit: '', idealValue: 1.618, yAxisId: 'left' },
+    { id: 'score', label: 'Score Geral', color: 'var(--color-secondary)', unit: 'pts', idealValue: 100, yAxisId: 'right' },
     { id: 'ombros', label: 'Ombros', color: '#3B82F6', unit: 'cm', yAxisId: 'right' },
     { id: 'cintura', label: 'Cintura', color: '#F59E0B', unit: 'cm', yAxisId: 'right' },
     { id: 'braco', label: 'Braço', color: '#EC4899', unit: 'cm', yAxisId: 'right' },

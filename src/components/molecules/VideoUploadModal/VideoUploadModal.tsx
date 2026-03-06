@@ -125,7 +125,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ exercicio, o
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
             onClick={(e) => e.target === e.currentTarget && onFechar()}
         >
-            <div className="w-full max-w-lg bg-[#0B101D] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+            <div className="w-full max-w-lg bg-background-dark border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
                 {/* Header */}
                 <div className="flex items-center justify-between p-5 border-b border-white/5">
                     <div className="flex items-center gap-3">

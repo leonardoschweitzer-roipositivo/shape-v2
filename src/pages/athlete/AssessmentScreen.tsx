@@ -63,7 +63,7 @@ export const AssessmentScreen = memo(function AssessmentScreen({
 }: AssessmentScreenProps) {
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-[#060B18] flex items-center justify-center">
+            <div className="min-h-screen bg-background-dark flex items-center justify-center">
                 <div className="text-center space-y-3">
                     <div className="w-8 h-8 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin mx-auto" />
                     <p className="text-sm text-gray-500">Carregando avaliação...</p>
@@ -73,7 +73,7 @@ export const AssessmentScreen = memo(function AssessmentScreen({
     }
 
     return (
-        <div className="min-h-screen bg-[#060B18] pb-20">
+        <div className="min-h-screen bg-background-dark pb-20">
             {/* Header */}
             <HeaderIdentidade
                 nome={nomeAtleta || 'Atleta'}

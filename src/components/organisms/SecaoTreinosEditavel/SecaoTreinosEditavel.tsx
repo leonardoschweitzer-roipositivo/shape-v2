@@ -389,7 +389,7 @@ export const SecaoTreinosEditavel: React.FC<SecaoTreinosEditavelProps> = ({
                         <button
                             onClick={() => setActiveTab(t.id)}
                             className={`w-full px-4 py-3 rounded-xl font-bold text-sm uppercase transition-all ${activeTab === t.id
-                                ? 'bg-primary text-[#0A0F1C] shadow-lg shadow-primary/20'
+                                ? 'bg-primary text-black shadow-lg shadow-primary/20'
                                 : 'text-gray-500 hover:text-white hover:bg-white/5'
                                 }`}
                         >

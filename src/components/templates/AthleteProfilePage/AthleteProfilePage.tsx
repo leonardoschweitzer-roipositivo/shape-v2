@@ -443,7 +443,7 @@ const CreateProfileModal: React.FC<CreateProfileModalProps> = ({ isOpen, onClose
 
                     <button
                         type="submit"
-                        className="w-full h-12 bg-primary hover:bg-primary/90 text-[#0A0F1C] rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(0,201,167,0.2)] hover:shadow-[0_0_20px_rgba(0,201,167,0.4)] mt-2"
+                        className="w-full h-12 bg-primary hover:bg-primary/90 text-black rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(0,201,167,0.2)] hover:shadow-[0_0_20px_rgba(0,201,167,0.4)] mt-2"
                     >
                         CRIAR PERFIL
                     </button>

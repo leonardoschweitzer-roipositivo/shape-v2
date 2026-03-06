@@ -12,7 +12,7 @@ export interface ProportionAiAnalysisCardProps {
 export const ProportionAiAnalysisCard: React.FC<ProportionAiAnalysisCardProps> = ({ analysis, suggestion }) => {
     return (
         <GlassPanel
-            className="h-full p-5 rounded-2xl border border-white/10 bg-gradient-to-b from-surface to-[#0A0F1C] relative overflow-hidden flex flex-col"
+            className="h-full p-5 rounded-2xl border border-white/10 bg-gradient-to-b from-surface to-background-dark relative overflow-hidden flex flex-col"
             hoverEffect={false}
         >
             <div className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2" style={{ background: `${colors.brand.primary}0D` }}></div>

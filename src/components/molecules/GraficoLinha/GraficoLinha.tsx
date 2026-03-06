@@ -101,9 +101,9 @@ export function GraficoLinha({
                         <Line
                             type="monotone"
                             dataKey="valor"
-                            stroke="#00D9A5"
+                            stroke="var(--color-accent)"
                             strokeWidth={3}
-                            dot={{ fill: '#00D9A5', r: 4 }}
+                            dot={{ fill: 'var(--color-accent)', r: 4 }}
                             activeDot={{ r: 6 }}
                         />
                     </LineChart>

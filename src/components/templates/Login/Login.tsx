@@ -72,7 +72,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     return (
         <div className="flex min-h-screen w-full bg-background-dark text-white font-sans overflow-hidden">
             {/* Left Side - Hero Section */}
-            <div className="hidden lg:flex w-1/2 relative bg-gradient-to-br from-[#0A0F1C] to-[#1a1f2e] items-center justify-center overflow-hidden">
+            <div className="hidden lg:flex w-1/2 relative bg-gradient-to-br from-background-dark to-surface items-center justify-center overflow-hidden">
                 {/* Background Image */}
                 <div className="absolute top-0 left-0 w-full h-full z-0">
                     <img
@@ -124,7 +124,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </div>
 
             {/* Right Side - Form Section */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-[#0B101D]">
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-background-dark">
                 <div className="max-w-md w-full flex flex-col gap-8">
 
                     <div className="space-y-2">
@@ -226,7 +226,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full bg-primary hover:bg-primary/90 text-[#0A0F1C] font-bold py-3.5 rounded-lg transition-all shadow-[0_0_20px_rgba(0,201,167,0.2)] flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full bg-primary hover:bg-primary/90 text-black font-bold py-3.5 rounded-lg transition-all shadow-[0_0_20px_rgba(0,201,167,0.2)] flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {isLoading ? 'CARREGANDO...' : (isNewUser ? 'CRIAR CONTA' : 'ENTRAR')}
                             {!isLoading && <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />}
@@ -234,7 +234,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
                         <div className="relative flex items-center justify-center py-2">
                             <div className="absolute w-full h-px bg-white/5"></div>
-                            <span className="relative bg-[#0B101D] px-2 text-xs text-gray-500">ou</span>
+                            <span className="relative bg-background-dark px-2 text-xs text-gray-500">ou</span>
                         </div>
 
                         <button

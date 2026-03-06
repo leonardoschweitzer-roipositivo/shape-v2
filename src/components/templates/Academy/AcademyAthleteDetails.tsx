@@ -314,8 +314,8 @@ export const AcademyAthleteDetails: React.FC<AcademyAthleteDetailsProps> = ({
                                         <CartesianGrid strokeDasharray="3 3" stroke="#2D3748" vertical={false} />
                                         <XAxis dataKey="date" stroke="#4A5568" tick={{ fontSize: 10, fontWeight: 600 }} axisLine={false} tickLine={false} />
                                         <YAxis stroke="#4A5568" tick={{ fontSize: 10, fontWeight: 600 }} axisLine={false} tickLine={false} />
-                                        <Tooltip contentStyle={{ backgroundColor: '#1A202C', border: '1px solid #2D3748', borderRadius: '12px' }} itemStyle={{ color: '#00D9A5', fontWeight: 700 }} />
-                                        <Line type="monotone" dataKey="score" stroke="#00D9A5" strokeWidth={4} dot={{ fill: '#00D9A5', r: 5, strokeWidth: 2, stroke: '#0F172A' }} activeDot={{ r: 8, strokeWidth: 0 }} />
+                                        <Tooltip contentStyle={{ backgroundColor: '#1A202C', border: '1px solid #2D3748', borderRadius: '12px' }} itemStyle={{ color: 'var(--color-accent)', fontWeight: 700 }} />
+                                        <Line type="monotone" dataKey="score" stroke="var(--color-accent)" strokeWidth={4} dot={{ fill: 'var(--color-accent)', r: 5, strokeWidth: 2, stroke: '#0F172A' }} activeDot={{ r: 8, strokeWidth: 0 }} />
                                     </LineChart>
                                 </ResponsiveContainer>
                             </div>

@@ -109,16 +109,16 @@ export function AlertasScreen({ personalId, onAbrirAluno, onAtualizarContador }:
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#060B18] flex items-center justify-center">
-                <Loader2 className="text-[var(--color-gold)] animate-spin" size={36} />
+            <div className="min-h-screen bg-background-dark flex items-center justify-center">
+                <Loader2 className="text-[var(--color-accent)] animate-spin" size={36} />
             </div>
         )
     }
 
     return (
-        <div className="min-h-screen bg-[#060B18] pb-24">
+        <div className="min-h-screen bg-background-dark pb-24">
             {/* Header */}
-            <div className="sticky top-0 bg-[#060B18] px-4 pt-6 pb-3 border-b border-white/5 z-10">
+            <div className="sticky top-0 bg-background-dark px-4 pt-6 pb-3 border-b border-white/5 z-10">
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-white text-xl font-black">Alertas</h1>
@@ -130,7 +130,7 @@ export function AlertasScreen({ personalId, onAbrirAluno, onAtualizarContador }:
                         <button
                             onClick={marcarTodasLidas}
                             disabled={marcandoTodas}
-                            className="flex items-center gap-1.5 text-[var(--color-gold)] text-xs font-bold"
+                            className="flex items-center gap-1.5 text-[var(--color-accent)] text-xs font-bold"
                         >
                             {marcandoTodas
                                 ? <Loader2 size={12} className="animate-spin" />
@@ -159,7 +159,7 @@ export function AlertasScreen({ personalId, onAbrirAluno, onAtualizarContador }:
                                 <p className="text-gray-500 text-[11px] font-bold uppercase tracking-widest mb-2 px-1">
                                     {GRUPO_LABEL[grupo]}
                                 </p>
-                                <div className="bg-[#111827] rounded-2xl border border-white/5 overflow-hidden">
+                                <div className="bg-surface rounded-2xl border border-white/5 overflow-hidden">
                                     {items.map((notif, idx) => {
                                         const prioConfig = PRIORIDADE_CONFIG[notif.prioridade]
                                         return (
@@ -186,7 +186,7 @@ export function AlertasScreen({ personalId, onAbrirAluno, onAtualizarContador }:
 
                                                 {/* Ponto não lida */}
                                                 {!notif.lida && (
-                                                    <div className="w-2 h-2 rounded-full bg-[var(--color-gold)] shrink-0 mt-1.5" />
+                                                    <div className="w-2 h-2 rounded-full bg-[var(--color-accent)] shrink-0 mt-1.5" />
                                                 )}
                                             </button>
                                         )

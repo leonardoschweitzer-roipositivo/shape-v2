@@ -232,7 +232,7 @@ export const CoachIA: React.FC<CoachIAProps> = ({
                             {/* CTA */}
                             <button
                                 onClick={() => setIsWizardOpen(true)}
-                                className="w-full flex items-center justify-center gap-3 h-14 bg-primary text-[#0A0F1C] rounded-xl font-bold text-sm uppercase tracking-wider shadow-[0_0_20px_rgba(0,201,167,0.2)] hover:shadow-[0_0_30px_rgba(0,201,167,0.4)] transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                className="w-full flex items-center justify-center gap-3 h-14 bg-primary text-black rounded-xl font-bold text-sm uppercase tracking-wider shadow-[0_0_20px_rgba(0,201,167,0.2)] hover:shadow-[0_0_30px_rgba(0,201,167,0.4)] transition-all hover:scale-[1.02] active:scale-[0.98]"
                             >
                                 <Play size={18} />
                                 Iniciar Plano de Evolução

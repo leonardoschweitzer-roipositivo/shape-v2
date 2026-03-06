@@ -369,12 +369,22 @@ const App: React.FC = () => {
     setIsPersonalInviteModalOpen(true);
   };
 
-  // Apply primary color globally from settings
+  // Apply saved theme on boot (GOD-selected, affects all users)
   React.useEffect(() => {
-    if (settings.preferences.primaryColor) {
+    import('@/config/themes').then(({ applyTheme, DEFAULT_THEME_ID }) => {
+      const savedTheme = localStorage.getItem('vitru-theme-id') || DEFAULT_THEME_ID;
+      applyTheme(savedTheme as 'shape-pro' | 'vitru-original' | 'black-red' | 'black-yellow');
+    });
+  }, []);
+
+  // Apply athlete-specific primary color override (only if athlete has custom color)
+  React.useEffect(() => {
+    if (settings.preferences.primaryColor && userProfile === 'atleta') {
+      document.documentElement.style.setProperty('--color-accent', settings.preferences.primaryColor);
       document.documentElement.style.setProperty('--color-primary', settings.preferences.primaryColor);
+      document.documentElement.style.setProperty('--color-gold', settings.preferences.primaryColor);
     }
-  }, [settings.preferences.primaryColor]);
+  }, [settings.preferences.primaryColor, userProfile]);
 
 
   const handleLogout = () => {
@@ -1011,7 +1021,7 @@ const App: React.FC = () => {
   if (personalPortalId) {
     return (
       <Suspense fallback={
-        <div className="flex h-screen w-full items-center justify-center bg-[#060B18] text-white">
+        <div className="flex h-screen w-full items-center justify-center bg-background-dark text-white">
           <div className="w-8 h-8 border-4 border-[gold] border-t-transparent rounded-full animate-spin" />
         </div>
       }>

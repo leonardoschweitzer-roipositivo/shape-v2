@@ -28,7 +28,7 @@ export const RadarChart: React.FC = () => {
                     {angles.map((a, i) => (
                         <line key={i} x1={center} y1={center} x2={getPoint(center, radius, a, 1).split(',')[0]} y2={getPoint(center, radius, a, 1).split(',')[1]} stroke="#2a303c" strokeWidth="1" />
                     ))}
-                    <polygon points={leftPath} fill="rgba(124, 58, 237, 0.2)" stroke="#7C3AED" strokeWidth="2" />
+                    <polygon points={leftPath} fill="rgba(124, 58, 237, 0.2)" stroke="var(--color-secondary)" strokeWidth="2" />
                     <polygon points={rightPath} fill="transparent" stroke="rgba(255,255,255,0.3)" strokeWidth="1" strokeDasharray="2 2" />
                 </svg>
                 {/* Labels positioning logic */}

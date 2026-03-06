@@ -37,7 +37,7 @@ export const BodyHeatmap: React.FC<BodyHeatmapProps> = ({ data }) => {
     const getColorForStatus = (status: RegionData['status']) => {
         switch (status) {
             case 'excellent': return '#10B981'; // emerald-500
-            case 'good': return '#00C9A7'; // teal
+            case 'good': return 'var(--color-accent)'; // teal
             case 'attention': return '#F59E0B'; // amber-500
             case 'critical': return '#EF4444'; // red-500
             default: return '#374151'; // gray-700
@@ -62,7 +62,7 @@ export const BodyHeatmap: React.FC<BodyHeatmapProps> = ({ data }) => {
             {/* Legend */}
             <div className="w-full flex justify-center gap-3 mb-6 z-10">
                 <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500"></div><span className="text-[10px] text-gray-400">Excellent</span></div>
-                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#00C9A7]"></div><span className="text-[10px] text-gray-400">Good</span></div>
+                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-primary"></div><span className="text-[10px] text-gray-400">Good</span></div>
                 <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-amber-500"></div><span className="text-[10px] text-gray-400">Attention</span></div>
                 <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-red-500"></div><span className="text-[10px] text-gray-400">Critical</span></div>
             </div>
@@ -172,7 +172,7 @@ export const BodyHeatmap: React.FC<BodyHeatmapProps> = ({ data }) => {
             </div>
 
             {/* Background Radial */}
-            <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-[#00C9A7]/5 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+            <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-primary/5 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
         </div>
     );
 };

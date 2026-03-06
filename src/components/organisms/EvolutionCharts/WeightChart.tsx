@@ -18,12 +18,12 @@ export const WeightChart: React.FC<WeightChartProps> = ({ data, selectedMetric =
             <AreaChart data={data} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                 <defs>
                     <linearGradient id="colorLean" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#00C9A7" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#00C9A7" stopOpacity={0} />
+                        <stop offset="5%" stopColor="var(--color-accent)" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="var(--color-accent)" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="colorFat" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#7C3AED" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#7C3AED" stopOpacity={0} />
+                        <stop offset="5%" stopColor="var(--color-secondary)" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="var(--color-secondary)" stopOpacity={0} />
                     </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
@@ -41,10 +41,10 @@ export const WeightChart: React.FC<WeightChartProps> = ({ data, selectedMetric =
                     <Area type="monotone" dataKey="total" name="Peso Total" stroke="#fff" fill="none" strokeDasharray="4 4" strokeOpacity={0.5} strokeWidth={2} />
                 )}
                 {showLean && (
-                    <Area type="monotone" dataKey="lean" name="Massa Magra" stroke="#00C9A7" fillOpacity={1} fill="url(#colorLean)" strokeWidth={2} />
+                    <Area type="monotone" dataKey="lean" name="Massa Magra" stroke="var(--color-accent)" fillOpacity={1} fill="url(#colorLean)" strokeWidth={2} />
                 )}
                 {showFat && (
-                    <Area type="monotone" dataKey="fat" name="Massa Gorda" stroke="#7C3AED" fillOpacity={1} fill="url(#colorFat)" strokeWidth={2} />
+                    <Area type="monotone" dataKey="fat" name="Massa Gorda" stroke="var(--color-secondary)" fillOpacity={1} fill="url(#colorFat)" strokeWidth={2} />
                 )}
             </AreaChart>
         </ResponsiveContainer>

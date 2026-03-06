@@ -6,8 +6,10 @@
  * - KPIs globais (futuro)
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Video, BookOpen, Users, BarChart3, Settings, Shield } from 'lucide-react';
+import { ThemeSwitcher } from '@/components/organisms/ThemeSwitcher/ThemeSwitcher';
+import { applyTheme, DEFAULT_THEME_ID, type ThemeId } from '@/config/themes';
 
 interface GodDashboardProps {
     onNavigate: (view: string) => void;
@@ -46,7 +48,18 @@ const ActionCard: React.FC<ActionCardProps> = ({ icon: Icon, title, description,
     </button>
 );
 
+const THEME_STORAGE_KEY = 'vitru-theme-id';
+
 export const GodDashboard: React.FC<GodDashboardProps> = ({ onNavigate }) => {
+    const [currentThemeId, setCurrentThemeId] = useState<ThemeId>(() => {
+        return (localStorage.getItem(THEME_STORAGE_KEY) as ThemeId) || DEFAULT_THEME_ID;
+    });
+
+    const handleThemeChange = async (themeId: ThemeId) => {
+        localStorage.setItem(THEME_STORAGE_KEY, themeId);
+        setCurrentThemeId(themeId);
+    };
+
     return (
         <div className="flex-1 p-6 md:p-8 max-w-6xl mx-auto w-full">
             {/* Header */}
@@ -84,6 +97,19 @@ export const GodDashboard: React.FC<GodDashboardProps> = ({ onNavigate }) => {
                             description="Visualizar artigos e fontes científicas da plataforma."
                             onClick={() => onNavigate('library')}
                             accentColor="blue"
+                        />
+                    </div>
+                </div>
+
+                {/* Seção: Aparência */}
+                <div>
+                    <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 px-1">
+                        Aparência Global
+                    </h2>
+                    <div className="p-6 rounded-2xl border border-white/10 bg-white/[0.02]">
+                        <ThemeSwitcher
+                            currentThemeId={currentThemeId}
+                            onThemeChange={handleThemeChange}
                         />
                     </div>
                 </div>

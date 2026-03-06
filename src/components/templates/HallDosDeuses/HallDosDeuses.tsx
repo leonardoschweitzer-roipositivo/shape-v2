@@ -250,7 +250,7 @@ export const HallDosDeuses: React.FC = () => {
                             backgroundPosition: 'center'
                         }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#0A0F1C] via-[#0A0F1C]/90 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-background-dark via-background-dark/90 to-transparent" />
                     <div className="absolute right-0 top-0 h-full w-1/2 opacity-10" style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
                     <div className="absolute right-10 md:right-32 top-1/2 -translate-y-1/2 w-64 h-64 border border-primary/20 rounded-full flex items-center justify-center pointer-events-none opacity-60">
                         <div className="w-40 h-40 border border-secondary/30 rounded-full" />

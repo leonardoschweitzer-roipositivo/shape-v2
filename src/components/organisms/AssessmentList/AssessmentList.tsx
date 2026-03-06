@@ -54,7 +54,7 @@ export const mockAssessments: Assessment[] = [
 
 const getScoreColor = (score: number): { bg: string; text: string; border: string } => {
     if (score >= 9.0) return { bg: 'bg-[#16332D]', text: 'text-[#00FFA3]', border: 'border-[#00FFA3]/30' };
-    if (score >= 8.0) return { bg: 'bg-[#0F2F44]', text: 'text-[#00C9A7]', border: 'border-[#00C9A7]/30' };
+    if (score >= 8.0) return { bg: 'bg-[#0F2F44]', text: 'text-primary', border: 'border-primary/30' };
     if (score >= 7.0) return { bg: 'bg-[#2E1F5E]', text: 'text-[#A78BFA]', border: 'border-[#A78BFA]/30' };
     if (score >= 6.0) return { bg: 'bg-[#3D2E10]', text: 'text-[#FBBF24]', border: 'border-[#FBBF24]/30' };
     return { bg: 'bg-[#3D1F1F]', text: 'text-[#F87171]', border: 'border-[#F87171]/30' };
@@ -198,7 +198,7 @@ export const AssessmentList: React.FC<AssessmentListProps> = ({ assessments = mo
                                 key={page}
                                 onClick={() => setCurrentPage(page)}
                                 className={`w-8 h-8 rounded-lg text-xs font-bold transition-all ${currentPage === page
-                                    ? 'bg-primary text-[#0A0F1C]'
+                                    ? 'bg-primary text-black'
                                     : 'border border-white/10 text-gray-500 hover:text-white hover:bg-white/5'
                                     }`}
                             >
@@ -271,7 +271,7 @@ export const AssessmentList: React.FC<AssessmentListProps> = ({ assessments = mo
                             <span>Última: 15 Out</span>
                             <span>Próxima: 15 Nov</span>
                         </div>
-                        <div className="h-1.5 bg-[#1E293B] rounded-full overflow-hidden">
+                        <div className="h-1.5 bg-surface-raised rounded-full overflow-hidden">
                             <div
                                 className="h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-500"
                                 style={{ width: '50%' }}

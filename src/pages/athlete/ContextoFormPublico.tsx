@@ -148,7 +148,7 @@ export function ContextoFormPublico({ atletaId, atletaNome, onBack }: ContextoFo
     // ---- Estado: Sucesso ----
     if (success) {
         return (
-            <div className="min-h-screen bg-[#060B18] flex items-center justify-center p-6">
+            <div className="min-h-screen bg-background-dark flex items-center justify-center p-6">
                 <div className="max-w-md w-full text-center space-y-6 animate-in fade-in zoom-in duration-500">
                     <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto">
                         <CheckCircle2 className="text-emerald-400" size={40} />
@@ -180,7 +180,7 @@ export function ContextoFormPublico({ atletaId, atletaNome, onBack }: ContextoFo
     const CurrentIcon = currentField.icon
 
     return (
-        <div className="min-h-screen bg-[#060B18] text-white flex flex-col">
+        <div className="min-h-screen bg-background-dark text-white flex flex-col">
             {/* Header */}
             <div className="px-4 pt-4 pb-3">
                 <div className="flex items-center gap-3 mb-4">

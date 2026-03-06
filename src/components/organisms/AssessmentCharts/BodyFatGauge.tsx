@@ -16,7 +16,7 @@ interface BFCategory {
 
 const BF_CATEGORIES_MALE: BFCategory[] = [
     { label: 'Essencial', color: '#9CA3AF', min: 0, max: 6 },
-    { label: 'Atleta', color: '#00C9A7', min: 6, max: 13 },
+    { label: 'Atleta', color: 'var(--color-accent)', min: 6, max: 13 },
     { label: 'Fitness', color: '#3B82F6', min: 13, max: 17 },
     { label: 'Aceitável', color: '#F59E0B', min: 17, max: 25 },
     { label: 'Acima', color: '#EF4444', min: 25, max: 30 },
@@ -25,7 +25,7 @@ const BF_CATEGORIES_MALE: BFCategory[] = [
 
 const BF_CATEGORIES_FEMALE: BFCategory[] = [
     { label: 'Essencial', color: '#9CA3AF', min: 0, max: 14 },
-    { label: 'Atleta', color: '#00C9A7', min: 14, max: 21 },
+    { label: 'Atleta', color: 'var(--color-accent)', min: 14, max: 21 },
     { label: 'Fitness', color: '#3B82F6', min: 21, max: 25 },
     { label: 'Aceitável', color: '#F59E0B', min: 25, max: 32 },
     { label: 'Acima', color: '#EF4444', min: 32, max: 39 },
@@ -162,7 +162,7 @@ export const BodyFatGauge: React.FC<BodyFatGaugeProps> = ({
                     <button
                         onClick={() => onMethodChange?.('navy')}
                         className={`px-2 py-0.5 text-[9px] font-bold rounded transition-all ${method === 'navy'
-                            ? 'bg-[#00C9A7] text-[#0A0F1C]'
+                            ? 'bg-primary text-black'
                             : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
                             }`}
                     >
@@ -171,7 +171,7 @@ export const BodyFatGauge: React.FC<BodyFatGaugeProps> = ({
                     <button
                         onClick={() => onMethodChange?.('pollock')}
                         className={`px-2 py-0.5 text-[9px] font-bold rounded transition-all ${method === 'pollock'
-                            ? 'bg-[#00C9A7] text-[#0A0F1C]'
+                            ? 'bg-primary text-black'
                             : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
                             }`}
                     >

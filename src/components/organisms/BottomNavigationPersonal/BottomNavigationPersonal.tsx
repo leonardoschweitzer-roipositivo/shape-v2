@@ -34,7 +34,7 @@ export function BottomNavigationPersonal({
     alertasNaoLidos = 0,
 }: BottomNavigationPersonalProps) {
     return (
-        <nav className="fixed bottom-0 left-0 right-0 bg-[#060B18] border-t border-white/5 z-50">
+        <nav className="fixed bottom-0 left-0 right-0 bg-background-dark border-t border-white/5 z-50">
             <div className="max-w-screen-sm mx-auto">
                 <div className="grid grid-cols-4 h-16">
                     {NAV_ITEMS.map((item) => {
@@ -52,7 +52,7 @@ export function BottomNavigationPersonal({
                             >
                                 {/* Active indicator */}
                                 {isActive && (
-                                    <div className="absolute top-0 left-0 right-0 h-0.5 bg-[var(--color-gold)]" />
+                                    <div className="absolute top-0 left-0 right-0 h-0.5 bg-[var(--color-accent)]" />
                                 )}
 
                                 {/* Icon with badge */}
@@ -60,7 +60,7 @@ export function BottomNavigationPersonal({
                                     <Icon
                                         size={24}
                                         className={`transition-colors ${isActive
-                                            ? 'text-[var(--color-gold)]'
+                                            ? 'text-[var(--color-accent)]'
                                             : 'text-gray-500'
                                             }`}
                                         strokeWidth={isActive ? 2.5 : 2}
@@ -75,7 +75,7 @@ export function BottomNavigationPersonal({
                                 {/* Label */}
                                 <span
                                     className={`text-[10px] font-bold uppercase tracking-wider transition-colors ${isActive
-                                        ? 'text-[var(--color-gold)]'
+                                        ? 'text-[var(--color-accent)]'
                                         : 'text-gray-600'
                                         }`}
                                 >

@@ -98,7 +98,7 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
     // ---- Loading ----
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#060B18] flex items-center justify-center">
+            <div className="min-h-screen bg-background-dark flex items-center justify-center">
                 <div className="text-center space-y-4">
                     <Loader2 className="text-indigo-400 mx-auto animate-spin" size={40} />
                     <p className="text-zinc-500 text-sm font-medium">Carregando seu portal...</p>
@@ -110,7 +110,7 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
     // ---- Error ----
     if (error || !athleteData) {
         return (
-            <div className="min-h-screen bg-[#060B18] flex items-center justify-center p-6">
+            <div className="min-h-screen bg-background-dark flex items-center justify-center p-6">
                 <div className="max-w-md w-full text-center space-y-6">
                     <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto">
                         <Shield className="text-red-400" size={36} />
@@ -339,7 +339,7 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
 
     if (!temAvaliacao) {
         return (
-            <div className="min-h-screen bg-[#060B18] text-white">
+            <div className="min-h-screen bg-background-dark text-white">
                 <HeaderIdentidade
                     nome={athleteData.nome}
                     sexo={sexoLabel}
@@ -350,7 +350,7 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
                 />
 
                 {/* CTA Primeiro Acesso */}
-                <div className="mx-4 mt-8 bg-gradient-to-br from-[#0C1220] to-[#0A0F1C] rounded-2xl p-8 border border-white/5 text-center shadow-xl">
+                <div className="mx-4 mt-8 bg-gradient-to-br from-surface-deep to-background-dark rounded-2xl p-8 border border-white/5 text-center shadow-xl">
                     <div className="text-5xl mb-4">🎯</div>
                     <h2 className="text-white font-black text-lg uppercase tracking-widest mb-3">
                         COMECE SUA JORNADA
@@ -376,7 +376,7 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
 
     // ---- Estado: Com avaliação — HOME COMPLETA v2.0 ----
     return (
-        <div className="min-h-screen bg-[#060B18] text-white pb-4">
+        <div className="min-h-screen bg-background-dark text-white pb-4">
             {/* 1. Header Integrado com Personal */}
             <HeaderIdentidade
                 nome={athleteData.nome}

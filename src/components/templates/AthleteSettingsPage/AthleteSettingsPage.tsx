@@ -294,7 +294,7 @@ const AppearanceSection: React.FC = () => {
     const { primaryColor } = settings.preferences;
 
     const colorOptions = [
-        { name: 'Teal (Original)', value: '#00C9A7', class: 'bg-[#00C9A7]' },
+        { name: 'Teal (Original)', value: '#00C9A7', class: 'bg-primary' },
         { name: 'Azul', value: '#3b82f6', class: 'bg-status-info' },
         { name: 'Roxo', value: '#7C3AED', class: 'bg-secondary' },
         { name: 'Amarelo', value: '#eab308', class: 'bg-[#eab308]' },
@@ -304,7 +304,9 @@ const AppearanceSection: React.FC = () => {
 
     const handleColorChange = (color: string) => {
         updatePreferences({ primaryColor: color });
+        document.documentElement.style.setProperty('--color-accent', color);
         document.documentElement.style.setProperty('--color-primary', color);
+        document.documentElement.style.setProperty('--color-gold', color);
     };
 
     return (
@@ -532,7 +534,9 @@ export const AthleteSettingsPage: React.FC = () => {
     // Effect to apply primary color on mount or change
     React.useEffect(() => {
         if (settings.preferences.primaryColor) {
+            document.documentElement.style.setProperty('--color-accent', settings.preferences.primaryColor);
             document.documentElement.style.setProperty('--color-primary', settings.preferences.primaryColor);
+            document.documentElement.style.setProperty('--color-gold', settings.preferences.primaryColor);
         }
     }, [settings.preferences.primaryColor]);
 

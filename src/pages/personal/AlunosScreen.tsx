@@ -80,9 +80,9 @@ export function AlunosScreen({ alunos, onVoltar, alunoInicialId, onAlunoFechou }
     ]
 
     return (
-        <div className="min-h-screen bg-[#060B18] pb-24">
+        <div className="min-h-screen bg-background-dark pb-24">
             {/* Header fixo */}
-            <div className="sticky top-0 bg-[#060B18] pt-6 pb-3 px-4 z-10 border-b border-white/5">
+            <div className="sticky top-0 bg-background-dark pt-6 pb-3 px-4 z-10 border-b border-white/5">
                 <h1 className="text-white text-xl font-black mb-4">Meus Alunos</h1>
 
                 {/* Busca */}
@@ -93,7 +93,7 @@ export function AlunosScreen({ alunos, onVoltar, alunoInicialId, onAlunoFechou }
                         placeholder="Buscar por nome ou email..."
                         value={busca}
                         onChange={e => setBusca(e.target.value)}
-                        className="w-full bg-[#111827] text-white text-sm placeholder-gray-600 rounded-xl pl-9 pr-4 py-2.5 border border-white/5 focus:outline-none focus:border-[var(--color-gold)]/50"
+                        className="w-full bg-surface text-white text-sm placeholder-gray-600 rounded-xl pl-9 pr-4 py-2.5 border border-white/5 focus:outline-none focus:border-[var(--color-accent)]/50"
                     />
                 </div>
 
@@ -104,7 +104,7 @@ export function AlunosScreen({ alunos, onVoltar, alunoInicialId, onAlunoFechou }
                             key={f.id}
                             onClick={() => setFiltro(f.id)}
                             className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${filtro === f.id
-                                ? 'bg-[var(--color-gold)] text-black border-[var(--color-gold)]'
+                                ? 'bg-[var(--color-accent)] text-black border-[var(--color-accent)]'
                                 : 'bg-transparent text-gray-400 border-white/10'
                                 }`}
                         >
@@ -124,7 +124,7 @@ export function AlunosScreen({ alunos, onVoltar, alunoInicialId, onAlunoFechou }
                         <p className="text-gray-500 text-sm">Nenhum aluno encontrado.</p>
                     </div>
                 ) : (
-                    <div className="bg-[#111827] rounded-2xl border border-white/5 overflow-hidden">
+                    <div className="bg-surface rounded-2xl border border-white/5 overflow-hidden">
                         {alunosFiltrados.map((aluno, idx) => {
                             const status = getStatusConfig(aluno.status)
                             const temEvolucao = aluno.evolucaoSemana !== 0
@@ -136,7 +136,7 @@ export function AlunosScreen({ alunos, onVoltar, alunoInicialId, onAlunoFechou }
                                 >
                                     <div className="flex items-start gap-3">
                                         {/* Avatar */}
-                                        <div className="w-10 h-10 rounded-full bg-[var(--color-surface)] flex items-center justify-center shrink-0 border border-white/10">
+                                        <div className="w-10 h-10 rounded-full bg-[var(--bg-card)] flex items-center justify-center shrink-0 border border-white/10">
                                             {aluno.fotoUrl
                                                 ? <img src={aluno.fotoUrl} alt={aluno.nome} className="w-10 h-10 rounded-full object-cover" />
                                                 : <span className="text-gray-400 text-sm font-bold">{aluno.nome[0].toUpperCase()}</span>
@@ -146,7 +146,7 @@ export function AlunosScreen({ alunos, onVoltar, alunoInicialId, onAlunoFechou }
                                             <div className="flex items-center gap-2">
                                                 <p className="text-white text-sm font-semibold">{aluno.nome}</p>
                                                 {aluno.nivel && (
-                                                    <span className="text-[10px] text-[var(--color-gold)] font-bold">
+                                                    <span className="text-[10px] text-[var(--color-accent)] font-bold">
                                                         {aluno.nivel}
                                                     </span>
                                                 )}

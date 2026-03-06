@@ -11,7 +11,7 @@ export interface AiInsightCardProps {
 
 export const AiInsightCard: React.FC<AiInsightCardProps> = ({ type = "AI Insight", title, description }) => {
     return (
-        <GlassPanel className="p-6 rounded-2xl border border-white/10 bg-gradient-to-b from-surface to-[#0A0F1C] relative overflow-hidden" hoverEffect={false}>
+        <GlassPanel className="p-6 rounded-2xl border border-white/10 bg-gradient-to-b from-surface to-background-dark relative overflow-hidden" hoverEffect={false}>
             <div className="absolute top-0 right-0 w-32 h-32 rounded-full blur-2xl pointer-events-none" style={{ background: `${colors.brand.primary}0D` }}></div>
             <div style={{
                 display: 'inline-flex',

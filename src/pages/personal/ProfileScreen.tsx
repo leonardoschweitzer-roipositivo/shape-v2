@@ -21,15 +21,15 @@ export function ProfileScreen({ contexto, onLogout }: ProfileScreenProps) {
         .join('')
 
     return (
-        <div className="min-h-screen bg-[#060B18] pb-24 px-4 pt-6">
+        <div className="min-h-screen bg-background-dark pb-24 px-4 pt-6">
             <h1 className="text-white text-xl font-black mb-6">Perfil</h1>
 
             {/* Avatar + dados */}
-            <div className="bg-[#111827] rounded-2xl p-5 border border-white/5 text-center mb-4">
-                <div className="w-20 h-20 rounded-full bg-[var(--color-gold)]/10 border-2 border-[var(--color-gold)]/30 flex items-center justify-center mx-auto mb-4">
+            <div className="bg-surface rounded-2xl p-5 border border-white/5 text-center mb-4">
+                <div className="w-20 h-20 rounded-full bg-[var(--color-accent)]/10 border-2 border-[var(--color-accent)]/30 flex items-center justify-center mx-auto mb-4">
                     {contexto.fotoUrl
                         ? <img src={contexto.fotoUrl} alt={contexto.nome} className="w-20 h-20 rounded-full object-cover" />
-                        : <span className="text-[var(--color-gold)] text-2xl font-black">{iniciais}</span>
+                        : <span className="text-[var(--color-accent)] text-2xl font-black">{iniciais}</span>
                     }
                 </div>
                 <h2 className="text-white text-xl font-black">{contexto.nome}</h2>
@@ -54,7 +54,7 @@ export function ProfileScreen({ contexto, onLogout }: ProfileScreenProps) {
             </div>
 
             {/* Identificação */}
-            <div className="bg-[#111827] rounded-2xl border border-white/5 overflow-hidden mb-4">
+            <div className="bg-surface rounded-2xl border border-white/5 overflow-hidden mb-4">
                 <div className="flex items-center gap-3 p-4 border-b border-white/5">
                     <User size={16} className="text-gray-500" />
                     <div>

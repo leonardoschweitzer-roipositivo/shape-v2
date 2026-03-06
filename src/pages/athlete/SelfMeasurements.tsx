@@ -105,7 +105,7 @@ export function SelfMeasurements({ atletaId, atletaNome, sexo, onSave, onBack }:
 
     if (saved) {
         return (
-            <div className="min-h-screen bg-[#060B18] flex items-center justify-center p-6">
+            <div className="min-h-screen bg-background-dark flex items-center justify-center p-6">
                 <div className="max-w-md w-full text-center space-y-8 animate-fade-in">
                     <div className="w-24 h-24 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto animate-pulse">
                         <CheckCircle className="text-emerald-400" size={48} />
@@ -131,9 +131,9 @@ export function SelfMeasurements({ atletaId, atletaNome, sexo, onSave, onBack }:
     }
 
     return (
-        <div className="min-h-screen bg-[#060B18]">
+        <div className="min-h-screen bg-background-dark">
             {/* Header */}
-            <div className="sticky top-0 z-50 bg-[#060B18]/95 backdrop-blur-xl border-b border-white/5">
+            <div className="sticky top-0 z-50 bg-background-dark/95 backdrop-blur-xl border-b border-white/5">
                 <div className="max-w-2xl mx-auto px-6 py-4">
                     <div className="flex items-center justify-between">
                         <button

@@ -45,7 +45,7 @@ const NAV_ITEMS: NavItem[] = [
 
 export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationProps) {
     return (
-        <nav className="fixed bottom-0 left-0 right-0 bg-[#060B18] border-t border-white/5 z-50">
+        <nav className="fixed bottom-0 left-0 right-0 bg-background-dark border-t border-white/5 z-50">
             <div className="max-w-screen-sm mx-auto">
                 <div className="grid grid-cols-4 h-16">
                     {NAV_ITEMS.map((item) => {

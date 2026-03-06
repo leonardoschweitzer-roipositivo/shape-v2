@@ -46,7 +46,7 @@ export function HomeScreen({ contexto, alunosAtencao, todosAlunos, atividadeRece
     const nomeCurto = contexto.nome.split(' ')[0]
 
     return (
-        <div className="min-h-screen bg-[#060B18] pb-24 px-4 pt-6">
+        <div className="min-h-screen bg-background-dark pb-24 px-4 pt-6">
             {/* Header */}
             <div className="mb-6">
                 <p className="text-gray-400 text-sm">{saudacao()},</p>
@@ -54,7 +54,7 @@ export function HomeScreen({ contexto, alunosAtencao, todosAlunos, atividadeRece
             </div>
 
             {/* Resumo do Dia */}
-            <div className="bg-[#111827] rounded-2xl p-4 mb-5 border border-white/5">
+            <div className="bg-surface rounded-2xl p-4 mb-5 border border-white/5">
                 <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-3">
                     📊 Resumo do Dia
                 </p>
@@ -68,7 +68,7 @@ export function HomeScreen({ contexto, alunosAtencao, todosAlunos, atividadeRece
                         <p className="text-gray-500 text-[10px] mt-0.5">Ativos</p>
                     </div>
                     <div className="text-center border-r border-white/5">
-                        <p className="text-[var(--color-gold)] text-xl font-black">{contexto.scoreMedio}</p>
+                        <p className="text-[var(--color-accent)] text-xl font-black">{contexto.scoreMedio}</p>
                         <p className="text-gray-500 text-[10px] mt-0.5">Score Médio</p>
                     </div>
                     <div className="text-center">
@@ -87,7 +87,7 @@ export function HomeScreen({ contexto, alunosAtencao, todosAlunos, atividadeRece
                             Precisam de Atenção
                         </p>
                     </div>
-                    <div className="bg-[#111827] rounded-2xl border border-white/5 overflow-hidden">
+                    <div className="bg-surface rounded-2xl border border-white/5 overflow-hidden">
                         {alunosAtencao.slice(0, 3).map((aluno, idx) => {
                             const reason = aluno.score > 0 && aluno.score < 50
                                 ? 'Score crítico, agendar reavaliação'
@@ -121,7 +121,7 @@ export function HomeScreen({ contexto, alunosAtencao, todosAlunos, atividadeRece
 
             {/* Sem alertas */}
             {alunosAtencao.length === 0 && (
-                <div className="bg-[#111827] rounded-2xl p-5 mb-5 border border-white/5 text-center">
+                <div className="bg-surface rounded-2xl p-5 mb-5 border border-white/5 text-center">
                     <div className="text-emerald-400 text-2xl mb-2">✅</div>
                     <p className="text-emerald-400 text-sm font-semibold">Todos os alunos em dia!</p>
                     <p className="text-gray-500 text-xs mt-1">Nenhum aluno precisa de atenção agora.</p>
@@ -133,18 +133,18 @@ export function HomeScreen({ contexto, alunosAtencao, todosAlunos, atividadeRece
                 <div className="mb-5">
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
-                            <Bell size={14} className="text-[var(--color-gold)]" />
+                            <Bell size={14} className="text-[var(--color-accent)]" />
                             <p className="text-gray-300 text-xs font-bold uppercase tracking-wider">
                                 Alertas Recentes
                             </p>
                         </div>
                         {onVerAlertas && (
-                            <button onClick={onVerAlertas} className="text-[var(--color-gold)] text-xs font-semibold flex items-center gap-0.5">
+                            <button onClick={onVerAlertas} className="text-[var(--color-accent)] text-xs font-semibold flex items-center gap-0.5">
                                 Ver todos <ChevronRight size={12} />
                             </button>
                         )}
                     </div>
-                    <div className="bg-[#111827] rounded-2xl border border-white/5 overflow-hidden">
+                    <div className="bg-surface rounded-2xl border border-white/5 overflow-hidden">
                         {notificacoesRecentes.slice(0, 3).map((notif, idx) => {
                             const prioConfig = PRIORIDADE_CONFIG[notif.prioridade]
                             return (
@@ -162,7 +162,7 @@ export function HomeScreen({ contexto, alunosAtencao, todosAlunos, atividadeRece
                                             {stripHtml(notif.mensagem)}
                                         </p>
                                     </div>
-                                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-gold)] shrink-0 mt-1.5" />
+                                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-accent)] shrink-0 mt-1.5" />
                                 </button>
                             )
                         })}
@@ -179,7 +179,7 @@ export function HomeScreen({ contexto, alunosAtencao, todosAlunos, atividadeRece
                             Atividade Recente
                         </p>
                     </div>
-                    <div className="bg-[#111827] rounded-2xl border border-white/5 overflow-hidden">
+                    <div className="bg-surface rounded-2xl border border-white/5 overflow-hidden">
                         {atividadeRecente.map((ativ, idx) => (
                             <button
                                 key={ativ.id}
@@ -222,7 +222,7 @@ export function HomeScreen({ contexto, alunosAtencao, todosAlunos, atividadeRece
                                 Top Performers
                             </p>
                         </div>
-                        <div className="bg-[#111827] rounded-2xl border border-white/5 overflow-hidden">
+                        <div className="bg-surface rounded-2xl border border-white/5 overflow-hidden">
                             {topPerformers.map((aluno, idx) => (
                                 <button
                                     key={aluno.id}
@@ -236,7 +236,7 @@ export function HomeScreen({ contexto, alunosAtencao, todosAlunos, atividadeRece
                                             <p className="text-gray-500 text-xs mt-0.5">{aluno.nivel ?? 'Sem avaliação'}</p>
                                         </div>
                                     </div>
-                                    <span className="text-[var(--color-gold)] text-sm font-bold">{aluno.score} pts</span>
+                                    <span className="text-[var(--color-accent)] text-sm font-bold">{aluno.score} pts</span>
                                 </button>
                             ))}
                         </div>

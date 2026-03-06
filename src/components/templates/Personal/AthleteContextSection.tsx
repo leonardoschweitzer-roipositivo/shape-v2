@@ -326,7 +326,7 @@ export const AthleteContextSection: React.FC<AthleteContextSectionProps> = ({
                                         onClick={handleSave}
                                         disabled={isSaving}
                                         className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all font-bold text-[10px] uppercase tracking-wider
-                                        bg-primary text-[#0A0F1C] border-primary shadow-[0_0_15px_rgba(0,201,167,0.3)]
+                                        bg-primary text-black border-primary shadow-[0_0_15px_rgba(0,201,167,0.3)]
                                         ${isSaving ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-[0_0_25px_rgba(0,201,167,0.4)]'}`}
                                     >
                                         {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
@@ -383,7 +383,7 @@ export const AthleteContextSection: React.FC<AthleteContextSectionProps> = ({
                                         onClick={handleSave}
                                         disabled={isSaving}
                                         className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all font-bold text-xs uppercase tracking-wider
-                                        bg-primary text-[#0A0F1C] border-primary shadow-[0_0_15px_rgba(0,201,167,0.3)]
+                                        bg-primary text-black border-primary shadow-[0_0_15px_rgba(0,201,167,0.3)]
                                         ${isSaving ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-[0_0_25px_rgba(0,201,167,0.4)]'}`}
                                     >
                                         {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}

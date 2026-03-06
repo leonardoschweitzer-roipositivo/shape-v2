@@ -79,7 +79,7 @@ export const AssimetriaSection = memo(function AssimetriaSection({
     const [expanded, setExpanded] = useState(false)
 
     return (
-        <div className="bg-gradient-to-br from-[#0D1425] to-[#0A0F1C] rounded-2xl border border-white/5 overflow-hidden">
+        <div className="bg-gradient-to-br from-surface-deep to-background-dark rounded-2xl border border-white/5 overflow-hidden">
             {/* Header colapsável */}
             <button
                 onClick={() => setExpanded(!expanded)}

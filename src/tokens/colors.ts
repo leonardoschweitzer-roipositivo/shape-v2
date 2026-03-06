@@ -2,19 +2,23 @@
  * Tokens de Cores - VITRU IA Design System
  * 
  * Paleta de cores centralizada para toda a aplicação.
- * @see docs/specs/design-system.md
+ * Cores de tema usam CSS variables para permitir theming dinâmico via GOD.
+ * Cores semânticas (status) são fixas em todos os temas.
+ * 
+ * @see src/config/themes.ts — Presets de tema
+ * @see index.html — CSS variables definidas em :root
  */
 
 export const colors = {
-    // === BRAND ===
+    // === BRAND (Dynamic — mudam com tema) ===
     brand: {
-        /** Dynamic - Ações principais, CTAs, progresso positivo */
-        primary: 'var(--color-primary)',
-        /** #7C3AED - Gradientes, acentos secundários, badges PRO */
-        secondary: '#7C3AED',
+        /** Ações principais, CTAs, progresso positivo */
+        primary: 'var(--color-accent)',
+        /** Gradientes, acentos secundários, badges PRO */
+        secondary: 'var(--color-secondary)',
     },
 
-    // === SEMANTIC ===
+    // === SEMANTIC (Fixed — iguais em todos os temas) ===
     semantic: {
         /** Verde - Sucesso, ganhos, métricas positivas */
         success: '#22c55e',
@@ -28,29 +32,33 @@ export const colors = {
         info: '#3b82f6',
     },
 
-    // === BACKGROUND (Dark Theme) ===
+    // === BACKGROUND (Dynamic — mudam com tema) ===
     background: {
-        /** #0A0F1C - Fundo principal da aplicação */
-        dark: '#0A0F1C',
-        /** #131B2C - Painéis, cards, elementos elevados */
-        card: '#131B2C',
+        /** Fundo principal da aplicação */
+        dark: 'var(--bg-primary)',
+        /** Painéis, cards, elementos elevados */
+        card: 'var(--bg-card)',
         /** Glassmorphism overlay */
-        glass: 'rgba(255, 255, 255, 0.05)',
+        glass: 'var(--bg-card-alpha)',
+        /** Backdrop de modais */
+        backdrop: 'var(--bg-backdrop)',
+        /** Elementos elevados, hover */
+        raised: 'var(--bg-surface-raised)',
     },
 
-    // === TEXT ===
+    // === TEXT (Dynamic — mudam com tema) ===
     text: {
         /** Títulos, valores principais */
-        primary: '#FFFFFF',
+        primary: 'var(--text-primary)',
         /** Texto de corpo, parágrafos */
-        secondary: '#D1D5DB',
+        secondary: 'var(--text-secondary)',
         /** Legendas, descrições secundárias */
-        muted: '#9CA3AF',
+        muted: 'var(--text-muted)',
         /** Labels, informações de suporte */
-        disabled: '#6B7280',
+        disabled: 'var(--text-disabled)',
     },
 
-    // === PROPORTIONS (específico VITRU IA) ===
+    // === PROPORTIONS (Fixed — específico VITRU IA) ===
     proportions: {
         /** Dourado - Golden Ratio */
         golden: '#FFD700',
@@ -60,7 +68,7 @@ export const colors = {
         physique: '#3b82f6',
     },
 
-    // === SCALE LEVELS ===
+    // === SCALE LEVELS (Fixed) ===
     scale: {
         /** Bloco < 1.20 */
         bloco: '#6B7280',
@@ -74,7 +82,7 @@ export const colors = {
         freak: '#ef4444',
     },
 
-    // === ASYMMETRY LEVELS ===
+    // === ASYMMETRY LEVELS (Fixed) ===
     asymmetry: {
         /** < 3% - Simétrico */
         symmetrical: '#22c55e',

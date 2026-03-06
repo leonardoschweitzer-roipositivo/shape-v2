@@ -12,7 +12,7 @@ export const ScoreBreakdown: React.FC<ScoreBreakdownProps> = ({ data }) => {
     const getStatusColor = (status: ProportionBreakdownItem['status']) => {
         switch (status) {
             case 'excellent': return 'bg-emerald-500';
-            case 'good': return 'bg-[#00C9A7]';
+            case 'good': return 'bg-primary';
             case 'attention': return 'bg-amber-500';
             case 'critical': return 'bg-red-500';
             default: return 'bg-gray-500';

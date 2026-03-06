@@ -38,7 +38,7 @@ export function CardRanking({
 
     return (
         <div className="max-w-2xl mx-auto px-6 mt-4">
-            <div className="p-5 bg-gradient-to-br from-[#0C1220] to-[#0A0F1C] rounded-2xl border border-white/5 shadow-xl">
+            <div className="p-5 bg-gradient-to-br from-surface-deep to-background-dark rounded-2xl border border-white/5 shadow-xl">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-5">
                     <div className="flex items-center gap-2">

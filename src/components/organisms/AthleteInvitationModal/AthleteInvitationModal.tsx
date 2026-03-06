@@ -187,7 +187,7 @@ Qualquer dúvida, estou à disposição!`);
                                     placeholder="email@aluno.com"
                                     className="w-full max-w-sm bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50 text-sm"
                                 />
-                                <button className="w-full max-w-sm h-12 bg-primary hover:bg-primary/90 text-[#0A0F1C] rounded-xl font-bold transition-all">
+                                <button className="w-full max-w-sm h-12 bg-primary hover:bg-primary/90 text-black rounded-xl font-bold transition-all">
                                     Enviar Convite
                                 </button>
                             </div>
@@ -204,7 +204,7 @@ Qualquer dúvida, estou à disposição!`);
                                     <button
                                         onClick={() => generateInviteLink('LINK_GENERIC')}
                                         disabled={loading}
-                                        className="w-full h-12 bg-primary hover:bg-primary/90 text-[#0A0F1C] rounded-xl font-bold transition-all"
+                                        className="w-full h-12 bg-primary hover:bg-primary/90 text-black rounded-xl font-bold transition-all"
                                     >
                                         {loading ? 'Gerando...' : 'Gerar Link'}
                                     </button>
@@ -294,7 +294,7 @@ Qualquer dúvida, estou à disposição!`);
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="w-full h-12 bg-primary hover:bg-primary/90 text-[#0A0F1C] rounded-xl font-bold flex items-center justify-center gap-2 transition-all mt-4"
+                                    className="w-full h-12 bg-primary hover:bg-primary/90 text-black rounded-xl font-bold flex items-center justify-center gap-2 transition-all mt-4"
                                 >
                                     {loading ? 'Cadastrando...' : 'CADASTRAR ALUNO'}
                                 </button>

@@ -55,8 +55,8 @@ export const Evolution: React.FC<EvolutionProps> = ({
     // --- DYNAMIC METRICS CONFIG ---
     const AVAILABLE_METRICS = React.useMemo(() => {
         const baseMetrics: MetricConfig[] = [
-            { id: 'ratio', label: isMale ? 'Proporção Shape-V' : 'Razão Cintura-Quadril', color: '#00C9A7', unit: '', idealValue: isMale ? 1.618 : 0.70, yAxisId: 'left' },
-            { id: 'score', label: 'Score Geral', color: '#7C3AED', unit: 'pts', idealValue: 100, yAxisId: 'right' },
+            { id: 'ratio', label: isMale ? 'Proporção Shape-V' : 'Razão Cintura-Quadril', color: 'var(--color-accent)', unit: '', idealValue: isMale ? 1.618 : 0.70, yAxisId: 'left' },
+            { id: 'score', label: 'Score Geral', color: 'var(--color-secondary)', unit: 'pts', idealValue: 100, yAxisId: 'right' },
             { id: 'ombros', label: 'Ombros', color: '#3B82F6', unit: 'cm', yAxisId: 'right' },
             { id: 'cintura', label: 'Cintura', color: '#F59E0B', unit: 'cm', yAxisId: 'right' },
             { id: 'braco', label: 'Braço', color: '#EC4899', unit: 'cm', yAxisId: 'right' },
@@ -76,7 +76,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
         if (!evolutionData) return baseMetrics;
 
         const propColors: Record<string, string> = {
-            vTaper: '#00C9A7',
+            vTaper: 'var(--color-accent)',
             peitoral: '#8B5CF6',
             braco: '#EC4899',
             antebraco: '#F59E0B',
@@ -84,7 +84,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
             cintura: '#EF4444',
             coxa: '#06B6D4',
             coxaPanturrilha: '#84CC16',
-            panturrilha: '#7C3AED',
+            panturrilha: 'var(--color-secondary)',
             costas: '#6366F1'
         };
 
@@ -535,7 +535,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
                                     <button
                                         onClick={() => setViewMode('charts')}
                                         className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs font-bold transition-all ${viewMode === 'charts'
-                                            ? 'bg-primary text-[#0A0F1C] shadow-sm hover:brightness-110'
+                                            ? 'bg-primary text-black shadow-sm hover:brightness-110'
                                             : 'text-gray-500 hover:text-white hover:bg-white/5'
                                             }`}
                                     >
@@ -544,7 +544,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
                                     <button
                                         onClick={() => setViewMode('list')}
                                         className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs font-bold transition-all ${viewMode === 'list'
-                                            ? 'bg-primary text-[#0A0F1C] shadow-sm hover:brightness-110'
+                                            ? 'bg-primary text-black shadow-sm hover:brightness-110'
                                             : 'text-gray-500 hover:text-white hover:bg-white/5'
                                             }`}
                                     >
@@ -558,7 +558,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
                                         <button
                                             key={p}
                                             onClick={() => setPeriod(p)}
-                                            className={`px-3 py-1.5 rounded text-[10px] font-bold transition-all ${period === p ? 'bg-[#1E293B] text-white border border-white/10 shadow-sm' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}`}
+                                            className={`px-3 py-1.5 rounded text-[10px] font-bold transition-all ${period === p ? 'bg-surface-raised text-white border border-white/10 shadow-sm' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}`}
                                         >
                                             {p}
                                         </button>
@@ -578,7 +578,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
                             <button
                                 onClick={() => setViewMode('charts')}
                                 className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs font-bold transition-all ${viewMode === 'charts'
-                                    ? 'bg-primary text-[#0A0F1C] shadow-sm hover:brightness-110'
+                                    ? 'bg-primary text-black shadow-sm hover:brightness-110'
                                     : 'text-gray-500 hover:text-white hover:bg-white/5'
                                     }`}
                             >
@@ -587,7 +587,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
                             <button
                                 onClick={() => setViewMode('list')}
                                 className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs font-bold transition-all ${viewMode === 'list'
-                                    ? 'bg-primary text-[#0A0F1C] shadow-sm hover:brightness-110'
+                                    ? 'bg-primary text-black shadow-sm hover:brightness-110'
                                     : 'text-gray-500 hover:text-white hover:bg-white/5'
                                     }`}
                             >
@@ -601,7 +601,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
                                 <button
                                     key={p}
                                     onClick={() => setPeriod(p)}
-                                    className={`px-3 py-1.5 rounded text-[10px] font-bold transition-all ${period === p ? 'bg-[#1E293B] text-white border border-white/10 shadow-sm' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}`}
+                                    className={`px-3 py-1.5 rounded text-[10px] font-bold transition-all ${period === p ? 'bg-surface-raised text-white border border-white/10 shadow-sm' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}`}
                                 >
                                     {p}
                                 </button>

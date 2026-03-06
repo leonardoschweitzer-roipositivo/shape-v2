@@ -55,7 +55,7 @@ export function CardIndicadorProgresso({
 
     return (
         <div className="max-w-2xl mx-auto px-6 mt-4">
-            <div className="p-4 bg-gradient-to-br from-[#0C1220] to-[#0A0F1C] rounded-2xl border border-white/5 shadow-lg">
+            <div className="p-4 bg-gradient-to-br from-surface-deep to-background-dark rounded-2xl border border-white/5 shadow-lg">
                 <div className="flex justify-between items-start mb-3">
                     <div className="flex flex-col gap-1">
                         <span className="text-[10px] font-bold tracking-widest text-gray-500 uppercase">

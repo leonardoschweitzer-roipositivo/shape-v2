@@ -56,7 +56,7 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ urlVideo, ti
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
             onClick={(e) => e.target === e.currentTarget && onFechar()}
         >
-            <div className="w-full max-w-3xl bg-[#0B101D] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+            <div className="w-full max-w-3xl bg-background-dark border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 py-3 border-b border-white/5">
                     <h3 className="text-sm font-bold text-white truncate pr-4">{titulo}</h3>

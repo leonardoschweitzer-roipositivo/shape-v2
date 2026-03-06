@@ -75,7 +75,7 @@ export const DebugAccess: React.FC<DebugAccessProps> = ({ onLogin, isVisible }) 
         <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end gap-3">
             {/* Pop-up Panel */}
             {isOpen && (
-                <div className="w-80 bg-[#0B101D]/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <div className="w-80 bg-background-dark/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
                     <div className="p-4 border-b border-white/5 bg-primary/10">
                         <h3 className="text-sm font-bold text-white flex items-center gap-2">
                             <ShieldCheck size={16} className="text-primary" />

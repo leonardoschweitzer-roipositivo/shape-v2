@@ -292,7 +292,7 @@ export const ChatPlanoEvolucao: React.FC<ChatPlanoEvolucaoProps> = ({
                             >
                                 {isTyping
                                     ? <Loader2 size={18} className="text-white animate-spin" />
-                                    : <Send size={18} className="text-[#0A0F1C]" />
+                                    : <Send size={18} className="text-black" />
                                 }
                             </button>
                         </div>

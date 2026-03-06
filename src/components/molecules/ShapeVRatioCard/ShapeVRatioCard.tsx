@@ -25,7 +25,7 @@ export const ShapeVRatioCard: React.FC<ShapeVRatioCardProps> = ({ data }) => {
     const progressPercent = Math.min(100, Math.max(0, ((current - minRatio) / (maxRatio - minRatio)) * 100));
 
     return (
-        <div className="bg-surface rounded-2xl p-6 border border-white/5 shadow-lg flex flex-col justify-between h-full relative overflow-hidden group hover:border-[#00C9A7]/30 transition-colors">
+        <div className="bg-surface rounded-2xl p-6 border border-white/5 shadow-lg flex flex-col justify-between h-full relative overflow-hidden group hover:border-primary/30 transition-colors">
 
             {/* Header */}
             <div className="flex justify-between items-start mb-4 relative z-10">
@@ -38,7 +38,7 @@ export const ShapeVRatioCard: React.FC<ShapeVRatioCardProps> = ({ data }) => {
                 </div>
                 <div className="bg-emerald-500/10 p-2 rounded-lg">
                     {/* Simple bar chart icon */}
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00C9A7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="18" y1="20" x2="18" y2="10"></line>
                         <line x1="12" y1="20" x2="12" y2="4"></line>
                         <line x1="6" y1="20" x2="6" y2="14"></line>
@@ -57,7 +57,7 @@ export const ShapeVRatioCard: React.FC<ShapeVRatioCardProps> = ({ data }) => {
                     />
                     {/* Current Value Bar */}
                     <div
-                        className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-600 via-indigo-500 to-[#00C9A7] rounded-full transition-all duration-1000"
+                        className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-600 via-indigo-500 to-primary rounded-full transition-all duration-1000"
                         style={{ width: `${progressPercent}%` }}
                     />
                 </div>
@@ -65,7 +65,7 @@ export const ShapeVRatioCard: React.FC<ShapeVRatioCardProps> = ({ data }) => {
                 {/* Classification Labels */}
                 <div className="flex justify-between mt-2 text-[9px] text-gray-500 font-medium tracking-wide uppercase">
                     {classifications.map((item, index) => (
-                        <span key={item} className={index === activeClassIndex ? 'text-[#00C9A7] font-bold' : ''}>
+                        <span key={item} className={index === activeClassIndex ? 'text-primary font-bold' : ''}>
                             {item}
                         </span>
                     ))}
@@ -79,7 +79,7 @@ export const ShapeVRatioCard: React.FC<ShapeVRatioCardProps> = ({ data }) => {
                     {[45, 52, 48, 62, 58, 70, 75, 82].map((height, i) => (
                         <div
                             key={i}
-                            className="bg-indigo-500/40 w-full rounded-t-sm hover:bg-[#00C9A7]/60 transition-colors"
+                            className="bg-indigo-500/40 w-full rounded-t-sm hover:bg-primary/60 transition-colors"
                             style={{ height: `${height}%` }}
                         ></div>
                     ))}
@@ -114,7 +114,7 @@ export const ShapeVRatioCard: React.FC<ShapeVRatioCardProps> = ({ data }) => {
             </div>
 
             {/* Background Decor */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-[#00C9A7]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
         </div>
     );
 };
