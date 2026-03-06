@@ -63,25 +63,41 @@ export async function carregarContextoPersonal(
         return null
     }
 
-    // Buscar contadores de alunos
+    // Buscar atletas (query simples, sem join problemático)
     const { data: atletas } = await supabase
         .from('atletas')
-        .select('id, medidas(created_at)')
+        .select('id')
         .eq('personal_id', personalId)
 
+    const atletaIds = (atletas ?? []).map(a => a.id)
+
+    // Para cada atleta, buscar última medição para classificar status
     let ativos = 0
-    let atencao = 0
+    let atencaoCount = 0
     let inativos = 0
 
-    for (const atleta of atletas ?? []) {
-        const medidas = (atleta as { medidas?: { created_at: string }[] }).medidas ?? []
-        const ultima = medidas.length > 0
-            ? medidas.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0].created_at
-            : null
-        const status = classificarStatus(ultima)
-        if (status === 'ATIVO') ativos++
-        else if (status === 'ATENCAO') atencao++
-        else inativos++
+    if (atletaIds.length > 0) {
+        const { data: medidas } = await supabase
+            .from('medidas')
+            .select('atleta_id, created_at')
+            .in('atleta_id', atletaIds)
+            .order('created_at', { ascending: false })
+
+        // Agrupar por atleta e pegar a mais recente
+        const ultimaPorAtleta = new Map<string, string>()
+        for (const m of medidas ?? []) {
+            if (!ultimaPorAtleta.has(m.atleta_id)) {
+                ultimaPorAtleta.set(m.atleta_id, m.created_at)
+            }
+        }
+
+        for (const id of atletaIds) {
+            const ultima = ultimaPorAtleta.get(id) ?? null
+            const status = classificarStatus(ultima)
+            if (status === 'ATIVO') ativos++
+            else if (status === 'ATENCAO') atencaoCount++
+            else inativos++
+        }
     }
 
     return {
@@ -89,9 +105,9 @@ export async function carregarContextoPersonal(
         nome: personal.nome,
         email: personal.email,
         fotoUrl: personal.foto_url ?? null,
-        totalAlunos: (atletas ?? []).length,
+        totalAlunos: atletaIds.length,
         alunosAtivos: ativos,
-        alunosAtencao: atencao,
+        alunosAtencao: atencaoCount,
         alunosInativos: inativos,
     }
 }
@@ -100,22 +116,13 @@ export async function carregarContextoPersonal(
 
 /**
  * Lista todos os alunos do personal com score, status e última medição.
- * Usado na Tab ALUNOS e na seção "Precisam de Atenção" da Home.
+ * Usa queries separadas (atletas + medidas) para evitar join inline que pode falhar.
  */
 export async function listarAlunos(personalId: string): Promise<AlunoCard[]> {
+    // 1. Buscar atletas
     const { data: atletas, error } = await supabase
         .from('atletas')
-        .select(`
-            id,
-            nome,
-            email,
-            foto_url,
-            medidas (
-                id,
-                created_at,
-                score_shape_v
-            )
-        `)
+        .select('id, nome, email, foto_url')
         .eq('personal_id', personalId)
         .order('nome', { ascending: true })
 
@@ -124,35 +131,53 @@ export async function listarAlunos(personalId: string): Promise<AlunoCard[]> {
         return []
     }
 
+    if (atletas.length === 0) return []
+
+    const atletaIds = atletas.map(a => a.id)
+
+    // 2. Buscar medidas de todos os atletas
+    const { data: todasMedidas } = await supabase
+        .from('medidas')
+        .select('id, atleta_id, created_at, score')
+        .in('atleta_id', atletaIds)
+        .order('created_at', { ascending: false })
+
+    // Agrupar medidas por atleta
+    const medidasPorAtleta = new Map<string, typeof todasMedidas>()
+    for (const m of todasMedidas ?? []) {
+        if (!medidasPorAtleta.has(m.atleta_id)) {
+            medidasPorAtleta.set(m.atleta_id, [])
+        }
+        medidasPorAtleta.get(m.atleta_id)!.push(m)
+    }
+
     const hoje = new Date()
     const inicioSemana = new Date(hoje)
     inicioSemana.setDate(hoje.getDate() - 7)
 
     return atletas.map((atleta) => {
-        const medidas = ((atleta as { medidas?: { id: string; created_at: string; score_shape_v: number | null }[] }).medidas ?? [])
-            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-
+        const medidas = medidasPorAtleta.get(atleta.id) ?? []
         const ultimaMedicao = medidas[0]?.created_at ?? null
-        const scoreAtual = medidas[0]?.score_shape_v ?? 0
+        const scoreAtual = medidas[0]?.score ?? 0
 
         // Calcula evolução semanal
         const medidasSemana = medidas.filter(m => new Date(m.created_at) >= inicioSemana)
         const scoreSemanaAnterior = medidasSemana.length > 1
-            ? medidasSemana[medidasSemana.length - 1].score_shape_v ?? 0
+            ? medidasSemana[medidasSemana.length - 1].score ?? 0
             : 0
         const evolucaoSemana = scoreAtual - scoreSemanaAnterior
 
         return {
             id: atleta.id,
             nome: atleta.nome,
-            email: atleta.email,
-            fotoUrl: (atleta as { foto_url?: string | null }).foto_url ?? null,
+            email: atleta.email ?? '',
+            fotoUrl: atleta.foto_url ?? null,
             score: scoreAtual,
             nivel: scoreParaNivel(scoreAtual),
             status: classificarStatus(ultimaMedicao),
             ultimaMedicao,
             evolucaoSemana: Math.round(evolucaoSemana * 10) / 10,
-            streak: 0, // TODO: calcular streak via registros_diarios
+            streak: 0,
         } as AlunoCard
     })
 }
@@ -161,16 +186,10 @@ export async function listarAlunos(personalId: string): Promise<AlunoCard[]> {
  * Busca a ficha rápida de um aluno específico (para a sub-tela de Ficha).
  */
 export async function buscarFichaAluno(atletaId: string): Promise<FichaAlunoResumo | null> {
+    // 1. Buscar atleta
     const { data: atleta, error } = await supabase
         .from('atletas')
-        .select(`
-            id, nome, email, foto_url,
-            fichas (telefone, personal_id),
-            medidas (
-                created_at, score_shape_v,
-                ombros, peito, cintura, quadril, braco_d, coxa_d
-            )
-        `)
+        .select('id, nome, email, foto_url')
         .eq('id', atletaId)
         .single()
 
@@ -179,20 +198,32 @@ export async function buscarFichaAluno(atletaId: string): Promise<FichaAlunoResu
         return null
     }
 
-    const fichas = (atleta as { fichas?: { telefone?: string; personal_id: string }[] }).fichas ?? []
-    const ficha = fichas[0]
+    // 2. Buscar ficha
+    const { data: fichaData } = await supabase
+        .from('fichas')
+        .select('telefone, atleta_id')
+        .eq('atleta_id', atletaId)
+        .limit(1)
 
-    const medidas = ((atleta as { medidas?: { created_at: string; score_shape_v: number | null; ombros?: number; peito?: number; cintura?: number; quadril?: number; braco_d?: number; coxa_d?: number }[] }).medidas ?? [])
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    const ficha = fichaData?.[0]
 
+    // 3. Buscar medidas (últimas 2 para comparação antes/depois)
+    const { data: medidasData } = await supabase
+        .from('medidas')
+        .select('created_at, score, ombros, peitoral, cintura, quadril, braco_direito, coxa_direita')
+        .eq('atleta_id', atletaId)
+        .order('created_at', { ascending: false })
+        .limit(5)
+
+    const medidas = medidasData ?? []
     const ultima = medidas[0]
-    const scoreAtual = ultima?.score_shape_v ?? 0
-    const scoreSemanaAnterior = medidas[1]?.score_shape_v ?? 0
+    const penultima = medidas[1]
+
+    const scoreAtual = ultima?.score ?? 0
+    const scoreSemanaAnterior = penultima?.score ?? 0
     const evolucaoSemana = Math.round((scoreAtual - scoreSemanaAnterior) * 10) / 10
 
-    const penultima = medidas[1] // medição anterior para comparação
-
-    // Proporções resumidas a partir da última medição (com valor anterior para comparação)
+    // Proporções resumidas com valor anterior para comparação
     const proporcoes: ProporçãoResumo[] = ultima ? [
         {
             nome: 'Ombros',
@@ -202,11 +233,11 @@ export async function buscarFichaAluno(atletaId: string): Promise<FichaAlunoResu
             percentual: Math.min(100, Math.round(((ultima.ombros ?? 0) / 135) * 100))
         },
         {
-            nome: 'Peito',
-            valor: ultima.peito ?? 0,
-            valorAnterior: penultima?.peito ?? 0,
+            nome: 'Peitoral',
+            valor: ultima.peitoral ?? 0,
+            valorAnterior: penultima?.peitoral ?? 0,
             meta: 120,
-            percentual: Math.min(100, Math.round(((ultima.peito ?? 0) / 120) * 100))
+            percentual: Math.min(100, Math.round(((ultima.peitoral ?? 0) / 120) * 100))
         },
         {
             nome: 'Cintura',
@@ -217,7 +248,7 @@ export async function buscarFichaAluno(atletaId: string): Promise<FichaAlunoResu
         },
     ].filter(p => p.valor > 0) : []
 
-    // Streak e check-ins (simplificado — busca registros do mês)
+    // 4. Streak e check-ins (simplificado — busca registros do mês)
     const inicioMes = new Date()
     inicioMes.setDate(1)
 
@@ -231,21 +262,28 @@ export async function buscarFichaAluno(atletaId: string): Promise<FichaAlunoResu
     const checkinsMes = (registros ?? []).filter(r => r.treino_status === 'completo').length
     const totalDiasMes = new Date().getDate()
 
+    // 5. Buscar personal_id a partir da tabela atletas
+    const { data: atletaFull } = await supabase
+        .from('atletas')
+        .select('personal_id')
+        .eq('id', atletaId)
+        .single()
+
     return {
         id: atleta.id,
         nome: atleta.nome,
-        email: atleta.email,
+        email: atleta.email ?? '',
         telefone: ficha?.telefone ?? null,
-        fotoUrl: (atleta as { foto_url?: string | null }).foto_url ?? null,
+        fotoUrl: atleta.foto_url ?? null,
         score: scoreAtual,
         nivel: scoreParaNivel(scoreAtual),
         evolucaoSemana,
-        streak: checkinsMes, // Estimativa simples
+        streak: checkinsMes,
         checkinsMes,
         totalDiasMes,
         proporcoes: proporcoes.slice(0, 3),
-        insightIA: null, // gerado sob demanda
-        pessoalId: ficha?.personal_id ?? '',
+        insightIA: null,
+        pessoalId: atletaFull?.personal_id ?? '',
     }
 }
 
