@@ -89,6 +89,11 @@ export function FeedbackTextual({ atletaId, personalId }: FeedbackTextualProps) 
                 <button
                     type="submit"
                     disabled={!texto.trim() || enviando}
+                    onPointerDown={(e) => {
+                        // iOS/Mobile Safari hack: Impede que o textarea perca o foco ao tocar no botão (evita engolir o clique)
+                        // Apenas o preventDefault no PointerDown é suficiente para manter o foco e garantir o click->submit
+                        e.preventDefault()
+                    }}
                     className={`self-end px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 ${enviado
                         ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20'
                         : texto.trim()
