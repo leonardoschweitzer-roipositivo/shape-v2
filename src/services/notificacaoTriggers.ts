@@ -87,7 +87,7 @@ export async function onTreinoCompleto(
         dados: { grupo, duracao: dados.duracao },
         acao_url: `/athlete-details/${atletaId}`,
         acao_label: 'Ver perfil →',
-        grupo_id: `treino-completo-${atletaId}-${new Date().toISOString().slice(0, 10)}`,
+        // Treinos completos NÃO são deduplicados - o aluno pode fazer 2+ treinos no dia
     }, dados.personalId)
 }
 
