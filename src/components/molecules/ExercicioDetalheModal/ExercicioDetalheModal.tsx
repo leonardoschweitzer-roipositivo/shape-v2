@@ -35,8 +35,16 @@ export function ExercicioDetalheModal({ exercicio, onFechar }: ExercicioDetalheM
 
     // Converte URL do YouTube para embed
     const getYouTubeEmbedUrl = (url: string): string => {
-        const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/)
-        if (match) return `https://www.youtube.com/embed/${match[1]}?autoplay=1&rel=0`
+        const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]+)/)
+        if (match) {
+            // controls=0: esconde controles
+            // modestbranding=1: reduz logo (em 2024+ é menos eficaz, mas ajuda)
+            // rel=0: apenas vídeos do mesmo canal ao pausar
+            // iv_load_policy=3: esconde anotações
+            // mute=1 & autoplay=1: necessário para autoplay funcionar em todos browsers
+            // loop=1 & playlist=ID: necessário para loop funcionar no embed
+            return `https://www.youtube.com/embed/${match[1]}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&loop=1&playlist=${match[1]}&showinfo=0`
+        }
         return url
     }
 
@@ -161,13 +169,13 @@ export function ExercicioDetalheModal({ exercicio, onFechar }: ExercicioDetalheM
                         </button>
                     ) : (
                         /* Player de vídeo — YouTube embed ou vídeo nativo */
-                        <div className="w-full aspect-video rounded-2xl overflow-hidden bg-black">
+                        <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-black">
                             {exercicio.url_video.includes('youtube') || exercicio.url_video.includes('youtu.be') ? (
                                 <iframe
                                     src={getYouTubeEmbedUrl(exercicio.url_video)}
-                                    className="w-full h-full"
+                                    // Técnica de Clipping: iframe maior que o container para esconder bordas (título e logo)
+                                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[115%] h-[140%] pointer-events-none"
                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowFullScreen
                                     title={exercicio.nome}
                                 />
                             ) : (
