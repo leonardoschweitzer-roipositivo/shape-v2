@@ -12,6 +12,8 @@ import { AthletePortalTab } from '../types/athlete-portal'
 import type { TodayScreenData, ScoreGeral, GraficoEvolucaoData, ProporcaoResumo, ChatMessage, MeuPersonal, DadosBasicos, ExercicioTimerState } from '../types/athlete-portal'
 import { Loader2 } from 'lucide-react'
 import { RegistrarRefeicaoModal } from '../components/organisms/RegistrarRefeicaoModal'
+import { RegistrarTrackerModal } from '../components/organisms/RegistrarTrackerModal/RegistrarTrackerModal'
+import { TrackerRapidoType } from '../types/athlete-portal'
 import { enviarMensagemIA, type AtletaContextoIA } from '../services/vitruviusAI'
 import {
     carregarContextoPortal,
@@ -59,6 +61,10 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
     const [showRefeicaoModal, setShowRefeicaoModal] = useState(false)
     const [avaliacaoDados, setAvaliacaoDados] = useState<any | null>(null)
     const [avaliacaoLoading, setAvaliacaoLoading] = useState(false)
+    const [trackerModal, setTrackerModal] = useState<{ isOpen: boolean; tipo: TrackerRapidoType | null }>({
+        isOpen: false,
+        tipo: null
+    })
 
     const timerStorageKey = `exercicioTimers_${atletaId}`
     const [exercicioTimers, setExercicioTimersRaw] = useState<Record<string, ExercicioTimerState>>(() => {
@@ -263,92 +269,70 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
         }
     }
 
-    const handleTrackerClick = async (tipo: string) => {
+    const handleTrackerClick = (tipo: TrackerRapidoType) => {
+        setTrackerModal({ isOpen: true, tipo })
+    }
+
+    const handleSalvarTracker = async (valor: number | string, extra?: Record<string, any>) => {
+        const tipo = trackerModal.tipo
+        if (!tipo) return
+
         if (tipo === 'agua') {
-            const ml = prompt('Quantos ml de água?', '250')
-            if (ml && !isNaN(Number(ml))) {
-                await registrarTracker(atletaId, 'agua', { quantidade: Number(ml) })
+            await registrarTracker(atletaId, 'agua', { quantidade: Number(valor) })
 
-                import('../services/notificacaoTriggers').then(({ onRegistroRapido }) => {
-                    onRegistroRapido(atletaId, {
-                        tipo: 'agua',
-                        valor: `${ml}ml`,
-                        personalId: personal?.id
-                    }).catch(err => console.warn('[AthletePortal] Erro ao notificar registro rápido:', err))
-                })
-
-                if (ctx) {
-                    const today = await montarDadosHoje(ctx)
-                    setTodayData(today)
-                }
-            }
+            import('../services/notificacaoTriggers').then(({ onRegistroRapido }) => {
+                onRegistroRapido(atletaId, {
+                    tipo: 'agua',
+                    valor: `${valor}ml`,
+                    personalId: personal?.id
+                }).catch(err => console.warn('[AthletePortal] Erro ao notificar registro rápido:', err))
+            })
         }
 
         if (tipo === 'sono') {
-            const horas = prompt('Quantas horas dormiu ontem à noite?', '7')
-            if (horas && !isNaN(Number(horas))) {
-                await registrarTracker(atletaId, 'sono', { quantidade: Number(horas) })
+            await registrarTracker(atletaId, 'sono', { quantidade: Number(valor) })
 
-                import('../services/notificacaoTriggers').then(({ onRegistroRapido }) => {
-                    onRegistroRapido(atletaId, {
-                        tipo: 'sono',
-                        valor: `${horas}h`,
-                        personalId: personal?.id
-                    }).catch(err => console.warn('[AthletePortal] Erro ao notificar registro rápido:', err))
-                })
-
-                if (ctx) {
-                    const today = await montarDadosHoje(ctx)
-                    setTodayData(today)
-                }
-            }
+            import('../services/notificacaoTriggers').then(({ onRegistroRapido }) => {
+                onRegistroRapido(atletaId, {
+                    tipo: 'sono',
+                    valor: `${valor}h`,
+                    personalId: personal?.id
+                }).catch(err => console.warn('[AthletePortal] Erro ao notificar registro rápido:', err))
+            })
         }
 
         if (tipo === 'peso') {
-            const peso = prompt('Qual seu peso hoje? (kg)', '94')
-            if (peso && !isNaN(Number(peso))) {
-                await registrarTracker(atletaId, 'peso', { quantidade: Number(peso) })
+            await registrarTracker(atletaId, 'peso', { quantidade: Number(valor) })
 
-                import('../services/notificacaoTriggers').then(({ onRegistroRapido }) => {
-                    onRegistroRapido(atletaId, {
-                        tipo: 'peso',
-                        valor: `${peso} kg`,
-                        personalId: personal?.id
-                    }).catch(err => console.warn('[AthletePortal] Erro ao notificar registro rápido:', err))
-                })
-
-                if (ctx) {
-                    const today = await montarDadosHoje(ctx)
-                    setTodayData(today)
-                }
-            }
+            import('../services/notificacaoTriggers').then(({ onRegistroRapido }) => {
+                onRegistroRapido(atletaId, {
+                    tipo: 'peso',
+                    valor: `${valor} kg`,
+                    personalId: personal?.id
+                }).catch(err => console.warn('[AthletePortal] Erro ao notificar registro rápido:', err))
+            })
         }
 
         if (tipo === 'dor') {
-            const local = prompt('Onde está a dor? (ex: ombro direito, lombar)')
-            if (local) {
-                const intensidade = prompt('Intensidade de 1 a 10?', '3')
-                if (intensidade && !isNaN(Number(intensidade))) {
-                    await registrarTracker(atletaId, 'dor', {
-                        quantidade: Number(intensidade),
-                        local,
-                    })
+            const local = extra?.local || 'Não especificado'
+            await registrarTracker(atletaId, 'dor', {
+                quantidade: Number(valor),
+                local,
+            })
 
-                    // Notificar personal sobre dor reportada (fire-and-forget)
-                    import('../services/notificacaoTriggers').then(({ onDorReportada }) => {
-                        onDorReportada(atletaId, {
-                            local,
-                            intensidade: Number(intensidade),
-                            personalId: personal?.id
-                        }).catch(err => console.warn('[AthletePortal] Erro ao notificar dor:', err))
-                    })
+            // Notificar personal sobre dor reportada (fire-and-forget)
+            import('../services/notificacaoTriggers').then(({ onDorReportada }) => {
+                onDorReportada(atletaId, {
+                    local,
+                    intensidade: Number(valor),
+                    personalId: personal?.id
+                }).catch(err => console.warn('[AthletePortal] Erro ao notificar dor:', err))
+            })
+        }
 
-                    if (ctx) {
-                        const today = await montarDadosHoje(ctx)
-                        setTodayData(today)
-                    }
-                }
-            }
+        if (ctx) {
+            const today = await montarDadosHoje(ctx)
+            setTodayData(today)
         }
     }
 
@@ -497,6 +481,13 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                 isOpen={showRefeicaoModal}
                 onClose={() => setShowRefeicaoModal(false)}
                 onSave={handleSalvarRefeicao}
+            />
+
+            <RegistrarTrackerModal
+                isOpen={trackerModal.isOpen}
+                tipo={trackerModal.tipo}
+                onClose={() => setTrackerModal({ isOpen: false, tipo: null })}
+                onSave={handleSalvarTracker}
             />
         </div>
     )

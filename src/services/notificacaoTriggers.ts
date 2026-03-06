@@ -368,7 +368,7 @@ export async function onRegistroRapido(
         dados: { tipo: dados.tipo, valor: dados.valor },
         acao_url: `/athlete-details/${atletaId}`,
         acao_label: 'Ver detalhes →',
-        grupo_id: `registro-rapido-${dados.tipo}-${atletaId}-${new Date().toISOString().slice(0, 10)}`,
+        // Registros rápidos não são deduplicados para garantir que todas as atualizações cheguem
     }, dados.personalId)
 }
 
