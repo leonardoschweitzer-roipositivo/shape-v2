@@ -355,15 +355,39 @@ export function CardTreino({ treino, proximoTreino, exerciciosFeitos, exercicioT
                     </span>
                 </div>
 
-                <div className="mb-6">
-                    <p className="text-lg font-semibold text-white mb-1">
-                        {treino.titulo}
-                    </p>
-                    {treino.subtitulo && (
-                        <p className="text-sm text-gray-400">
-                            {treino.subtitulo}
+                <div className="flex items-start justify-between mb-6">
+                    <div>
+                        <p className="text-lg font-semibold text-white mb-1">
+                            {treino.titulo}
                         </p>
-                    )}
+                        {treino.subtitulo && (
+                            <p className="text-sm text-gray-400">
+                                {treino.subtitulo}
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Botão Global de Play/Pause */}
+                    <button
+                        onClick={() => {
+                            const runningId = Object.entries(exercicioTimers).find(([, t]) => t.status === 'running')?.[0]
+                            if (runningId) {
+                                handlePauseExercicio(runningId)
+                            } else {
+                                const firstPending = treino.exercicios?.find(ex => (exercicioTimers[ex.id]?.status || 'idle') !== 'done')
+                                if (firstPending) {
+                                    handlePlayExercicio(firstPending.id)
+                                }
+                            }
+                        }}
+                        className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all active:scale-95 shadow-lg border ${Object.values(exercicioTimers).some(t => t.status === 'running')
+                            ? 'bg-amber-500/10 border-amber-500/30 text-amber-500 shadow-amber-500/10'
+                            : 'bg-indigo-600 border-indigo-500 text-white shadow-indigo-600/20 hover:bg-indigo-500'
+                            }`}
+                        title={Object.values(exercicioTimers).some(t => t.status === 'running') ? "Pausar Treino" : "Iniciar Treino"}
+                    >
+                        {Object.values(exercicioTimers).some(t => t.status === 'running') ? <Pause size={22} fill="currentColor" /> : <Play size={20} fill="currentColor" className="ml-1" />}
+                    </button>
                 </div>
 
                 {/* Lista de Exercícios com Divisores */}
