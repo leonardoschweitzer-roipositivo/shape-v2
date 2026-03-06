@@ -130,3 +130,6 @@ export const LazyNotificationSettingsPage = lazy(() =>
 export const LazyBibliotecaExerciciosPage = lazy(() =>
     import('@/pages/BibliotecaExerciciosPage').then(m => ({ default: m.BibliotecaExerciciosPage }))
 );
+export const LazyPersonalPortal = lazy(() =>
+    import('@/pages/PersonalPortal').then(m => ({ default: m.PersonalPortal }))
+);

@@ -13,7 +13,10 @@ import {
     Check,
     X,
     Instagram,
-    MessageCircle
+    MessageCircle,
+    Smartphone,
+    Copy,
+    ExternalLink
 } from 'lucide-react';
 import { mockPersonalProfile, PersonalProfile } from '@/mocks/personal';
 import { useAuthStore } from '@/stores/authStore';
@@ -122,6 +125,67 @@ const InfoRow: React.FC<{ label: string; value: string | React.ReactNode; icon?:
         <span className="text-sm font-bold text-white text-right">{value}</span>
     </div>
 );
+
+// ============================================
+// PORTAL CARD
+// ============================================
+
+const PortalCard: React.FC<{ personalId: string }> = ({ personalId }) => {
+    const [copiado, setCopiado] = useState(false);
+    const portalUrl = `${window.location.origin}/personal/${personalId}`;
+
+    const copiarLink = () => {
+        navigator.clipboard.writeText(portalUrl).then(() => {
+            setCopiado(true);
+            setTimeout(() => setCopiado(false), 2000);
+        });
+    };
+
+    const abrirPortal = () => {
+        window.open(portalUrl, '_blank');
+    };
+
+    return (
+        <div className="bg-surface border border-white/10 rounded-2xl p-6 shadow-lg hover:border-white/20 transition-all">
+            <div className="flex items-center gap-3 mb-5">
+                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10">
+                    <Smartphone size={20} className="text-primary" />
+                </div>
+                <h3 className="text-lg font-bold text-white uppercase tracking-wide">Portal do Personal</h3>
+            </div>
+
+            <p className="text-sm text-gray-400 font-light mb-4 leading-relaxed">
+                Acesse sua visão mobile do portal para acompanhar alunos, alertas e atividades do dia a dia diretamente pelo celular.
+            </p>
+
+            {/* URL */}
+            <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-4 py-3 mb-4">
+                <span className="text-xs text-gray-400 font-mono flex-1 truncate">{portalUrl}</span>
+            </div>
+
+            {/* Ações */}
+            <div className="flex gap-3">
+                <button
+                    onClick={copiarLink}
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all ${copiado
+                            ? 'bg-primary/20 border-primary/40 text-primary'
+                            : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white'
+                        }`}
+                >
+                    {copiado ? <Check size={14} /> : <Copy size={14} />}
+                    {copiado ? 'Link Copiado!' : 'Copiar Link'}
+                </button>
+                <button
+                    onClick={abrirPortal}
+                    className="flex-1 flex items-center justify-center gap-2 py-3 bg-primary/10 border border-primary/20 rounded-xl text-xs font-bold uppercase tracking-wider text-primary hover:bg-primary/20 transition-all"
+                >
+                    <ExternalLink size={14} />
+                    Abrir Portal
+                </button>
+            </div>
+        </div>
+    );
+};
 
 // ============================================
 // MAIN COMPONENT
@@ -239,7 +303,10 @@ export const PersonalProfilePage: React.FC = () => {
                         </div>
                     </InfoCard>
 
-                    {/* 6. Segurança da Conta */}
+                    {/* 6. Portal do Personal */}
+                    <PortalCard personalId={profile.id} />
+
+                    {/* 7. Segurança da Conta */}
                     <InfoCard title="Segurança da Conta" icon={Shield}>
                         <div className="flex flex-col gap-4">
                             <p className="text-sm text-gray-400 font-light px-2">

@@ -60,6 +60,7 @@ import {
   LazyNotificationsPage as NotificationsPage,
   LazyNotificationSettingsPage as NotificationSettingsPage,
   LazyBibliotecaExerciciosPage as BibliotecaExerciciosPage,
+  LazyPersonalPortal as PersonalPortal,
 } from '@/lazyPages';
 // import { GamificationPage } from './pages/GamificationPage'; // DISABLED - Feature para depois
 
@@ -89,6 +90,12 @@ const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
   const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(null);
   const [portalToken, setPortalToken] = useState<string | null>(null);
+
+  // Personal Portal URL detection (/personal/:personalId)
+  const personalPortalId = (() => {
+    const match = window.location.pathname.match(/^\/personal\/([a-zA-Z0-9\-]+)/);
+    return match ? match[1] : null;
+  })();
   const [diagnosticoPlanId, setDiagnosticoPlanId] = useState<string | null>(null);
   const [consultaDiagData, setConsultaDiagData] = useState<DiagnosticoDados | null>(null);
   const [consultaTreinoData, setConsultaTreinoData] = useState<PlanoTreino | null>(null);
@@ -946,7 +953,7 @@ const App: React.FC = () => {
     );
   }
 
-  if (isAuthLoading) {
+  if (isAuthLoading && !personalPortalId) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background-dark text-white">
         <div className="flex flex-col items-center gap-4">
@@ -954,6 +961,25 @@ const App: React.FC = () => {
           <p className="text-sm text-gray-400">Carregando...</p>
         </div>
       </div>
+    );
+  }
+
+  // Portal do Personal via URL (/personal/:personalId)
+  if (personalPortalId) {
+    return (
+      <Suspense fallback={
+        <div className="flex h-screen w-full items-center justify-center bg-[#060B18] text-white">
+          <div className="w-8 h-8 border-4 border-[gold] border-t-transparent rounded-full animate-spin" />
+        </div>
+      }>
+        <PersonalPortal
+          personalId={personalPortalId}
+          onLogout={() => {
+            signOut();
+            window.location.href = '/';
+          }}
+        />
+      </Suspense>
     );
   }
 
