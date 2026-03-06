@@ -1,6 +1,11 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const API_KEY = process.env.VITE_GEMINI_API_KEY || 'AIzaSyBSKsH4IqAwoiOtphBlYFDp2K4CzZWG5mg';
+const API_KEY = process.env.VITE_GEMINI_API_KEY;
+
+if (!API_KEY) {
+  console.error("ERRO: VITE_GEMINI_API_KEY não localizada. Defina no .env!");
+  process.exit(1);
+}
 console.log("Using API KEY:", API_KEY);
 
 const genAI = new GoogleGenerativeAI(API_KEY);
@@ -10,7 +15,7 @@ async function run() {
   try {
     const result = await model.generateContent("Diga 'Olá mundo' em JSON no formato { \"mensagem\": \"...\" }");
     console.log(result.response.text());
-  } catch(e) {
+  } catch (e) {
     console.error("Error:", e);
   }
 }

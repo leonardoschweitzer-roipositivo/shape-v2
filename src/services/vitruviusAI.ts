@@ -11,7 +11,7 @@ import { GoogleGenerativeAI, type GenerativeModel, type ChatSession, HarmCategor
 // CONFIGURAÇÃO
 // ==========================================
 
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyBSKsH4IqAwoiOtphBlYFDp2K4CzZWG5mg' // Fallback temporário para evitar crash de dev server desatualizado
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY // Removido fallback hardcoded para segurança
 
 let genAI: GoogleGenerativeAI | null = null
 let model: GenerativeModel | null = null
