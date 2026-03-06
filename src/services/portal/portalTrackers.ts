@@ -72,9 +72,9 @@ export async function pularTreino(
     });
 
     // Disparar notificação para o Personal (fire-and-forget)
-    if (result && !continuarHoje) {
+    if (result) {
         import('../notificacaoTriggers').then(({ onTreinoPulado }) => {
-            onTreinoPulado(atletaId, { personalId }).catch(err => console.warn('[pularTreino] Erro ao notificar:', err));
+            onTreinoPulado(atletaId, { personalId, continuarHoje }).catch(err => console.warn('[pularTreino] Erro ao notificar:', err));
         });
     }
 

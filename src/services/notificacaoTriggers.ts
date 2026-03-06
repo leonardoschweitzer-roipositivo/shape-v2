@@ -96,18 +96,27 @@ export async function onTreinoCompleto(
  */
 export async function onTreinoPulado(
     atletaId: string,
-    dados?: { grupo?: string; personalId?: string }
+    dados?: { grupo?: string; personalId?: string; continuarHoje?: boolean }
 ): Promise<void> {
     const nome = await buscarNomeAtleta(atletaId)
     const grupo = dados?.grupo || 'do dia'
+    const continuou = dados?.continuarHoje
+
+    const titulo = continuou
+        ? `⏭️ <strong>${nome}</strong> avançou para o próximo treino`
+        : `⏭️ <strong>${nome}</strong> pulou o treino de hoje (${grupo})`
+
+    const mensagem = continuou
+        ? `Decidiu pular o treino de ${grupo} e fazer o próximo da sequência`
+        : `Treino de ${grupo} foi pulado — dia de descanso`
 
     await criarNotificacaoParaAtleta(atletaId, {
         tipo: 'TREINO_PULADO',
         categoria: 'treino',
         prioridade: 'normal',
-        titulo: `⏭️ <strong>${nome}</strong> pulou o treino de hoje (${grupo})`,
-        mensagem: `Treino de ${grupo} foi pulado`,
-        dados: { grupo },
+        titulo,
+        mensagem,
+        dados: { grupo, continuarHoje: continuou },
         acao_url: `/athlete-details/${atletaId}`,
         acao_label: 'Ver perfil →',
         // Treinos pulados NÃO são agrupados - cada um é individual
