@@ -243,15 +243,18 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
 
     const handleTrackerClick = async (tipo: string) => {
         if (tipo === 'agua') {
-            await registrarTracker(atletaId, 'agua', { quantidade: 250 }) // 250ml
+            const ml = prompt('Quantos ml de água?', '250')
+            if (ml && !isNaN(Number(ml))) {
+                await registrarTracker(atletaId, 'agua', { quantidade: Number(ml) })
 
-            import('../services/notificacaoTriggers').then(({ onRegistroRapido }) => {
-                onRegistroRapido(atletaId, { tipo: 'agua', valor: '250ml' }).catch(err => console.warn('[AthletePortal] Erro ao notificar registro rápido:', err))
-            })
+                import('../services/notificacaoTriggers').then(({ onRegistroRapido }) => {
+                    onRegistroRapido(atletaId, { tipo: 'agua', valor: `${ml}ml` }).catch(err => console.warn('[AthletePortal] Erro ao notificar registro rápido:', err))
+                })
 
-            if (ctx) {
-                const today = await montarDadosHoje(ctx)
-                setTodayData(today)
+                if (ctx) {
+                    const today = await montarDadosHoje(ctx)
+                    setTodayData(today)
+                }
             }
         }
 
