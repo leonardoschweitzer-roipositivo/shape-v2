@@ -16,7 +16,7 @@ export function TrackersRapidos({ trackers, onTrackerClick }: TrackersRapidosPro
     return (
         <div className="bg-surface-deep rounded-2xl p-6 border border-white/5">
             <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">
-                ⚡ RÁPIDO
+                ⚡ REGISTRO RÁPIDO
             </h3>
 
             <div className="grid grid-cols-4 gap-3">

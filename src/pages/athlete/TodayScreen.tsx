@@ -86,11 +86,8 @@ export function TodayScreen({
                     onPular={() => setModalPularOpen(true)}
                 />
 
-                {/* Card de Dieta */}
-                <CardDieta
-                    dieta={data.dieta}
-                    onRegistrarRefeicao={onRegistrarRefeicao}
-                />
+                {/* Feedback Textual - Relato do dia */}
+                <FeedbackTextual atletaId={atletaId} />
 
                 {/* Trackers Rápidos */}
                 <TrackersRapidos
@@ -98,8 +95,11 @@ export function TodayScreen({
                     onTrackerClick={onTrackerClick}
                 />
 
-                {/* Feedback Textual - Relato do dia */}
-                <FeedbackTextual atletaId={atletaId} />
+                {/* Card de Dieta */}
+                <CardDieta
+                    dieta={data.dieta}
+                    onRegistrarRefeicao={onRegistrarRefeicao}
+                />
 
                 {/* Dica do Coach */}
                 <DicaCoach

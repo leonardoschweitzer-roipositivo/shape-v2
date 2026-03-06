@@ -147,10 +147,23 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
         updateEditData: updateEditTreinos,
     } = useEditableState<TreinoDetalhado[]>(plano?.treinos ?? []);
 
-    const handleSaveEdits = () => {
+    const handleSaveEdits = async () => {
         if (!plano) return;
         const editedTreinos = commitEditingTreino();
-        setPlano({ ...plano, treinos: editedTreinos });
+        const updatedPlano = { ...plano, treinos: editedTreinos };
+        setPlano(updatedPlano);
+
+        if (isReadOnly) {
+            const personalId = atleta.personalId ?? null;
+            const result = await salvarPlanoTreino(atletaId, personalId, updatedPlano, diagnosticoId);
+
+            if (result) {
+                setToastStatus('success');
+            } else {
+                setToastStatus('error');
+            }
+            setTimeout(() => setToastStatus(null), 3000);
+        }
     };
 
     if (!atleta) {
@@ -416,7 +429,6 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
                                     onStartEditing={startEditingTreino}
                                     onSave={handleSaveEdits}
                                     onDiscard={cancelEditingTreino}
-                                    readOnly={isReadOnly}
                                 />
                             </div>
                             <SecaoTreinosEditavel

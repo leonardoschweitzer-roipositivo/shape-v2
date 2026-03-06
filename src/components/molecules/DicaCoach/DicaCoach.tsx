@@ -55,18 +55,6 @@ export function DicaCoach({ dica, onFalarComCoach }: DicaCoachProps) {
             <p className="text-sm text-gray-300 leading-relaxed mb-4">
                 {dica.mensagem}
             </p>
-
-            <button
-                onClick={dica.acao?.callback || onFalarComCoach}
-                className={`
-          w-full py-2.5 px-4 rounded-lg text-sm font-medium transition-colors
-          flex items-center justify-center gap-2
-          ${config.bgColor} hover:opacity-80 border ${config.borderColor} ${config.iconColor}
-        `}
-            >
-                <MessageCircle size={16} />
-                {dica.acao?.label || 'FALAR COM O COACH'}
-            </button>
         </div>
     )
 }

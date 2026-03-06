@@ -90,7 +90,7 @@ export function FeedbackTextual({ atletaId }: FeedbackTextualProps) {
             <div className="flex items-center gap-2 mb-3">
                 <MessageSquare size={14} className="text-indigo-400" />
                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-                    Como você está hoje?
+                    Feedback sobre o Treino
                 </h3>
             </div>
 
