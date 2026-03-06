@@ -3,6 +3,7 @@
  *
  * Reutiliza o notificacaoService existente.
  * Lista agrupada: Hoje / Ontem / Esta Semana.
+ * Ao clicar em uma notificação, abre o NotificationDetailModal.
  */
 
 import React, { useEffect, useState, useCallback } from 'react'
@@ -10,6 +11,7 @@ import { Bell, Loader2, CheckCheck } from 'lucide-react'
 import { notificacaoService } from '@/services/notificacao.service'
 import type { Notificacao } from '@/types/notificacao.types'
 import { PRIORIDADE_CONFIG } from '@/types/notificacao.types'
+import { NotificationDetailModal } from '@/components/molecules/NotificationDetailModal/NotificationDetailModal'
 
 interface AlertasScreenProps {
     personalId: string
@@ -51,6 +53,7 @@ export function AlertasScreen({ personalId, onAbrirAluno, onAtualizarContador }:
     const [notificacoes, setNotificacoes] = useState<Notificacao[]>([])
     const [loading, setLoading] = useState(true)
     const [marcandoTodas, setMarcandoTodas] = useState(false)
+    const [notifSelecionada, setNotifSelecionada] = useState<Notificacao | null>(null)
 
     const carregar = useCallback(async () => {
         setLoading(true)
@@ -75,6 +78,22 @@ export function AlertasScreen({ personalId, onAbrirAluno, onAtualizarContador }:
         setNotificacoes(prev => prev.map(n => ({ ...n, lida: true })))
         onAtualizarContador?.(0)
         setMarcandoTodas(false)
+    }
+
+    const handleClickNotificacao = (notif: Notificacao) => {
+        // Marca como lida se ainda não foi
+        if (!notif.lida) marcarLida(notif.id)
+        // Abre o modal de detalhes
+        setNotifSelecionada(notif)
+    }
+
+    const handleAcaoModal = (url: string) => {
+        // Se tem atleta_id na URL, navega para o aluno
+        const atletaMatch = url.match(/athlete-details\/(.+)$/)
+        if (atletaMatch && onAbrirAluno) {
+            onAbrirAluno(atletaMatch[1])
+        }
+        setNotifSelecionada(null)
     }
 
     // Agrupar notificações por data
@@ -146,12 +165,7 @@ export function AlertasScreen({ personalId, onAbrirAluno, onAtualizarContador }:
                                         return (
                                             <button
                                                 key={notif.id}
-                                                onClick={() => {
-                                                    if (!notif.lida) marcarLida(notif.id)
-                                                    if (notif.atleta_id && onAbrirAluno) {
-                                                        onAbrirAluno(notif.atleta_id)
-                                                    }
-                                                }}
+                                                onClick={() => handleClickNotificacao(notif)}
                                                 className={`w-full flex items-start gap-3 p-4 text-left transition-colors hover:bg-white/5 ${idx < items.length - 1 ? 'border-b border-white/5' : ''} ${!notif.lida ? 'bg-white/[0.02]' : ''}`}
                                             >
                                                 {/* Ícone / indicador */}
@@ -183,6 +197,15 @@ export function AlertasScreen({ personalId, onAbrirAluno, onAtualizarContador }:
                     })
                 )}
             </div>
+
+            {/* Modal de detalhes da notificação */}
+            {notifSelecionada && (
+                <NotificationDetailModal
+                    notificacao={notifSelecionada}
+                    onFechar={() => setNotifSelecionada(null)}
+                    onAcao={handleAcaoModal}
+                />
+            )}
         </div>
     )
 }
