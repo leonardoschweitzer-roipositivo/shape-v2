@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { portalService, PortalAthleteData } from '@/services/portalService';
 import { buscarDadosConsistencia, type DadosConsistencia } from '@/services/consistencia.service';
+import { type DiagnosticoDados } from '@/services/calculations/diagnostico';
 import { SelfMeasurements } from './SelfMeasurements';
 import { ContextoFormPublico } from './ContextoFormPublico';
 import { AthletePortal } from '../AthletePortal';
@@ -30,7 +31,7 @@ import { AthletePortalTab } from '../../types/athlete-portal';
 import {
     HeaderIdentidade,
     CardScoreMeta,
-    CardRanking,
+    CardMetasTrimestre,
     CardConsistencia,
     FooterUltimaMedicao,
     CardIndicadorProgresso
@@ -242,7 +243,6 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
     const ratioAtual = Number(lastAval?.results?.classificacao as unknown as Record<string, unknown>) // fallback
         || (ombrosAtual > 0 && cinturaAtual > 0 ? ombrosAtual / cinturaAtual : 0);
     const itemShapeV = metasProporcoes?.find(p => p.grupo === 'Shape-V');
-    const ratioMeta = Number(itemShapeV?.meta6M) || 1.618;
     const ratioMeta12M = Number(itemShapeV?.meta12M) || 1.618;
 
     // Medida Ombros cm (para impressionar mais como solicitado)
@@ -262,6 +262,39 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
     const bfMeta = Number(metasComposicao?.gordura12Meses) || 12;
     const firstAval = athleteData.avaliacoes?.[athleteData.avaliacoes.length - 1] || lastAval;
     const bfBasal = firstAval?.gordura || bfAtual + 5;
+
+    // Diagnóstico tipado para o CardMetasTrimestre
+    const diagTyped = diag as unknown as DiagnosticoDados | undefined;
+
+    // Medidas atuais para conversão ratio→cm no CardMetasTrimestre
+    const medidasParaCard = {
+        ombros: ombrosAtual || undefined,
+        cintura: cinturaAtual || undefined,
+        braco: (
+            (Number(measurements?.linear?.arm_right) + Number(measurements?.linear?.arm_left)) / 2
+            || (Number(medidasDiag?.bracoD) + Number(medidasDiag?.bracoE)) / 2
+            || ((lastMedida?.braco_direito ?? 0) + (lastMedida?.braco_esquerdo ?? 0)) / 2
+        ) || undefined,
+        antebraco: (
+            (Number(measurements?.linear?.forearm_right) + Number(measurements?.linear?.forearm_left)) / 2
+            || (Number(medidasDiag?.antebracoD) + Number(medidasDiag?.antebracoE)) / 2
+            || ((lastMedida?.antebraco_direito ?? 0) + (lastMedida?.antebraco_esquerdo ?? 0)) / 2
+        ) || undefined,
+        coxa: (
+            (Number(measurements?.linear?.thigh_right) + Number(measurements?.linear?.thigh_left)) / 2
+            || (Number(medidasDiag?.coxaD) + Number(medidasDiag?.coxaE)) / 2
+            || ((lastMedida?.coxa_direita ?? 0) + (lastMedida?.coxa_esquerda ?? 0)) / 2
+        ) || undefined,
+        panturrilha: (
+            (Number(measurements?.linear?.calf_right) + Number(measurements?.linear?.calf_left)) / 2
+            || (Number(medidasDiag?.panturrilhaD) + Number(medidasDiag?.panturrilhaE)) / 2
+            || ((lastMedida?.panturrilha_direita ?? 0) + (lastMedida?.panturrilha_esquerda ?? 0)) / 2
+        ) || undefined,
+        peitoral: Number(measurements?.linear?.chest) || Number(medidasDiag?.peitoral) || lastMedida?.peitoral || undefined,
+        punho: athleteData.ficha?.punho ?? undefined,
+        joelho: athleteData.ficha?.joelho ?? undefined,
+        tornozelo: athleteData.ficha?.tornozelo ?? undefined,
+    };
 
     const prazoMeta = 12;
 
@@ -409,19 +442,19 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
                 />
             )}
 
-            {/* 4. Card Ranking (Hall dos Deuses) */}
-            <CardRanking
-                contexto="academia"
-                nomeContexto="ACADEMIA"
-                posicaoGeral={47}
-                totalParticipantes={312}
-                percentilGeral={15}
-                posicaoEvolucao={12}
-                percentilEvolucao={4}
-                movimentoGeral={5}
-                movimentoEvolucao={-2}
-                atletaParticipa={true}
-            />
+            {/* 4. Card Metas do Trimestre (baseado no Diagnóstico IA) */}
+            {diagTyped && (
+                <CardMetasTrimestre
+                    diagnosticoDados={diagTyped}
+                    sexo={athleteData.ficha?.sexo as 'M' | 'F' || 'M'}
+                    composicaoAtual={{
+                        peso: peso || 0,
+                        gorduraPct: bfAtual,
+                    }}
+                    medidas={medidasParaCard}
+                    onVerPlano={() => onGoToPortal('avalicao')}
+                />
+            )}
 
             {/* 7. Footer */}
             <FooterUltimaMedicao
