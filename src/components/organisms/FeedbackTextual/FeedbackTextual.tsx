@@ -34,7 +34,8 @@ export function FeedbackTextual({ atletaId, personalId }: FeedbackTextualProps) 
     const [enviando, setEnviando] = useState(false)
     const [enviado, setEnviado] = useState(false)
 
-    const handleEnviar = async () => {
+    const handleEnviar = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault()
         if (!texto.trim()) return
         setEnviando(true)
 
@@ -76,7 +77,7 @@ export function FeedbackTextual({ atletaId, personalId }: FeedbackTextualProps) 
             </div>
 
             {/* Input + Botão */}
-            <div className="flex gap-2">
+            <form onSubmit={handleEnviar} className="flex gap-2">
                 <textarea
                     value={texto}
                     onChange={e => setTexto(e.target.value)}
@@ -86,7 +87,7 @@ export function FeedbackTextual({ atletaId, personalId }: FeedbackTextualProps) 
                     className="flex-1 bg-white/[0.03] text-white text-sm rounded-xl border border-white/10 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 outline-none p-3 resize-none placeholder-gray-600 transition-all font-light leading-relaxed disabled:opacity-50"
                 />
                 <button
-                    onClick={handleEnviar}
+                    type="submit"
                     disabled={!texto.trim() || enviando}
                     className={`self-end px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 ${enviado
                         ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20'
@@ -103,7 +104,7 @@ export function FeedbackTextual({ atletaId, personalId }: FeedbackTextualProps) 
                         <Send size={14} />
                     )}
                 </button>
-            </div>
+            </form>
 
             {/* Mensagem de sucesso */}
             {enviado && (
