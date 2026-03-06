@@ -154,7 +154,7 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
         setPlano(updatedPlano);
 
         if (isReadOnly) {
-            const personalId = atleta.personalId ?? null;
+            const personalId = atleta?.personalId ?? null;
             const result = await salvarPlanoTreino(atletaId, personalId, updatedPlano, diagnosticoId);
 
             if (result) {
@@ -256,7 +256,7 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
         if (!plano) return;
         setEstado('saving');
 
-        const personalId = atleta.personalId ?? null;
+        const personalId = atleta?.personalId ?? null;
         const result = await salvarPlanoTreino(atletaId, personalId, plano, diagnosticoId);
 
         if (!result) {
