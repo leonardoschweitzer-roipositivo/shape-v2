@@ -60,7 +60,6 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
     const [avaliacaoDados, setAvaliacaoDados] = useState<any | null>(null)
     const [avaliacaoLoading, setAvaliacaoLoading] = useState(false)
 
-    // Timers de exercícios persistidos via sessionStorage (sobrevive a troca de aba/rota)
     const timerStorageKey = `exercicioTimers_${atletaId}`
     const [exercicioTimers, setExercicioTimersRaw] = useState<Record<string, ExercicioTimerState>>(() => {
         try {
@@ -72,9 +71,26 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
         setExercicioTimersRaw(timers)
         try { sessionStorage.setItem(timerStorageKey, JSON.stringify(timers)) } catch { }
     }
-    const clearExercicioTimers = () => {
+
+    const sessionTimerStorageKey = `sessionTimer_${atletaId}`
+    const [sessionTimer, setSessionTimerRaw] = useState<ExercicioTimerState>(() => {
+        try {
+            const saved = sessionStorage.getItem(sessionTimerStorageKey)
+            return saved ? JSON.parse(saved) : { status: 'idle', tempoAcumuladoMs: 0 }
+        } catch { return { status: 'idle', tempoAcumuladoMs: 0 } }
+    })
+    const setSessionTimer = (timer: ExercicioTimerState) => {
+        setSessionTimerRaw(timer)
+        try { sessionStorage.setItem(sessionTimerStorageKey, JSON.stringify(timer)) } catch { }
+    }
+
+    const clearAllTimers = () => {
         setExercicioTimersRaw({})
-        try { sessionStorage.removeItem(timerStorageKey) } catch { }
+        setSessionTimerRaw({ status: 'idle', tempoAcumuladoMs: 0 })
+        try {
+            sessionStorage.removeItem(timerStorageKey)
+            sessionStorage.removeItem(sessionTimerStorageKey)
+        } catch { }
     }
 
     // exerciciosFeitos derivado dos timers (compatibilidade)
@@ -146,26 +162,27 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
     }
 
     const handleCompletarTreino = async (dataOverride?: string) => {
-        // Calcular duração real a partir dos timers
-        let duracaoMinutos = 60 // fallback
+        // Calcular duração real a partir do timer de SESSÃO (Global)
+        let totalMs = sessionTimer.tempoAcumuladoMs
+        if (sessionTimer.status === 'running' && sessionTimer.inicioUltimoPlay) {
+            totalMs += Date.now() - sessionTimer.inicioUltimoPlay
+        }
+
+        const duracaoMinutos = totalMs > 0 ? Math.max(1, Math.round(totalMs / 60000)) : 60
+
         const exerciciosDetalhes: Array<{ id: string; nome: string; tempoSegundos: number; carga?: number }> = []
 
-        if (todayData?.treino?.exercicios && Object.keys(exercicioTimers).length > 0) {
-            let totalMs = 0
+        if (todayData?.treino?.exercicios) {
             for (const ex of todayData.treino.exercicios) {
                 const timer = exercicioTimers[ex.id]
                 if (timer) {
-                    totalMs += timer.tempoAcumuladoMs
                     exerciciosDetalhes.push({
                         id: ex.id,
                         nome: ex.nome,
-                        tempoSegundos: Math.round(timer.tempoAcumuladoMs / 1000),
+                        tempoSegundos: 0, // Ignorar tempo por exercício
                         carga: timer.carga,
                     })
                 }
-            }
-            if (totalMs > 0) {
-                duracaoMinutos = Math.max(1, Math.round(totalMs / 60000))
             }
         }
 
@@ -176,7 +193,8 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
             treinoIndex: todayData?.treino?.indiceTreino,
             ...(exerciciosDetalhes.length > 0 ? { exercicios: exerciciosDetalhes } : {}),
         } as never, dataOverride)
-        clearExercicioTimers() // Reset timers após completar
+
+        clearAllTimers() // Reset todos os timers após completar
         // Refresh today data
         if (ctx) {
             const today = await montarDadosHoje(ctx)
@@ -187,7 +205,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
 
     const handlePularTreino = async (continuarHoje?: boolean) => {
         await pularTreino(atletaId, todayData?.treino?.indiceTreino, continuarHoje)
-        clearExercicioTimers() // Reset timers após pular
+        clearAllTimers() // Reset timers após pular
         if (ctx) {
             const today = await montarDadosHoje(ctx)
             setTodayData(today)
@@ -389,7 +407,9 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                         personalNome={ctx?.personalNome}
                         exerciciosFeitos={exerciciosFeitos}
                         exercicioTimers={exercicioTimers}
+                        sessionTimer={sessionTimer}
                         onExercicioTimersChange={setExercicioTimers}
+                        onSessionTimerChange={setSessionTimer}
                         onVerTreino={handleVerTreino}
                         onCompletarTreino={handleCompletarTreino}
                         onPularTreino={handlePularTreino}

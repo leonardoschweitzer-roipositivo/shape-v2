@@ -25,7 +25,9 @@ interface TodayScreenProps {
     personalNome?: string
     exerciciosFeitos: Record<string, boolean>
     exercicioTimers: Record<string, ExercicioTimerState>
+    sessionTimer: ExercicioTimerState
     onExercicioTimersChange: (timers: Record<string, ExercicioTimerState>) => void
+    onSessionTimerChange: (timer: ExercicioTimerState) => void
     onVerTreino: () => void
     onCompletarTreino: (dataOverride?: string) => void
     onPularTreino: (continuarHoje?: boolean) => void
@@ -44,7 +46,9 @@ export function TodayScreen({
     personalNome,
     exerciciosFeitos,
     exercicioTimers,
+    sessionTimer,
     onExercicioTimersChange,
+    onSessionTimerChange,
     onVerTreino,
     onCompletarTreino,
     onPularTreino,
@@ -80,7 +84,9 @@ export function TodayScreen({
                     proximoTreino={proximoTreino}
                     exerciciosFeitos={exerciciosFeitos}
                     exercicioTimers={exercicioTimers}
+                    sessionTimer={sessionTimer}
                     onExercicioTimersChange={onExercicioTimersChange}
+                    onSessionTimerChange={onSessionTimerChange}
                     onVerTreino={onVerTreino}
                     onCompletei={onCompletarTreino}
                     onPular={() => setModalPularOpen(true)}

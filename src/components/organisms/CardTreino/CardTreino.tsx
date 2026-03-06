@@ -22,7 +22,9 @@ interface CardTreinoProps {
     proximoTreino?: ProximoTreino | null
     exerciciosFeitos: Record<string, boolean>
     exercicioTimers: Record<string, ExercicioTimerState>
+    sessionTimer: ExercicioTimerState
     onExercicioTimersChange: (timers: Record<string, ExercicioTimerState>) => void
+    onSessionTimerChange: (timer: ExercicioTimerState) => void
     onVerTreino: () => void
     onCompletei: (dataOverride?: string) => void
     onPular: () => void
@@ -50,7 +52,18 @@ function formatTime(ms: number): string {
     return `${min}:${sec.toString().padStart(2, '0')}`
 }
 
-export function CardTreino({ treino, proximoTreino, exerciciosFeitos, exercicioTimers, onExercicioTimersChange, onVerTreino, onCompletei, onPular }: CardTreinoProps) {
+export function CardTreino({
+    treino,
+    proximoTreino,
+    exerciciosFeitos,
+    exercicioTimers,
+    sessionTimer,
+    onExercicioTimersChange,
+    onSessionTimerChange,
+    onVerTreino,
+    onCompletei,
+    onPular
+}: CardTreinoProps) {
     const [accordionOpen, setAccordionOpen] = useState(treino.status === 'pendente')
     const [showCompleteiMenu, setShowCompleteiMenu] = useState(false)
     const completeiMenuRef = useRef<HTMLDivElement>(null)
@@ -69,13 +82,12 @@ export function CardTreino({ treino, proximoTreino, exerciciosFeitos, exercicioT
         return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [showCompleteiMenu])
 
-    // Tick interval para atualizar timers rodando
+    // Tick interval para atualizar timer global rodando
     useEffect(() => {
-        const hasRunning = Object.values(exercicioTimers).some(t => t.status === 'running')
-        if (!hasRunning) return undefined
+        if (sessionTimer.status !== 'running') return undefined
         const interval = setInterval(() => forceUpdate(n => n + 1), 1000)
         return () => clearInterval(interval)
-    }, [exercicioTimers])
+    }, [sessionTimer.status])
 
     // Data de ontem em 'YYYY-MM-DD'
     const getOntemISO = (): string => {
@@ -93,34 +105,30 @@ export function CardTreino({ treino, proximoTreino, exerciciosFeitos, exercicioT
         return timer.tempoAcumuladoMs
     }
 
-    // Ações do timer
-    const handlePlayExercicio = (id: string) => {
-        const current = exercicioTimers[id] || { status: 'idle', tempoAcumuladoMs: 0 }
-        onExercicioTimersChange({
-            ...exercicioTimers,
-            [id]: { ...current, status: 'running', inicioUltimoPlay: Date.now() },
-        })
-    }
-
-    const handlePauseExercicio = (id: string) => {
-        const current = exercicioTimers[id]
-        if (!current || current.status !== 'running') return
-        const elapsed = current.inicioUltimoPlay ? Date.now() - current.inicioUltimoPlay : 0
-        onExercicioTimersChange({
-            ...exercicioTimers,
-            [id]: { ...current, status: 'paused', tempoAcumuladoMs: current.tempoAcumuladoMs + elapsed, inicioUltimoPlay: undefined },
-        })
+    // Ações do timer GLOBAL
+    const handleToggleGlobalTimer = () => {
+        if (sessionTimer.status === 'running') {
+            const elapsed = sessionTimer.inicioUltimoPlay ? Date.now() - sessionTimer.inicioUltimoPlay : 0
+            onSessionTimerChange({
+                ...sessionTimer,
+                status: 'paused',
+                tempoAcumuladoMs: sessionTimer.tempoAcumuladoMs + elapsed,
+                inicioUltimoPlay: undefined,
+            })
+        } else {
+            onSessionTimerChange({
+                ...sessionTimer,
+                status: 'running',
+                inicioUltimoPlay: Date.now(),
+            })
+        }
     }
 
     const handleDoneExercicio = (id: string) => {
         const current = exercicioTimers[id] || { status: 'idle', tempoAcumuladoMs: 0 }
-        let finalMs = current.tempoAcumuladoMs
-        if (current.status === 'running' && current.inicioUltimoPlay) {
-            finalMs += Date.now() - current.inicioUltimoPlay
-        }
         const updated = {
             ...exercicioTimers,
-            [id]: { status: 'done' as const, tempoAcumuladoMs: finalMs, inicioUltimoPlay: undefined },
+            [id]: { ...current, status: 'done' as const },
         }
         onExercicioTimersChange(updated)
 
@@ -128,7 +136,8 @@ export function CardTreino({ treino, proximoTreino, exerciciosFeitos, exercicioT
         if (treino.exercicios && treino.exercicios.length > 0) {
             const todosFeitos = treino.exercicios.every(ex => updated[ex.id]?.status === 'done')
             if (todosFeitos) {
-                setTimeout(() => onCompletei(), 600)
+                // Se o timer global não estiver rodando, nem iniciamos a lógica de auto-complete total por enquanto
+                // para não surpreender o usuário que quer clicar no botão grande.
             }
         }
     }
@@ -139,7 +148,7 @@ export function CardTreino({ treino, proximoTreino, exerciciosFeitos, exercicioT
 
         onExercicioTimersChange({
             ...exercicioTimers,
-            [id]: { ...current, status: 'paused', inicioUltimoPlay: undefined },
+            [id]: { ...current, status: 'idle' },
         })
     }
 
@@ -367,39 +376,36 @@ export function CardTreino({ treino, proximoTreino, exerciciosFeitos, exercicioT
                         )}
                     </div>
 
-                    {/* Botão Global de Play/Pause */}
-                    <button
-                        onClick={() => {
-                            const runningId = Object.entries(exercicioTimers).find(([, t]) => t.status === 'running')?.[0]
-                            if (runningId) {
-                                handlePauseExercicio(runningId)
-                            } else {
-                                const firstPending = treino.exercicios?.find(ex => (exercicioTimers[ex.id]?.status || 'idle') !== 'done')
-                                if (firstPending) {
-                                    handlePlayExercicio(firstPending.id)
-                                }
-                            }
-                        }}
-                        className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all active:scale-95 shadow-lg border ${Object.values(exercicioTimers).some(t => t.status === 'running')
-                            ? 'bg-amber-500/10 border-amber-500/30 text-amber-500 shadow-amber-500/10'
-                            : 'bg-indigo-600 border-indigo-500 text-white shadow-indigo-600/20 hover:bg-indigo-500'
-                            }`}
-                        title={Object.values(exercicioTimers).some(t => t.status === 'running') ? "Pausar Treino" : "Iniciar Treino"}
-                    >
-                        {Object.values(exercicioTimers).some(t => t.status === 'running') ? <Pause size={22} fill="currentColor" /> : <Play size={20} fill="currentColor" className="ml-1" />}
-                    </button>
+                    {/* Botão Global de Play/Pause e Timer */}
+                    <div className="flex items-center gap-3">
+                        {getTempoAtual(sessionTimer) > 0 && (
+                            <div className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-xl flex items-center gap-2">
+                                <Timer size={14} className={sessionTimer.status === 'running' ? 'text-indigo-400 animate-pulse' : 'text-gray-500'} />
+                                <span className="text-sm font-mono font-bold text-white">
+                                    {formatTime(getTempoAtual(sessionTimer))}
+                                </span>
+                            </div>
+                        )}
+
+                        <button
+                            onClick={handleToggleGlobalTimer}
+                            className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all active:scale-95 shadow-lg border ${sessionTimer.status === 'running'
+                                ? 'bg-amber-500/10 border-amber-500/30 text-amber-500 shadow-amber-500/10'
+                                : 'bg-indigo-600 border-indigo-500 text-white shadow-indigo-600/20 hover:bg-indigo-500'
+                                }`}
+                            title={sessionTimer.status === 'running' ? "Pausar Treino" : "Iniciar Treino"}
+                        >
+                            {sessionTimer.status === 'running' ? <Pause size={22} fill="currentColor" /> : <Play size={20} fill="currentColor" className="ml-1" />}
+                        </button>
+                    </div>
                 </div>
 
-                {/* Lista de Exercícios com Divisores */}
+                {/* Lista de Exercícios Simplificada */}
                 {treino.exercicios && treino.exercicios.length > 0 && (
                     <div className="mb-6 -mx-6 border-y border-white/5 animate-in fade-in duration-300">
                         {treino.exercicios.map((ex, idx) => {
                             const timer = exercicioTimers[ex.id]
-                            const timerStatus = timer?.status || 'idle'
-                            const tempoMs = getTempoAtual(timer)
-                            const isDone = timerStatus === 'done'
-                            const isRunning = timerStatus === 'running'
-                            const isPaused = timerStatus === 'paused'
+                            const isDone = timer?.status === 'done'
 
                             return (
                                 <div
@@ -407,30 +413,21 @@ export function CardTreino({ treino, proximoTreino, exerciciosFeitos, exercicioT
                                     className={`flex items-center gap-3 px-6 py-4 transition-all duration-300 ${idx !== treino.exercicios!.length - 1 ? 'border-b border-white/5' : ''
                                         } ${isDone ? 'opacity-50' : ''}`}
                                 >
-                                    {/* Botão de ação do timer */}
-                                    {isDone ? (
-                                        <button
-                                            onClick={() => handleUndoExercicio(ex.id)}
-                                            className="w-8 h-8 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 flex items-center justify-center flex-shrink-0 transition-colors group/undo"
-                                            title="Desmarcar exercício"
-                                        >
-                                            <Check size={16} className="text-emerald-400 group-hover/undo:scale-90 transition-transform" strokeWidth={3} />
-                                        </button>
-                                    ) : isRunning ? (
-                                        <button
-                                            onClick={() => handlePauseExercicio(ex.id)}
-                                            className="w-8 h-8 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 flex items-center justify-center flex-shrink-0 transition-colors"
-                                        >
-                                            <Pause size={16} className="text-amber-400" />
-                                        </button>
-                                    ) : (
-                                        <button
-                                            onClick={() => handlePlayExercicio(ex.id)}
-                                            className="w-8 h-8 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 flex items-center justify-center flex-shrink-0 transition-colors"
-                                        >
-                                            <Play size={14} className="text-indigo-400 ml-0.5" />
-                                        </button>
-                                    )}
+                                    {/* Botão de Check (Independente do Cronômetro) */}
+                                    <button
+                                        onClick={() => isDone ? handleUndoExercicio(ex.id) : handleDoneExercicio(ex.id)}
+                                        className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${isDone
+                                            ? 'bg-emerald-500/20 hover:bg-emerald-500/30'
+                                            : 'bg-white/5 hover:bg-white/10 border border-white/10'
+                                            }`}
+                                        title={isDone ? "Desmarcar" : "Marcar como feito"}
+                                    >
+                                        <Check
+                                            size={16}
+                                            className={`transition-all ${isDone ? 'text-emerald-400 scale-110' : 'text-gray-600'}`}
+                                            strokeWidth={3}
+                                        />
+                                    </button>
 
                                     {/* Nome do exercício */}
                                     <div className="flex-1 min-w-0">
@@ -499,33 +496,12 @@ export function CardTreino({ treino, proximoTreino, exerciciosFeitos, exercicioT
                                             <Video size={13} className="text-indigo-400" />
                                         </button>
 
-                                        {/* Timer ou Séries */}
-                                        {(isRunning || isPaused || isDone) && tempoMs > 0 ? (
-                                            <div className={`flex items-center gap-1.5 h-7 px-2 rounded-lg ${isDone ? 'bg-emerald-500/10' : isRunning ? 'bg-indigo-500/10' : 'bg-white/5'
-                                                }`}>
-                                                <Timer size={12} className={isDone ? 'text-emerald-400' : isRunning ? 'text-indigo-400 animate-pulse' : 'text-gray-400'} />
-                                                <span className={`text-xs font-mono font-bold ${isDone ? 'text-emerald-400' : isRunning ? 'text-indigo-300' : 'text-gray-300'
-                                                    }`}>
-                                                    {formatTime(tempoMs)}
-                                                </span>
-                                            </div>
-                                        ) : (
-                                            <div className="h-7 px-2 flex items-center rounded-lg bg-white/5">
-                                                <span className="text-[11px] font-mono text-gray-400 whitespace-nowrap">
-                                                    {ex.series}×{ex.repeticoes}
-                                                </span>
-                                            </div>
-                                        )}
-
-                                        {/* Botão FEITO (só aparece quando running ou paused) */}
-                                        {(isRunning || isPaused) && (
-                                            <button
-                                                onClick={() => handleDoneExercicio(ex.id)}
-                                                className="w-8 h-8 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 flex items-center justify-center flex-shrink-0 transition-colors"
-                                            >
-                                                <Check size={16} className="text-emerald-400" strokeWidth={3} />
-                                            </button>
-                                        )}
+                                        {/* Timer ou Séries (Apenas Séries Agora) */}
+                                        <div className="h-7 px-2 flex items-center rounded-lg bg-white/5">
+                                            <span className="text-[11px] font-mono text-gray-400 whitespace-nowrap">
+                                                {ex.series}×{ex.repeticoes}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             )
