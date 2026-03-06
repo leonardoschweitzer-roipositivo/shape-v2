@@ -72,6 +72,18 @@ export async function carregarContextoPortal(atletaId: string): Promise<PortalCo
         console.info('[PortalDataService] Plano Treino:', treino ? 'ENCONTRADO' : 'NÃO ENCONTRADO');
         console.info('[PortalDataService] Plano Dieta:', dieta ? 'ENCONTRADO' : 'NÃO ENCONTRADO');
 
+        // Vincular exercícios à Biblioteca (adiciona urlVideo para player no portal)
+        let planoTreinoVinculado = treino?.dados ?? null;
+        if (planoTreinoVinculado) {
+            try {
+                const { vincularPlanoTreino } = await import('@/services/exercicioVinculacao.service');
+                planoTreinoVinculado = await vincularPlanoTreino(planoTreinoVinculado);
+                console.info('[PortalDataService] ✅ Vinculação vídeos OK');
+            } catch (err) {
+                console.warn('[PortalDataService] Vinculação vídeos falhou (não crítico):', err);
+            }
+        }
+
         return {
             atletaId,
             atletaNome: atleta.nome || 'Atleta',
@@ -79,7 +91,7 @@ export async function carregarContextoPortal(atletaId: string): Promise<PortalCo
             personalNome: personal?.nome || 'Personal',
             ficha: ficha || null,
             diagnostico: diag?.dados ?? null,
-            planoTreino: treino?.dados ?? null,
+            planoTreino: planoTreinoVinculado,
             planoDieta: dieta?.dados ?? null,
         };
     } catch (err) {
