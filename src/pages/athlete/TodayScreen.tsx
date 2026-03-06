@@ -22,6 +22,7 @@ interface TodayScreenProps {
     sexo?: string
     altura?: number
     peso?: number
+    personalId?: string
     personalNome?: string
     exerciciosFeitos: Record<string, boolean>
     exercicioTimers: Record<string, ExercicioTimerState>
@@ -43,6 +44,7 @@ export function TodayScreen({
     sexo,
     altura,
     peso,
+    personalId,
     personalNome,
     exerciciosFeitos,
     exercicioTimers,
@@ -93,7 +95,7 @@ export function TodayScreen({
                 />
 
                 {/* Feedback Textual - Relato do dia */}
-                <FeedbackTextual atletaId={atletaId} />
+                <FeedbackTextual atletaId={atletaId} personalId={personalId} />
 
                 {/* Trackers Rápidos */}
                 <TrackersRapidos

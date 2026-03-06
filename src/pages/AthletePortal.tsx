@@ -192,7 +192,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
             reportouDor: false,
             treinoIndex: todayData?.treino?.indiceTreino,
             ...(exerciciosDetalhes.length > 0 ? { exercicios: exerciciosDetalhes } : {}),
-        } as never, dataOverride)
+        } as never, dataOverride, personal?.id)
 
         clearAllTimers() // Reset todos os timers após completar
         // Refresh today data
@@ -204,7 +204,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
     }
 
     const handlePularTreino = async (continuarHoje?: boolean) => {
-        await pularTreino(atletaId, todayData?.treino?.indiceTreino, continuarHoje)
+        await pularTreino(atletaId, todayData?.treino?.indiceTreino, continuarHoje, personal?.id)
         clearAllTimers() // Reset timers após pular
         if (ctx) {
             const today = await montarDadosHoje(ctx)
@@ -228,7 +228,11 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
         })
 
         import('../services/notificacaoTriggers').then(({ onRegistroRapido }) => {
-            onRegistroRapido(atletaId, { tipo: 'refeicao', valor: macros.descricao || `${macros.calorias} kcal` }).catch(err => console.warn('[AthletePortal] Erro ao notificar registro rápido:', err))
+            onRegistroRapido(atletaId, {
+                tipo: 'refeicao',
+                valor: macros.descricao || `${macros.calorias} kcal`,
+                personalId: personal?.id
+            }).catch(err => console.warn('[AthletePortal] Erro ao notificar registro rápido:', err))
         })
 
 
@@ -266,7 +270,11 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                 await registrarTracker(atletaId, 'agua', { quantidade: Number(ml) })
 
                 import('../services/notificacaoTriggers').then(({ onRegistroRapido }) => {
-                    onRegistroRapido(atletaId, { tipo: 'agua', valor: `${ml}ml` }).catch(err => console.warn('[AthletePortal] Erro ao notificar registro rápido:', err))
+                    onRegistroRapido(atletaId, {
+                        tipo: 'agua',
+                        valor: `${ml}ml`,
+                        personalId: personal?.id
+                    }).catch(err => console.warn('[AthletePortal] Erro ao notificar registro rápido:', err))
                 })
 
                 if (ctx) {
@@ -282,7 +290,11 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                 await registrarTracker(atletaId, 'sono', { quantidade: Number(horas) })
 
                 import('../services/notificacaoTriggers').then(({ onRegistroRapido }) => {
-                    onRegistroRapido(atletaId, { tipo: 'sono', valor: `${horas}h` }).catch(err => console.warn('[AthletePortal] Erro ao notificar registro rápido:', err))
+                    onRegistroRapido(atletaId, {
+                        tipo: 'sono',
+                        valor: `${horas}h`,
+                        personalId: personal?.id
+                    }).catch(err => console.warn('[AthletePortal] Erro ao notificar registro rápido:', err))
                 })
 
                 if (ctx) {
@@ -298,7 +310,11 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                 await registrarTracker(atletaId, 'peso', { quantidade: Number(peso) })
 
                 import('../services/notificacaoTriggers').then(({ onRegistroRapido }) => {
-                    onRegistroRapido(atletaId, { tipo: 'peso', valor: `${peso} kg` }).catch(err => console.warn('[AthletePortal] Erro ao notificar registro rápido:', err))
+                    onRegistroRapido(atletaId, {
+                        tipo: 'peso',
+                        valor: `${peso} kg`,
+                        personalId: personal?.id
+                    }).catch(err => console.warn('[AthletePortal] Erro ao notificar registro rápido:', err))
                 })
 
                 if (ctx) {
@@ -323,6 +339,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                         onDorReportada(atletaId, {
                             local,
                             intensidade: Number(intensidade),
+                            personalId: personal?.id
                         }).catch(err => console.warn('[AthletePortal] Erro ao notificar dor:', err))
                     })
 
@@ -404,6 +421,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                         sexo={ctx?.ficha?.sexo}
                         altura={ctx?.ficha?.altura}
                         peso={lastPeso}
+                        personalId={ctx?.personalId}
                         personalNome={ctx?.personalNome}
                         exerciciosFeitos={exerciciosFeitos}
                         exercicioTimers={exercicioTimers}

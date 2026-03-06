@@ -13,6 +13,7 @@ import { registrarTracker } from '@/services/portalDataService'
 
 interface FeedbackTextualProps {
     atletaId: string
+    personalId?: string
 }
 
 /** Palavras-chave que disparam notificação urgente ao personal */
@@ -28,7 +29,7 @@ function textoTemAlerta(texto: string): boolean {
     return KEYWORDS_ALERTA.some(kw => lower.includes(kw))
 }
 
-export function FeedbackTextual({ atletaId }: FeedbackTextualProps) {
+export function FeedbackTextual({ atletaId, personalId }: FeedbackTextualProps) {
     const [texto, setTexto] = useState('')
     const [enviando, setEnviando] = useState(false)
     const [enviado, setEnviado] = useState(false)
@@ -49,7 +50,8 @@ export function FeedbackTextual({ atletaId }: FeedbackTextualProps) {
             const { onFeedbackTreino } = await import('@/services/notificacaoTriggers')
             await onFeedbackTreino(atletaId, {
                 texto: texto.trim(),
-                alerta: ehAlerta
+                alerta: ehAlerta,
+                personalId
             })
         } catch (err) {
             console.warn('[FeedbackTextual] Erro ao notificar personal:', err)

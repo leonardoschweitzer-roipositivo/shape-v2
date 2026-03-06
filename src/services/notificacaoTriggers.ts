@@ -52,9 +52,10 @@ async function buscarNomeAtleta(atletaId: string): Promise<string> {
  */
 async function criarNotificacaoParaAtleta(
     atletaId: string,
-    dados: Omit<CriarNotificacaoDTO, 'personal_id' | 'atleta_id'>
+    dados: Omit<CriarNotificacaoDTO, 'personal_id' | 'atleta_id'>,
+    personalIdOverride?: string
 ): Promise<void> {
-    const personalId = await buscarPersonalDoAtleta(atletaId)
+    const personalId = personalIdOverride || await buscarPersonalDoAtleta(atletaId)
     if (!personalId) return
 
     await notificacaoService.criar({
@@ -71,7 +72,7 @@ async function criarNotificacaoParaAtleta(
  */
 export async function onTreinoCompleto(
     atletaId: string,
-    dados: { grupo?: string; duracao?: string }
+    dados: { grupo?: string; duracao?: string; personalId?: string }
 ): Promise<void> {
     const nome = await buscarNomeAtleta(atletaId)
     const grupo = dados.grupo || 'do dia'
@@ -87,7 +88,7 @@ export async function onTreinoCompleto(
         acao_url: `/athlete-details/${atletaId}`,
         acao_label: 'Ver perfil →',
         grupo_id: `treino-completo-${atletaId}-${new Date().toISOString().slice(0, 10)}`,
-    })
+    }, dados.personalId)
 }
 
 /**
@@ -95,7 +96,7 @@ export async function onTreinoCompleto(
  */
 export async function onTreinoPulado(
     atletaId: string,
-    dados?: { grupo?: string }
+    dados?: { grupo?: string; personalId?: string }
 ): Promise<void> {
     const nome = await buscarNomeAtleta(atletaId)
     const grupo = dados?.grupo || 'do dia'
@@ -110,7 +111,7 @@ export async function onTreinoPulado(
         acao_url: `/athlete-details/${atletaId}`,
         acao_label: 'Ver perfil →',
         // Treinos pulados NÃO são agrupados - cada um é individual
-    })
+    }, dados?.personalId)
 }
 
 // ===== GATILHOS DE MEDIDAS & AVALIAÇÃO =====
@@ -305,7 +306,7 @@ export async function onPrimeiroAcessoPortal(atletaId: string): Promise<void> {
  */
 export async function onDorReportada(
     atletaId: string,
-    dados: { local: string; intensidade: number }
+    dados: { local: string; intensidade: number; personalId?: string }
 ): Promise<void> {
     const nome = await buscarNomeAtleta(atletaId)
 
@@ -319,7 +320,7 @@ export async function onDorReportada(
         acao_url: `/athlete-details/${atletaId}`,
         acao_label: 'Ver detalhes →',
         // Dor NUNCA é deduplicada — cada reporte é individual
-    })
+    }, dados.personalId)
 }
 
 /**
@@ -345,7 +346,7 @@ export async function onContextoPreenchido(atletaId: string): Promise<void> {
  */
 export async function onRegistroRapido(
     atletaId: string,
-    dados: { tipo: string; valor: string | number }
+    dados: { tipo: string; valor: string | number; personalId?: string }
 ): Promise<void> {
     const nome = await buscarNomeAtleta(atletaId)
 
@@ -368,7 +369,7 @@ export async function onRegistroRapido(
         acao_url: `/athlete-details/${atletaId}`,
         acao_label: 'Ver detalhes →',
         grupo_id: `registro-rapido-${dados.tipo}-${atletaId}-${new Date().toISOString().slice(0, 10)}`,
-    })
+    }, dados.personalId)
 }
 
 /**
@@ -376,7 +377,7 @@ export async function onRegistroRapido(
  */
 export async function onFeedbackTreino(
     atletaId: string,
-    dados: { texto: string; alerta: boolean }
+    dados: { texto: string; alerta: boolean; personalId?: string }
 ): Promise<void> {
     const nome = await buscarNomeAtleta(atletaId)
 
@@ -389,5 +390,5 @@ export async function onFeedbackTreino(
         dados: { texto: dados.texto, alerta: dados.alerta },
         acao_url: `/athlete-details/${atletaId}`,
         acao_label: 'Ver detalhes →',
-    })
+    }, dados.personalId)
 }

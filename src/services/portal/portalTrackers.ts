@@ -35,7 +35,8 @@ export async function registrarTracker(
 export async function completarTreino(
     atletaId: string,
     dados: { intensidade: number; duracao: number; reportouDor: boolean; treinoIndex?: number },
-    dataOverride?: string // 'YYYY-MM-DD' — para registros retroativos
+    dataOverride?: string, // 'YYYY-MM-DD' — para registros retroativos
+    personalId?: string    // ID do personal para notificação direta
 ): Promise<boolean> {
     const result = await registrarTracker(atletaId, 'treino', {
         status: 'completo',
@@ -47,6 +48,7 @@ export async function completarTreino(
         import('../notificacaoTriggers').then(({ onTreinoCompleto }) => {
             onTreinoCompleto(atletaId, {
                 duracao: dados.duracao ? `${dados.duracao}min` : undefined,
+                personalId
             }).catch(err => console.warn('[completarTreino] Erro ao notificar:', err));
         });
     }
@@ -57,7 +59,12 @@ export async function completarTreino(
 /**
  * Marca treino como pulado
  */
-export async function pularTreino(atletaId: string, treinoIndex?: number, continuarHoje: boolean = false): Promise<boolean> {
+export async function pularTreino(
+    atletaId: string,
+    treinoIndex?: number,
+    continuarHoje: boolean = false,
+    personalId?: string
+): Promise<boolean> {
     const result = await registrarTracker(atletaId, 'treino', {
         status: 'pulado',
         treinoIndex,
@@ -67,7 +74,7 @@ export async function pularTreino(atletaId: string, treinoIndex?: number, contin
     // Disparar notificação para o Personal (fire-and-forget)
     if (result && !continuarHoje) {
         import('../notificacaoTriggers').then(({ onTreinoPulado }) => {
-            onTreinoPulado(atletaId).catch(err => console.warn('[pularTreino] Erro ao notificar:', err));
+            onTreinoPulado(atletaId, { personalId }).catch(err => console.warn('[pularTreino] Erro ao notificar:', err));
         });
     }
 
