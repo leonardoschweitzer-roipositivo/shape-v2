@@ -707,7 +707,37 @@ interface PlanoTreino {
 | Versão | Data | Alterações |
 |--------|------|------------|
 | 1.0 | Fev/2026 | Versão inicial |
+| 1.1 | Mar/2026 | Estado real da implementação |
 
 ---
 
-**VITRU IA - Plano de Evolução: Etapa 2 - Plano de Treino v1.0**
+## 8. ✅ ESTADO ATUAL DA IMPLEMENTAÇÃO (Março 2026)
+
+### Componente Principal
+- `TreinoView.tsx` (29.2K) em `templates/Personal/` — Renderiza plano de treino completo
+
+### Service de Cálculo
+- `treino.ts` (50.2K) em `services/calculations/` — **MAIOR arquivo de cálculo do app**
+  - Divisão de treino (ABC, ABCD, ABCDE, PPL)
+  - Volume por grupo muscular com priorização de pontos fracos
+  - Exercícios com séries, reps, descanso, técnicas
+  - Periodização trimestral com mesociclos
+
+### O Que Está Funcionando ✅
+- [x] Visão Geral do Plano Anual (4 trimestres com focos)
+- [x] Trimestre Detalhado (3 mesociclos de 4 semanas)
+- [x] Divisão de treino baseada na disponibilidade
+- [x] Volume semanal por grupo com priorização
+- [x] Treinos detalhados com exercícios completos
+- [x] Observações do Vitrúvio (alinhamento com metodologia do personal)
+- [x] Editabilidade pelo personal trainer (TreinoView)
+- [x] Integração com fluxo de aprovação (supervisor + IA)
+
+### Pendências
+- [ ] Exportar PDF
+- [ ] Imprimir treinos (versão para impressão)
+- [ ] Progressão automática de carga entre semanas
+
+---
+
+**VITRU IA - Plano de Evolução: Etapa 2 - Plano de Treino v1.1**

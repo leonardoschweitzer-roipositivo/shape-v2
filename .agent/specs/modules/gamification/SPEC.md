@@ -2,8 +2,7 @@
 
 > Hall dos Deuses e Rankings
 
-## Status: 📋 PENDENTE
-TODO: Consolidar de hall-dos-deuses.md, ranking-personais.md
+## Status: ✅ IMPLEMENTADO (Março 2026)
 
 ## 📄 Arquivos deste Módulo
 
@@ -14,11 +13,29 @@ TODO: Consolidar de hall-dos-deuses.md, ranking-personais.md
 
 ## 🔗 Dependências
 
-TODO: Mapear dependências
+- `stores/personalRankingStore.ts` — Store de ranking de personais (Zustand)
+- `services/supabase.ts` — Queries de ranking e classificação
 
 ## 📊 Status de Implementação
 
-- [ ] Especificação completa
-- [ ] Implementação frontend
-- [ ] Implementação backend
-- [ ] Testes
+- [x] Especificação completa
+- [x] Implementação frontend
+- [x] Integração com Supabase
+- [ ] Testes automatizados
+
+## ✅ ESTADO ATUAL DA IMPLEMENTAÇÃO
+
+### Componentes Implementados
+
+| Componente | Caminho | Descrição |
+|------------|---------|-----------|
+| HallDosDeuses | `organisms/HallDosDeuses/` | Hall dos Deuses com rankings por categoria |
+| RankingPersonais | `organisms/RankingPersonais/` | Ranking de personais (7 componentes) |
+| GamificationPanel | `organisms/GamificationPanel/` | Painel de gamificação |
+| HallDosDeusesPage | `pages/HallDosDeuses.tsx` (lazy) | Página dedicada |
+
+### Pendências
+
+- [ ] Gamificação no Portal do Atleta (XP por registros, conquistas)
+- [ ] Badges e conquistas visuais
+- [ ] Desafios entre atletas do mesmo personal

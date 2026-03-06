@@ -1297,7 +1297,44 @@ CREATE TABLE planos_dieta (
 |--------|------|------------|
 | 1.0 | Fev/2026 | Versão inicial |
 | 2.0 | Fev/2026 | Adicionado CONTEXTO (8 campos), Sistema de Memória, Ciclos de Planejamento revisados (Treino Trimestral, Dieta Mensal), Removidos fluxos para SPECs separadas |
+| 2.1 | Mar/2026 | Estado real da implementação |
 
 ---
 
-**VITRU IA - VITRÚVIO IA Coach v2.0**
+## 13. ✅ ESTADO ATUAL DA IMPLEMENTAÇÃO (Março 2026)
+
+### Arquitetura de Serviços
+| Arquivo | Tamanho | Função |
+|---------|---------|--------|
+| `geminiService.ts` | 30K+ | Integração com Gemini API, geração de planos |
+| `contextBuilder.ts` | 15K+ | Monta contexto completo do atleta para prompts |
+| `coachService.ts` | 10K+ | Lógica de negócio do Coach IA |
+| `diagnostico.ts` | 40K | Motor de cálculo de diagnóstico |
+| `treino.ts` | 50.2K | Motor de cálculo de treino |
+| `dieta.ts` | 45K | Motor de cálculo de dieta |
+
+### Modos Implementados ✅
+- [x] **Diagnóstico**: Análise completa (composição, proporções, simetria, metas)
+- [x] **Treino**: Plano trimestral com periodização e exercícios
+- [x] **Dieta**: Plano mensal com macros, refeições, menu exemplo
+- [x] **Context Builder**: 8 campos do contexto usados nos prompts
+- [x] **Stepper**: Fluxo Diagnóstico → Treino → Dieta
+
+### O Que Está Funcionando ✅
+- [x] Geração de planos via Gemini API
+- [x] Contexto do atleta (8 campos) enviado como parte do prompt
+- [x] Insights textuais gerados pela IA em cada etapa
+- [x] Fluxo de aprovação (supervisor + IA)
+- [x] Editabilidade dos planos pelo personal
+- [x] Metodologia do personal respeitada no contexto
+
+### Pendências
+- [ ] Chat free-form com Vitrúvio (conversa aberta)
+- [ ] Sistema de Memória (aprendizado contínuo)
+- [ ] Insights automáticos (sem solicitar)
+- [ ] Modos Quick e Evolução
+- [ ] Voice Input
+
+---
+
+**VITRU IA - VITRÚVIO IA Coach v2.1**

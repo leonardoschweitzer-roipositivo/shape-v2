@@ -1034,7 +1034,37 @@ const gerarDietaComMetodologia = (
 | Versão | Data | Alterações |
 |--------|------|------------|
 | 1.0 | Fev/2026 | Versão inicial |
+| 1.1 | Mar/2026 | Estado real da implementação |
 
 ---
 
-**VITRU IA - Plano de Evolução: Etapa 3 - Plano de Dieta v1.0**
+## 11. ✅ ESTADO ATUAL DA IMPLEMENTAÇÃO (Março 2026)
+
+### Componente Principal
+- `DietaView.tsx` (23.4K) em `templates/Personal/` — Renderiza plano de dieta completo
+
+### Service de Cálculo
+- `dieta.ts` (45K) em `services/calculations/` — Motor de dieta completo
+  - Estratégia calórica (superávit, déficit, manutenção)
+  - Distribuição de macronutrientes (proteína, carboidrato, gordura)
+  - Estrutura de refeições (5-6 por dia)
+  - Menu exemplo com alimentos e quantidades
+
+### O Que Está Funcionando ✅
+- [x] Estratégia calórica baseada no objetivo e TDEE
+- [x] Distribuição de macros por refeição
+- [x] Estrutura de 5-6 refeições diárias
+- [x] Menu exemplo com substituições
+- [x] Checkpoints de reavaliação (mensal)
+- [x] Insights do Vitrúvio sobre dieta
+- [x] Editabilidade pelo personal trainer (DietaView)
+- [x] Integração com fluxo de aprovação
+
+### Pendências
+- [ ] Exportar PDF
+- [ ] Lista de compras automática
+- [ ] Integração com apps de contagem calórica
+
+---
+
+**VITRU IA - Plano de Evolução: Etapa 3 - Plano de Dieta v1.1**

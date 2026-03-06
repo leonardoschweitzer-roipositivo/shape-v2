@@ -1703,8 +1703,57 @@ interface GetAtletasResponse {
 | Versão | Data | Alterações |
 |--------|------|------------|
 | 1.0 | Fev/2026 | Versão inicial - Acompanhamento Diário completo |
+| 1.1 | Mar/2026 | Atualização com estado real da implementação |
 
 ---
 
-**VITRU IA - Acompanhamento Diário do Coach IA v1.0**  
+## 13. ✅ ESTADO ATUAL DA IMPLEMENTAÇÃO (Março 2026)
+
+### 13.1 Fluxos de Registro Implementados
+
+| Fluxo (SPEC) | Modal Real | Status |
+|--------------|-----------|:------:|
+| 4.1 Registrar Refeição | `RegistrarRefeicaoModal.tsx` (16.3K) | ✅ Texto |
+| 4.2 Registrar Treino | `RegistrarTreinoModal.tsx` (10K) | ✅ |
+| 4.3 Registrar Água | `RegistrarAguaModal.tsx` (6.5K) | ✅ |
+| 4.4 Registrar Sono | `RegistrarSonoModal.tsx` (13.1K) | ✅ |
+| 4.5 Reportar Dor | `ReportarDorModal.tsx` (13.6K) | ✅ |
+
+### 13.2 Trackers Implementados vs SPEC
+
+| Tracker (SPEC) | Implementado |
+|----------------|:------------:|
+| Refeição | ✅ |
+| Treino | ✅ |
+| Água | ✅ |
+| Sono | ✅ |
+| Dor | ✅ |
+| Suplemento | ❌ |
+| Peso | ❌ |
+| Energia | ❌ |
+
+### 13.3 O Que Está Funcionando ✅
+
+- [x] Trackers rápidos na tela HOJE (5 de 8)
+- [x] Modais de registro para: refeição, treino, água, sono, dor
+- [x] Integração com `portalTrackers.ts` para persistência
+- [x] Notificações para o personal via `notificacaoTriggers.ts`
+- [x] Feedback de treino (renomeado de "Como você está hoje")
+- [x] Store de tracking diário (`useDailyTrackingStore`)
+
+### 13.4 Pendências vs SPEC
+
+- [ ] Seção 5 — Input conversacional NLP (processamento texto livre)
+- [ ] Resumo Nutricional em tempo real (macros do dia)
+- [ ] Estimativa de macros por IA (ao descrever refeição)
+- [ ] Foto de refeição → análise por IA
+- [ ] Busca de alimentos na base
+- [ ] Trackers: suplemento, peso, energia
+- [ ] Gamificação dos trackers (XP, conquistas)
+- [ ] Dashboard do Personal com visão em tempo real dos atletas (seção 10 da spec)
+- [ ] Relatórios periódicos de acompanhamento
+
+---
+
+**VITRU IA - Acompanhamento Diário do Coach IA v1.1**  
 *Registro • Insights • Gamificação • Dashboard Personal*

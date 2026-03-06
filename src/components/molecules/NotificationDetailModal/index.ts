@@ -1,0 +1,1 @@
+export { NotificationDetailModal } from './NotificationDetailModal'

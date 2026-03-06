@@ -998,9 +998,48 @@ interface PerfilAtleta {
 
 ## 14. CHANGELOG
 
-| Versão | Data | Alterações |--------|------|------------| 1.0 | Fev/2026 | Versão inicial - Portal simplificado do Atleta |
+| Versão | Data | Alterações |
+|--------|------|------------|
+| 1.0 | Fev/2026 | Versão inicial - Portal simplificado do Atleta |
+| 1.1 | Mar/2026 | Estado real da implementação |
 
 ---
 
-**VITRU IA - Portal do Atleta v1.0**  
+## 15. ✅ ESTADO ATUAL DA IMPLEMENTAÇÃO (Março 2026)
+
+### Componente Principal
+- `PortalAluno.tsx` (15K+) em `templates/Portal/` — Container principal do portal
+- `PortalLayout.tsx` — Layout com bottom nav de 5 abas
+
+### Abas Implementadas (5, não 4 como planejado)
+| Aba | Componente | Status |
+|-----|-----------|--------|
+| **Home** | `HomeTab.tsx` | ✅ Cards de treino, dieta, trackers, alerta do coach |
+| **Treino** | `TreinoTab.tsx` | ✅ Treino do dia com exercícios, vídeos, registro de carga |
+| **Dieta** | `DietaTab.tsx` | ✅ Dieta do dia com macros e refeições |
+| **Evolução** | `EvolucaoTab.tsx` | ✅ Score, gráficos, proporções |
+| **Perfil** | `PerfilTab.tsx` | ✅ Dados pessoais, personal, configurações |
+
+### O Que Está Funcionando ✅
+- [x] Acesso via token (sem cadastro do atleta)
+- [x] Bottom navigation com 5 abas
+- [x] Card de treino do dia com completar/pular
+- [x] Exercícios com vídeos e detalhes (modal)
+- [x] Registro de carga por exercício
+- [x] Trackers rápidos (água, sono, peso, feedback)
+- [x] Alerta do Coach com insights
+- [x] Dieta do dia com macros
+- [x] Evolução com gráficos (Recharts)
+- [x] Header de identidade padrão
+- [x] Gamificação (badges, streaks)
+
+### Pendências
+- [ ] Chat com Coach IA (aba dedicada)
+- [ ] Ranking / Hall dos Deuses
+- [ ] Onboarding de primeiro acesso (passo-a-passo)
+- [ ] Notificações push para atleta
+
+---
+
+**VITRU IA - Portal do Atleta v1.1**  
 *Simples  Focado  Direto ao Ponto*

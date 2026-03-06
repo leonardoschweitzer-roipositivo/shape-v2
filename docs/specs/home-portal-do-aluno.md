@@ -928,5 +928,30 @@ interface DadosHomeAtleta {
 
 ---
 
+## ✅ ESTADO ATUAL DA IMPLEMENTAÇÃO (Março 2026)
+
+### Componente Principal
+- `HomeTab.tsx` em `templates/Portal/` — Tab Home do portal do atleta
+
+### Cards Implementados ✅
+- [x] **Header Identidade** (nome, sexo, altura, peso)
+- [x] **Card Personal** (nome do personal vinculado)
+- [x] **Alerta do Coach** (insight do Vitrúvio)
+- [x] **Treino de Hoje** (com ações completar/pular)
+- [x] **Dieta de Hoje** (macros resumidos)
+- [x] **Feedback sobre o Treino** (registros rápidos)
+- [x] **Registro Rápido** (água, sono, peso)
+- [x] **Consistência/Streaks** (card de streak)
+- [x] **Badges/Gamificação** (badges conquistados)
+
+### Pendências
+- [ ] Card Score + Meta (barra de progresso score atual → meta)
+- [ ] Card Ranking / Hall dos Deuses
+- [ ] Sistema de metas configuráveis pelo atleta
+- [ ] Foco da Semana (ponto fraco identificado)
+- [ ] Ações Rápidas (grid Medir/Coach/Evolução)
+
+---
+
 **VITRÚVIO IA - Home do Atleta v2.0**  
 *Meta • Progresso • Competição • Resultado*

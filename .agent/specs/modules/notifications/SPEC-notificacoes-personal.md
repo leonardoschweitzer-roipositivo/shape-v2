@@ -1,11 +1,12 @@
 # SPEC: Notificações do Personal
 
-## Documento de Especificação Técnica v1.0
+## Documento de Especificação Técnica v1.1
 
-**Versão:** 1.0  
+**Versão:** 1.1  
 **Data:** Março 2026  
 **Projeto:** VITRU IA - Sistema de Notificações para Personal Trainers  
-**Princípio:** Informação Relevante no Momento Certo
+**Princípio:** Informação Relevante no Momento Certo  
+**Status:** ✅ Implementado
 
 ---
 
@@ -717,4 +718,50 @@ Toda notificação deve levar o Personal ao contexto correto:
 
 ---
 
-*SPEC v1.0 — Notificações do Personal — VITRU IA*
+*SPEC v1.1 — Notificações do Personal — VITRU IA*
+
+---
+
+## 11. ✅ ESTADO ATUAL DA IMPLEMENTAÇÃO (Março 2026)
+
+### 11.1 Arquivos Implementados
+
+| Caminho | Descrição | Tamanho |
+|---------|-----------|---------|
+| `src/types/notificacao.types.ts` | Tipos, interfaces, constantes (CategoriaNotificacao, TipoNotificacao, Notificacao, ConfigNotificacoesPersonal, etc.) | 4.5K |
+| `src/services/notificacao.service.ts` | CRUD Supabase: buscar, contarNaoLidas, marcarComoLida, marcarTodasComoLidas, criar, criarBatch, limparExpiradas, buscarConfig, atualizarConfig | 8.9K |
+| `src/services/notificacaoTriggers.ts` | 10 gatilhos: onTreinoCompleto, onTreinoPulado, onNovaMedicaoPortal, onNovaAvaliacao, onPrimeiroAcessoPortal, onDorReportada, onContextoPreenchido, onRegistroRapido, onFeedbackTreino | 15.1K |
+| `src/services/resumoNotificacoes.ts` | Serviço de geração de resumos periódicos (diário, semanal, mensal) | 11.7K |
+| `src/hooks/useNotificacoes.ts` | Hook React: polling de notificações, contagem de não-lidas, marcar como lida | 5.1K |
+| `src/pages/NotificationsPage.tsx` | Página principal de notificações com filtros, paginação e agrupamento por data | 12.5K |
+| `src/pages/NotificationSettingsPage.tsx` | Configurações de notificação do personal (toggles por categoria, horários) | 12.4K |
+| `src/components/organisms/NotificationDrawer/` | Drawer lateral de notificações (sino no header) | ~4K |
+| `supabase/notificacoes-schema.sql` | Schema SQL: tabelas notificacoes + notificacao_config, índices, RLS, triggers | 4K |
+
+### 11.2 Tipos Adicionados vs SPEC Original
+
+Os seguintes tipos foram **adicionados** na implementação real, não presentes na SPEC original:
+
+- `'CONTEXTO_PREENCHIDO'` — Aluno preencheu formulário de contexto do portal
+- `'REGISTRO_RAPIDO'` — Aluno registrou água/sono/peso/refeição rápida
+- `'FEEDBACK_TREINO'` — Aluno deixou feedback textual sobre treino
+
+### 11.3 O Que Está Funcionando ✅
+
+- [x] Criação de notificações via triggers (treino completo/pulado, medidas, avaliação, portal, dor, registro rápido, feedback treino)
+- [x] CRUD completo via Supabase com RLS
+- [x] Deduplicação por `grupo_id`
+- [x] Expiração automática (90 dias)
+- [x] Drawer lateral com sino e badge de contagem
+- [x] Página de notificações com filtros (categoria, período, lida/não-lida)
+- [x] Página de configurações com toggles por categoria
+- [x] Hook `useNotificacoes` com polling
+- [x] Batch de notificações (múltiplas de uma avaliação)
+
+### 11.4 Pendências / Diferenças vs SPEC
+
+- [ ] Resumos periódicos (CRON diário/semanal/mensal) — Lógica implementada em `resumoNotificacoes.ts`, mas sem scheduler automático (precisa de Supabase Edge Functions ou CRON externo)
+- [ ] Notificações push (apenas in_app atualmente)
+- [ ] Agrupamento visual de >5 treinos concluídos no mesmo dia
+- [ ] Modal de detalhe de notificação (ao clicar)
+

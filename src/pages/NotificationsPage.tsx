@@ -8,8 +8,8 @@
 import React, { useState, useCallback } from 'react'
 import { Bell, Search } from 'lucide-react'
 import { useNotificacoes } from '@/hooks/useNotificacoes'
-import { NotificationItem } from '@/components/molecules/NotificationItem'
-import type { CategoriaNotificacao } from '@/types/notificacao.types'
+import { NotificationItem, NotificationDetailModal } from '@/components/molecules'
+import type { Notificacao, CategoriaNotificacao } from '@/types/notificacao.types'
 import { CATEGORIA_CONFIG } from '@/types/notificacao.types'
 
 interface NotificationsPageProps {
@@ -47,6 +47,7 @@ export function NotificationsPage({ onAcao }: NotificationsPageProps) {
     const [categoriaAtiva, setCategoriaAtiva] = useState<CategoriaNotificacao | undefined>()
     const [periodoAtivo, setPeriodoAtivo] = useState<'tudo' | 'hoje' | 'semana' | 'mes'>('tudo')
     const [statusAtivo, setStatusAtivo] = useState<boolean | undefined>()
+    const [notificacaoSelecionada, setNotificacaoSelecionada] = useState<Notificacao | null>(null)
 
     // ===== Handlers =====
 
@@ -235,7 +236,7 @@ export function NotificationsPage({ onAcao }: NotificationsPageProps) {
                                                 key={notif.id}
                                                 notificacao={notif}
                                                 onMarcarLida={marcarComoLida}
-                                                onAcao={onAcao}
+                                                onAcao={() => setNotificacaoSelecionada(notif)}
                                             />
                                         ))}
                                     </div>
@@ -256,6 +257,15 @@ export function NotificationsPage({ onAcao }: NotificationsPageProps) {
                     )}
                 </div>
             </div>
+
+            {/* Modal de Detalhes da Notificação */}
+            {notificacaoSelecionada && (
+                <NotificationDetailModal
+                    notificacao={notificacaoSelecionada}
+                    onFechar={() => setNotificacaoSelecionada(null)}
+                    onAcao={onAcao}
+                />
+            )}
         </div>
     )
 }

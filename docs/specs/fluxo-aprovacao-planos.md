@@ -807,7 +807,32 @@ Response: { success: boolean, plano: Plano }
 | Versão | Data | Alterações |
 |--------|------|------------|
 | 1.0 | Fev/2026 | Versão inicial |
+| 1.1 | Mar/2026 | Estado real da implementação |
 
 ---
 
-**VITRU IA - Fluxo de Aprovação de Planos v1.0**
+## 9. ✅ ESTADO ATUAL DA IMPLEMENTAÇÃO (Março 2026)
+
+### Implementação Parcial
+O fluxo de aprovação foi implementado de forma simplificada na v1, sem todas as telas de modal previstas na SPEC:
+
+### O Que Está Funcionando ✅
+- [x] Stepper de 3 etapas (Diagnóstico → Treino → Dieta)
+- [x] Geração automática do plano pelo Vitrúvio (Gemini API)
+- [x] Editabilidade do plano de treino pelo personal (TreinoView)
+- [x] Editabilidade do plano de dieta pelo personal (DietaView)
+- [x] Contexto do atleta usado na geração
+- [x] Personal como "supervisor" que revisa antes de liberar
+
+### Pendências
+- [ ] Status formal do plano (RASCUNHO, AGUARDANDO_APROVAÇÃO, APROVADO, etc.)
+- [ ] Tela de lista de planos pendentes do personal
+- [ ] Modal de revisão estruturado (aprovar/ajustar/rejeitar)
+- [ ] Notificações de aprovação para atleta
+- [ ] Histórico de aprovações no banco
+- [ ] Prazo de expiração automático (7 dias)
+- [ ] Fluxo para atleta SEM personal
+
+---
+
+**VITRU IA - Fluxo de Aprovação de Planos v1.1**

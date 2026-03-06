@@ -897,8 +897,9 @@ Pesos do Score Golden Ratio:
 |--------|------|------------|
 | 1.0 | 06/02/2026 | Versão inicial (Draft) |
 | 2.0 | 08/02/2026 | Atualização para refletir implementação frontend-mvp-v1: Stack tecnológica atualizada (Vite/React/Zustand), Configurações (6 seções), Coach IA (3 pilares + chat), Navegação por perfil, Design tokens, Status de implementação no roadmap |
+| 2.1 | 06/03/2026 | Auditoria completa de SPECs: todas modules, docs/specs e architecture atualizadas com "Estado Atual da Implementação" |
 
 ---
 
-**VITRU IA PRD v2.0**  
+**VITRU IA PRD v2.1**  
 *A Matemática do Físico Perfeito*

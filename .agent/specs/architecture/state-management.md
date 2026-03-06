@@ -162,8 +162,38 @@ Acesso tipado aos design tokens do tema (cores, tipografia, espaçamento).
 |--------|------|------------|
 | 1.0 | Fev/2026 | Versão inicial (planejamento com React Query) |
 | 2.0 | Fev/2026 | Atualizado para refletir implementação real: 6 Zustand stores + 4 custom hooks, sem React Query/React Hook Form |
+| 2.1 | Mar/2026 | Adicionado estado real da implementação |
 
 ---
 
-**VITRU IA State Management v2.0**  
+## 7. ✅ ESTADO ATUAL DA IMPLEMENTAÇÃO (Março 2026)
+
+### Zustand Stores (src/store/)
+| Store | Arquivo | Tamanho | Responsabilidade |
+|-------|---------|---------|------------------|
+| `useAppStore` | `useAppStore.ts` | Core | Estado global do app (auth, personal, atletas, fichas, medidas, avaliações) |
+| `useRegistroStore` | `useRegistroStore.ts` | Médio | Registros diários (refeição, treino, água, sono) |
+| `useGamificationStore` | `useGamificationStore.ts` | Médio | Badges, pontos, ranking, streaks |
+| `useNotificacaoStore` | `useNotificacaoStore.ts` | Médio | Notificações do personal |
+| `useOnboardingStore` | `useOnboardingStore.ts` | Pequeno | Estado do fluxo de onboarding |
+| `useCoachStore` | `useCoachStore.ts` | Médio | Estado de conversas com Coach IA |
+
+### Custom Hooks (src/hooks/)
+| Hook | Função |
+|------|--------|
+| `usePersonalDetails` | Carrega dados do personal + atletas + fichas + medidas |
+| `useSupabaseConnection` | Status de conexão com Supabase |
+| `useSupabaseSync` | Sincronização bidirecional Zustand ↔ Supabase |
+| `useTokens` | Design tokens para componentes |
+| `useCalculations` | Cálculos sob demanda (assessment, proporções) |
+
+### Padrão Implementado
+- **Persistência**: Zustand persiste no `localStorage` via middleware `persist`
+- **Sync**: `useSupabaseSync` faz pull/push periódico com Supabase
+- **Sem React Query**: Todas as chamadas usam `supabase.from().select()` diretamente
+- **Sem React Hook Form**: Formulários usam `useState` + handlers manuais
+
+---
+
+**VITRU IA State Management v2.1**  
 *Zustand 5 • Supabase Client • TypeScript*

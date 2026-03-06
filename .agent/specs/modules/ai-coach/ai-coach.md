@@ -1875,8 +1875,62 @@ ETAPA 10: PRIMEIRA AVALIAÇÃO
 |--------|------|------------|
 | 1.0 | Fev/2026 | Versão inicial do VITRÚVIO |
 | 2.0 | Fev/2026 | UserHealthProfile completo, Plano de Treino, Plano Alimentar, Chat, Análise de Risco, Insights Contextuais |
+| 2.1 | Mar/2026 | Atualização com estado real da implementação |
 
 ---
 
-**VITRÚVIO - Coach IA do VITRU IA v2.0**  
+## 14. ✅ ESTADO ATUAL DA IMPLEMENTAÇÃO (Março 2026)
+
+### 14.1 Arquitetura Real (3 Serviços Centrais)
+
+| Serviço | Caminho | Tamanho | Descrição |
+|---------|---------|---------|-----------|
+| vitruviusAI | `services/vitruviusAI.ts` | ~30K | Serviço principal de IA: geração de diagnósticos, planos de treino, planos de dieta, chat contextual |
+| vitruviusContext | `services/vitruviusContext.ts` | ~15K | Montagem de contexto completo do atleta (medidas, histórico, objetivos, saúde) para envio à API |
+| vitruviusPrompts | `services/vitruviusPrompts.ts` | ~10K | Prompts estruturados por tipo de consulta (diagnóstico, treino, dieta, chat) |
+
+### 14.2 Componentes de UI do Coach
+
+| Componente | Caminho | Descrição |
+|------------|---------|-----------|
+| CoachModal | `organisms/modals/CoachModal/` | Modal de chat com Vitrúvio |
+| CoachScreen | `pages/athlete/CoachScreen.tsx` | Tela Coach no Portal do Atleta |
+| PersonalCoachView | `templates/Personal/PersonalCoachView.tsx` (33.4K) | Tela do Coach para Personal (gera Plano de Evolução) |
+| PersonalCoachDashboard | `templates/Personal/PersonalCoachDashboard.tsx` | Dashboard wrapper do coach |
+| ChatMessages | `organisms/ChatMessages/` | Componentes de mensagens do chat |
+| ChatPlanoEvolucao | `organisms/ChatPlanoEvolucao/` | Chat integrado ao Plano de Evolução |
+
+### 14.3 O Que Está Funcionando ✅
+
+- [x] Chat contextual com Vitrúvio (atleta e personal)
+- [x] Geração de diagnóstico corporal via IA
+- [x] Geração de plano de treino via IA (integrado com `treino.ts` — 50K de cálculos)
+- [x] Geração de plano de dieta via IA (integrado com `dieta.ts` — 38K de cálculos)
+- [x] Montagem automática de contexto do atleta (`vitruviusContext.ts`)
+- [x] Prompts estruturados por tipo de consulta
+- [x] Fluxo completo: Diagnóstico → Treino → Dieta (Plano de Evolução)
+- [x] Integração com Portal do Atleta (tela Coach)
+
+### 14.4 Diferenças vs SPEC
+
+| SPEC Planejou | Implementação Real |
+|---------------|-------------------|
+| ContextBuilder como classe com múltiplos collectors | `vitruviusContext.ts` como service com funções puras |
+| Múltiplos analyzers (Proportion, Symmetry, Evolution, Risk) | Cálculos centralizados em `services/calculations/` |
+| TrainingPlanGenerator, NutritionPlanGenerator como objetos | Funções em `vitruviusAI.ts` que chamam API da OpenAI com contexto |
+| Schema Prisma expandido | Supabase com tabelas existentes (sem Prisma) |
+| SafetyChecker como componente | Regras de segurança embutidas nos prompts |
+| Enums TypeScript (RotinaDiaria, etc.) | Tipos string union ou interfaces simplificadas |
+
+### 14.5 Pendências vs SPEC
+
+- [ ] Insights diários automáticos (alertas proativos do Vitrúvio)
+- [ ] Relatórios semanais gerados por IA
+- [ ] Ajustes periódicos automáticos (periodização)
+- [ ] Reconhecimento de foto de refeição
+- [ ] Input conversacional NLP (seção 5 da spec)
+
+---
+
+**VITRÚVIO - Coach IA do VITRU IA v2.1**  
 *Inspirado em Marcus Vitruvius Pollio • Análise • Treino • Dieta • Personalização Total*

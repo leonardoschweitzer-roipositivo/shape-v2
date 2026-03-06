@@ -19,6 +19,7 @@ import {
   TermsOfUse,
   PrivacyPolicy,
   NotificationDrawer,
+  NotificationDetailModal,
   type ProfileType
 } from '@/components';
 
@@ -94,6 +95,7 @@ const App: React.FC = () => {
   const [consultaDietaData, setConsultaDietaData] = useState<PlanoDieta | null>(null);
   const [consultaPlanoCompleto, setConsultaPlanoCompleto] = useState<any | null>(null);
   const [isNotificationDrawerOpen, setIsNotificationDrawerOpen] = useState(false);
+  const [selectedNotifDetail, setSelectedNotifDetail] = useState<Notificacao | null>(null);
 
   // Notifications hook (polling + state)
   const {
@@ -1043,16 +1045,27 @@ const App: React.FC = () => {
           setIsNotificationDrawerOpen(false);
           setCurrentView('notifications');
         }}
-        onAcao={(url) => {
-          setIsNotificationDrawerOpen(false);
-          if (url.startsWith('/athlete-details/')) {
-            const id = url.replace('/athlete-details/', '');
-            setSelectedAthleteId(id);
-            setCurrentView('athlete-details');
-          }
+        onAcao={(notif) => {
+          setSelectedNotifDetail(notif);
         }}
       />
 
+      {/* Notification Detail Modal (Drawer) */}
+      {
+        selectedNotifDetail && (
+          <NotificationDetailModal
+            notificacao={selectedNotifDetail}
+            onFechar={() => setSelectedNotifDetail(null)}
+            onAcao={(url) => {
+              if (url.startsWith('/athlete-details/')) {
+                const id = url.replace('/athlete-details/', '');
+                setSelectedAthleteId(id);
+                setCurrentView('athlete-details');
+              }
+            }}
+          />
+        )
+      }
 
       <DebugAccess
         onLogin={handleQuickLogin}

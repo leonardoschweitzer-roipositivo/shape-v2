@@ -460,7 +460,29 @@ CREATE INDEX idx_metodologia_personal ON metodologias_personal(personal_id);
 | Versão | Data | Alterações |
 |--------|------|------------|
 | 1.0 | Fev/2026 | Versão inicial |
+| 1.1 | Mar/2026 | Estado real da implementação |
 
 ---
 
-**VITRU IA - Metodologia do Personal v1.0**
+## 7. ✅ ESTADO ATUAL DA IMPLEMENTAÇÃO (Março 2026)
+
+### Implementação Parcial
+A metodologia é **usada** pelo contextBuilder na geração de planos, mas **não tem tela dedicada** de cadastro ainda.
+
+### O Que Está Implementado ✅
+- [x] Campos de metodologia no contexto do personal (contextBuilder.ts)
+- [x] Metodologia influencia prompts de geração (treino + dieta)
+- [x] Hierarquia de decisão respeitada (IA considera preferências)
+- [x] Preferências básicas de treino (divisão, volume, técnicas)
+
+### O Que Está Pendente ❌
+- [ ] Tela dedicada "Minha Metodologia" (seção 3 da SPEC)
+- [ ] Formulário de 4 seções (Geral, Treino, Dieta, Observações)
+- [ ] Barra de completude visual
+- [ ] Tabela `metodologias_personal` no Supabase (usa campos genéricos hoje)
+- [ ] Regras específicas para Vitrúvio (texto livre)
+- [ ] Sugestões do Vitrúvio "fora da metodologia"
+
+---
+
+**VITRU IA - Metodologia do Personal v1.1**

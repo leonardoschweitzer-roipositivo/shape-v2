@@ -1514,8 +1514,43 @@ export function useEvolutionInsight(period: Period) {
 | Versão | Data | Alterações |
 |--------|------|------------|
 | 1.0 | Fev/2026 | Versão inicial da página Evolução |
+| 1.1 | Mar/2026 | Atualização com estado real da implementação |
 
 ---
 
-**VITRU IA Evolution Page**  
+## 9. ✅ ESTADO ATUAL DA IMPLEMENTAÇÃO (Março 2026)
+
+### 9.1 Componentes Implementados
+
+| Componente | Caminho | Tamanho | Descrição |
+|------------|---------|---------|-----------|
+| Evolution | `templates/Evolution/Evolution.tsx` | 46K | Página principal com todos os gráficos e KPIs |
+| EvolutionCharts | `organisms/EvolutionCharts/` | 6 arquivos | Gráficos de evolução (peso, gordura, proporções, radar, etc.) |
+| AthleteEvolutionCharts | `organisms/AthleteEvolutionCharts/` | 2 arquivos | Gráficos de evolução para visualização do atleta |
+| GraficoEvolucao | `organisms/GraficoEvolucao/` | 2 arquivos | Componente gráfico reutilizável |
+| PersonalEvolutionView | `templates/Personal/PersonalEvolutionView.tsx` | 5.9K | Visão de evolução pelo personal (para aluno selecionado) |
+| evolutionProcessor | `services/calculations/evolutionProcessor.ts` | 10.3K | Processamento de dados de evolução e cálculos comparativos |
+| evolutionMockData | `templates/Evolution/evolutionMockData.ts` | 6K | Dados mock para desenvolvimento |
+
+### 9.2 O Que Está Implementado ✅
+
+- [x] Seção 3.1 — Resumo do Período (KPIs)
+- [x] Seção 3.2 — Evolução Áurea (gráfico principal com ratio)
+- [x] Seção 3.4 — Composição Corporal (peso, gordura)
+- [x] Seção 3.5 — Morfologia e Simetria (medidas brutas + assimetrias)
+- [x] Seção 7 — Layout responsivo (mobile/tablet/desktop)
+- [x] Filtros de período (3M/6M/1A/TOTAL)
+- [x] Visão do Personal (evolução de aluno específico)
+
+### 9.3 Pendências vs SPEC
+
+- [ ] Seção 3.3 — Insight da IA (análise por IA — integração com vitruviusAI planejada mas não implementada como componente isolado na página)
+- [ ] Seção 3.6 — Comparativo Visual (fotos antes/depois — não implementado)
+- [ ] Multi-métricas no gráfico (selecionar múltiplas métricas simultaneamente)
+- [ ] Geração de insight evolutivo via vitruviusAI
+
+---
+
+**VITRU IA Evolution Page — v1.1**  
 *Progresso • Tendências • Insights • Motivação*
+

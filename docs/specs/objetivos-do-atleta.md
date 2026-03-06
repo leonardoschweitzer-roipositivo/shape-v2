@@ -1578,7 +1578,33 @@ O sistema deve sugerir mudança de objetivo quando:
 | 1.0 | Fev/2026 | Versão inicial |
 | 1.1 | Fev/2026 | Detalhamento completo de cada objetivo |
 | 1.2 | Fev/2026 | Adicionado: Suplementação, Cardio, Sono/Recuperação, Expectativas Psicológicas, Erros Comuns, Splits de Treino, Algoritmo de Recomendação, Integração com SPECs |
+| 1.3 | Mar/2026 | Estado real da implementação |
 
 ---
 
-**VITRU IA - SPEC Objetivos do Atleta v1.2**
+## ✅ ESTADO ATUAL DA IMPLEMENTAÇÃO (Março 2026)
+
+### Implementação Parcial
+Os objetivos são utilizados no motor de cálculo (`diagnostico.ts`) para determinar estratégias, mas sem tela dedicada de seleção pelo atleta.
+
+### O Que Está Implementado ✅
+- [x] 6 objetivos definidos nos types (`BULK, CUT, RECOMP, GOLDEN_RATIO, TRANSFORM, MAINTAIN`)
+- [x] Matriz de decisão implementada no `diagnostico.ts` (40K)
+- [x] Estratégia de treino ajustada por objetivo no `treino.ts` (50K)
+- [x] Estratégia de dieta ajustada por objetivo no `dieta.ts` (45K)
+- [x] Parâmetros de macros/volume por objetivo
+- [x] Ajustes por gênero (masculino/feminino) nos cálculos
+- [x] Context Builder envia objetivo ao Gemini
+
+### O Que Está Pendente ❌
+- [ ] Tela de seleção de objetivo pelo atleta (onboarding)
+- [ ] Sugestão automática do Vitrúvio (seção 3.2)
+- [ ] Checkpoints trimestrais com reavaliação automática
+- [ ] Transição formal entre objetivos
+- [ ] Objetivo primário + secundário combinados
+- [ ] Ajustes por estilo de vida (viagem, período de provas)
+- [ ] Especificidades para atletas 40+
+
+---
+
+**VITRU IA - SPEC Objetivos do Atleta v1.3**

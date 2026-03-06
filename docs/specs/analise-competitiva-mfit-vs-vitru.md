@@ -519,5 +519,24 @@ Preenche as lacunas com foco em **retenção**:
 
 ---
 
-**VITRÚVIO IA - Inteligência Competitiva**  
+## 14. ✅ ESTADO ATUAL (Março 2026)
+
+> Este é um documento de **inteligência de mercado**, não de implementação. Os diferenciais citados como "VITRÚVIO tem" estão no estado abaixo:
+
+| Diferencial citado | Status Real |
+|--------------------|------------|
+| Score Shape-V | ✅ Implementado (assessments/) |
+| Proporções Áureas / 3 Pilares | ✅ Implementado (diagnostico.ts) |
+| Hall dos Deuses / Ranking | ⚠️ Parcial (gamification existe, ranking pendente) |
+| Streak / Heatmap | ✅ Implementado (ConsistenciaCard) |
+| Coach IA 24h (chat) | ⚠️ Parcial (geração de planos, sem chat livre) |
+| Foco da Semana | ❌ Pendente |
+| Meta visual "44.8 → 70 pts" | ⚠️ Parcial (score existe, card de meta pendente) |
+| Biblioteca de vídeos | ⚠️ Parcial (links de vídeo por exercício) |
+| Modo offline robusto | ❌ Pendente |
+| Pagamento in-app | ❌ Pendente |
+
+---
+
+**VITRÚVIO IA - Inteligência Competitiva v1.1**  
 *Conhecer o concorrente para ser melhor.*

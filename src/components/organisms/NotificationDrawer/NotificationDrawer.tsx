@@ -19,7 +19,7 @@ interface NotificationDrawerProps {
     onMarcarLida: (id: string) => void
     onMarcarTodasLidas: () => void
     onVerTodas: () => void
-    onAcao?: (url: string) => void
+    onAcao?: (notificacao: Notificacao) => void
 }
 
 /** Agrupa notificações por "HOJE", "ONTEM", "ESTA SEMANA", "ANTERIORES" */
@@ -180,7 +180,7 @@ export const NotificationDrawer = memo(function NotificationDrawer({
                                                 key={notif.id}
                                                 notificacao={notif}
                                                 onMarcarLida={onMarcarLida}
-                                                onAcao={onAcao}
+                                                onAcao={() => onAcao?.(notif)}
                                             />
                                         ))}
                                     </div>

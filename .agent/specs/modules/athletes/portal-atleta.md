@@ -1298,27 +1298,30 @@ interface PerfilAtleta {
 
 ### 13.1 Telas do Atleta
 
-| Tela | Função | Prioridade |
-|------|--------|:----------:|
-| **HOJE** | Treino, dieta, trackers do dia | 🔴 Alta |
-| **COACH** | Chat com Vitrúvio | 🔴 Alta |
-| **PROGRESSO** | Evolução e medidas | 🟡 Média |
-| **PERFIL** | Dados e configurações | 🟢 Baixa |
+| Tela | Função | Prioridade | Status |
+|------|--------|:----------:|:------:|
+| **HOJE** | Treino, dieta, trackers do dia | 🔴 Alta | ✅ |
+| **TREINO** | Exercícios do dia com vídeos/cargas | 🔴 Alta | ✅ |
+| **COACH** | Chat com Vitrúvio | 🔴 Alta | ✅ |
+| **PROGRESSO** | Evolução e medidas | 🟡 Média | ✅ |
+| **PERFIL** | Dados e configurações | 🟢 Baixa | ✅ |
 
 ### 13.2 Ações Principais
 
 | Ação | Localização | Frequência |
 |------|-------------|:----------:|
-| Ver treino do dia | HOJE | Diária |
-| Completar treino | HOJE | Diária |
-| Registrar refeição | HOJE / COACH | 3-5x/dia |
+| Ver treino do dia | HOJE / TREINO | Diária |
+| Completar treino | TREINO | Diária |
+| Registrar refeição | HOJE | 3-5x/dia |
 | Registrar água | HOJE | 5-10x/dia |
 | Falar com Coach | COACH | Conforme necessidade |
 | Ver progresso | PROGRESSO | Semanal |
+| Feedback sobre o Treino | HOJE | Diária |
+| Registro Rápido | HOJE | Diária |
 
 ### 13.3 Princípios Aplicados
 
-✅ **Menos é mais** - Apenas 4 abas no menu  
+✅ **Menos é mais** - 5 abas no menu (adicionada aba TREINO)  
 ✅ **Ação primeiro** - Treino e dieta em destaque  
 ✅ **Um toque** - Registrar água com 1 clique  
 ✅ **Feedback instantâneo** - Toasts de confirmação  
@@ -1331,8 +1334,80 @@ interface PerfilAtleta {
 | Versão | Data | Alterações |
 |--------|------|------------|
 | 1.0 | Fev/2026 | Versão inicial - Portal simplificado do Atleta |
+| 2.0 | Fev/2026 | Expansão com 5 abas, exercícios com vídeo |
+| 2.1 | Mar/2026 | Atualização com estado real da implementação |
 
 ---
 
-**VITRU IA - Portal do Atleta v1.0**  
+## 15. ✅ ESTADO ATUAL DA IMPLEMENTAÇÃO (Março 2026)
+
+### 15.1 Componentes Implementados
+
+| Componente | Caminho | Tamanho | Descrição |
+|------------|---------|---------|-----------|
+| AthletePortal | `pages/AthletePortal.tsx` | — | Página principal do portal com navegação de abas |
+| TodayScreen | `pages/athlete/TodayScreen.tsx` | — | Tela HOJE com cards e trackers |
+| WorkoutScreen | `pages/athlete/WorkoutScreen.tsx` | — | Tela TREINO com exercícios |
+| CoachScreen | `pages/athlete/CoachScreen.tsx` | — | Tela COACH com chat Vitrúvio |
+| ProgressScreen | `pages/athlete/ProgressScreen.tsx` | — | Tela PROGRESSO |
+| AssessmentScreen | `pages/athlete/AssessmentScreen.tsx` | — | Tela de avaliação |
+| ProfileScreen | `pages/athlete/ProfileScreen.tsx` | — | Tela PERFIL |
+
+### 15.2 Componentes de Cards (implementados)
+
+| Componente | Caminho | Descrição |
+|------------|---------|-----------|
+| CardConsistencia | `pages/athlete/components/CardConsistencia.tsx` (9.4K) | Card de streak com animação de fogo |
+| CardFocoSemana | `pages/athlete/components/CardFocoSemana.tsx` (3.2K) | Card de foco semanal |
+| CardIndicadorProgresso | `pages/athlete/components/CardIndicadorProgresso.tsx` (5.3K) | Indicador de progresso |
+| CardPersonal | `pages/athlete/components/CardPersonal.tsx` (1.5K) | Card com info do personal |
+| CardRanking | `pages/athlete/components/CardRanking.tsx` (5.8K) | Card de ranking |
+| CardScoreMeta | `pages/athlete/components/CardScoreMeta.tsx` (4.7K) | Card de score e meta |
+| ScoreGeralAvaliacao | `pages/athlete/components/ScoreGeralAvaliacao.tsx` (6.5K) | Score geral da avaliação |
+| HeaderIdentidade | `pages/athlete/components/HeaderIdentidade.tsx` (2.7K) | Header padrão de identidade |
+| FooterUltimaMedicao | `pages/athlete/components/FooterUltimaMedicao.tsx` (2.5K) | Footer com última medição |
+| AcoesRapidas | `pages/athlete/components/AcoesRapidas.tsx` (1.8K) | Botões de ações rápidas |
+
+### 15.3 Modais de Registro (implementados)
+
+| Modal | Caminho | Tamanho | Descrição |
+|-------|---------|---------|-----------|
+| RegistrarAguaModal | `organisms/modals/RegistrarAguaModal.tsx` | 6.5K | Registro de água com botões rápidos |
+| RegistrarSonoModal | `organisms/modals/RegistrarSonoModal.tsx` | 13.1K | Registro de sono (horários, qualidade) |
+| RegistrarRefeicaoModal | `organisms/modals/RegistrarRefeicaoModal.tsx` | 16.3K | Registro de refeição com macros |
+| RegistrarTreinoModal | `organisms/modals/RegistrarTreinoModal.tsx` | 10K | Registro de treino (completar/pular) |
+| ReportarDorModal | `organisms/modals/ReportarDorModal.tsx` | 13.6K | Reportar dor (local, intensidade, tipo) |
+
+### 15.4 Services do Portal (implementados)
+
+| Service | Caminho | Descrição |
+|---------|---------|-----------|
+| portalHoje | `services/portal/portalHoje.ts` (14.6K) | Dados da tela HOJE |
+| portalProgresso | `services/portal/portalProgresso.ts` (14.7K) | Dados de progresso |
+| portalCoach | `services/portal/portalCoach.ts` (1.1K) | Integração coach IA |
+| portalContext | `services/portal/portalContext.ts` (4.7K) | Contexto do portal |
+| portalPerfil | `services/portal/portalPerfil.ts` (1.4K) | Dados de perfil |
+| portalTrackers | `services/portal/portalTrackers.ts` (2.6K) | Trackers rápidos (água, sono, etc.) |
+| portalTypes | `services/portal/portalTypes.ts` (3.2K) | Tipos TypeScript do portal |
+
+### 15.5 Alterações Recentes vs SPEC Original
+
+1. **5 abas** (não 4) — Adicionada aba TREINO dedicada
+2. **"Como você está hoje?"** renomeado para **"Feedback sobre o Treino"**
+3. **"Rápido"** renomeado para **"Registro Rápido"**
+4. Botão "Falar com o Coach" **removido** do card "Alerta do Coach"
+5. Exercícios incluem **vídeo** e **campo de carga**
+6. Modal `ExercicioDetalheModal` com **passo-a-passo, dicas e erros comuns**
+
+### 15.6 Pendências vs SPEC
+
+- [ ] Envio de foto de refeição para análise por IA (seção 4.1 da spec)
+- [ ] Busca de alimentos na base nutricional (seção 4.1)
+- [ ] Registrar suplementos
+- [ ] Tracker de energia
+- [ ] Tracker de peso
+
+---
+
+**VITRU IA - Portal do Atleta v2.1**  
 *Simples • Focado • Direto ao Ponto*

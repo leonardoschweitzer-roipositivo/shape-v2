@@ -702,8 +702,42 @@ PATCH /api/settings/privacy
 | Versão | Data | Alterações |
 |--------|------|------------|
 | 1.0 | Fev/2026 | Versão inicial - Settings para Atleta, Personal e Academia |
+| 1.1 | Mar/2026 | Atualização com estado real da implementação |
 
 ---
 
-**VITRU IA Settings v1.0**  
+## 9. ✅ ESTADO ATUAL DA IMPLEMENTAÇÃO (Março 2026)
+
+### 9.1 Componentes Implementados
+
+| Componente | Caminho | Descrição |
+|------------|---------|-----------|
+| NotificationSettingsPage | `pages/NotificationSettingsPage.tsx` (12.4K) | Configurações de notificação do personal (toggles por categoria, horários) |
+| PersonalProfilePage | `templates/Personal/PersonalProfilePage.tsx` (13K) | Perfil/conta do personal (dados profissionais, foto, etc.) |
+| AthleteSettingsPage | `pages/AthleteSettingsPage/` | Configurações do atleta |
+
+### 9.2 O Que Está Implementado ✅
+
+- [x] Configurações de notificação do Personal (seção completa)
+- [x] Perfil profissional do Personal (nome, foto, dados)
+- [x] Logout
+- [x] Dark mode (via toggle)
+
+### 9.3 O Que NÃO Está Implementado
+
+- [ ] Seção Conta (alteração de email, 2FA, sessões ativas)
+- [ ] Seção Profissional completa (CREF, especialidades, bio)
+- [ ] Seção Metodologia (abordagem de treino, periodização)
+- [ ] Seção Atletas (gestão de convites via settings)
+- [ ] Seção Privacidade (visibilidade no ranking, compartilhamento)
+- [ ] Seção Segurança (senha, 2FA, histórico de atividade)
+- [ ] Seção Plano (assinatura, pagamentos)
+- [ ] Seção Integrações (API keys, webhooks)
+- [ ] Seção Meus Dados (exportar/excluir dados LGPD)
+- [ ] Configurações do tipo Academia (empresa, branding, personais)
+- [ ] Configurações do tipo Atleta completas (saúde, VITRÚVIO, medidas)
+
+---
+
+**VITRU IA Settings v1.1**  
 *Conta • Perfil • Saúde • VITRÚVIO • Plano • Privacidade • Segurança*

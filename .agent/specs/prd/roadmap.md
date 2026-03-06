@@ -1199,4 +1199,4 @@ mkdir -p src/hooks
 
 ---
 
-**Quer que eu comece gerando os arquivos da Fase 1?**
+> **Nota (Março 2026):** As Fases 1-3 do Supabase estão majoritariamente implementadas. Todas as SPECs do projeto foram auditadas e atualizadas com "Estado Atual da Implementação" em Março/2026.

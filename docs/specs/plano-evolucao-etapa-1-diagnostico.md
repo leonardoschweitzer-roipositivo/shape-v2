@@ -590,7 +590,33 @@ interface Diagnostico {
 | Versão | Data | Alterações |
 |--------|------|------------|
 | 1.0 | Fev/2026 | Versão inicial |
+| 1.1 | Mar/2026 | Estado real da implementação |
 
 ---
 
-**VITRU IA - Plano de Evolução: Etapa 1 - Diagnóstico v1.0**
+## 9. ✅ ESTADO ATUAL DA IMPLEMENTAÇÃO (Março 2026)
+
+### Componente Principal
+- `DiagnosticoView.tsx` (41.4K) em `templates/Personal/` — Renderiza todo o diagnóstico
+
+### Service de Cálculo
+- `diagnostico.ts` (40K) em `services/calculations/` — Motor de diagnóstico completo
+- `assessment.ts` (30.9K) — Scores, proporções, classificações auxiliares
+
+### O Que Está Funcionando ✅
+- [x] Taxas metabólicas (TMB, NEAT, TDEE) com fatores do contexto
+- [x] Composição corporal (peso, gordura %, massa magra, massa gorda)
+- [x] Análise estética (score, classificação, proporções por grupo)
+- [x] Simetria bilateral com detecção de assimetrias
+- [x] Pontos fortes e fracos (prioridades de desenvolvimento)
+- [x] Metas de 12 meses (proporções trimestrais + composição mensal)
+- [x] Insights do Vitrúvio (texto gerado por IA)
+- [x] Stepper de progresso Diagnóstico → Treino → Dieta
+
+### Pendências
+- [ ] Exportar PDF
+- [ ] Botão Regenerar diagnóstico
+
+---
+
+**VITRU IA - Plano de Evolução: Etapa 1 - Diagnóstico v1.1**
