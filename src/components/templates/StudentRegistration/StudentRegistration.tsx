@@ -127,9 +127,9 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
             setCreatedAtletaId(atleta.id);
             setIsSubmitting(false);
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('[Cadastro Rápido] ❌ Erro:', err);
-            setSubmitError(err.message || 'Erro ao cadastrar aluno.');
+            setSubmitError(err instanceof Error ? err.message : 'Erro ao cadastrar aluno.');
             setIsSubmitting(false);
         }
     };

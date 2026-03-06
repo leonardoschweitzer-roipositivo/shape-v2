@@ -211,7 +211,7 @@ export const AssessmentResults: React.FC<AssessmentResultsProps> = ({
                         {tabs.map(tab => (
                             <button
                                 key={tab.id}
-                                onClick={() => setActiveTab(tab.id as any)}
+                                onClick={() => setActiveTab(tab.id as never)}
                                 style={tokenStyles.tabButton(activeTab === tab.id)}
                             >
                                 {tab.label}

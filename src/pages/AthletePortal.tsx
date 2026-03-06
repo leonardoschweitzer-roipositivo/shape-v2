@@ -50,14 +50,14 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
     const [scoreGeral, setScoreGeral] = useState<ScoreGeral | null>(null)
     const [graficoEvolucao, setGraficoEvolucao] = useState<GraficoEvolucaoData | null>(null)
     const [proporcoes, setProporcoes] = useState<ProporcaoResumo[]>([])
-    const [historicoAvaliacoes, setHistoricoAvaliacoes] = useState<any[]>([])
+    const [historicoAvaliacoes, setHistoricoAvaliacoes] = useState<Record<string, unknown>[]>([])
     const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
     const [dadosBasicos, setDadosBasicos] = useState<DadosBasicos | null>(null)
     const [personal, setPersonal] = useState<MeuPersonal | null>(null)
     const [proximoTreino, setProximoTreino] = useState<ProximoTreino | null>(null)
     const [lastPeso, setLastPeso] = useState<number | undefined>(undefined)
     const [showRefeicaoModal, setShowRefeicaoModal] = useState(false)
-    const [avaliacaoDados, setAvaliacaoDados] = useState<any>(null)
+    const [avaliacaoDados, setAvaliacaoDados] = useState<any | null>(null)
     const [avaliacaoLoading, setAvaliacaoLoading] = useState(false)
 
     // Timers de exercícios persistidos via sessionStorage (sobrevive a troca de aba/rota)
@@ -175,7 +175,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
             reportouDor: false,
             treinoIndex: todayData?.treino?.indiceTreino,
             ...(exerciciosDetalhes.length > 0 ? { exercicios: exerciciosDetalhes } : {}),
-        } as any, dataOverride)
+        } as never, dataOverride)
         clearExercicioTimers() // Reset timers após completar
         // Refresh today data
         if (ctx) {

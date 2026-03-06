@@ -78,7 +78,7 @@ export function SelfMeasurements({ atletaId, atletaNome, sexo, onSave, onBack }:
         setValues(prev => ({ ...prev, [key]: value }));
     };
 
-    const filledCount = Object.values(values).filter(v => v && parseFloat(v as any) > 0).length;
+    const filledCount = Object.values(values).filter(v => v && parseFloat(String(v)) > 0).length;
     const totalFields = FIELDS.length;
     const progress = Math.round((filledCount / totalFields) * 100);
 
@@ -86,7 +86,7 @@ export function SelfMeasurements({ atletaId, atletaNome, sexo, onSave, onBack }:
         setSaving(true);
         const numericValues: Record<string, number> = {};
         for (const [key, val] of Object.entries(values)) {
-            const num = parseFloat(val as any);
+            const num = parseFloat(String(val));
             if (!isNaN(num) && num > 0) {
                 numericValues[key] = num;
             }

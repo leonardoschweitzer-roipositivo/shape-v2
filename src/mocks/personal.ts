@@ -413,7 +413,7 @@ export function getPersonalDetails(personalId: string, academiaId: string): Deta
     const alunosOrdenados = [...alunos].sort((a, b) => b.score - a.score)
     const topAlunos = alunosOrdenados.slice(0, 5).map((aluno, index) => ({
         posicao: index + 1,
-        medalha: (index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : undefined) as any,
+        medalha: (index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : undefined) as never,
         aluno: {
             id: aluno.id,
             nome: aluno.nome,

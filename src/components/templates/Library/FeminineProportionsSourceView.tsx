@@ -343,7 +343,7 @@ export const FeminineProportionsSourceView: React.FC<FeminineProportionsSourceVi
                                 key={key}
                                 {...bt}
                                 active={activeBodyType === key}
-                                onClick={() => setActiveBodyType(key as any)}
+                                onClick={() => setActiveBodyType(key as never)}
                             />
                         ))}
                     </div>

@@ -41,11 +41,11 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 // Sign Up Flow
                 const { error: signUpError } = await signUp(email, password, {
                     fullName,
-                    role: profile.toUpperCase() as any
+                    role: profile.toUpperCase() as 'PERSONAL' | 'ATLETA' | 'ACADEMIA'
                 });
 
                 if (signUpError) {
-                    throw new Error(signUpError.message);
+                    throw new Error(signUpError instanceof Error ? signUpError.message : String(signUpError));
                 }
 
                 alert('Cadastro realizado! Verifique seu email para confirmar.');
@@ -62,8 +62,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 // For now, let's keep the onLogin prop for callback compatibility
                 onLogin(profile);
             }
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Erro ao autenticar');
         } finally {
             setIsLoading(false);
         }

@@ -100,7 +100,7 @@ function getGenerateModel(): GenerativeModel | null {
  * @param prompt - Prompt completo (system + contexto + instrução)
  * @returns JSON parseado ou null se falhar
  */
-export async function gerarConteudoIA<T = any>(prompt: string): Promise<T | null> {
+export async function gerarConteudoIA<T = unknown>(prompt: string): Promise<T | null> {
     const aiModel = getGenerateModel()
 
     if (!aiModel) {
@@ -127,11 +127,9 @@ export async function gerarConteudoIA<T = any>(prompt: string): Promise<T | null
         const parsed = JSON.parse(cleaned) as T
         console.info('[VitruviusAI] ✅ Conteúdo IA gerado com sucesso')
         return parsed
-    } catch (error: any) {
-        console.error('[VitruviusAI] ❌ Erro na geração:', error?.message || error)
-        if (error?.response) {
-            console.error('[VitruviusAI] ❌ Detalhes:', error.response)
-        }
+    } catch (error: unknown) {
+        const errMsg = error instanceof Error ? error.message : String(error);
+        console.error('[VitruviusAI] ❌ Erro na geração:', errMsg)
         return null
     }
 }

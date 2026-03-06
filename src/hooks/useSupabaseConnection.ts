@@ -41,8 +41,8 @@ export function useSupabaseConnection() {
             } else {
                 setIsConnected(true)
             }
-        } catch (err: any) {
-            setError(err.message || 'Erro ao conectar')
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Erro ao conectar')
             setIsConnected(false)
         } finally {
             setLoading(false)

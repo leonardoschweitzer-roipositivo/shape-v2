@@ -457,7 +457,7 @@ export function CardTreino({ treino, proximoTreino, exerciciosFeitos, exercicioT
                                                                         : ex.foco?.toLowerCase().includes('perna') || ex.foco?.toLowerCase().includes('coxa') ? 'quadriceps'
                                                                             : ex.foco?.toLowerCase().includes('glut') ? 'gluteos'
                                                                                 : ex.foco?.toLowerCase().includes('abd') ? 'abdomen'
-                                                                                    : 'peito') as any,
+                                                                                    : 'peito') as never,
                                                     nivel: 'intermediario',
                                                     em_breve: true,
                                                     ativo: true,

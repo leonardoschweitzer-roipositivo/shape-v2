@@ -206,7 +206,7 @@ export const PersonalCoachView: React.FC<PersonalCoachViewProps> = ({ onStartDia
                 ]);
 
                 setSavedPlans({
-                    diagnostico: { exists: !!diag, createdAt: (diag as any)?.geradoEm },
+                    diagnostico: { exists: !!diag, createdAt: ((diag as any)).geradoEm },
                     treino: { exists: !!treino },
                     dieta: { exists: !!dieta },
                 });

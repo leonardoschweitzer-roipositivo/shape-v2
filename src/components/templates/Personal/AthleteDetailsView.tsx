@@ -70,7 +70,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
     const [openAccordion, setOpenAccordion] = useState<string | null>('basics');
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
-    const [evolutionPlans, setEvolutionPlans] = useState<any[]>([]);
+    const [evolutionPlans, setEvolutionPlans] = useState<Record<string, unknown>[]>([]);
     const [loadingPlans, setLoadingPlans] = useState(false);
 
     // Portal do Aluno
@@ -178,7 +178,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
 
             // Buscar o plano local para pegar IDs dos filhos (se disponíveis via join)
             const plano = evolutionPlans.find(p => p.id === planoId);
-            const deletePromises: Promise<any>[] = [];
+            const deletePromises: Promise<unknown>[] = [];
 
             // 1. Delete por ID direto (dos filhos encontrados no join)
             if (plano?.planos_treino?.length > 0) {

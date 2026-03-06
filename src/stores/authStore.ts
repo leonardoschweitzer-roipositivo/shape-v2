@@ -31,8 +31,8 @@ interface AuthState {
     error: string | null;
 
     // Actions
-    signIn: (email: string, password: string) => Promise<{ error: any }>;
-    signUp: (email: string, password: string, additionalData?: { fullName: string; role: UserRole }) => Promise<{ error: any }>;
+    signIn: (email: string, password: string) => Promise<{ error: unknown }>;
+    signUp: (email: string, password: string, additionalData?: { fullName: string; role: UserRole }) => Promise<{ error: unknown }>;
     signOut: () => Promise<void>;
     checkSession: () => Promise<void>;
     loadEntityData: (userId: string, role: UserRole) => Promise<void>;
@@ -130,8 +130,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                 });
             }
             return { error: null };
-        } catch (err: any) {
-            set({ error: err.message, isLoading: false });
+        } catch (err: unknown) {
+            set({ error: err instanceof Error ? err.message : 'Erro desconhecido', isLoading: false });
             return { error: err };
         }
     },
@@ -156,8 +156,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
             set({ isLoading: false });
             return { error: null };
-        } catch (err: any) {
-            set({ error: err.message, isLoading: false });
+        } catch (err: unknown) {
+            set({ error: err instanceof Error ? err.message : 'Erro desconhecido', isLoading: false });
             return { error: err };
         }
     },
