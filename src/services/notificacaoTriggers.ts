@@ -339,3 +339,55 @@ export async function onContextoPreenchido(atletaId: string): Promise<void> {
         grupo_id: `contexto-preenchido-${atletaId}`,
     })
 }
+
+/**
+ * Disparar quando aluno registra agua, sono, peso, ou refeição rápico.
+ */
+export async function onRegistroRapido(
+    atletaId: string,
+    dados: { tipo: string; valor: string | number }
+): Promise<void> {
+    const nome = await buscarNomeAtleta(atletaId)
+
+    const labelMap: Record<string, string> = {
+        agua: '💧 Água',
+        sono: '💤 Sono',
+        peso: '⚖️ Peso',
+        refeicao: '🍽️ Refeição',
+    }
+
+    const iconeLabel = labelMap[dados.tipo] || dados.tipo
+
+    await criarNotificacaoParaAtleta(atletaId, {
+        tipo: 'REGISTRO_RAPIDO',
+        categoria: 'portal',
+        prioridade: 'normal',
+        titulo: `${iconeLabel}: <strong>${nome}</strong> atualizou um registro`,
+        mensagem: `Novo registro de ${dados.tipo}: ${dados.valor}`,
+        dados: { tipo: dados.tipo, valor: dados.valor },
+        acao_url: `/athlete-details/${atletaId}`,
+        acao_label: 'Ver detalhes →',
+        grupo_id: `registro-rapido-${atletaId}-${new Date().toISOString().slice(0, 10)}`,
+    })
+}
+
+/**
+ * Disparar quando aluno deixa um feedback escrito do treino/dia.
+ */
+export async function onFeedbackTreino(
+    atletaId: string,
+    dados: { texto: string; alerta: boolean }
+): Promise<void> {
+    const nome = await buscarNomeAtleta(atletaId)
+
+    await criarNotificacaoParaAtleta(atletaId, {
+        tipo: 'FEEDBACK_TREINO',
+        categoria: 'portal',
+        prioridade: dados.alerta ? 'alerta' : 'normal',
+        titulo: `💬 <strong>${nome}</strong> mandou um feedback`,
+        mensagem: dados.texto.length > 100 ? dados.texto.substring(0, 100) + '...' : dados.texto,
+        dados: { texto: dados.texto, alerta: dados.alerta },
+        acao_url: `/athlete-details/${atletaId}`,
+        acao_label: 'Ver detalhes →',
+    })
+}

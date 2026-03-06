@@ -209,6 +209,11 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
             gordura: macros.gordura,
         })
 
+        import('../services/notificacaoTriggers').then(({ onRegistroRapido }) => {
+            onRegistroRapido(atletaId, { tipo: 'refeicao', valor: macros.descricao || `${macros.calorias} kcal` }).catch(err => console.warn('[AthletePortal] Erro ao notificar registro rápido:', err))
+        })
+
+
         // Atualizar macros consumidos na tela HOJE
         if (todayData) {
             setTodayData({
@@ -239,6 +244,11 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
     const handleTrackerClick = async (tipo: string) => {
         if (tipo === 'agua') {
             await registrarTracker(atletaId, 'agua', { quantidade: 250 }) // 250ml
+
+            import('../services/notificacaoTriggers').then(({ onRegistroRapido }) => {
+                onRegistroRapido(atletaId, { tipo: 'agua', valor: '250ml' }).catch(err => console.warn('[AthletePortal] Erro ao notificar registro rápido:', err))
+            })
+
             if (ctx) {
                 const today = await montarDadosHoje(ctx)
                 setTodayData(today)
@@ -249,6 +259,11 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
             const horas = prompt('Quantas horas dormiu ontem à noite?', '7')
             if (horas && !isNaN(Number(horas))) {
                 await registrarTracker(atletaId, 'sono', { quantidade: Number(horas) })
+
+                import('../services/notificacaoTriggers').then(({ onRegistroRapido }) => {
+                    onRegistroRapido(atletaId, { tipo: 'sono', valor: `${horas}h` }).catch(err => console.warn('[AthletePortal] Erro ao notificar registro rápido:', err))
+                })
+
                 if (ctx) {
                     const today = await montarDadosHoje(ctx)
                     setTodayData(today)
@@ -260,6 +275,11 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
             const peso = prompt('Qual seu peso hoje? (kg)', '94')
             if (peso && !isNaN(Number(peso))) {
                 await registrarTracker(atletaId, 'peso', { quantidade: Number(peso) })
+
+                import('../services/notificacaoTriggers').then(({ onRegistroRapido }) => {
+                    onRegistroRapido(atletaId, { tipo: 'peso', valor: `${peso} kg` }).catch(err => console.warn('[AthletePortal] Erro ao notificar registro rápido:', err))
+                })
+
                 if (ctx) {
                     const today = await montarDadosHoje(ctx)
                     setTodayData(today)

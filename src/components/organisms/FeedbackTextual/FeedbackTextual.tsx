@@ -44,36 +44,15 @@ export function FeedbackTextual({ atletaId }: FeedbackTextualProps) {
             alerta: ehAlerta,
         })
 
-        // Se for alerta, notificar o personal
-        if (ehAlerta) {
-            try {
-                const { notificacaoService } = await import('@/services/notificacao.service')
-                const { supabase } = await import('@/services/supabase')
-
-                // Buscar personal_id do atleta
-                const { data: atleta } = await supabase
-                    .from('atletas')
-                    .select('personal_id, nome')
-                    .eq('id', atletaId)
-                    .single()
-
-                if (atleta) {
-                    const atletaTyped = atleta as unknown as { personal_id: string; nome: string };
-                    await notificacaoService.criar({
-                        personal_id: atletaTyped.personal_id,
-                        atleta_id: atletaId,
-                        tipo: 'DOR_REPORTADA',
-                        categoria: 'portal',
-                        prioridade: 'urgente',
-                        titulo: `⚠️ <strong>${atletaTyped.nome}</strong> reportou algo que requer atenção`,
-                        mensagem: texto.trim().substring(0, 200),
-                        acao_url: `/athlete-details/${atletaId}`,
-                        acao_label: 'Ver detalhes →',
-                    })
-                }
-            } catch (err) {
-                console.warn('[FeedbackTextual] Erro ao notificar alerta:', err)
-            }
+        // Notificar o personal em todo feedback (com flag de alerta se necessário)
+        try {
+            const { onFeedbackTreino } = await import('@/services/notificacaoTriggers')
+            await onFeedbackTreino(atletaId, {
+                texto: texto.trim(),
+                alerta: ehAlerta
+            })
+        } catch (err) {
+            console.warn('[FeedbackTextual] Erro ao notificar personal:', err)
         }
 
         setEnviando(false)
