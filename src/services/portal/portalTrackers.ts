@@ -43,14 +43,17 @@ export async function completarTreino(
         ...dados,
     }, dataOverride);
 
-    // Disparar notificação para o Personal (fire-and-forget)
+    // Disparar notificação para o Personal (await garante execução no mobile)
     if (result) {
-        import('../notificacaoTriggers').then(({ onTreinoCompleto }) => {
-            onTreinoCompleto(atletaId, {
+        try {
+            const { onTreinoCompleto } = await import('../notificacaoTriggers')
+            await onTreinoCompleto(atletaId, {
                 duracao: dados.duracao ? `${dados.duracao}min` : undefined,
                 personalId
-            }).catch(err => console.warn('[completarTreino] Erro ao notificar:', err));
-        });
+            })
+        } catch (err) {
+            console.warn('[completarTreino] Erro ao notificar:', err)
+        }
     }
 
     return result;
@@ -71,11 +74,14 @@ export async function pularTreino(
         continuarHoje,
     });
 
-    // Disparar notificação para o Personal (fire-and-forget)
+    // Disparar notificação para o Personal (await garante execução no mobile)
     if (result) {
-        import('../notificacaoTriggers').then(({ onTreinoPulado }) => {
-            onTreinoPulado(atletaId, { personalId, continuarHoje }).catch(err => console.warn('[pularTreino] Erro ao notificar:', err));
-        });
+        try {
+            const { onTreinoPulado } = await import('../notificacaoTriggers')
+            await onTreinoPulado(atletaId, { personalId, continuarHoje })
+        } catch (err) {
+            console.warn('[pularTreino] Erro ao notificar:', err)
+        }
     }
 
     return result;

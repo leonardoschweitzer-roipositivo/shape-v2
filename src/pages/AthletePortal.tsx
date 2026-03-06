@@ -233,13 +233,17 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
             gordura: macros.gordura,
         })
 
-        import('../services/notificacaoTriggers').then(({ onRegistroRapido }) => {
-            onRegistroRapido(atletaId, {
+        // Notificar personal (await garante execução no mobile)
+        try {
+            const { onRegistroRapido } = await import('../services/notificacaoTriggers')
+            await onRegistroRapido(atletaId, {
                 tipo: 'refeicao',
                 valor: macros.descricao || `${macros.calorias} kcal`,
                 personalId: ctx?.personalId
-            }).catch(err => console.warn('[AthletePortal] Erro ao notificar registro rápido:', err))
-        })
+            })
+        } catch (err) {
+            console.warn('[AthletePortal] Erro ao notificar registro rápido:', err)
+        }
 
 
         // Atualizar macros consumidos na tela HOJE
@@ -280,37 +284,46 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
         if (tipo === 'agua') {
             await registrarTracker(atletaId, 'agua', { quantidade: Number(valor) })
 
-            import('../services/notificacaoTriggers').then(({ onRegistroRapido }) => {
-                onRegistroRapido(atletaId, {
+            try {
+                const { onRegistroRapido } = await import('../services/notificacaoTriggers')
+                await onRegistroRapido(atletaId, {
                     tipo: 'agua',
                     valor: `${valor}ml`,
                     personalId: ctx?.personalId
-                }).catch(err => console.warn('[AthletePortal] Erro ao notificar registro rápido:', err))
-            })
+                })
+            } catch (err) {
+                console.warn('[AthletePortal] Erro ao notificar registro rápido:', err)
+            }
         }
 
         if (tipo === 'sono') {
             await registrarTracker(atletaId, 'sono', { quantidade: Number(valor) })
 
-            import('../services/notificacaoTriggers').then(({ onRegistroRapido }) => {
-                onRegistroRapido(atletaId, {
+            try {
+                const { onRegistroRapido } = await import('../services/notificacaoTriggers')
+                await onRegistroRapido(atletaId, {
                     tipo: 'sono',
                     valor: `${valor}h`,
                     personalId: ctx?.personalId
-                }).catch(err => console.warn('[AthletePortal] Erro ao notificar registro rápido:', err))
-            })
+                })
+            } catch (err) {
+                console.warn('[AthletePortal] Erro ao notificar registro rápido:', err)
+            }
         }
 
         if (tipo === 'peso') {
             await registrarTracker(atletaId, 'peso', { quantidade: Number(valor) })
 
-            import('../services/notificacaoTriggers').then(({ onRegistroRapido }) => {
-                onRegistroRapido(atletaId, {
+            try {
+                const { onRegistroRapido } = await import('../services/notificacaoTriggers')
+                await onRegistroRapido(atletaId, {
                     tipo: 'peso',
                     valor: `${valor} kg`,
                     personalId: ctx?.personalId
-                }).catch(err => console.warn('[AthletePortal] Erro ao notificar registro rápido:', err))
-            })
+                })
+            } catch (err) {
+                console.warn('[AthletePortal] Erro ao notificar registro rápido:', err)
+            }
         }
 
         if (tipo === 'dor') {
@@ -320,14 +333,16 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                 local,
             })
 
-            // Notificar personal sobre dor reportada (fire-and-forget)
-            import('../services/notificacaoTriggers').then(({ onDorReportada }) => {
-                onDorReportada(atletaId, {
+            try {
+                const { onDorReportada } = await import('../services/notificacaoTriggers')
+                await onDorReportada(atletaId, {
                     local,
                     intensidade: Number(valor),
                     personalId: ctx?.personalId
-                }).catch(err => console.warn('[AthletePortal] Erro ao notificar dor:', err))
-            })
+                })
+            } catch (err) {
+                console.warn('[AthletePortal] Erro ao notificar dor:', err)
+            }
         }
 
         if (ctx) {
