@@ -47,7 +47,7 @@ export const BodyFatChart = ({ method = 'marinha', data: propData, meta = 8.0 }:
                         itemStyle={{ fontSize: '10px', fontWeight: 'bold', color: '#fff' }}
                         labelStyle={{ display: 'none' }}
                         cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }}
-                        formatter={(value: number) => [`${value.toFixed(2)}%`, method === 'marinha' ? 'B.F. (Marinha)' : 'B.F. (Pollock)']}
+                        formatter={((value: number) => [`${value.toFixed(2)}%`, method === 'marinha' ? 'B.F. (Marinha)' : 'B.F. (Pollock)']) as never}
                     />
                     <Area
                         type="monotone"

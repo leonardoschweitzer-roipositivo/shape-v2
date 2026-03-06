@@ -173,6 +173,7 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
     /** Gera o diagnóstico (mesmo input determinístico do DiagnosticoView) */
     /** Gera o diagnóstico usando helper compartilhado */
     const gerarDiag = (pot: PotencialAtleta): DiagnosticoDados => {
+        if (!ultimaAvaliacao) throw new Error('No assessment available');
         return gerarDiagnosticoLocal(
             atleta,
             ultimaAvaliacao.measurements as Record<string, unknown>,
@@ -185,11 +186,12 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
 
     /** Gera o plano de treino — pipeline completo: Potencial → Diagnóstico → Treino */
     const handleGerar = () => {
+        if (!ultimaAvaliacao) return;
         setEstado('generating');
         setTimeout(() => {
             // 1. Calcular potencial do atleta (contexto + classificação)
             const classificacao = getClassificacao(atleta.score);
-            const pot = calcularPotencialAtleta(classificacao, atleta.score, atleta.contexto);
+            const pot = calcularPotencialAtleta(classificacao, atleta.score, atleta.contexto ?? undefined);
             setPotencial(pot);
 
             // 2. Reanalisar diagnóstico com o potencial (score meta dinâmico)
@@ -211,13 +213,13 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
             setObjetivoAtleta(rec.objetivo);
 
             // 4. Gerar treino consumindo o potencial como fonte única + objetivo + contexto + sexo
-            const resultado = gerarPlanoTreino(atletaId, atleta.name, diag, pot, rec.objetivo, atleta.contexto, atleta.gender === 'FEMALE' ? 'F' : 'M');
+            const resultado = gerarPlanoTreino(atletaId, atleta.name, diag, pot, rec.objetivo, atleta.contexto ?? undefined, atleta.gender === 'FEMALE' ? 'F' : 'M');
             setPlano(resultado);
             setEstado('ready');
 
             // Enriquecer com IA em background
             setIaEnriching(true);
-            const perfil = buildPerfilIA(atleta.name, atleta.gender, atleta.birthDate, ultimaAvaliacao.measurements as Record<string, number>, ultimaAvaliacao.bf ?? 15, atleta.score, atleta.contexto);
+            const perfil = buildPerfilIA(atleta.name, atleta.gender, atleta.birthDate, ultimaAvaliacao.measurements as Record<string, number>, ultimaAvaliacao.bf ?? 15, atleta.score, atleta.contexto ?? undefined);
             console.info('[TreinoView] 🚀 Iniciando enriquecimento IA...');
             enriquecerTreinoComIA(resultado, perfil)
                 .then(enriquecido => {
@@ -265,7 +267,7 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
         setIaEnriching(true);
 
         try {
-            const perfil = buildPerfilIA(atleta.name, atleta.gender, atleta.birthDate, ultimaAvaliacao.measurements as Record<string, number>, ultimaAvaliacao.bf ?? 15, atleta.score, atleta.contexto);
+            const perfil = buildPerfilIA(atleta.name, atleta.gender, atleta.birthDate, ultimaAvaliacao!.measurements as Record<string, number>, ultimaAvaliacao!.bf ?? 15, atleta.score, atleta.contexto ?? undefined);
 
             const diretrizes = await extrairDiretrizesDoChat(atletaId, 'treino');
             if (diretrizes) {
@@ -470,7 +472,7 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
                                 score: atleta.score,
                                 classificacao: atleta.score >= 90 ? 'ELITE' : atleta.score >= 80 ? 'AVANÇADO' : atleta.score >= 70 ? 'ATLÉTICO' : atleta.score >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE',
                                 medidas: (ultimaAvaliacao?.measurements as Record<string, number>) || {},
-                                contexto: atleta.contexto as Record<string, unknown>,
+                                contexto: atleta.contexto as unknown as Record<string, unknown>,
                             })}
                             fontesCientificas={getFontesCientificas('treino')}
                         />

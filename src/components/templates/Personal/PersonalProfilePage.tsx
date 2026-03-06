@@ -141,8 +141,8 @@ export const PersonalProfilePage: React.FC = () => {
         cref: entity.personal?.cref || 'Não cadastrado',
         specialties: [], // futuramente: vir do banco
         bio: 'Personal trainer dedicado à transformação física e bem-estar dos alunos.',
-        whatsapp: entity.personal?.telefone || null,
-        instagram: null,
+        whatsapp: entity.personal?.telefone ?? undefined,
+        instagram: undefined,
         createdAt: new Date().toISOString(),
         stats: {
             totalAthletes: personalAthletes.length,

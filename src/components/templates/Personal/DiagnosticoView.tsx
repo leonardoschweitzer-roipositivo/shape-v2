@@ -55,6 +55,7 @@ import { supabase } from '@/services/supabase';
 import { ScoreWidget } from '@/components/organisms/AssessmentCards/ScoreWidget';
 import { colors } from '@/tokens';
 import { type ContextoAtleta } from './AthleteContextSection';
+import { getClassificacao } from './PlanoEvolucaoHelpers';
 import { gerarConteudoIA } from '@/services/vitruviusAI';
 import { type PerfilAtletaIA, perfilParaTexto, getFontesCientificas, diagnosticoParaTexto } from '@/services/vitruviusContext';
 import { buildAnaliseContextoPrompt } from '@/services/vitruviusPrompts';
@@ -187,7 +188,7 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
             });
             setRecomendacao(rec);
             // Em modo leitura, o objetivo selecionado é o objetivo atual do atleta (ou o recomendado como fallback)
-            setObjetivoSelecionado((atleta as unknown as Record<string, string>).objetivo || rec.objetivo);
+            setObjetivoSelecionado(((atleta as unknown as Record<string, string>).objetivo || rec.objetivo) as ObjetivoVitruvio);
         }
     }, [isReadOnly, diagnostico, atleta, ultimaAvaliacao, ratioEfetivo, recomendacao]);
 
@@ -215,7 +216,7 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
             score: scoreEfetivo,
             classificacao: scoreEfetivo >= 90 ? 'ELITE' : scoreEfetivo >= 80 ? 'AVANÇADO' : scoreEfetivo >= 70 ? 'ATLÉTICO' : scoreEfetivo >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE',
             medidas: m as Record<string, number>,
-            contexto: atleta.contexto as Record<string, unknown>,
+            contexto: atleta.contexto as unknown as Record<string, unknown>,
         };
 
         const perfilTexto = perfilParaTexto(perfil);
@@ -237,6 +238,7 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
 
     /** Gera diagnóstico a partir dos dados reais do atleta */
     const handleGerar = () => {
+        if (!m) return; // Guard: sem medidas, não gerar diagnóstico
         setEstado('generating');
 
         // Alias para facilitar mapeamento se vierem como peito/braco etc
@@ -251,44 +253,41 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                 sexo: atleta.gender === 'FEMALE' ? 'F' : 'M',
                 gorduraPct: ultimaAvaliacao?.bf ?? 15,
                 score: scoreEfetivo,
-                classificacao: scoreEfetivo >= 90 ? 'ELITE' : scoreEfetivo >= 80 ? 'AVANÇADO' : scoreEfetivo >= 70 ? 'ATLÉTICO' : scoreEfetivo >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE',
+                classificacao: getClassificacao(scoreEfetivo),
                 ratio: ratioEfetivo,
                 freqTreino: 5,
                 nivelAtividade: 'SEDENTARIO',
-                usaAnabolizantes: atleta.contexto?.medicacoesUso?.descricao ? true : false,
+                usaAnabolizantes: !!((atleta.contexto as unknown as Record<string, unknown>)?.medicacoes),
                 usaTermogenicos: false,
                 nomeAtleta: atleta.name,
                 medidas: {
                     ombros: m.shoulders,
                     cintura: m.waist,
-                    peitoral: m.chest || anyM.peito,
-                    costas: anyM.costas || m.chest || (m.shoulders * 0.9),
-                    bracoD: m.armRight || anyM.braco,
-                    bracoE: m.armLeft || anyM.braco,
-                    antebracoD: m.forearmRight || anyM.antebraco,
-                    antebracoE: m.forearmLeft || anyM.antebraco,
-                    coxaD: m.thighRight || anyM.coxa,
-                    coxaE: m.thighLeft || anyM.coxa,
-                    panturrilhaD: m.calfRight || anyM.panturrilha,
-                    panturrilhaE: m.calfLeft || anyM.panturrilha,
-                    punho: m.wrist || atleta.punho || 17.5,
-                    joelho: m.knee || anyM.joelho || 38,
-                    tornozelo: m.ankle || atleta.tornozelo || 22,
-                    pelvis: m.pelvis || anyM.pelvis || m.waist * 1.1,
-                    pescoco: m.neck || anyM.pescoco || 40,
+                    peitoral: m.chest || (anyM.peito as number),
+                    costas: (anyM.costas as number) || m.chest || (m.shoulders * 0.9),
+                    bracoD: m.armRight || (anyM.braco as number),
+                    bracoE: m.armLeft || (anyM.braco as number),
+                    antebracoD: m.forearmRight || (anyM.antebraco as number),
+                    antebracoE: m.forearmLeft || (anyM.antebraco as number),
+                    coxaD: m.thighRight || (anyM.coxa as number),
+                    coxaE: m.thighLeft || (anyM.coxa as number),
+                    panturrilhaD: m.calfRight || (anyM.panturrilha as number),
+                    panturrilhaE: m.calfLeft || (anyM.panturrilha as number),
+                    punho: (anyM.wrist as number) || 17.5,
+                    joelho: (anyM.knee as number) || 38,
+                    tornozelo: (anyM.ankle as number) || 22,
+                    pelvis: m.pelvis || (anyM.pelvis as number) || m.waist * 1.1,
+                    pescoco: m.neck || (anyM.pescoco as number) || 40,
                 },
                 // Se a avaliação já tem proporções gravadas, usar diretamente (zero discrepância)
                 proporcoesPreCalculadas: Array.isArray(ultimaAvaliacao?.proporcoes) ? ultimaAvaliacao.proporcoes : undefined,
             };
 
             // Pipeline completo: Potencial → Diagnóstico reanalisado
-            const classificacao = scoreEfetivo >= 90 ? 'ELITE'
-                : scoreEfetivo >= 80 ? 'AVANÇADO'
-                    : scoreEfetivo >= 70 ? 'ATLÉTICO'
-                        : scoreEfetivo >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE';
-            const potencial = calcularPotencialAtleta(classificacao, scoreEfetivo, atleta.contexto);
+            const classificacao = getClassificacao(scoreEfetivo);
+            const potencial = calcularPotencialAtleta(classificacao, scoreEfetivo, atleta.contexto ?? undefined);
             // Corrigir com valores reais do contexto (não mais hardcoded)
-            input.nivelAtividade = inferirNivelAtividade(atleta.contexto);
+            input.nivelAtividade = inferirNivelAtividade(atleta.contexto ?? undefined);
             input.freqTreino = potencial.frequenciaSemanal;
             const resultado = gerarDiagnosticoCompleto(input, potencial);
 
@@ -323,7 +322,7 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                 score: input.score,
                 classificacao: input.classificacao,
                 medidas: input.medidas as Record<string, number>,
-                contexto: atleta.contexto as Record<string, unknown>,
+                contexto: atleta.contexto as unknown as Record<string, unknown>,
             };
             console.info('[DiagnosticoView] 🚀 Iniciando enriquecimento IA...');
             enriquecerDiagnosticoComIA(resultado, perfil)
@@ -407,7 +406,7 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                 score: atleta.score,
                 classificacao: classificacao,
                 medidas: (ultimaAvaliacao?.measurements as Record<string, number>) || {},
-                contexto: atleta.contexto as Record<string, unknown>,
+                contexto: atleta.contexto as unknown as Record<string, unknown>,
             };
 
             const diretrizes = await extrairDiretrizesDoChat(atletaId, 'diagnostico');
@@ -585,7 +584,7 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                             <SecaoMetas
                                 dados={isEditingDiag && editDiag ? editDiag : diagnostico}
                                 nomeAtleta={atleta.name}
-                                medidas={(diagnostico as Record<string, unknown>)?._medidas}
+                                medidas={(diagnostico as unknown as Record<string, unknown>)?._medidas}
                                 isEditing={isEditingDiag}
                                 onUpdateData={updateEditDiag}
                             />
@@ -681,7 +680,7 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                                 score: atleta.score,
                                 classificacao: atleta.score >= 90 ? 'ELITE' : atleta.score >= 80 ? 'AVANÇADO' : atleta.score >= 70 ? 'ATLÉTICO' : atleta.score >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE',
                                 medidas: (ultimaAvaliacao?.measurements as Record<string, number>) || {},
-                                contexto: atleta.contexto as Record<string, unknown>,
+                                contexto: atleta.contexto as unknown as Record<string, unknown>,
                             })}
                             fontesCientificas={getFontesCientificas('diagnostico')}
                         />

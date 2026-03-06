@@ -330,8 +330,8 @@ export const Evolution: React.FC<EvolutionProps> = ({
 
         const lower = [
             mapMeasure('Cintura', 'waist'),
-            mapMeasure('Abdom.', 'abdomen'),
-            mapMeasure('Quadril', 'hips' as string),
+            mapMeasure('Abdom.', 'abdomen' as 'waist'),
+            mapMeasure('Quadril', 'hips'),
             {
                 name: 'Coxa (D)',
                 inicio: first?.thighRight || 0,
@@ -613,7 +613,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
                 {viewMode === 'charts' ? (
                     <>
                         {/* 1. SECTION: KPIs Summary */}
-                        <PeriodSummary period={currentPeriod} kpis={currentKPIs} />
+                        <PeriodSummary period={currentPeriod} kpis={currentKPIs as never} />
 
                         <div className="h-px w-full bg-white/5 my-2" />
 
@@ -762,7 +762,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
                                     </div>
 
                                     <div className="w-full h-[200px] mt-4">
-                                        <WeightChart data={weightData} selectedMetric={selectedWeightMetric as string} />
+                                        <WeightChart data={weightData} selectedMetric={selectedWeightMetric as 'all' | 'total' | 'lean' | 'fat'} />
                                     </div>
 
                                     <div className="flex gap-3 justify-center mt-6">
@@ -805,9 +805,9 @@ export const Evolution: React.FC<EvolutionProps> = ({
 
                         {/* 5. SECTION: Asymmetry */}
                         <AsymmetrySection
-                            data={asymmetryData}
-                            history={asymmetryHistory}
-                            recommendation={asymmetryRecommendation || MOCK_ASYMMETRY_REC}
+                            data={asymmetryData as import('@/components/molecules/AsymmetrySection/AsymmetrySection').AsymmetryData[]}
+                            history={asymmetryHistory as import('@/components/molecules/AsymmetrySection/AsymmetrySection').AsymmetryHistory[]}
+                            recommendation={(asymmetryRecommendation || MOCK_ASYMMETRY_REC) as import('@/components/molecules/AsymmetrySection/AsymmetrySection').AsymmetryRecommendation}
                         />
 
                         {/* 6. SECTION: Linear Measures Evolution */}
@@ -854,8 +854,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
                     </>
                 ) : (
                     <AssessmentList
-                        assessments={assessments}
-                        onConsult={undefined}
+                        assessments={assessments as never}
                     />
                 )}
 

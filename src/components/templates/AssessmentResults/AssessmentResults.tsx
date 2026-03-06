@@ -72,7 +72,7 @@ const tokenStyles = {
     tabsContainer: {
         width: '100%',
         overflowX: 'auto' as const,
-        WebkitOverflowScrolling: 'touch',
+        WebkitOverflowScrolling: 'touch' as const,
         scrollbarWidth: 'thin' as const
     },
     tabsScroll: {

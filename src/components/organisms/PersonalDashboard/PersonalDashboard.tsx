@@ -194,7 +194,7 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({ onAtletaCl
                         setAtletaSelecionado(null)
                     }}
                     atleta={atletaSelecionado}
-                    historico={[]}
+                    historico={[] as unknown as import('@/types/daily-tracking').DailyTrackingHistory}
                 />
             )}
         </div>

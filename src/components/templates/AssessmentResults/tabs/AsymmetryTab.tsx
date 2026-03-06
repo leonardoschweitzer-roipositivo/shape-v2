@@ -238,7 +238,7 @@ export const AsymmetryTab: React.FC<AsymmetryTabProps> = ({ assessment }) => {
                                 leftVal={item.leftVal}
                                 rightVal={item.rightVal}
                                 diff={item.diff}
-                                status={item.status as string}
+                                status={item.status as 'high' | 'moderate' | 'symmetrical'}
                             />
                             {/* AI insight per group */}
                             {assimetriasIA?.analisePorGrupo?.[item.id] && (

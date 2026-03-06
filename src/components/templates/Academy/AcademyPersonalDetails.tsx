@@ -388,7 +388,7 @@ export const AcademyPersonalDetails: React.FC<AcademyPersonalDetailsProps> = ({
 
                             <select
                                 value={ordenarPor}
-                                onChange={(e) => setOrdenarPor(e.target.value as string)}
+                                onChange={(e) => setOrdenarPor(e.target.value as 'score_desc' | 'nome_asc')}
                                 className="bg-white/5 border border-white/10 text-white rounded-xl py-2 px-4 text-xs font-bold uppercase tracking-wider focus:outline-none focus:border-primary/50 transition-all appearance-none cursor-pointer"
                             >
                                 <option value="score_desc">Classificar: Score</option>

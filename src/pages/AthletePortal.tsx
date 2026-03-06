@@ -119,7 +119,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                     buscarProporcoes(atletaId),
                     buscarHistoricoAvaliacoes(atletaId),
                     buscarMensagensChat(atletaId),
-                    buscarDadosPersonal(ctx.personalId),
+                    buscarDadosPersonal(ctx?.personalId ?? ''),
                     buscarDadosAvaliacao(atletaId),
                 ])
 
@@ -310,7 +310,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
             altura: ctx?.ficha?.altura,
             peso: lastPeso || ctx?.ficha?.peso,
             gorduraPct: ctx?.ficha?.gordura_percentual,
-            score: scoreGeral?.scoreAtual,
+            score: scoreGeral?.score,
             objetivo: ctx?.ficha?.objetivo,
             personalNome: ctx?.personalNome,
             // Dados de hoje

@@ -288,7 +288,7 @@ export const DesignSystem: React.FC = () => {
               <RadarChart />
             </GlassPanel>
             <GlassPanel className="p-4 rounded-2xl h-[350px]">
-              <BodyFatGauge />
+              <BodyFatGauge value={15} />
             </GlassPanel>
             <GlassPanel className="p-4 rounded-2xl h-[350px]">
               <AsymmetryRadar />

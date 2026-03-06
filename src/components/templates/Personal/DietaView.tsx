@@ -185,15 +185,16 @@ export const DietaView: React.FC<DietaViewProps> = ({
     }
 
     const handleGerar = () => {
+        if (!ultimaAvaliacao) return;
         setEstado('generating');
         setTimeout(() => {
             // 1. Calcular Potencial
             const classificacao = getClassificacao(atleta.score);
-            const pot = calcularPotencialAtleta(classificacao, atleta.score, atleta.contexto);
+            const pot = calcularPotencialAtleta(classificacao, atleta.score, atleta.contexto ?? undefined);
             setPotencial(pot);
 
             // 2. Calcular Diagnóstico (usando helper compartilhado)
-            const nivelAtiv = inferirNivelAtividade(atleta.contexto);
+            const nivelAtiv = inferirNivelAtividade(atleta.contexto ?? undefined);
             const input = buildDiagnosticoInput(
                 atleta,
                 ultimaAvaliacao.measurements as Record<string, unknown>,
@@ -220,13 +221,13 @@ export const DietaView: React.FC<DietaViewProps> = ({
             setObjetivoAtleta(rec.objetivo);
 
             // 4. Gerar Plano de Dieta (passando o objetivo Estrela do Norte + contexto do atleta)
-            const resultado = gerarPlanoDieta(atletaId, atleta.name, diag, pot, rec.objetivo, atleta.contexto);
+            const resultado = gerarPlanoDieta(atletaId, atleta.name, diag, pot, rec.objetivo, atleta.contexto ?? undefined);
             setPlano(resultado);
             setEstado('ready');
 
             // Enriquecer com IA em background
             setIaEnriching(true);
-            const perfil = buildPerfilIA(atleta.name, atleta.gender, atleta.birthDate, ultimaAvaliacao.measurements as Record<string, number>, ultimaAvaliacao.bf ?? 15, atleta.score, atleta.contexto);
+            const perfil = buildPerfilIA(atleta.name, atleta.gender, atleta.birthDate, ultimaAvaliacao.measurements as Record<string, number>, ultimaAvaliacao.bf ?? 15, atleta.score, atleta.contexto ?? undefined);
             console.info('[DietaView] 🚀 Iniciando enriquecimento IA...');
             enriquecerDietaComIA(resultado, perfil)
                 .then(enriquecido => {
@@ -833,7 +834,7 @@ export const DietaView: React.FC<DietaViewProps> = ({
                                 score: atleta.score,
                                 classificacao: atleta.score >= 90 ? 'ELITE' : atleta.score >= 80 ? 'AVANÇADO' : atleta.score >= 70 ? 'ATLÉTICO' : atleta.score >= 60 ? 'INTERMEDIÁRIO' : 'INICIANTE',
                                 medidas: (ultimaAvaliacao?.measurements as Record<string, number>) || {},
-                                contexto: atleta.contexto as Record<string, unknown>,
+                                contexto: atleta.contexto as unknown as Record<string, unknown>,
                             })}
                             fontesCientificas={getFontesCientificas('dieta')}
                         />

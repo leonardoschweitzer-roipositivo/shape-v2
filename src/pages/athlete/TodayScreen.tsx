@@ -65,8 +65,8 @@ export function TodayScreen({
             <HeaderIdentidade
                 nome={data.atleta.nome}
                 sexo={sexo === 'M' ? 'MASCULINO' : 'FEMININO'}
-                altura={altura}
-                peso={peso}
+                altura={altura ?? 0}
+                peso={peso ?? 0}
                 fotoUrl={undefined}
                 personalNome={personalNome}
                 personalRanking={3}

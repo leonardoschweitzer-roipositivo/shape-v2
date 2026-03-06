@@ -12,7 +12,7 @@ interface CardScoreGeralProps {
     score: ScoreGeral
 }
 
-const CLASSIFICATION_COLORS = {
+const CLASSIFICATION_COLORS: Record<string, string> = {
     'INICIANTE': 'text-gray-400',
     'EVOLUINDO': 'text-blue-400',
     'QUASE LÁ': 'text-yellow-400',

@@ -11,7 +11,7 @@ export const generateGeneralAnalysis = (contexto: ContextoAtleta | null | undefi
         return `O atleta encontra-se em um ${scoreText} (Score: ${score}). No entanto, a ausência de dados de contexto impossibilita uma análise de riscos e lifestyle. Recomenda-se preencher a ficha para personalizar as próximas etapas de treino e dieta.`;
     }
 
-    const insights = [];
+    const insights: string[] = [];
 
     // Saúde e Lesões (Prioridade Máxima)
     if ((contexto.problemas_saude && contexto.problemas_saude.toLowerCase() !== 'nenhum') ||

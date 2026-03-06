@@ -171,7 +171,7 @@ export const ProportionsTab: React.FC<ProportionsTabProps> = ({
             gorduraPct: 15, // fallback
             score: profile?.latestScore?.overall || 0,
             classificacao: 'N/A',
-            medidas: activeMeasurements as Record<string, number>,
+            medidas: activeMeasurements as unknown as Record<string, number>,
             contexto: athlete?.contexto as unknown as Record<string, unknown>,
         };
 

@@ -58,7 +58,7 @@ export const ScoreGeralAvaliacao = memo(function ScoreGeralAvaliacao({
 
     let textoPenalizacao = ''
     if (diferencaScore > 0) {
-        const motivos = []
+        const motivos: string[] = []
         if (penalizacoes?.cintura && penalizacoes.cintura < 1.0) motivos.push('Cintura')
         if (penalizacoes?.vTaper && penalizacoes.vTaper < 1.0) motivos.push('V-Taper')
 

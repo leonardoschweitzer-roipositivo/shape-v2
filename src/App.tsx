@@ -243,7 +243,7 @@ const App: React.FC = () => {
         studentName: profile?.name || 'Atleta',
         gender: profile?.gender === 'FEMALE' ? 'female' : 'male',
         assessment: assessment,
-        birthDate: profile?.birthDate || existingAthlete?.birthDate,
+        birthDate: (profile?.birthDate || existingAthlete?.birthDate) as string | undefined,
         athleteId: athleteId
       });
     } else if (data.studentName && data.gender) {
@@ -366,7 +366,7 @@ const App: React.FC = () => {
     setCurrentView('dashboard');
   };
 
-  const handleQuickLogin = (user: Record<string, unknown>) => {
+  const handleQuickLogin = (_user: unknown) => {
     // Legacy mock login support for DebugAccess
     // In a real scenario, this would likely bypass AuthStore or mock it
     // For now we just don't use it or implement a mockSignIn in AuthStore

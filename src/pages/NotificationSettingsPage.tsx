@@ -78,7 +78,7 @@ export function NotificationSettingsPage({ onBack }: NotificationSettingsPagePro
         setConfig({
             ...config,
             [section]: {
-                ...(config[section] as Record<string, unknown>),
+                ...(config[section] as unknown as Record<string, unknown>),
                 [field]: value,
             },
         })
@@ -125,8 +125,8 @@ export function NotificationSettingsPage({ onBack }: NotificationSettingsPagePro
                     onClick={handleSave}
                     disabled={saving}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${saved
-                            ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                            : 'bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20'
+                        ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                        : 'bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20'
                         }`}
                 >
                     {saving ? (

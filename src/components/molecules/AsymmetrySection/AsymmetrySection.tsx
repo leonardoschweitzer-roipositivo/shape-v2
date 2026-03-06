@@ -37,7 +37,7 @@ export interface AsymmetrySectionProps {
 const STATUS_CONFIG = {
     symmetric: {
         color: '#10B981',
-        icon: <CheckCircle2 size={14} weight="fill" />,
+        icon: <CheckCircle2 size={14} />,
         label: 'simétrico',
         bg: 'bg-green-500/10'
     },

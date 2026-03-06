@@ -11,7 +11,7 @@ interface ListaProporcoesResumoProps {
     proporcoes: ProporcaoResumo[]
 }
 
-const CLASSIFICATION_COLORS = {
+const CLASSIFICATION_COLORS: Record<string, string> = {
     'INICIANTE': 'bg-gray-500',
     'EVOLUINDO': 'bg-blue-500',
     'QUASE LÁ': 'bg-yellow-500',

@@ -78,8 +78,8 @@ export const AssessmentScreen = memo(function AssessmentScreen({
             <HeaderIdentidade
                 nome={nomeAtleta || 'Atleta'}
                 sexo={sexo === 'M' ? 'MASCULINO' : 'FEMININO'}
-                altura={altura}
-                peso={peso}
+                altura={altura ?? 0}
+                peso={peso ?? 0}
                 fotoUrl={undefined}
                 personalNome={personalNome}
                 personalRanking={3}

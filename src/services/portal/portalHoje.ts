@@ -337,7 +337,7 @@ export async function montarDadosHoje(ctx: PortalContext): Promise<TodayScreenDa
 
     // Se ele já completou/pulou um treino HOJE, queremos renderizar exatamente esse treino
     // na tela (para mostrar o card verde de "COMPLETO" ou card laranja de "PULADO").
-    let indiceRender = undefined;
+    let indiceRender: number | undefined = undefined;
     if (jaFezTreinoHoje) {
         indiceRender = (typeof dHoje.treinoIndex === 'number') ? dHoje.treinoIndex : lastCompletedIndex;
     }

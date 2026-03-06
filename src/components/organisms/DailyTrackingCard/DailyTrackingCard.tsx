@@ -165,7 +165,7 @@ export const DailyTrackingCard: React.FC<DailyTrackingCardProps> = ({
                     <DailyTrackerHeader
                         nomeAtleta={nomeAtleta}
                         streak={resumoDiario.streakAtual}
-                        nivel={nivelAtual}
+                        nivel={nivelAtual as never}
                         xpSystem={xpSystem}
                     />
                 </div>

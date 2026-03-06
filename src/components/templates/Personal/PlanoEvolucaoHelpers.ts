@@ -76,7 +76,7 @@ export function buildDiagnosticoInput(
         birthDate?: string;
         score: number;
         ratio?: number;
-        contexto?: Record<string, unknown>;
+        contexto?: unknown;
     },
     measurements: Record<string, unknown>,
     bf: number,
@@ -100,14 +100,15 @@ export function buildDiagnosticoInput(
         gorduraPct: bf,
         score: atleta.score,
         classificacao,
-        ratio: atleta.ratio,
+        ratio: atleta.ratio ?? 0,
         freqTreino: potencial.frequenciaSemanal,
         nivelAtividade: nivelAtividade as DiagnosticoInput['nivelAtividade'],
-        usaAnabolizantes: /testosterona|trt|anaboliz|durateston/i.test(
-            (atleta.contexto?.medicacoesUso as Record<string, string>)?.descricao
-            || (atleta.contexto?.medicacoes as string)
-            || ''
-        ),
+        usaAnabolizantes: (() => {
+            const ctx = atleta.contexto as Record<string, unknown> | undefined;
+            const medUso = ctx?.medicacoesUso as Record<string, string> | undefined;
+            const medStr = ctx?.medicacoes as string | undefined;
+            return /testosterona|trt|anaboliz|durateston/i.test(medUso?.descricao || medStr || '');
+        })(),
         usaTermogenicos: false,
         nomeAtleta: atleta.name,
         medidas: {
@@ -143,7 +144,7 @@ export function gerarDiagnosticoLocal(
         birthDate?: string;
         score: number;
         ratio?: number;
-        contexto?: Record<string, unknown>;
+        contexto?: unknown;
     },
     measurements: Record<string, unknown>,
     bf: number,
