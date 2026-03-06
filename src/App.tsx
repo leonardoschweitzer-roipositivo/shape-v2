@@ -964,7 +964,12 @@ const App: React.FC = () => {
     );
   }
 
-  // Portal do Personal via URL (/personal/:personalId)
+  if (!isAuthenticated) {
+    // Se é URL do portalPersonal e usuário não autenticado, redireciona para login
+    return <Login onLogin={() => { }} />;
+  }
+
+  // Portal do Personal via URL (/personal/:personalId) — requer auth p/ RLS funcionar
   if (personalPortalId) {
     return (
       <Suspense fallback={
@@ -981,10 +986,6 @@ const App: React.FC = () => {
         />
       </Suspense>
     );
-  }
-
-  if (!isAuthenticated) {
-    return <Login onLogin={() => { }} />;
   }
 
   return (

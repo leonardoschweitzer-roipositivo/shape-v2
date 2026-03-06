@@ -190,11 +190,31 @@ export async function buscarFichaAluno(atletaId: string): Promise<FichaAlunoResu
     const scoreSemanaAnterior = medidas[1]?.score_shape_v ?? 0
     const evolucaoSemana = Math.round((scoreAtual - scoreSemanaAnterior) * 10) / 10
 
-    // Proporções resumidas a partir da última medição
+    const penultima = medidas[1] // medição anterior para comparação
+
+    // Proporções resumidas a partir da última medição (com valor anterior para comparação)
     const proporcoes: ProporçãoResumo[] = ultima ? [
-        { nome: 'Ombros', valor: ultima.ombros ?? 0, meta: 135, percentual: Math.min(100, Math.round(((ultima.ombros ?? 0) / 135) * 100)) },
-        { nome: 'Peito', valor: ultima.peito ?? 0, meta: 120, percentual: Math.min(100, Math.round(((ultima.peito ?? 0) / 120) * 100)) },
-        { nome: 'Cintura', valor: ultima.cintura ?? 0, meta: 80, percentual: Math.min(100, Math.round(((ultima.cintura ?? 0) / 80) * 100)) },
+        {
+            nome: 'Ombros',
+            valor: ultima.ombros ?? 0,
+            valorAnterior: penultima?.ombros ?? 0,
+            meta: 135,
+            percentual: Math.min(100, Math.round(((ultima.ombros ?? 0) / 135) * 100))
+        },
+        {
+            nome: 'Peito',
+            valor: ultima.peito ?? 0,
+            valorAnterior: penultima?.peito ?? 0,
+            meta: 120,
+            percentual: Math.min(100, Math.round(((ultima.peito ?? 0) / 120) * 100))
+        },
+        {
+            nome: 'Cintura',
+            valor: ultima.cintura ?? 0,
+            valorAnterior: penultima?.cintura ?? 0,
+            meta: 80,
+            percentual: Math.min(100, Math.round(((ultima.cintura ?? 0) / 80) * 100))
+        },
     ].filter(p => p.valor > 0) : []
 
     // Streak e check-ins (simplificado — busca registros do mês)

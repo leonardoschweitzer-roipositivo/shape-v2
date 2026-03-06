@@ -6,14 +6,22 @@
  */
 
 import React from 'react'
-import { Users, AlertTriangle, Activity, ChevronRight, Clock } from 'lucide-react'
+import { Users, AlertTriangle, Activity, ChevronRight, Clock, Bell } from 'lucide-react'
 import type { AlunoCard, AtividadeRecente, PersonalPortalContext } from '@/types/personal-portal'
+import type { Notificacao } from '@/types/notificacao.types'
+import { PRIORIDADE_CONFIG } from '@/types/notificacao.types'
 
 interface HomeScreenProps {
     contexto: PersonalPortalContext
     alunosAtencao: AlunoCard[]
     atividadeRecente: AtividadeRecente[]
     onAbrirAluno: (alunoId: string) => void
+    notificacoesRecentes?: Notificacao[]   // últimas não lidas
+    onVerAlertas?: () => void
+}
+
+function stripHtml(html: string): string {
+    return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim()
 }
 
 function formatarTempo(isoDate: string): string {
@@ -26,7 +34,7 @@ function formatarTempo(isoDate: string): string {
     return `Há ${d} dias`
 }
 
-export function HomeScreen({ contexto, alunosAtencao, atividadeRecente, onAbrirAluno }: HomeScreenProps) {
+export function HomeScreen({ contexto, alunosAtencao, atividadeRecente, onAbrirAluno, notificacoesRecentes = [], onVerAlertas }: HomeScreenProps) {
     const saudacao = () => {
         const hora = new Date().getHours()
         if (hora < 12) return 'Bom dia'
@@ -113,6 +121,48 @@ export function HomeScreen({ contexto, alunosAtencao, atividadeRecente, onAbrirA
                     <div className="text-emerald-400 text-2xl mb-2">✅</div>
                     <p className="text-emerald-400 text-sm font-semibold">Todos os alunos em dia!</p>
                     <p className="text-gray-500 text-xs mt-1">Nenhum aluno precisa de atenção agora.</p>
+                </div>
+            )}
+
+            {/* Alertas Recentes (não lidos) */}
+            {notificacoesRecentes.length > 0 && (
+                <div className="mb-5">
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                            <Bell size={14} className="text-[var(--color-gold)]" />
+                            <p className="text-gray-300 text-xs font-bold uppercase tracking-wider">
+                                Alertas Recentes
+                            </p>
+                        </div>
+                        {onVerAlertas && (
+                            <button onClick={onVerAlertas} className="text-[var(--color-gold)] text-xs font-semibold flex items-center gap-0.5">
+                                Ver todos <ChevronRight size={12} />
+                            </button>
+                        )}
+                    </div>
+                    <div className="bg-[#111827] rounded-2xl border border-white/5 overflow-hidden">
+                        {notificacoesRecentes.slice(0, 3).map((notif, idx) => {
+                            const prioConfig = PRIORIDADE_CONFIG[notif.prioridade]
+                            return (
+                                <button
+                                    key={notif.id}
+                                    onClick={() => notif.atleta_id && onAbrirAluno(notif.atleta_id)}
+                                    className={`w-full flex items-start gap-3 p-3.5 text-left hover:bg-white/5 transition-colors ${idx < Math.min(3, notificacoesRecentes.length) - 1 ? 'border-b border-white/5' : ''}`}
+                                >
+                                    <span className="text-base shrink-0 mt-0.5">{prioConfig.icone}</span>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-white text-xs font-semibold leading-snug truncate">
+                                            {stripHtml(notif.titulo)}
+                                        </p>
+                                        <p className="text-gray-500 text-[11px] mt-0.5 leading-relaxed line-clamp-1">
+                                            {stripHtml(notif.mensagem)}
+                                        </p>
+                                    </div>
+                                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-gold)] shrink-0 mt-1.5" />
+                                </button>
+                            )
+                        })}
+                    </div>
                 </div>
             )}
 

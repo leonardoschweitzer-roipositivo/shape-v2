@@ -141,21 +141,48 @@ Responda APENAS com o insight em português brasileiro, sem saudação, sem form
                 {ficha.proporcoes.length > 0 && (
                     <div className="bg-[#111827] rounded-2xl p-4 border border-white/5">
                         <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-3">📐 Proporções</p>
-                        <div className="space-y-3">
-                            {ficha.proporcoes.map(prop => (
-                                <div key={prop.nome}>
-                                    <div className="flex justify-between items-center mb-1">
-                                        <span className="text-gray-300 text-sm">{prop.nome}</span>
-                                        <span className="text-white text-sm font-semibold">{prop.valor} cm</span>
+                        <div className="space-y-4">
+                            {ficha.proporcoes.map(prop => {
+                                const delta = prop.valorAnterior > 0 ? +(prop.valor - prop.valorAnterior).toFixed(1) : null
+                                const cresceu = delta !== null && delta > 0
+                                const diminuiu = delta !== null && delta < 0
+                                return (
+                                    <div key={prop.nome}>
+                                        <div className="flex justify-between items-center mb-1.5">
+                                            <span className="text-gray-300 text-sm">{prop.nome}</span>
+                                            <div className="flex items-center gap-2">
+                                                {/* Medidas lineares: anterior → atual */}
+                                                {prop.valorAnterior > 0 ? (
+                                                    <span className="text-gray-500 text-xs font-mono">
+                                                        {prop.valorAnterior}cm
+                                                        <span className="mx-1 text-gray-600">→</span>
+                                                        <span className={cresceu ? 'text-emerald-400' : diminuiu ? 'text-red-400' : 'text-white'}>
+                                                            {prop.valor}cm
+                                                        </span>
+                                                        {delta !== null && delta !== 0 && (
+                                                            <span className={`ml-1 text-[10px] font-bold ${cresceu ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                                ({cresceu ? '+' : ''}{delta})
+                                                            </span>
+                                                        )}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-white text-sm font-semibold">{prop.valor} cm</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-[var(--color-gold)] rounded-full transition-all"
+                                                style={{ width: `${Math.min(100, prop.percentual)}%` }}
+                                            />
+                                        </div>
+                                        <div className="flex justify-between mt-0.5">
+                                            <span className="text-gray-600 text-[10px]">{prop.percentual}% do ideal</span>
+                                            <span className="text-gray-600 text-[10px]">meta: {prop.meta}cm</span>
+                                        </div>
                                     </div>
-                                    <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                        <div
-                                            className="h-full bg-[var(--color-gold)] rounded-full transition-all"
-                                            style={{ width: `${Math.min(100, prop.percentual)}%` }}
-                                        />
-                                    </div>
-                                </div>
-                            ))}
+                                )
+                            })}
                         </div>
                     </div>
                 )}

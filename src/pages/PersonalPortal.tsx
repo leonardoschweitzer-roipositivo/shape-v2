@@ -27,6 +27,7 @@ import type {
     AlunoCard,
     AtividadeRecente,
 } from '@/types/personal-portal'
+import type { Notificacao } from '@/types/notificacao.types'
 
 interface PersonalPortalProps {
     personalId: string
@@ -44,6 +45,7 @@ export function PersonalPortal({ personalId, onLogout }: PersonalPortalProps) {
     const [alunos, setAlunos] = useState<AlunoCard[]>([])
     const [atividade, setAtividade] = useState<AtividadeRecente[]>([])
     const [alertasNaoLidos, setAlertasNaoLidos] = useState(0)
+    const [notificacoesRecentes, setNotificacoesRecentes] = useState<Notificacao[]>([])
 
     // Estado de aluno selecionado (para navegação de Alertas → Ficha)
     const [alunoSelecionadoId, setAlunoSelecionadoId] = useState<string | null>(null)
@@ -63,14 +65,16 @@ export function PersonalPortal({ personalId, onLogout }: PersonalPortalProps) {
     useEffect(() => {
         if (!contexto) return
         async function loadSecondary() {
-            const [alunosData, atividadeData, naoLidas] = await Promise.all([
+            const [alunosData, atividadeData, { data: notifsData }] = await Promise.all([
                 listarAlunos(personalId),
                 buscarAtividadeRecente(personalId),
-                notificacaoService.contarNaoLidas(personalId),
+                notificacaoService.buscar(personalId, { limit: 10 }),
             ])
             setAlunos(alunosData)
             setAtividade(atividadeData)
-            setAlertasNaoLidos(naoLidas)
+            const naoLidas = notifsData.filter(n => !n.lida)
+            setNotificacoesRecentes(naoLidas.slice(0, 5))
+            setAlertasNaoLidos(naoLidas.length)
         }
         loadSecondary()
     }, [contexto, personalId])
@@ -103,6 +107,8 @@ export function PersonalPortal({ personalId, onLogout }: PersonalPortalProps) {
                         alunosAtencao={alunosAtencao}
                         atividadeRecente={atividade}
                         onAbrirAluno={handleAbrirAluno}
+                        notificacoesRecentes={notificacoesRecentes}
+                        onVerAlertas={() => setActiveTab('alertas')}
                     />
                 )
             case 'alunos':

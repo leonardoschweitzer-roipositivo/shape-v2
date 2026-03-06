@@ -40,7 +40,6 @@ interface CardMetasTrimestReProps {
         gorduraPct: number;
     };
     medidas: MedidasAtuais;
-    onVerPlano?: () => void;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -192,9 +191,9 @@ function ItemProporção({
                 <span className="text-base">{emoji}</span>
                 <span className="text-white font-bold text-sm uppercase tracking-wider">{label}</span>
                 <span className={`ml-auto text-xs font-bold px-2 py-0.5 rounded-full ${pct >= 90 ? 'bg-emerald-500/20 text-emerald-400' :
-                        pct >= 75 ? 'bg-blue-500/20 text-blue-400' :
-                            pct >= 50 ? 'bg-amber-500/20 text-amber-400' :
-                                'bg-red-500/20 text-red-400'
+                    pct >= 75 ? 'bg-blue-500/20 text-blue-400' :
+                        pct >= 50 ? 'bg-amber-500/20 text-amber-400' :
+                            'bg-red-500/20 text-red-400'
                     }`}>
                     {pct}% do ideal
                 </span>
@@ -258,7 +257,6 @@ export function CardMetasTrimestre({
     diagnosticoDados,
     composicaoAtual,
     medidas,
-    onVerPlano,
 }: CardMetasTrimestReProps) {
     const { metasProporcoes, metasComposicao, analiseEstetica } = diagnosticoDados;
 
@@ -385,15 +383,6 @@ export function CardMetasTrimestre({
                     </div>
                 )}
 
-                {/* CTA */}
-                {onVerPlano && (
-                    <button
-                        onClick={onVerPlano}
-                        className="mt-5 w-full flex items-center justify-center gap-2 text-indigo-400 hover:text-indigo-300 text-xs font-bold uppercase tracking-widest transition-colors py-2 border border-indigo-500/20 hover:border-indigo-500/40 rounded-xl hover:bg-indigo-500/5"
-                    >
-                        Ver Plano Completo →
-                    </button>
-                )}
             </div>
         </div>
     );

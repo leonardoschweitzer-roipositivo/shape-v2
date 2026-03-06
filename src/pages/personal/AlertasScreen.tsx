@@ -19,6 +19,11 @@ interface AlertasScreenProps {
 
 type GrupoData = 'hoje' | 'ontem' | 'semana' | 'antigas'
 
+/** Remove tags HTML que possam vir no texto das notificações */
+function stripHtml(html: string): string {
+    return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim()
+}
+
 function classificarData(iso: string): GrupoData {
     const diff = Date.now() - new Date(iso).getTime()
     const h = diff / 3600000
@@ -158,11 +163,11 @@ export function AlertasScreen({ personalId, onAbrirAluno, onAtualizarContador }:
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-start justify-between gap-2">
                                                         <p className={`text-sm font-semibold leading-snug ${!notif.lida ? 'text-white' : 'text-gray-300'}`}>
-                                                            {notif.titulo}
+                                                            {stripHtml(notif.titulo)}
                                                         </p>
                                                         <span className="text-gray-600 text-[11px] shrink-0">{formatarHora(notif.created_at)}</span>
                                                     </div>
-                                                    <p className="text-gray-500 text-xs mt-0.5 leading-relaxed">{notif.mensagem}</p>
+                                                    <p className="text-gray-500 text-xs mt-0.5 leading-relaxed">{stripHtml(notif.mensagem)}</p>
                                                 </div>
 
                                                 {/* Ponto não lida */}

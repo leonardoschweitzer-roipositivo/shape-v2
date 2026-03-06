@@ -29,9 +29,10 @@ export interface AlunoCard {
 
 export interface ProporçãoResumo {
     nome: string
-    valor: number
+    valor: number         // valor atual em cm
+    valorAnterior: number // valor anterior (0 se não tem histórico)
     meta: number
-    percentual: number // 0-100
+    percentual: number    // 0-100 relativo à meta
 }
 
 export interface FichaAlunoResumo {

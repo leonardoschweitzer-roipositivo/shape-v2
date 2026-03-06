@@ -332,7 +332,7 @@ export const portalService = {
                     classificacao_geral: (classif?.nivel as string) || '',
                     results: av.results,
                     measurements: av.measurements,
-                    gordura: Number(comp?.gorduraPct) || 0,
+                    gordura: Number(comp?.gorduraPct) || Number(av.body_fat) || 0,
                     ratio: av.ratio,
                     peso: av.weight,
                 };
