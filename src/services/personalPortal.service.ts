@@ -259,7 +259,7 @@ export async function buscarFichaAluno(atletaId: string): Promise<FichaAlunoResu
 
     const ficha = fichaData?.[0]
 
-    // 3. Buscar medidas e assessments em paralelo
+    // 3. Buscar medidas e assessments em paralelo  
     const [{ data: medidasData }, { data: assessData }] = await Promise.all([
         supabase
             .from('medidas')
@@ -269,44 +269,71 @@ export async function buscarFichaAluno(atletaId: string): Promise<FichaAlunoResu
             .limit(5),
         supabase
             .from('assessments')
-            .select('score, date, created_at')
+            .select('score, date, created_at, measurements')
             .eq('atleta_id', atletaId)
             .order('date', { ascending: false })
             .limit(2),
     ])
 
     const medidas = medidasData ?? []
-    const assessments = assessData ?? []
+    const assessments = (assessData ?? []) as { score: number | null; date: string; created_at: string; measurements?: Record<string, unknown> }[]
     const ultima = medidas[0]
     const penultima = medidas[1]
 
     // Score: prioridade para assessments
-    const scoreAtual = (assessments[0] as { score: number | null })?.score ?? ultima?.score ?? 0
-    const scoreSemanaAnterior = (assessments[1] as { score: number | null })?.score ?? penultima?.score ?? 0
+    const scoreAtual = assessments[0]?.score ?? ultima?.score ?? 0
+    const scoreSemanaAnterior = assessments[1]?.score ?? penultima?.score ?? 0
     const evolucaoSemana = Math.round((scoreAtual - scoreSemanaAnterior) * 10) / 10
 
+    // Extrair medidas lineares: primeiro tenta tabela medidas, senão cai para assessments.measurements.linear
+    let ombrosAtual = ultima?.ombros ?? 0
+    let peitoralAtual = ultima?.peitoral ?? 0
+    let cinturaAtual = ultima?.cintura ?? 0
+    let ombrosAnterior = penultima?.ombros ?? 0
+    let peitoralAnterior = penultima?.peitoral ?? 0
+    let cinturaAnterior = penultima?.cintura ?? 0
+
+    // Fallback: se medidas lineares estão zeradas, buscar de assessments.measurements.linear
+    if (ombrosAtual === 0 && peitoralAtual === 0 && cinturaAtual === 0 && assessments.length > 0) {
+        const linear0 = (assessments[0]?.measurements as { linear?: Record<string, number> })?.linear
+        const linear1 = assessments.length > 1
+            ? (assessments[1]?.measurements as { linear?: Record<string, number> })?.linear
+            : undefined
+
+        if (linear0) {
+            ombrosAtual = linear0.shoulders ?? 0
+            peitoralAtual = linear0.chest ?? 0
+            cinturaAtual = linear0.waist ?? 0
+        }
+        if (linear1) {
+            ombrosAnterior = linear1.shoulders ?? 0
+            peitoralAnterior = linear1.chest ?? 0
+            cinturaAnterior = linear1.waist ?? 0
+        }
+    }
+
     // Proporções resumidas com valor anterior para comparação
-    const proporcoes: ProporçãoResumo[] = ultima ? [
+    const proporcoes: ProporçãoResumo[] = (ombrosAtual > 0 || peitoralAtual > 0 || cinturaAtual > 0) ? [
         {
             nome: 'Ombros',
-            valor: ultima.ombros ?? 0,
-            valorAnterior: penultima?.ombros ?? 0,
+            valor: ombrosAtual,
+            valorAnterior: ombrosAnterior,
             meta: 135,
-            percentual: Math.min(100, Math.round(((ultima.ombros ?? 0) / 135) * 100))
+            percentual: Math.min(100, Math.round((ombrosAtual / 135) * 100))
         },
         {
             nome: 'Peitoral',
-            valor: ultima.peitoral ?? 0,
-            valorAnterior: penultima?.peitoral ?? 0,
+            valor: peitoralAtual,
+            valorAnterior: peitoralAnterior,
             meta: 120,
-            percentual: Math.min(100, Math.round(((ultima.peitoral ?? 0) / 120) * 100))
+            percentual: Math.min(100, Math.round((peitoralAtual / 120) * 100))
         },
         {
             nome: 'Cintura',
-            valor: ultima.cintura ?? 0,
-            valorAnterior: penultima?.cintura ?? 0,
+            valor: cinturaAtual,
+            valorAnterior: cinturaAnterior,
             meta: 80,
-            percentual: Math.min(100, Math.round(((ultima.cintura ?? 0) / 80) * 100))
+            percentual: Math.min(100, Math.round((cinturaAtual / 80) * 100))
         },
     ].filter(p => p.valor > 0) : []
 
