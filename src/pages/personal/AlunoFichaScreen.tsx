@@ -5,9 +5,11 @@
  */
 
 import React, { useEffect, useState } from 'react'
-import { ChevronLeft, TrendingUp, TrendingDown, Flame, Trophy, Loader2, Sparkles } from 'lucide-react'
+import { ChevronLeft, TrendingUp, TrendingDown, Flame, Trophy, Loader2, Sparkles, Camera, User } from 'lucide-react'
 import type { FichaAlunoResumo } from '@/types/personal-portal'
 import { buscarFichaAluno } from '@/services/personalPortal.service'
+import { atletaService } from '@/services/atleta.service'
+import { storageService } from '@/services/storage.service'
 import { gerarConteudoIA } from '@/services/vitruviusAI'
 
 interface AlunoFichaScreenProps {
@@ -36,13 +38,42 @@ export function AlunoFichaScreen({ alunoId, onVoltar }: AlunoFichaScreenProps) {
     const [loading, setLoading] = useState(true)
     const [insightLoading, setInsightLoading] = useState(false)
     const [insight, setInsight] = useState<string | null>(null)
+    const [uploading, setUploading] = useState(false)
+    const [fotoUrl, setFotoUrl] = useState<string | null>(null)
 
     useEffect(() => {
         buscarFichaAluno(alunoId).then(data => {
             setFicha(data)
+            setFotoUrl(data?.fotoUrl ?? null)
             setLoading(false)
         })
     }, [alunoId])
+
+    const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file || !ficha) return
+
+        try {
+            setUploading(true)
+
+            // 1. Upload para o Supabase Storage (bucket 'avatars')
+            const fileName = `atleta-${alunoId}-${Date.now()}.jpg`
+            const publicUrl = await storageService.uploadImage('avatars', `atleta-avatars/${fileName}`, file)
+
+            // 2. Atualiza a URL na tabela 'atletas'
+            const atualizado = await atletaService.atualizar(alunoId, { foto_url: publicUrl })
+
+            if (atualizado) {
+                setFotoUrl(publicUrl)
+                // Opcional: Recarregar a ficha se necessário, mas alterar apenas a fotoUrl localmente já melhora UX
+            }
+        } catch (err) {
+            console.error('[AlunoFicha] Erro ao trocar foto:', err)
+            alert('Erro ao carregar a imagem. Verifique se o bucket "avatars" existe no seu Supabase.')
+        } finally {
+            setUploading(false)
+        }
+    }
 
     const gerarInsight = async () => {
         if (!ficha || insightLoading) return
@@ -106,9 +137,43 @@ Responda APENAS com o insight em português brasileiro, sem saudação, sem form
                     <span>Alunos</span>
                 </button>
                 <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-white text-xl font-black">{ficha.nome}</h1>
-                        <p className="text-gray-500 text-xs mt-0.5">{ficha.email}</p>
+                    <div className="flex items-center gap-4">
+                        {/* Avatar com Upload */}
+                        <div className="relative group shrink-0">
+                            <label className="cursor-pointer block">
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={handleAvatarUpload}
+                                    disabled={uploading}
+                                />
+                                <div className="w-14 h-14 rounded-full bg-[var(--color-surface)] flex items-center justify-center border-2 border-white/10 overflow-hidden relative overflow-hidden">
+                                    {uploading ? (
+                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10 text-white animate-spin">
+                                            <Loader2 size={20} />
+                                        </div>
+                                    ) : (
+                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 flex items-center justify-center transition-colors">
+                                            <Camera size={16} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        </div>
+                                    )}
+                                    {fotoUrl ? (
+                                        <img src={fotoUrl} alt={ficha.nome} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <User className="text-gray-600" size={24} />
+                                    )}
+                                </div>
+                                {/* Badge de edição no mobile (Always Visible) */}
+                                <div className="absolute -bottom-1 -right-1 bg-[var(--color-gold)] text-black p-1 rounded-full border-2 border-[#060B18]">
+                                    <Camera size={10} />
+                                </div>
+                            </label>
+                        </div>
+                        <div>
+                            <h1 className="text-white text-xl font-black">{ficha.nome}</h1>
+                            <p className="text-gray-500 text-xs mt-0.5">{ficha.email}</p>
+                        </div>
                     </div>
                     <NivelBadge nivel={ficha.nivel} />
                 </div>
