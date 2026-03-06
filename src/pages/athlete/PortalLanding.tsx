@@ -419,19 +419,6 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
                 </button>
             </div>
 
-            {/* 3.2 Percentual de Gordura */}
-            {bfAtual > 0 && (
-                <CardIndicadorProgresso
-                    label="Percentual de Gordura"
-                    valorAtual={bfAtual}
-                    valorMeta={bfMeta}
-                    valorBasal={bfBasal}
-                    unidade="%"
-                    isInverse={true}
-                    cor="#F59E0B"
-                />
-            )}
-
             {/* 4. Card Metas do Trimestre (baseado no Diagnóstico IA) */}
             {diagTyped && (
                 <CardMetasTrimestre
