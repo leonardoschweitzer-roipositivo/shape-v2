@@ -5,6 +5,7 @@ import type {
     ComparisonMode,
     ProportionRatioSnapshot
 } from '../types';
+import type { ProportionConfig } from '@/types/proportionConfig';
 import {
     GOLDEN_RATIO,
     CLASSIC_PHYSIQUE,
@@ -107,7 +108,7 @@ export const extractProportionRatios = (
     comparisonMode: ComparisonMode
 ): ProportionRatioSnapshot[] => {
     // Select constants based on mode
-    const config = comparisonMode === 'golden' ? GOLDEN_RATIO :
+    const config: ProportionConfig = comparisonMode === 'golden' ? GOLDEN_RATIO :
         comparisonMode === 'classic' ? CLASSIC_PHYSIQUE :
             comparisonMode === 'mens' ? MENS_PHYSIQUE : OPEN_BODYBUILDING;
 
@@ -151,7 +152,7 @@ export const extractProportionRatios = (
 
     // 1. Shape-V (Ombros / Cintura)
     const shapeVAtual = userMeasurements.ombros / userMeasurements.cintura;
-    const shapeVTarget = (config as any).OMBROS_CINTURA || (config as any).PHI || GOLDEN_RATIO.PHI;
+    const shapeVTarget = config.OMBROS_CINTURA || config.PHI || GOLDEN_RATIO.PHI;
     const shapeVPct = getCalibratedPct(shapeVAtual, shapeVTarget, BASELINES['Shape-V']);
     results.push({
         nome: 'Shape-V',
@@ -163,7 +164,7 @@ export const extractProportionRatios = (
 
     // 2. Costas (Costas / Cintura)
     const costasRatio = userMeasurements.costas / userMeasurements.cintura;
-    const costasTarget = (config as any).COSTAS_CINTURA || 1.6;
+    const costasTarget = config.COSTAS_CINTURA || 1.6;
     const costasPct = getCalibratedPct(costasRatio, costasTarget, BASELINES['Costas']);
     results.push({
         nome: 'Costas',
@@ -187,7 +188,7 @@ export const extractProportionRatios = (
 
     // 4. Braço (Braço / Punho)
     const bracoRatio = userMeasurements.braco / userMeasurements.punho;
-    const bracoTarget = (config as any).BRACO_PUNHO || config.PEITO_PUNHO;
+    const bracoTarget = config.BRACO_PUNHO || config.PEITO_PUNHO;
     const bracoPct = getCalibratedPct(bracoRatio, bracoTarget, BASELINES['Braço']);
     results.push({
         nome: 'Braço',
@@ -232,7 +233,7 @@ export const extractProportionRatios = (
         cinturaTarget = GOLDEN_RATIO.CINTURA_PELVIS;
     } else {
         cinturaRatio = userMeasurements.cintura / userMeasurements.altura;
-        cinturaTarget = (config as any).CINTURA_ALTURA;
+        cinturaTarget = config.CINTURA_ALTURA!;
     }
     const cinturaPct = getCalibratedPct(cinturaRatio, cinturaTarget, BASELINES['Cintura'], true);
     results.push({
@@ -245,7 +246,7 @@ export const extractProportionRatios = (
 
     // 8. Coxa (Coxa / Joelho)
     const coxaRatio = userMeasurements.coxa / userMeasurements.joelho;
-    const coxaTarget = (config as any).COXA_JOELHO || 1.75;
+    const coxaTarget = config.COXA_JOELHO || 1.75;
     const coxaPct = getCalibratedPct(coxaRatio, coxaTarget, BASELINES['Coxa']);
     results.push({
         nome: 'Coxa',
@@ -257,7 +258,7 @@ export const extractProportionRatios = (
 
     // 9. Coxa vs Panturrilha
     const legRatio = userMeasurements.coxa / userMeasurements.panturrilha;
-    const legTarget = (config as any).COXA_PANTURRILHA || 1.50;
+    const legTarget = config.COXA_PANTURRILHA || 1.50;
     const legPct = getCalibratedPct(legRatio, legTarget, BASELINES['Coxa vs Pantur.']);
     results.push({
         nome: 'Coxa vs Pantur.',
@@ -272,10 +273,10 @@ export const extractProportionRatios = (
     let pantTarget: number;
     if (comparisonMode === 'golden' || comparisonMode === 'mens') {
         pantRatio = userMeasurements.panturrilha / userMeasurements.tornozelo;
-        pantTarget = (config as any).PANTURRILHA_TORNOZELO;
+        pantTarget = config.PANTURRILHA_TORNOZELO!;
     } else {
         pantRatio = userMeasurements.panturrilha / userMeasurements.braco;
-        pantTarget = (config as any).PANTURRILHA_BRACO;
+        pantTarget = config.PANTURRILHA_BRACO!;
     }
     const pantPct = pantRatio > 0 ? getCalibratedPct(pantRatio, pantTarget, BASELINES['Panturrilha']) : 0;
     results.push({
@@ -290,7 +291,7 @@ export const extractProportionRatios = (
     const upperVolume = userMeasurements.braco + userMeasurements.antebraco;
     const lowerVolume = userMeasurements.coxa + userMeasurements.panturrilha;
     const upperLowerRatio = lowerVolume > 0 ? upperVolume / lowerVolume : 0;
-    const upperLowerTarget = (config as any).UPPER_LOWER_RATIO || 0.75;
+    const upperLowerTarget = config.UPPER_LOWER_RATIO || 0.75;
     const upperLowerPct = getCalibratedPct(upperLowerRatio, upperLowerTarget, BASELINES['Upper vs Lower'], true);
     results.push({
         nome: 'Upper vs Lower',

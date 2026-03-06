@@ -54,14 +54,17 @@ export function derivarTreinoDoDia(plano: PlanoTreino | null, lastCompletedIndex
 
     // Flatten exercícios de todos os blocos
     const todosExercicios = treinoHoje.blocos.flatMap((bloco, bIdx) =>
-        bloco.exercicios.map((ex: any, i: number) => ({
-            id: `ex-${bIdx}-${i}`,
-            nome: ex.nome || ex.exercicio || '',
-            series: ex.series || 0,
-            repeticoes: ex.repeticoes || ex.reps || '',
-            dica: ex.observacao || ex.dica || '',
-            foco: bloco.nomeGrupo || '',
-        }))
+        bloco.exercicios.map((ex, i: number) => {
+            const raw = ex as unknown as Record<string, unknown>;
+            return {
+                id: `ex-${bIdx}-${i}`,
+                nome: ex.nome || (raw.exercicio as string) || '',
+                series: ex.series || 0,
+                repeticoes: ex.repeticoes || (raw.reps as string) || '',
+                dica: ex.observacao || (raw.dica as string) || '',
+                foco: bloco.nomeGrupo || '',
+            };
+        })
     );
 
     return {
@@ -116,13 +119,16 @@ export function derivarProximoTreino(plano: PlanoTreino | null, currentPendingIn
     const letra = (treino as unknown as Record<string, unknown>).letra as string || String.fromCharCode(65 + proximoIndex);
 
     const exercicios = treino.blocos.flatMap((bloco, bIdx) =>
-        bloco.exercicios.map((ex: any, i: number) => ({
-            id: `next-ex-${bIdx}-${i}`,
-            nome: ex.nome || ex.exercicio || '',
-            series: ex.series || 0,
-            repeticoes: ex.repeticoes || ex.reps || '',
-            foco: bloco.nomeGrupo || '',
-        }))
+        bloco.exercicios.map((ex, i: number) => {
+            const raw = ex as unknown as Record<string, unknown>;
+            return {
+                id: `next-ex-${bIdx}-${i}`,
+                nome: ex.nome || (raw.exercicio as string) || '',
+                series: ex.series || 0,
+                repeticoes: ex.repeticoes || (raw.reps as string) || '',
+                foco: bloco.nomeGrupo || '',
+            };
+        })
     );
 
     return {

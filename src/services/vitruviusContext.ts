@@ -132,7 +132,7 @@ export function treinoParaTexto(treino: PlanoTreino): string {
             const blocos = t.blocos.map(b =>
                 `  ${b.nomeGrupo}: ${b.seriesTotal} séries (${b.isPrioridade ? 'PRIORIDADE' : 'normal'})`
             ).join('\n');
-            return `Treino ${(t as any).letra || t.id}:\n${blocos}`;
+            return `Treino ${(t as PlanoTreino['treinos'][number] & { letra?: string }).letra || t.id}:\n${blocos}`;
         }),
     ];
     return linhas.join('\n');

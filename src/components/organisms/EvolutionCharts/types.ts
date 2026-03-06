@@ -10,5 +10,5 @@ export interface MetricConfig {
 export interface MeasurementPoint {
     date: string; // formatted date for axis
     fullDate?: Date; // for tooltip
-    [key: string]: any;
+    [key: string]: number | string | Date | undefined;
 }

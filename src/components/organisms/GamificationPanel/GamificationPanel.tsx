@@ -133,7 +133,7 @@ export const GamificationPanel: React.FC<GamificationPanelProps> = ({ profile })
                                     <div
                                         className="absolute inset-y-0 left-0 rounded-full transition-all duration-500"
                                         style={{
-                                            width: `${(xpSystem as any).percentualNivel}%`,
+                                            width: `${(xpSystem as ReturnType<typeof calcularXPSystem> & { percentualNivel: number }).percentualNivel}%`,
                                             background: `linear-gradient(90deg, ${nivelAtual.cor}80, ${nivelAtual.cor})`,
                                         }}
                                     />

@@ -325,7 +325,7 @@ function calcularScoreBF(bf: number, genero: 'MALE' | 'FEMALE'): number {
     for (const [key, config] of Object.entries(faixas)) {
         if (key === 'muitoBaixo' || key === 'obesidadeSevera') continue;
 
-        const { min, max, scoreMin, scoreMax } = config as any;
+        const { min, max, scoreMin, scoreMax } = config as { min: number; max: number; scoreMin: number; scoreMax: number };
         if (bf >= min && bf < max) {
             // v1.1: Interpolação linear dentro da faixa (scoreMax em min, scoreMin em max)
             return interpolate(bf, min, max, scoreMax, scoreMin);
@@ -542,7 +542,7 @@ function gerarInsights(
     const pontoForte = scores[0];
     const pontoFraco = scores[scores.length - 1];
 
-    let proximaMeta: any = { categoria: '', metaAtual: 0, metaProxima: 0, acao: '' };
+    let proximaMeta: { categoria: string; metaAtual: number; metaProxima: number; acao: string } = { categoria: '', metaAtual: 0, metaProxima: 0, acao: '' };
 
     // Simple heuristic for "Action"
     if (pontoFraco.categoria === 'Composição Corporal') {

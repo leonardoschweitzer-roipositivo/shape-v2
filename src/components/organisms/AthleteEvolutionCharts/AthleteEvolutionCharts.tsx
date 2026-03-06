@@ -17,6 +17,7 @@ import {
     Area,
     AreaChart,
 } from 'recharts'
+import type { Payload } from 'recharts/types/component/DefaultTooltipContent';
 import type { DailyTrackingHistory } from '../../../types/daily-tracking'
 
 interface AthleteEvolutionChartsProps {
@@ -63,14 +64,14 @@ export const AthleteEvolutionCharts: React.FC<AthleteEvolutionChartsProps> = ({
         { id: 'sleep' as MetricaVis, label: '😴 Sono', icon: '😴' },
     ]
 
-    const CustomTooltip = ({ active, payload, label }: any) => {
+    const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Payload<number, string>[]; label?: string }) => {
         if (active && payload && payload.length) {
             return (
                 <div className="bg-gray-900 border border-gray-700 rounded-lg p-3 shadow-xl">
                     <p className="text-white font-semibold mb-2">{label}</p>
-                    {payload.map((entry: any, index: number) => (
+                    {payload.map((entry, index: number) => (
                         <p key={index} className="text-sm" style={{ color: entry.color }}>
-                            {entry.name}: <span className="font-bold">{entry.value.toFixed(1)}</span>
+                            {entry.name}: <span className="font-bold">{(entry.value ?? 0).toFixed(1)}</span>
                             {entry.unit || ''}
                         </p>
                     ))}

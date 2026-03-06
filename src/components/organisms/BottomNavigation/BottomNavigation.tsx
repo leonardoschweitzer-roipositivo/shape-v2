@@ -17,7 +17,7 @@ interface BottomNavigationProps {
 interface NavItem {
     id: AthletePortalTab
     label: string
-    icon: any
+    icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>
 }
 
 const NAV_ITEMS: NavItem[] = [

@@ -151,10 +151,10 @@ export async function buscarDadosConsistencia(
 
     // Filtrar apenas treinos completos e extrair datas únicas
     const treinosCompletos = (registros ?? []).filter(
-        (r: any) => r.dados?.status === 'completo'
+        (r: { data: string; dados: Record<string, unknown> | null }) => r.dados?.status === 'completo'
     )
 
-    const datasUnicas = [...new Set(treinosCompletos.map((r: any) => r.data as string))]
+    const datasUnicas = [...new Set(treinosCompletos.map((r) => r.data as string))]
     const checkinsSet = new Set(datasUnicas)
 
     // Calcular streak atual
@@ -178,8 +178,8 @@ export async function buscarDadosConsistencia(
     const consistencia = Math.round((totalTreinos / diasPassados) * 100)
 
     // Tempo total (soma duração de cada treino, default 60min se não informado)
-    const tempoTotalMinutos = treinosCompletos.reduce((acc: number, r: any) => {
-        return acc + (r.dados?.duracao ?? 60)
+    const tempoTotalMinutos = treinosCompletos.reduce((acc: number, r) => {
+        return acc + ((r.dados as Record<string, number> | null)?.duracao ?? 60)
     }, 0)
 
     return {

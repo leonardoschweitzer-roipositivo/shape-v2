@@ -372,7 +372,7 @@ export interface Badge {
     nome: string
     icone: string
     descricao: string
-    condicao: (dados: any) => boolean
+    condicao: (dados: Record<string, unknown>) => boolean
     xpBonus: number
     conquistado?: boolean
     dataConquista?: Date
@@ -388,7 +388,7 @@ export interface ConversationalInput {
     texto: string
     tipo: TipoInput
     entidade?: TrackerType
-    dados?: Record<string, any>
+    dados?: Record<string, unknown>
 }
 
 // ==========================================

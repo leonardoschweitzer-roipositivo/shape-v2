@@ -2,6 +2,7 @@ import React from 'react';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine
 } from 'recharts';
+import type { Payload } from 'recharts/types/component/DefaultTooltipContent';
 import { MeasurementPoint, MetricConfig } from './types';
 
 interface EvolutionChartProps {
@@ -11,13 +12,13 @@ interface EvolutionChartProps {
     idealValue?: number;
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Payload<number, string>[]; label?: string }) => {
     if (!active || !payload || !payload.length) return null;
 
     return (
         <div className="bg-surface border border-white/10 p-3 rounded-lg shadow-xl cursor-default select-none pointer-events-none z-50">
             <p className="text-gray-400 text-[10px] font-bold uppercase mb-2">{label}</p>
-            {payload.map((entry: any, index: number) => (
+            {payload.map((entry, index: number) => (
                 <div key={index} className="flex items-center gap-2 mb-1">
                     <span
                         className="w-2 h-2 rounded-full"
