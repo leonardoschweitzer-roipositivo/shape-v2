@@ -51,6 +51,7 @@ export interface ExercicioTreino {
     dica?: string
     videoUrl?: string
     foco?: string              // "Peitoral superior"
+    bibliotecaId?: string
 }
 
 export interface ExercicioTimerState {
