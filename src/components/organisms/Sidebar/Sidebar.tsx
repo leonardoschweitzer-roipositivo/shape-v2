@@ -77,6 +77,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
   // Define menu items based on profile
   const getNavItems = () => {
     switch (userProfile) {
+      case 'god':
+        return [
+          { icon: LayoutDashboard, label: 'Painel GOD', id: 'dashboard' },
+          { icon: Video, label: 'Biblioteca Exercícios', id: 'exercicios-biblioteca' },
+          { icon: Layers, label: 'Biblioteca Científica', id: 'library' },
+          { type: 'divider' as const },
+          { icon: Trophy, label: 'Hall dos Deuses', id: 'hall' },
+          { icon: Award, label: 'Ranking Personais', id: 'trainers-ranking' },
+        ];
       case 'academia':
         return [
           { icon: LayoutDashboard, label: 'Dashboard', id: 'dashboard' },
@@ -148,7 +157,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <nav className="flex flex-col gap-2">
           {!isSidebarCollapsed && (
             <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 px-2">
-              Menu {userProfile === 'atleta' ? 'Principal' : userProfile.charAt(0).toUpperCase() + userProfile.slice(1)}
+              Menu {userProfile === 'atleta' ? 'Principal' : userProfile === 'god' ? 'GOD' : userProfile.charAt(0).toUpperCase() + userProfile.slice(1)}
             </p>
           )}
           {mainNavItems.map((item, index) => {

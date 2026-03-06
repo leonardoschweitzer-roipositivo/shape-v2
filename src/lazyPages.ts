@@ -113,6 +113,13 @@ export const LazyAcademyAthleteDetails = lazy(() =>
 );
 
 // ═══════════════════════════════════════════════════════════
+// GOD VIEWS
+// ═══════════════════════════════════════════════════════════
+export const LazyGodDashboard = lazy(() =>
+    import('@/components/templates/God/GodDashboard').then(m => ({ default: m.GodDashboard }))
+);
+
+// ═══════════════════════════════════════════════════════════
 // PAGES
 // ═══════════════════════════════════════════════════════════
 export const LazyAthletePortal = lazy(() =>

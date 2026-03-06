@@ -7,6 +7,7 @@ import {
     ChevronRight,
     Key,
     ShieldCheck,
+    Shield,
     Layout
 } from 'lucide-react';
 import { ProfileType } from './organisms';
@@ -21,6 +22,13 @@ interface DebugUser {
 }
 
 const DEBUG_USERS: DebugUser[] = [
+    {
+        id: 'debug-god',
+        role: 'god',
+        name: 'Admin GOD',
+        email: 'god@vitruia.com',
+        password: '123'
+    },
     {
         id: 'debug-m-athlete',
         role: 'atleta',
@@ -83,10 +91,12 @@ export const DebugAccess: React.FC<DebugAccessProps> = ({ onLogin, isVisible }) 
                                 onClick={() => onLogin(user)}
                                 className="w-full p-3 rounded-xl hover:bg-white/5 transition-all text-left group flex items-center gap-3 border border-transparent hover:border-white/5"
                             >
-                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${user.role === 'atleta' ? 'bg-primary/20 text-primary' :
-                                    user.role === 'personal' ? 'bg-secondary/20 text-secondary' :
-                                        'bg-blue-500/20 text-blue-400'
+                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${user.role === 'god' ? 'bg-amber-500/20 text-amber-400' :
+                                    user.role === 'atleta' ? 'bg-primary/20 text-primary' :
+                                        user.role === 'personal' ? 'bg-secondary/20 text-secondary' :
+                                            'bg-blue-500/20 text-blue-400'
                                     }`}>
+                                    {user.role === 'god' && <Shield size={18} />}
                                     {user.role === 'atleta' && <Dumbbell size={18} />}
                                     {user.role === 'personal' && <User size={18} />}
                                     {user.role === 'academia' && <Building2 size={18} />}

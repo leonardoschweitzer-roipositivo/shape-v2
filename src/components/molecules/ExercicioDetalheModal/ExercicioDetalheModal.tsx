@@ -134,17 +134,24 @@ export function ExercicioDetalheModal({ exercicio, onFechar }: ExercicioDetalheM
                             onClick={() => setVideoAberto(true)}
                             className="relative w-full aspect-video rounded-2xl overflow-hidden group"
                         >
-                            {exercicio.thumbnail_url ? (
-                                <img
-                                    src={exercicio.thumbnail_url}
-                                    alt={exercicio.nome}
-                                    className="w-full h-full object-cover"
-                                />
-                            ) : (
-                                <div className="w-full h-full bg-gradient-to-br from-indigo-900/40 to-purple-900/40 flex items-center justify-center">
-                                    <Video size={32} className="text-indigo-400" />
-                                </div>
-                            )}
+                            {(() => {
+                                let thumbSrc = exercicio.thumbnail_url || ''
+                                if (!thumbSrc && exercicio.url_video) {
+                                    const match = exercicio.url_video.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([a-zA-Z0-9_-]{11})/)
+                                    if (match) thumbSrc = `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg`
+                                }
+                                return thumbSrc ? (
+                                    <img
+                                        src={thumbSrc}
+                                        alt={exercicio.nome}
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full bg-gradient-to-br from-indigo-900/40 to-purple-900/40 flex items-center justify-center">
+                                        <Video size={32} className="text-indigo-400" />
+                                    </div>
+                                )
+                            })()}
                             {/* Overlay de play */}
                             <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors flex items-center justify-center">
                                 <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center group-hover:scale-110 transition-transform">

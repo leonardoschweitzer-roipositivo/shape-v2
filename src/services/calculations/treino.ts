@@ -75,6 +75,10 @@ export interface Exercicio {
     descansoSegundos: number;
     tecnica?: string;
     observacao?: string;
+    /** ID do exercício vinculado na biblioteca (FK para exercicios_biblioteca.id) */
+    bibliotecaId?: string;
+    /** URL do vídeo do YouTube (herdado da biblioteca) */
+    urlVideo?: string;
 }
 
 export interface BlocoTreino {
@@ -953,6 +957,8 @@ export async function salvarPlanoTreino(
 
 /**
  * Busca o último plano de treino ativo de um atleta.
+ * Automaticamente vincula os exercícios à Biblioteca de Exercícios
+ * para que vídeos sejam exibidos no Portal do Atleta.
  */
 export async function buscarPlanoTreino(atletaId: string): Promise<PlanoTreino | null> {
     try {
@@ -966,7 +972,17 @@ export async function buscarPlanoTreino(atletaId: string): Promise<PlanoTreino |
             .single();
 
         if (error || !data) return null;
-        return data.dados as PlanoTreino;
+
+        const plano = data.dados as PlanoTreino;
+
+        // Vincular exercícios à biblioteca (adiciona bibliotecaId e urlVideo)
+        try {
+            const { vincularPlanoTreino } = await import('@/services/exercicioVinculacao.service');
+            return await vincularPlanoTreino(plano);
+        } catch (err) {
+            console.warn('[treino] Vinculação com biblioteca falhou (não crítico):', err);
+            return plano;
+        }
     } catch {
         return null;
     }

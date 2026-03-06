@@ -20,6 +20,16 @@ export function getPageTitle(currentView: ViewState, userProfile: ProfileType): 
     if (currentView === 'library-feminine-proportions') return 'FONTE: PROPORÇÕES CORPORAIS FEMININAS';
     if (currentView === 'exercicios-biblioteca') return 'BIBLIOTECA DE EXERCÍCIOS';
 
+    // GOD views
+    if (userProfile === 'god') {
+        switch (currentView) {
+            case 'dashboard': return 'PAINEL GOD';
+            case 'profile': return 'PERFIL ADMINISTRADOR';
+            case 'settings': return 'CONFIGURAÇÕES';
+            default: return currentView.toUpperCase();
+        }
+    }
+
     if (userProfile === 'academia') {
         switch (currentView) {
             case 'dashboard': return 'DASHBOARD ACADEMIA';

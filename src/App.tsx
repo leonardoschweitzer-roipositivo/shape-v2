@@ -46,6 +46,7 @@ import {
   LazyAcademyProfilePage as AcademyProfilePage,
   LazyAcademyAthletesList as AcademyAthletesList,
   LazyAcademyAthleteDetails as AcademyAthleteDetails,
+  LazyGodDashboard as GodDashboard,
   LazyLibraryView as LibraryView,
   LazyGoldenRatioSourceView as GoldenRatioSourceView,
   LazyMetabolismSourceView as MetabolismSourceView,
@@ -75,6 +76,7 @@ import { buscarDiagnostico, type DiagnosticoDados } from '@/services/calculation
 import { buscarPlanoTreino, type PlanoTreino } from '@/services/calculations/treino';
 import { buscarPlanoDieta, type PlanoDieta } from '@/services/calculations/dieta';
 import { supabase } from '@/services/supabase';
+import { isGodEmail } from '@/types/auth';
 import { getPageTitle, type ViewState } from '@/utils/getPageTitle';
 
 const App: React.FC = () => {
@@ -143,7 +145,12 @@ const App: React.FC = () => {
   }, [entity?.personal?.id, recarregarNotificacoes]);
 
   // Derived user profile from Auth Store
-  const userProfile: ProfileType = (authProfile?.role?.toLowerCase() as ProfileType) || 'atleta';
+  // Se o email está na whitelist GOD, força o perfil para 'god'
+  const userProfile: ProfileType = (() => {
+    const email = authProfile?.email || '';
+    if (email && isGodEmail(email)) return 'god';
+    return (authProfile?.role?.toLowerCase() as ProfileType) || 'atleta';
+  })();
 
   const { settings, profile, initializeProfile } = useAthleteStore();
 
@@ -427,6 +434,37 @@ const App: React.FC = () => {
     }
     if (currentView === 'library-feminine-proportions') {
       return <FeminineProportionsSourceView onBack={() => setCurrentView('library')} />;
+    }
+
+    // Se usuário é GOD, renderiza views específicas
+    if (userProfile === 'god') {
+      switch (currentView) {
+        case 'dashboard':
+          return <GodDashboard onNavigate={(view) => setCurrentView(view as ViewState)} />;
+        case 'exercicios-biblioteca':
+          return (
+            <BibliotecaExerciciosPage
+              onBack={() => setCurrentView('dashboard')}
+              isGod={true}
+            />
+          );
+        case 'hall':
+          return <HallDosDeuses />;
+        case 'trainers-ranking':
+          return <RankingPersonaisPage />;
+        case 'design-system':
+          return <DesignSystem />;
+        case 'profile':
+          return <PersonalProfilePage />;
+        case 'settings':
+          return <AthleteSettingsPage />;
+        default:
+          return (
+            <div className="flex-1 flex items-center justify-center text-gray-500">
+              <p>Funcionalidade em desenvolvimento para GOD ({currentView})</p>
+            </div>
+          );
+      }
     }
 
     // Se usuário é Academia, renderiza views específicas

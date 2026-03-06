@@ -62,6 +62,7 @@ export function derivarTreinoDoDia(plano: PlanoTreino | null, lastCompletedIndex
                 series: ex.series || 0,
                 repeticoes: ex.repeticoes || (raw.reps as string) || '',
                 dica: ex.observacao || (raw.dica as string) || '',
+                videoUrl: ex.urlVideo || (raw.urlVideo as string) || undefined,
                 foco: bloco.nomeGrupo || '',
             };
         })

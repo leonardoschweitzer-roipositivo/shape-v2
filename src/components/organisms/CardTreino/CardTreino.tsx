@@ -14,6 +14,7 @@ import { WorkoutOfDay } from '../../../types/athlete-portal'
 import type { ExercicioTimerState } from '../../../types/athlete-portal'
 import type { ProximoTreino } from '../../../services/portalDataService'
 import { ExercicioDetalheModal } from '../../molecules/ExercicioDetalheModal'
+import { VideoPlayerModal } from '../../molecules/VideoPlayerModal/VideoPlayerModal'
 import { exercicioBibliotecaService } from '../../../services/exercicioBiblioteca.service'
 import type { ExercicioBiblioteca } from '../../../types/exercicio-biblioteca'
 
@@ -69,6 +70,7 @@ export function CardTreino({
     const completeiMenuRef = useRef<HTMLDivElement>(null)
     const [, forceUpdate] = useState(0) // for timer ticking
     const [exercicioBiblioteca, setExercicioBiblioteca] = useState<ExercicioBiblioteca | null>(null)
+    const [videoPlayer, setVideoPlayer] = useState<{ url: string; titulo: string } | null>(null)
 
     // Fechar menu ao clicar fora
     useEffect(() => {
@@ -466,7 +468,18 @@ export function CardTreino({
                                         <button
                                             onClick={async (e) => {
                                                 e.stopPropagation()
+                                                // Se o exercício já tem videoUrl (vinculado), abre o player direto
+                                                if (ex.videoUrl) {
+                                                    setVideoPlayer({ url: ex.videoUrl, titulo: ex.nome })
+                                                    return
+                                                }
+                                                // Fallback: busca na biblioteca por nome similar
                                                 const found = await exercicioBibliotecaService.buscarPorNomeSimilar(ex.nome)
+                                                if (found?.url_video) {
+                                                    setVideoPlayer({ url: found.url_video, titulo: ex.nome })
+                                                    return
+                                                }
+                                                // Sem vídeo: abre modal de detalhes
                                                 setExercicioBiblioteca(found ?? {
                                                     id: ex.id,
                                                     nome: ex.nome,
@@ -490,8 +503,11 @@ export function CardTreino({
                                                     updated_at: new Date().toISOString(),
                                                 } as ExercicioBiblioteca)
                                             }}
-                                            className="w-7 h-7 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 flex items-center justify-center flex-shrink-0 transition-colors"
-                                            title="Ver vídeo"
+                                            className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${ex.videoUrl
+                                                    ? 'bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/30'
+                                                    : 'bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20'
+                                                }`}
+                                            title={ex.videoUrl ? 'Assistir vídeo' : 'Ver detalhes'}
                                         >
                                             <Video size={13} className="text-indigo-400" />
                                         </button>
@@ -565,6 +581,17 @@ export function CardTreino({
                     <ExercicioDetalheModal
                         exercicio={exercicioBiblioteca}
                         onFechar={() => setExercicioBiblioteca(null)}
+                    />
+                )
+            }
+
+            {/* Player de vídeo YouTube direto */}
+            {
+                videoPlayer && (
+                    <VideoPlayerModal
+                        urlVideo={videoPlayer.url}
+                        titulo={videoPlayer.titulo}
+                        onFechar={() => setVideoPlayer(null)}
                     />
                 )
             }

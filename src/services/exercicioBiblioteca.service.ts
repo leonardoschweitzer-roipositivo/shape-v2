@@ -127,4 +127,70 @@ export const exercicioBibliotecaService = {
             emBreve: emBreve || 0,
         }
     },
+
+    // ═══════════════════════════════════════════════════════════
+    // GESTÃO (GOD) — CRUD completo
+    // ═══════════════════════════════════════════════════════════
+
+    /**
+     * Atualiza o vídeo (URL do YouTube) de um exercício.
+     * Também marca em_breve = false quando há vídeo.
+     */
+    async atualizarVideo(
+        exercicioId: string,
+        urlVideo: string | null,
+        duracaoSeg?: number
+    ): Promise<boolean> {
+        const { error } = await supabase
+            .from('exercicios_biblioteca')
+            .update({
+                url_video: urlVideo,
+                duracao_video_seg: duracaoSeg || null,
+                em_breve: !urlVideo,
+                updated_at: new Date().toISOString(),
+            })
+            .eq('id', exercicioId)
+
+        if (error) {
+            console.error('[exercicioBibliotecaService] Erro ao atualizar vídeo:', error.message)
+            return false
+        }
+
+        return true
+    },
+
+    /**
+     * Atualiza os dados textuais de um exercício (instruções, dicas, erros).
+     */
+    async atualizarConteudo(
+        exercicioId: string,
+        dados: {
+            instrucoes?: string[]
+            dicas?: string[]
+            erros_comuns?: string[]
+            descricao?: string
+        }
+    ): Promise<boolean> {
+        const { error } = await supabase
+            .from('exercicios_biblioteca')
+            .update({
+                ...dados,
+                updated_at: new Date().toISOString(),
+            })
+            .eq('id', exercicioId)
+
+        if (error) {
+            console.error('[exercicioBibliotecaService] Erro ao atualizar conteúdo:', error.message)
+            return false
+        }
+
+        return true
+    },
+
+    /**
+     * Remove o vídeo de um exercício (volta para em_breve = true).
+     */
+    async removerVideo(exercicioId: string): Promise<boolean> {
+        return this.atualizarVideo(exercicioId, null)
+    },
 }
