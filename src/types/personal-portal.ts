@@ -63,6 +63,7 @@ export interface PersonalPortalContext {
     alunosAtivos: number
     alunosAtencao: number
     alunosInativos: number
+    scoreMedio: number
 }
 
 // ===== Atividade Recente =====

@@ -75,9 +75,10 @@ export async function carregarContextoPersonal(
     let ativos = 0
     let atencaoCount = 0
     let inativos = 0
+    let scoreMedio = 0
 
     if (atletaIds.length > 0) {
-        // Buscar última atividade de AMBAS as tabelas
+        // Buscar última atividade de AMBAS as tabelas + scores dos assessments
         const [{ data: medidas }, { data: assessments }] = await Promise.all([
             supabase
                 .from('medidas')
@@ -86,7 +87,7 @@ export async function carregarContextoPersonal(
                 .order('created_at', { ascending: false }),
             supabase
                 .from('assessments')
-                .select('atleta_id, created_at')
+                .select('atleta_id, created_at, score')
                 .in('atleta_id', atletaIds)
                 .order('created_at', { ascending: false }),
         ])
@@ -98,20 +99,37 @@ export async function carregarContextoPersonal(
                 ultimaPorAtleta.set(m.atleta_id, m.created_at)
             }
         }
+
+        // Score por atleta (último assessment)
+        const scorePorAtleta = new Map<string, number>()
         for (const a of assessments ?? []) {
             const atual = ultimaPorAtleta.get(a.atleta_id)
             if (!atual || new Date(a.created_at) > new Date(atual)) {
                 ultimaPorAtleta.set(a.atleta_id, a.created_at)
             }
+            if (!scorePorAtleta.has(a.atleta_id) && a.score) {
+                scorePorAtleta.set(a.atleta_id, a.score)
+            }
         }
+
+        // Contabilizar statuses e atenção baseada em SCORE < 60 (alinhado com Desktop)
+        let somaScores = 0
+        let qtdComScore = 0
 
         for (const id of atletaIds) {
             const ultima = ultimaPorAtleta.get(id) ?? null
+            const score = scorePorAtleta.get(id) ?? 0
             const status = classificarStatus(ultima)
             if (status === 'ATIVO') ativos++
             else if (status === 'ATENCAO') atencaoCount++
             else inativos++
+
+            // "Precisa de atenção" = score > 0 e < 60 (critério do Desktop)
+            if (score > 0 && score < 60) atencaoCount++
+            if (score > 0) { somaScores += score; qtdComScore++ }
         }
+
+        scoreMedio = qtdComScore > 0 ? Math.round(somaScores / qtdComScore * 10) / 10 : 0
     }
 
     return {
@@ -123,6 +141,7 @@ export async function carregarContextoPersonal(
         alunosAtivos: ativos,
         alunosAtencao: atencaoCount,
         alunosInativos: inativos,
+        scoreMedio,
     }
 }
 

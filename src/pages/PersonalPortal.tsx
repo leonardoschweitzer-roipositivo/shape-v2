@@ -79,7 +79,10 @@ export function PersonalPortal({ personalId, onLogout }: PersonalPortalProps) {
         loadSecondary()
     }, [contexto, personalId])
 
-    const alunosAtencao = alunos.filter(a => a.status === 'ATENCAO')
+    // Alunos que precisam de atenção: critério do Desktop (score > 0 e < 60, OU status ATENCAO)
+    const alunosAtencao = alunos.filter(a =>
+        a.status === 'ATENCAO' || (a.score > 0 && a.score < 60)
+    )
 
     const handleAbrirAluno = useCallback((alunoId: string) => {
         setAlunoSelecionadoId(alunoId)
@@ -105,6 +108,7 @@ export function PersonalPortal({ personalId, onLogout }: PersonalPortalProps) {
                     <HomeScreen
                         contexto={contexto}
                         alunosAtencao={alunosAtencao}
+                        todosAlunos={alunos}
                         atividadeRecente={atividade}
                         onAbrirAluno={handleAbrirAluno}
                         notificacoesRecentes={notificacoesRecentes}

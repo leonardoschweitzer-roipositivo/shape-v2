@@ -14,9 +14,10 @@ import { PRIORIDADE_CONFIG } from '@/types/notificacao.types'
 interface HomeScreenProps {
     contexto: PersonalPortalContext
     alunosAtencao: AlunoCard[]
+    todosAlunos: AlunoCard[]
     atividadeRecente: AtividadeRecente[]
     onAbrirAluno: (alunoId: string) => void
-    notificacoesRecentes?: Notificacao[]   // últimas não lidas
+    notificacoesRecentes?: Notificacao[]
     onVerAlertas?: () => void
 }
 
@@ -34,7 +35,7 @@ function formatarTempo(isoDate: string): string {
     return `Há ${d} dias`
 }
 
-export function HomeScreen({ contexto, alunosAtencao, atividadeRecente, onAbrirAluno, notificacoesRecentes = [], onVerAlertas }: HomeScreenProps) {
+export function HomeScreen({ contexto, alunosAtencao, todosAlunos, atividadeRecente, onAbrirAluno, notificacoesRecentes = [], onVerAlertas }: HomeScreenProps) {
     const saudacao = () => {
         const hora = new Date().getHours()
         if (hora < 12) return 'Bom dia'
@@ -57,18 +58,22 @@ export function HomeScreen({ contexto, alunosAtencao, atividadeRecente, onAbrirA
                 <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-3">
                     📊 Resumo do Dia
                 </p>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-4 gap-2">
                     <div className="text-center">
-                        <p className="text-white text-2xl font-black">{contexto.totalAlunos}</p>
-                        <p className="text-gray-500 text-[11px] mt-0.5">Alunos</p>
+                        <p className="text-white text-xl font-black">{contexto.totalAlunos}</p>
+                        <p className="text-gray-500 text-[10px] mt-0.5">Alunos</p>
                     </div>
                     <div className="text-center border-x border-white/5">
-                        <p className="text-emerald-400 text-2xl font-black">{contexto.alunosAtivos}</p>
-                        <p className="text-gray-500 text-[11px] mt-0.5">Ativos</p>
+                        <p className="text-emerald-400 text-xl font-black">{contexto.alunosAtivos}</p>
+                        <p className="text-gray-500 text-[10px] mt-0.5">Ativos</p>
+                    </div>
+                    <div className="text-center border-r border-white/5">
+                        <p className="text-[var(--color-gold)] text-xl font-black">{contexto.scoreMedio}</p>
+                        <p className="text-gray-500 text-[10px] mt-0.5">Score Médio</p>
                     </div>
                     <div className="text-center">
-                        <p className="text-red-400 text-2xl font-black">{contexto.alunosAtencao}</p>
-                        <p className="text-gray-500 text-[11px] mt-0.5">Atenção</p>
+                        <p className="text-red-400 text-xl font-black">{alunosAtencao.length}</p>
+                        <p className="text-gray-500 text-[10px] mt-0.5">Atenção</p>
                     </div>
                 </div>
             </div>
@@ -84,9 +89,11 @@ export function HomeScreen({ contexto, alunosAtencao, atividadeRecente, onAbrirA
                     </div>
                     <div className="bg-[#111827] rounded-2xl border border-white/5 overflow-hidden">
                         {alunosAtencao.slice(0, 3).map((aluno, idx) => {
-                            const diasSemMedir = aluno.ultimaMedicao
-                                ? Math.floor((Date.now() - new Date(aluno.ultimaMedicao).getTime()) / 86400000)
-                                : null
+                            const reason = aluno.score > 0 && aluno.score < 50
+                                ? 'Score crítico, agendar reavaliação'
+                                : aluno.score > 0 && aluno.score < 60
+                                    ? 'Score abaixo da média'
+                                    : 'Sem atividade recente'
                             return (
                                 <button
                                     key={aluno.id}
@@ -95,17 +102,14 @@ export function HomeScreen({ contexto, alunosAtencao, atividadeRecente, onAbrirA
                                 >
                                     <div>
                                         <p className="text-white text-sm font-semibold">{aluno.nome}</p>
-                                        <p className="text-gray-500 text-xs mt-0.5">
-                                            {diasSemMedir !== null
-                                                ? `Sem medição há ${diasSemMedir}d`
-                                                : 'Nunca mediu'}
-                                            {aluno.score > 0 ? ` • Score: ${aluno.score}` : ''}
-                                        </p>
+                                        <p className="text-gray-500 text-xs mt-0.5">{reason}</p>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className="text-[10px] bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full font-bold">
-                                            ⚠️ ATENÇÃO
-                                        </span>
+                                        {aluno.score > 0 && (
+                                            <span className="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full font-bold">
+                                                Score: {aluno.score}
+                                            </span>
+                                        )}
                                         <ChevronRight size={16} className="text-gray-600" />
                                     </div>
                                 </button>
@@ -202,6 +206,43 @@ export function HomeScreen({ contexto, alunosAtencao, atividadeRecente, onAbrirA
                     </div>
                 </div>
             )}
+
+            {/* Top Performers */}
+            {(() => {
+                const topPerformers = [...todosAlunos]
+                    .filter(a => a.score > 0)
+                    .sort((a, b) => b.score - a.score)
+                    .slice(0, 3)
+                const medals = ['🥇', '🥈', '🥉']
+                return topPerformers.length > 0 ? (
+                    <div className="mb-5">
+                        <div className="flex items-center gap-2 mb-3">
+                            <span className="text-sm">🏆</span>
+                            <p className="text-gray-300 text-xs font-bold uppercase tracking-wider">
+                                Top Performers
+                            </p>
+                        </div>
+                        <div className="bg-[#111827] rounded-2xl border border-white/5 overflow-hidden">
+                            {topPerformers.map((aluno, idx) => (
+                                <button
+                                    key={aluno.id}
+                                    onClick={() => onAbrirAluno(aluno.id)}
+                                    className={`w-full flex items-center justify-between p-3.5 text-left hover:bg-white/5 transition-colors ${idx < topPerformers.length - 1 ? 'border-b border-white/5' : ''}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-lg">{medals[idx]}</span>
+                                        <div>
+                                            <p className="text-white text-sm font-semibold">{aluno.nome}</p>
+                                            <p className="text-gray-500 text-xs mt-0.5">{aluno.nivel ?? 'Sem avaliação'}</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-[var(--color-gold)] text-sm font-bold">{aluno.score} pts</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                ) : null
+            })()}
 
             {/* Estado vazio geral */}
             {atividadeRecente.length === 0 && alunosAtencao.length === 0 && (
