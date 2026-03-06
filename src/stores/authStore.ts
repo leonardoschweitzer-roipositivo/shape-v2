@@ -93,7 +93,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     error: null,
 
     signIn: async (email, password) => {
-        set({ isLoading: true, error: null });
+        set({ error: null });
         try {
             const { data, error } = await supabase.auth.signInWithPassword({
                 email,
@@ -125,19 +125,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                     user: data.user,
                     profile,
                     entity,
-                    isAuthenticated: true,
-                    isLoading: false
+                    isAuthenticated: true
                 });
             }
             return { error: null };
         } catch (err: unknown) {
-            set({ error: err instanceof Error ? err.message : 'Erro desconhecido', isLoading: false });
+            set({ error: err instanceof Error ? err.message : 'Erro desconhecido' });
             return { error: err };
         }
     },
 
     signUp: async (email, password, additionalData) => {
-        set({ isLoading: true, error: null });
+        set({ error: null });
         try {
             const { data, error } = await supabase.auth.signUp({
                 email,
@@ -153,11 +152,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             if (error) throw error;
 
             // Note: Profile creation is handled by Supabase Trigger (handle_new_user)
-
-            set({ isLoading: false });
             return { error: null };
         } catch (err: unknown) {
-            set({ error: err instanceof Error ? err.message : 'Erro desconhecido', isLoading: false });
+            set({ error: err instanceof Error ? err.message : 'Erro desconhecido' });
             return { error: err };
         }
     },
