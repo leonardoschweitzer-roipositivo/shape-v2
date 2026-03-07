@@ -6,10 +6,10 @@
  */
 
 import React from 'react'
-import { Users, AlertTriangle, Activity, ChevronRight, Clock, Bell, User, Play } from 'lucide-react'
+import { Users, AlertTriangle, Activity, ChevronRight, Clock, Bell, User, Play, Flame, CheckCircle2, SkipForward, Ruler, FileText, Star, Info, AlertCircle, Trophy } from 'lucide-react'
 import type { AlunoCard, AtividadeRecente, PersonalPortalContext } from '@/types/personal-portal'
 import type { Notificacao } from '@/types/notificacao.types'
-import { PRIORIDADE_CONFIG } from '@/types/notificacao.types'
+import { PRIORIDADE_CONFIG } from '@/types/notificacao.constants'
 
 interface HomeScreenProps {
     contexto: PersonalPortalContext
@@ -74,8 +74,8 @@ export function HomeScreen({ contexto, alunosAtencao, todosAlunos, atividadeRece
                     </div>
                 </div>
 
-                <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 backdrop-blur-md shadow-xl">
-                    <span className="text-xl">🔥</span>
+                <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20 backdrop-blur-md shadow-xl shadow-orange-500/10">
+                    <Flame size={24} className="text-orange-500" />
                 </div>
             </div>
 
@@ -192,10 +192,10 @@ export function HomeScreen({ contexto, alunosAtencao, todosAlunos, atividadeRece
                                     className={`w-full flex items-center justify-between p-5 text-left hover:bg-white/5 transition-all active:scale-[0.98] ${idx < atividadeRecente.length - 1 ? 'border-b border-white/5' : ''}`}
                                 >
                                     <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center text-xl shrink-0">
-                                            {ativ.tipo === 'TREINO_COMPLETO' ? '✅' :
-                                                ativ.tipo === 'TREINO_PULADO' ? '⏭️' :
-                                                    ativ.tipo === 'NOVA_MEDICAO' ? '📏' : '📝'}
+                                        <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center shrink-0">
+                                            {ativ.tipo === 'TREINO_COMPLETO' ? <CheckCircle2 size={20} className="text-emerald-400" /> :
+                                                ativ.tipo === 'TREINO_PULADO' ? <SkipForward size={20} className="text-amber-400" /> :
+                                                    ativ.tipo === 'NOVA_MEDICAO' ? <Ruler size={20} className="text-indigo-400" /> : <FileText size={20} className="text-zinc-500" />}
                                         </div>
                                         <div>
                                             <p className="text-white text-sm font-black tracking-tight">{ativ.alunoNome}</p>
@@ -267,7 +267,7 @@ export function HomeScreen({ contexto, alunosAtencao, todosAlunos, atividadeRece
                 ) : (
                     <div className="bg-surface-deep/50 rounded-3xl p-8 mb-8 border border-white/5 text-center backdrop-blur-sm">
                         <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-3">
-                            <span className="text-2xl">✅</span>
+                            <CheckCircle2 size={24} className="text-emerald-500" />
                         </div>
                         <p className="text-emerald-400 text-[11px] font-black uppercase tracking-widest">Todos em dia!</p>
                         <p className="text-zinc-600 text-[10px] font-medium mt-1">Nenhum aluno precisa de atenção agora.</p>
@@ -280,12 +280,16 @@ export function HomeScreen({ contexto, alunosAtencao, todosAlunos, atividadeRece
                         .filter(a => a.score > 0)
                         .sort((a, b) => b.score - a.score)
                         .slice(0, 3)
-                    const medals = ['🥇', '🥈', '🥉']
+                    const medals = [
+                        <Trophy size={18} className="text-amber-400" />,
+                        <Trophy size={18} className="text-zinc-400" />,
+                        <Trophy size={18} className="text-orange-400" />
+                    ]
                     return topPerformers.length > 0 ? (
                         <div className="mb-8">
                             <div className="flex items-center gap-2 mb-4 px-1">
-                                <div className="w-6 h-6 rounded-lg bg-amber-500/10 flex items-center justify-center text-xs">
-                                    🏆
+                                <div className="w-6 h-6 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                                    <Trophy size={12} className="text-amber-500" />
                                 </div>
                                 <p className="text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em]">
                                     Ranking Elite
@@ -299,7 +303,9 @@ export function HomeScreen({ contexto, alunosAtencao, todosAlunos, atividadeRece
                                         className={`w-full flex items-center justify-between p-5 text-left hover:bg-white/5 transition-all active:scale-[0.98] ${idx < topPerformers.length - 1 ? 'border-b border-white/5' : ''}`}
                                     >
                                         <div className="flex items-center gap-4">
-                                            <span className="text-xl shrink-0">{medals[idx]}</span>
+                                            <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center shrink-0">
+                                                {medals[idx]}
+                                            </div>
                                             <div>
                                                 <p className="text-white text-sm font-black tracking-tight">{aluno.nome}</p>
                                                 <p className="text-indigo-400 text-[10px] font-black uppercase tracking-widest mt-1">{aluno.nivel ?? 'Analista'}</p>

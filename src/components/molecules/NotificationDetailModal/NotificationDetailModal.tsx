@@ -24,7 +24,7 @@ import {
     ArrowRight
 } from 'lucide-react'
 import type { Notificacao } from '@/types/notificacao.types'
-import { CATEGORIA_CONFIG, PRIORIDADE_CONFIG } from '@/types/notificacao.types'
+import { CATEGORIA_CONFIG, PRIORIDADE_CONFIG } from '@/types/notificacao.constants'
 
 interface NotificationDetailModalProps {
     notificacao: Notificacao
@@ -70,8 +70,12 @@ export function NotificationDetailModal({ notificacao, onFechar, onAcao }: Notif
                             </div>
                             <div className="bg-white/5 rounded-xl p-3 border border-white/5">
                                 <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Status</p>
-                                <p className={`text-sm font-medium mt-1 ${tipo === 'TREINO_COMPLETO' ? 'text-emerald-400' : 'text-amber-400'}`}>
-                                    {tipo === 'TREINO_COMPLETO' ? 'Concluído ✅' : (dados.continuarHoje ? 'Avançado ⏭️' : 'Pulado ⏭️')}
+                                <p className={`text-sm font-medium mt-1 flex items-center gap-1.5 ${tipo === 'TREINO_COMPLETO' ? 'text-emerald-400' : 'text-amber-400'}`}>
+                                    {tipo === 'TREINO_COMPLETO' ? (
+                                        <><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]" /> Concluído</>
+                                    ) : (
+                                        <><span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)]" /> {dados.continuarHoje ? 'Avançado' : 'Pulado'}</>
+                                    )}
                                 </p>
                             </div>
                         </div>

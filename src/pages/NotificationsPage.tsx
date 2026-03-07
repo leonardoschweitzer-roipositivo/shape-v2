@@ -10,7 +10,7 @@ import { Bell, Search } from 'lucide-react'
 import { useNotificacoes } from '@/hooks/useNotificacoes'
 import { NotificationItem, NotificationDetailModal } from '@/components/molecules'
 import type { Notificacao, CategoriaNotificacao } from '@/types/notificacao.types'
-import { CATEGORIA_CONFIG } from '@/types/notificacao.types'
+import { CATEGORIA_CONFIG } from '@/types/notificacao.constants'
 
 interface NotificationsPageProps {
     onAcao?: (url: string) => void

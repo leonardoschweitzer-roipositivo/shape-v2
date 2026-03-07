@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
 import { getEmojiStreak, formatarTempo } from '@/services/consistencia.service'
-import { Flame, Calendar } from 'lucide-react'
+import { Flame, Calendar, Zap, Trophy, Timer } from 'lucide-react'
 
 // ==========================================
 // CORES DO HEATMAP (conforme spec)
@@ -131,23 +131,30 @@ export function CardConsistenciaPersonal({
             {/* Streak + Recorde */}
             <div className="flex justify-between items-center mb-1">
                 <div className="flex items-center gap-2">
-                    <span className="text-xl">{emojiStreak}</span>
+                    <div className="flex -space-x-1">
+                        {[...Array(Math.min(3, Math.floor(streakAtual / 7) + 1))].map((_, i) => (
+                            <Zap key={i} size={20} className="text-orange-500 fill-orange-500/20" />
+                        ))}
+                    </div>
                     <span className="text-white font-black text-xl">
                         {streakAtual} {streakAtual === 1 ? 'dia' : 'dias'} seguidos
                     </span>
                 </div>
                 <div className="flex items-center gap-1">
-                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">🏆 Recorde:</span>
+                    <Trophy size={12} className="text-yellow-500" />
+                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Recorde:</span>
                     <span className="text-[10px] text-gray-300 font-black">{recorde} dias</span>
                 </div>
             </div>
 
-            {/* Próximo Badge */}
             <div className="mb-6 h-4">
                 {proximoBadge && (
-                    <span className="text-[10px] text-gray-500 font-medium italic">
-                        ⏳ {proximoBadge.diasFaltando === 1 ? 'Falta 1 dia' : `Faltam ${proximoBadge.diasFaltando} dias`} para: {proximoBadge.emoji} {proximoBadge.nome}
-                    </span>
+                    <div className="flex items-center gap-2 text-[10px] text-gray-500 font-medium italic">
+                        <Timer size={12} className="text-gray-600" />
+                        <span>
+                            {proximoBadge.diasFaltando === 1 ? 'Falta 1 dia' : `Faltam ${proximoBadge.diasFaltando} dias`} para: {proximoBadge.nome}
+                        </span>
+                    </div>
                 )}
             </div>
 

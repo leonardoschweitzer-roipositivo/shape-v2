@@ -154,31 +154,3 @@ export interface ConfigNotificacoesPersonal {
     horarioFim: string
     canalPrincipal: 'in_app' | 'push' | 'email'
 }
-
-// ===== Constantes de Prioridade =====
-
-export const PRIORIDADE_CONFIG: Record<PrioridadeNotificacao, {
-    cor: string
-    icone: string
-    badge: boolean
-}> = {
-    urgente: { cor: '#EF4444', icone: '🚨', badge: true },
-    alerta: { cor: '#F59E0B', icone: '⚠️', badge: true },
-    destaque: { cor: '#22C55E', icone: '🌟', badge: true },
-    normal: { cor: '#3B82F6', icone: 'ℹ️', badge: true },
-    baixa: { cor: '#6B7280', icone: '📝', badge: false },
-}
-
-// ===== Constantes de Categoria =====
-
-export const CATEGORIA_CONFIG: Record<CategoriaNotificacao, {
-    label: string
-    icone: string
-    cor: string
-}> = {
-    treino: { label: 'Treino', icone: '🏋️', cor: '#3B82F6' },
-    medidas: { label: 'Medidas', icone: '📏', cor: '#8B5CF6' },
-    conquistas: { label: 'Conquistas', icone: '🏆', cor: '#F59E0B' },
-    portal: { label: 'Portal', icone: '👤', cor: '#22C55E' },
-    resumo: { label: 'Resumos', icone: '📊', cor: '#6B7280' },
-}

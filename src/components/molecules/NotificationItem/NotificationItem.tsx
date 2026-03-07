@@ -8,7 +8,7 @@
 import React, { memo, useCallback } from 'react'
 import { ExternalLink } from 'lucide-react'
 import type { Notificacao } from '@/types/notificacao.types'
-import { PRIORIDADE_CONFIG } from '@/types/notificacao.types'
+import { PRIORIDADE_CONFIG } from '@/types/notificacao.constants'
 
 interface NotificationItemProps {
     notificacao: Notificacao

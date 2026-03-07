@@ -10,7 +10,7 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { Bell, Loader2, CheckCheck } from 'lucide-react'
 import { notificacaoService } from '@/services/notificacao.service'
 import type { Notificacao } from '@/types/notificacao.types'
-import { PRIORIDADE_CONFIG } from '@/types/notificacao.types'
+import { PRIORIDADE_CONFIG } from '@/types/notificacao.constants'
 import { NotificationDetailModal } from '@/components/molecules/NotificationDetailModal/NotificationDetailModal'
 
 interface AlertasScreenProps {
