@@ -16,6 +16,7 @@ import type {
     StatusAluno,
     ProporçãoResumo,
 } from '@/types/personal-portal'
+import { buscarDadosConsistencia } from './consistencia.service'
 
 // ===== Helpers =====
 
@@ -236,12 +237,13 @@ export async function listarAlunos(personalId: string): Promise<AlunoCard[]> {
 
 /**
  * Busca a ficha rápida de um aluno específico (para a sub-tela de Ficha).
+ * Agora ampliada para incluir diagnóstico, últimas 3 atividades e metas.
  */
 export async function buscarFichaAluno(atletaId: string): Promise<FichaAlunoResumo | null> {
     // 1. Buscar atleta
     const { data: atleta, error } = await supabase
         .from('atletas')
-        .select('id, nome, email, foto_url')
+        .select('id, nome, email, foto_url, personal_id')
         .eq('id', atletaId)
         .single()
 
@@ -250,113 +252,160 @@ export async function buscarFichaAluno(atletaId: string): Promise<FichaAlunoResu
         return null
     }
 
-    // 2. Buscar ficha
-    const { data: fichaData } = await supabase
-        .from('fichas')
-        .select('telefone, atleta_id')
-        .eq('atleta_id', atletaId)
-        .limit(1)
-
-    const ficha = fichaData?.[0]
-
-    // 3. Buscar medidas e assessments em paralelo  
-    const [{ data: medidasData }, { data: assessData }] = await Promise.all([
-        supabase
-            .from('medidas')
-            .select('created_at, score, ombros, peitoral, cintura, quadril, braco_direito, coxa_direita')
+    // 2. Buscar ficha e diagnósticos/assessments
+    // Unificar busca em registros_diarios (que contém treinos, dieta e trackers)
+    const [
+        { data: fichaData },
+        { data: assessData },
+        { data: registrosData },
+        { data: diagConfirmadoData }
+    ] = await Promise.all([
+        supabase.from('fichas').select('*').eq('atleta_id', atletaId).limit(1),
+        supabase.from('assessments').select('*').eq('atleta_id', atletaId).order('date', { ascending: false }).limit(2),
+        supabase.from('registros_diarios')
+            .select('id, atleta_id, data, tipo, dados, created_at')
             .eq('atleta_id', atletaId)
+            .order('data', { ascending: false })
+            .limit(60),
+        supabase.from('diagnosticos')
+            .select('*')
+            .eq('atleta_id', atletaId)
+            .eq('status', 'confirmado')
             .order('created_at', { ascending: false })
-            .limit(5),
-        supabase
-            .from('assessments')
-            .select('score, date, created_at, measurements')
-            .eq('atleta_id', atletaId)
-            .order('date', { ascending: false })
-            .limit(2),
+            .limit(1)
+            .single()
     ])
 
-    const medidas = medidasData ?? []
-    const assessments = (assessData ?? []) as { score: number | null; date: string; created_at: string; measurements?: Record<string, unknown> }[]
-    const ultima = medidas[0]
-    const penultima = medidas[1]
+    const ficha = fichaData?.[0]
+    const assessments = (assessData ?? []) as any[]
+    const registros = registrosData ?? []
+    const diagConfirmado = diagConfirmadoData as any
 
-    // Score: prioridade para assessments
-    const scoreAtual = assessments[0]?.score ?? ultima?.score ?? 0
-    const scoreSemanaAnterior = assessments[1]?.score ?? penultima?.score ?? 0
-    const evolucaoSemana = Math.round((scoreAtual - scoreSemanaAnterior) * 10) / 10
+    // 3. Processar Score e Composição
+    // (Assumindo que trackers também estão em registros_diarios conforme portalHoje.ts)
+    // No shape-v2, registros_diarios pode ter tipo 'treino', 'refeicao', 'agua', 'sono', 'peso', 'dor'
+    const trackers = registros.filter(r => ['agua', 'sono', 'peso', 'dor', 'refeicao'].includes(r.tipo))
 
-    // Extrair medidas lineares: primeiro tenta tabela medidas, senão cai para assessments.measurements.linear
-    let ombrosAtual = ultima?.ombros ?? 0
-    let peitoralAtual = ultima?.peitoral ?? 0
-    let cinturaAtual = ultima?.cintura ?? 0
-    let ombrosAnterior = penultima?.ombros ?? 0
-    let peitoralAnterior = penultima?.peitoral ?? 0
-    let cinturaAnterior = penultima?.cintura ?? 0
+    // Extrair checkins (datas de treinos completos)
+    const checkins = registros
+        .filter(r => r.tipo === 'treino' && r.dados?.status === 'completo')
+        .map(r => r.data)
+    const ultimoAssess = assessments[0]
+    const penultimoAssess = assessments[1]
 
-    // Fallback: se medidas lineares estão zeradas, buscar de assessments.measurements.linear
-    if (ombrosAtual === 0 && peitoralAtual === 0 && cinturaAtual === 0 && assessments.length > 0) {
-        const linear0 = (assessments[0]?.measurements as { linear?: Record<string, number> })?.linear
-        const linear1 = assessments.length > 1
-            ? (assessments[1]?.measurements as { linear?: Record<string, number> })?.linear
-            : undefined
+    // Dados do diagnóstico: Priorizar o confirmado da tabela 'diagnosticos', fallback para o do último assessment
+    const diagnostico = (diagConfirmado?.dados || ultimoAssess?.results || ultimoAssess?.diagnostico) as any
+    const scoreAtual = ultimoAssess?.score ?? 0
+    const scoreAnterior = penultimoAssess?.score ?? 0
 
-        if (linear0) {
-            ombrosAtual = linear0.shoulders ?? 0
-            peitoralAtual = linear0.chest ?? 0
-            cinturaAtual = linear0.waist ?? 0
-        }
-        if (linear1) {
-            ombrosAnterior = linear1.shoulders ?? 0
-            peitoralAnterior = linear1.chest ?? 0
-            cinturaAnterior = linear1.waist ?? 0
-        }
+    // 4. Mapear Medidas para o Card de Metas (Premium Standard)
+    const measurements = ultimoAssess?.measurements as any
+    const medidasDiag = diagnostico?._medidas as any
+    const lastMedida = registros.find(r => r.tipo === 'peso')?.dados as any // Fallback rudimentar para peso
+
+    const medidasParaCard = {
+        ombros: Number(measurements?.linear?.shoulders || measurements?.ombros)
+            || Number(medidasDiag?.ombros)
+            || Number(ficha?.ombros) // Se existisse na ficha
+            || 0,
+        cintura: Number(measurements?.linear?.waist || measurements?.cintura)
+            || Number(medidasDiag?.cintura)
+            || 1,
+        braco: (
+            (Number(measurements?.linear?.arm_right) + Number(measurements?.linear?.arm_left)) / 2
+            || (Number(measurements?.braco_direito) + Number(measurements?.braco_esquerdo)) / 2
+            || (Number(medidasDiag?.bracoD) + Number(medidasDiag?.bracoE)) / 2
+        ) || 0,
+        antebraco: (
+            (Number(measurements?.linear?.forearm_right) + Number(measurements?.linear?.forearm_left)) / 2
+            || (Number(measurements?.antebraco_direito) + Number(measurements?.antebraco_esquerdo)) / 2
+            || (Number(medidasDiag?.antebracoD) + Number(medidasDiag?.antebracoE)) / 2
+        ) || 0,
+        coxa: (
+            (Number(measurements?.linear?.thigh_right) + Number(measurements?.linear?.thigh_left)) / 2
+            || (Number(measurements?.coxa_direita) + Number(measurements?.coxa_esquerda)) / 2
+            || (Number(medidasDiag?.coxaD) + Number(medidasDiag?.coxaE)) / 2
+        ) || 0,
+        panturrilha: (
+            (Number(measurements?.linear?.calf_right) + Number(measurements?.linear?.calf_left)) / 2
+            || (Number(measurements?.panturrilha_direita) + Number(measurements?.panturrilha_esquerda)) / 2
+            || (Number(medidasDiag?.panturrilhaD) + Number(medidasDiag?.panturrilhaE)) / 2
+        ) || 0,
+        peitoral: Number(measurements?.linear?.chest || measurements?.peitoral) || Number(medidasDiag?.peitoral) || 0,
+        punho: Number(ficha?.punho) || 0,
+        joelho: Number(ficha?.joelho) || 0,
+        tornozelo: Number(ficha?.tornozelo) || 0,
     }
 
-    // Proporções resumidas com valor anterior para comparação
-    const proporcoes: ProporçãoResumo[] = (ombrosAtual > 0 || peitoralAtual > 0 || cinturaAtual > 0) ? [
-        {
-            nome: 'Ombros',
-            valor: ombrosAtual,
-            valorAnterior: ombrosAnterior,
-            meta: 135,
-            percentual: Math.min(100, Math.round((ombrosAtual / 135) * 100))
-        },
-        {
-            nome: 'Peitoral',
-            valor: peitoralAtual,
-            valorAnterior: peitoralAnterior,
-            meta: 120,
-            percentual: Math.min(100, Math.round((peitoralAtual / 120) * 100))
-        },
-        {
-            nome: 'Cintura',
-            valor: cinturaAtual,
-            valorAnterior: cinturaAnterior,
-            meta: 80,
-            percentual: Math.min(100, Math.round((cinturaAtual / 80) * 100))
-        },
-    ].filter(p => p.valor > 0) : []
+    // 5. Mapear Últimos 3 Registros (Conforme pedido pelo usuário)
+    const ultimosRegistros: RegistroAtividade[] = []
 
-    // 4. Streak e check-ins (simplificado — busca registros do mês)
-    const inicioMes = new Date()
-    inicioMes.setDate(1)
+    // Pegar treinos recentes com feedback
+    const treinosComFeedback = registros
+        .filter(r => r.tipo === 'treino' && r.dados?.status === 'completo' && r.dados?.observacoes)
+        .slice(0, 3)
+        .map(r => ({
+            id: r.id,
+            tipo: 'FEEDBACK' as const,
+            data: r.data,
+            valor: 'Feedback',
+            descricao: r.dados.observacoes,
+            emoji: '💬'
+        }))
 
-    const { data: registros } = await supabase
-        .from('registros_diarios')
-        .select('data, treino_status')
-        .eq('atleta_id', atletaId)
-        .gte('data', inicioMes.toISOString().split('T')[0])
-        .order('data', { ascending: false })
+    // Pegar trackers recentes (água, sono, etc)
+    const trackersMapeados = trackers.slice(0, 3).map(t => {
+        const tipos: Record<string, { label: string, emoji: string }> = {
+            agua: { label: 'Água', emoji: '💧' },
+            sono: { label: 'Sono', emoji: '😴' },
+            peso: { label: 'Peso', emoji: '⚖️' },
+            dor: { label: 'Dor', emoji: '🚨' },
+            refeicao: { label: 'Refeição', emoji: '🍽️' }
+        }
+        const info = tipos[t.tipo] || { label: t.tipo, emoji: '📝' }
 
-    const checkinsMes = (registros ?? []).filter(r => r.treino_status === 'completo').length
-    const totalDiasMes = new Date().getDate()
+        // Extração inteligente do valor baseado no tipo
+        let valorExibicao = '---'
+        if (t.tipo === 'refeicao') {
+            valorExibicao = t.dados?.calorias ? `${t.dados.calorias} kcal` : 'Registrada'
+        } else if (t.tipo === 'agua') {
+            valorExibicao = t.dados?.quantidade ? `${t.dados.quantidade}ml` : 'Registrada'
+        } else if (t.tipo === 'peso') {
+            valorExibicao = t.dados?.quantidade ? `${t.dados.quantidade}kg` : '---'
+        } else if (t.tipo === 'sono') {
+            valorExibicao = t.dados?.quantidade ? `${t.dados.quantidade}h` : '---'
+        } else if (t.tipo === 'dor') {
+            valorExibicao = t.dados?.quantidade ? `${t.dados.quantidade}/10` : '---'
+        }
 
-    // 5. Buscar personal_id a partir da tabela atletas
-    const { data: atletaFull } = await supabase
-        .from('atletas')
-        .select('personal_id')
-        .eq('id', atletaId)
-        .single()
+        return {
+            id: t.id,
+            tipo: (t.tipo as string).toUpperCase() as any,
+            data: t.data,
+            valor: valorExibicao,
+            descricao: t.dados?.observacoes || t.dados?.local || info.label,
+            emoji: info.emoji
+        }
+    })
+
+    // Combinar e pegar os 3 mais recentes cronologicamente
+    const combinados = [...treinosComFeedback, ...trackersMapeados]
+        .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime())
+        .slice(0, 3)
+
+    // 5. Proporções e Metas
+    const proporcoes: ProporçãoResumo[] = diagnostico?.analiseEstetica?.proporcoes?.slice(0, 3).map((p: any) => ({
+        nome: p.grupo,
+        valor: p.atual,
+        valorAnterior: 0, // Poderia ser buscado do penúltimo assessment se necessário
+        meta: p.ideal,
+        percentual: p.pct
+    })) ?? []
+
+    const metasProporcoes: MetaProporcao[] = diagnostico?.metasProporcoes ?? []
+
+    // 6. Streak e Consistência (Athlete Standard)
+    const dadosConsistencia = await buscarDadosConsistencia(atletaId)
 
     return {
         id: atleta.id,
@@ -366,13 +415,32 @@ export async function buscarFichaAluno(atletaId: string): Promise<FichaAlunoResu
         fotoUrl: atleta.foto_url ?? null,
         score: scoreAtual,
         nivel: scoreParaNivel(scoreAtual),
-        evolucaoSemana,
-        streak: checkinsMes,
-        checkinsMes,
-        totalDiasMes,
-        proporcoes: proporcoes.slice(0, 3),
+        evolucaoSemana: Math.round((scoreAtual - scoreAnterior) * 10) / 10,
+        streak: dadosConsistencia.streakAtual,
+        checkinsMes: checkins.filter(d => d.startsWith(new Date().toISOString().slice(0, 7))).length,
+        totalDiasMes: new Date().getDate(),
+        consistencia: dadosConsistencia.consistencia,
+        recorde: dadosConsistencia.recorde,
+        totalTreinos: dadosConsistencia.totalTreinos,
+        tempoTotalMinutos: dadosConsistencia.tempoTotalMinutos,
+        proximoBadge: dadosConsistencia.proximoBadge,
+        proporcoes,
         insightIA: null,
-        pessoalId: atletaFull?.personal_id ?? '',
+        pessoalId: atleta.personal_id ?? '',
+        // Novos campos
+        sexo: ficha?.sexo,
+        altura: ficha?.altura,
+        peso: ultimoAssess?.weight || diagnostico?.composicaoAtual?.peso || 0,
+        gorduraPct: ultimoAssess?.body_fat || diagnostico?.composicaoAtual?.gorduraPct || 0,
+        massaMagra: diagnostico?.composicaoAtual?.massaMagra,
+        scoreMeta3M: diagnostico?.analiseEstetica?.scoreMeta3M ?? (scoreAtual > 0 ? scoreAtual + 1.5 : 0),
+        scoreMeta6M: diagnostico?.analiseEstetica?.scoreMeta6M,
+        scoreMeta12M: diagnostico?.analiseEstetica?.scoreMeta12M,
+        checkins: dadosConsistencia.checkins,
+        medidas: medidasParaCard,
+        diagnosticoDados: diagnostico,
+        ultimosRegistros: combinados,
+        metasProporcoes
     }
 }
 
@@ -394,20 +462,20 @@ export async function buscarAtividadeRecente(personalId: string): Promise<Ativid
     // Buscar registros diários recentes
     const { data: registros } = await supabase
         .from('registros_diarios')
-        .select('id, atleta_id, treino_status, observacoes, created_at')
+        .select('id, atleta_id, tipo, dados, created_at')
         .in('atleta_id', atletaIds)
         .order('created_at', { ascending: false })
-        .limit(10)
+        .limit(20)
 
     const atividades: AtividadeRecente[] = (registros ?? [])
-        .filter(r => r.treino_status === 'completo' || r.treino_status === 'pulado')
+        .filter(r => r.tipo === 'treino' && (r.dados?.status === 'completo' || r.dados?.status === 'pulado'))
         .slice(0, 5)
         .map(r => ({
             id: r.id,
-            tipo: r.treino_status === 'completo' ? 'TREINO_COMPLETO' : 'TREINO_PULADO',
+            tipo: r.dados.status === 'completo' ? 'TREINO_COMPLETO' : 'TREINO_PULADO',
             alunoId: r.atleta_id,
             alunoNome: atletaMap[r.atleta_id] ?? 'Aluno',
-            descricao: r.treino_status === 'completo'
+            descricao: r.dados.status === 'completo'
                 ? 'completou o treino de hoje'
                 : 'pulou o treino de hoje',
             criadoEm: r.created_at,

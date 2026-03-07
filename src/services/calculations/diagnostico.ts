@@ -70,6 +70,7 @@ export interface AnaliseSimetriaItem {
 export interface AnaliseEstetica {
     scoreAtual: number;
     classificacaoAtual: string;
+    scoreMeta3M: number;
     scoreMeta6M: number;
     scoreMeta12M: number;
     proporcoes: ProporcoesGrupo[];
@@ -777,7 +778,8 @@ function projetarScoreMeta(
             deltaProportionScore * 0.40 +      // 40% proporções
             deltaSymmetry * 0.25;              // 25% simetria
 
-        // 6 meses = ~55% do ganho total (front-loaded para novatos)
+        // Ganho front-loaded: 3 meses ≈ 30% do ganho total, 6 meses ≈ 55%
+        const deltaTotal3M = deltaTotal12M * 0.30;
         const deltaTotal6M = deltaTotal12M * 0.55;
 
         console.info(`[ScoreMeta] Deltas calculados (${isFemale ? 'F' : 'M'}):`,
@@ -787,19 +789,23 @@ function projetarScoreMeta(
             `| Total 12M=${deltaTotal12M.toFixed(1)}, 6M=${deltaTotal6M.toFixed(1)}`
         );
 
+        const scoreMeta3M = Math.min(100, Math.round((input.score + deltaTotal3M) * 10) / 10);
         const scoreMeta6M = Math.min(100, Math.round((input.score + deltaTotal6M) * 10) / 10);
         const scoreMeta12M = Math.min(100, Math.round((input.score + deltaTotal12M) * 10) / 10);
 
-        // Segurança: meta deve ser pelo menos 1 ponto acima do score atual
+        // Segurança: meta deve ser pelo menos 0.5 pontos acima do score atual
         return {
-            scoreMeta6M: Math.max(input.score + 0.5, scoreMeta6M),
-            scoreMeta12M: Math.max(input.score + 1.0, scoreMeta12M),
+            scoreMeta3M: Math.max(input.score + 0.3, scoreMeta3M),
+            scoreMeta6M: Math.max(input.score + 0.6, scoreMeta6M),
+            scoreMeta12M: Math.max(input.score + 1.2, scoreMeta12M),
         };
     } catch (error) {
         console.error('[Diagnostico] Erro ao projetar Score Meta, usando fallback:', error);
         // Fallback: método antigo (delta flat)
+        const deltaScore3M = Math.round(fallbackDelta * 0.30 * 10) / 10;
         const deltaScore6M = Math.round(fallbackDelta * 0.55 * 10) / 10;
         return {
+            scoreMeta3M: Math.min(100, Math.round((input.score + deltaScore3M) * 10) / 10),
             scoreMeta6M: Math.min(100, Math.round((input.score + deltaScore6M) * 10) / 10),
             scoreMeta12M: Math.min(100, Math.round((input.score + fallbackDelta) * 10) / 10),
         };

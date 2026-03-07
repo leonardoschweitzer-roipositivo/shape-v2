@@ -23,6 +23,8 @@ export interface AlunoCard {
     ultimaMedicao: string | null // ISO date string
     evolucaoSemana: number       // delta de pontos na semana, ex: +8.2 ou -2.1
     streak: number
+    checkinsMes: number
+    totalDiasMes: number
 }
 
 // ===== Ficha Rápida do Aluno =====
@@ -50,6 +52,49 @@ export interface FichaAlunoResumo {
     proporcoes: ProporçãoResumo[]    // top 3-4 métricas
     insightIA?: string | null        // gerado sob demanda pelo Vitruvius
     pessoalId: string
+    sexo?: 'M' | 'F'
+    altura?: number
+    peso?: number
+    gorduraPct?: number
+    massaMagra?: number
+    scoreMeta3M?: number
+    scoreMeta6M?: number
+    scoreMeta12M?: number
+    checkins: string[]
+    // Métricas de Consistência (Athlete Standard)
+    consistencia: number
+    recorde: number
+    totalTreinos: number
+    tempoTotalMinutos: number
+    proximoBadge?: {
+        nome: string
+        emoji: string
+        diasFaltando: number
+    } | null
+    // Dados para Metas do Trimestre
+    medidas?: any
+    diagnosticoDados?: any
+    ultimosRegistros: RegistroAtividade[]
+    metasProporcoes: MetaProporcao[]
+}
+
+export interface RegistroAtividade {
+    id: string
+    tipo: 'TREINO' | 'REFEICAO' | 'AGUA' | 'SONO' | 'PESO' | 'DOR' | 'FEEDBACK'
+    data: string
+    valor: string | number
+    descricao?: string
+    emoji?: string
+}
+
+export interface MetaProporcao {
+    grupo: string
+    atual: number
+    meta3M: number
+    meta6M: number
+    meta9M: number
+    meta12M: number
+    idealFinal: number
 }
 
 // ===== Contexto do Portal =====

@@ -1,16 +1,15 @@
-/**
- * AlunoFichaScreen — Ficha Rápida do Aluno (sub-tela dentro de ALUNOS)
- *
- * Exibe: score, nível, evolução, proporções, streak e Insight IA.
- */
-
 import React, { useEffect, useState } from 'react'
 import { ChevronLeft, TrendingUp, TrendingDown, Flame, Trophy, Loader2, Sparkles, Camera, User } from 'lucide-react'
 import type { FichaAlunoResumo } from '@/types/personal-portal'
+import { HeaderAluno } from './components/HeaderAluno'
+import { CardConsistenciaPersonal } from './components/CardConsistenciaPersonal'
+import { CardUltimosRegistros } from './components/CardUltimosRegistros'
+import { CardMetasTrimestrePersonal } from './components/CardMetasTrimestrePersonal'
 import { buscarFichaAluno } from '@/services/personalPortal.service'
 import { atletaService } from '@/services/atleta.service'
 import { storageService } from '@/services/storage.service'
 import { gerarConteudoIA } from '@/services/vitruviusAI'
+import { getFontesCientificas } from '@/services/vitruviusContext'
 
 interface AlunoFichaScreenProps {
     alunoId: string
@@ -79,21 +78,30 @@ export function AlunoFichaScreen({ alunoId, onVoltar }: AlunoFichaScreenProps) {
         if (!ficha || insightLoading) return
         setInsightLoading(true)
 
-        const prompt = `Você é o Vitrúvio IA, assistente de um personal trainer.
-Gere um insight CONCISO e ÚTIL (máximo 3 frases) para o personal sobre este aluno, focando no ponto mais importante para a próxima sessão.
+        // Buscar fontes científicas para o prompt
+        const fontes = getFontesCientificas('diagnostico')
 
-Dados do aluno:
-- Nome: ${ficha.nome}
-- Score: ${ficha.score} pts (${ficha.nivel ?? 'sem nível'})
-- Evolução semanal: ${ficha.evolucaoSemana > 0 ? '+' : ''}${ficha.evolucaoSemana} pts
-- Streak de treinos no mês: ${ficha.streak}/${ficha.totalDiasMes} dias
-- Proporções: ${ficha.proporcoes.map(p => `${p.nome}: ${p.valor}cm`).join(', ')}
+        const prompt = `Você é o Vitrúvio IA, um assistente científico de alta performance para personal trainers.
+Analise os dados reais do aluno ${ficha.nome} e gere um insight TÉCNICO, ANALÍTICO e EMBASADO.
 
-Responda APENAS com o insight em português brasileiro, sem saudação, sem formatação markdown.`
+DADOS REAIS DO ALUNO:
+- Score Atual: ${ficha.score} pts (Meta 12M: ${ficha.scoreMeta12M} pts)
+- Consistência Anual: ${ficha.consistencia}% (Streak Atual: ${ficha.streak} dias)
+- Últimos Registros: ${ficha.ultimosRegistros.map(r => `${r.valor} (${r.descricao || 'sem detalhes'})`).join(', ')}
+- Composição: BF ${ficha.gorduraPct?.toFixed(1)}%, Massa Magra ${ficha.massaMagra?.toFixed(1)}kg, Peso ${ficha.peso}kg
+
+FONTES CIENTÍFICAS DISPONÍVEIS:
+${fontes}
+
+REGRAS OBRIGATÓRIAS:
+1. Cite pelo menos UMA fonte científica específica (ex: Schoenfeld, Morton, ACSM) para embasar sua recomendação.
+2. Seja direto e profissional (máximo 4 frases).
+3. Foque na ação prática que o Personal deve tomar na próxima sessão com base nos últimos registros e na consistência.
+
+Responda APENAS com o insight em português brasileiro, use tom de consultor técnico.`
 
         const resultado = await gerarConteudoIA<string>(prompt).catch(() => null)
 
-        // Se retornou JSON (string dentro de JSON), tenta extrair
         let insightFinal: string | null = null
         if (typeof resultado === 'string') {
             insightFinal = resultado
@@ -101,7 +109,7 @@ Responda APENAS com o insight em português brasileiro, sem saudação, sem form
             insightFinal = String(Object.values(resultado as Record<string, unknown>)[0] ?? '')
         }
 
-        setInsight(insightFinal ?? `${ficha.nome} tem score ${ficha.score} pts. ${ficha.evolucaoSemana > 0 ? `Evolução positiva de +${ficha.evolucaoSemana} pts esta semana.` : 'Trabalhar a consistência de medições para acompanhar a evolução.'}`)
+        setInsight(insightFinal ?? `${ficha.nome} mantém ${ficha.checkinsMes} treinos no mês. Segundo Schoenfeld (2017), a consistência é o pilar primário da hipertrofia. Continue monitorando os feedbacks recentes para ajustes finos.`)
         setInsightLoading(false)
     }
 
@@ -130,177 +138,96 @@ Responda APENAS com o insight em português brasileiro, sem saudação, sem form
 
     return (
         <div className="min-h-screen bg-background-dark pb-24">
-            {/* Header */}
-            <div className="sticky top-0 bg-background-dark px-4 pt-5 pb-3 border-b border-white/5 z-10">
-                <button onClick={onVoltar} className="flex items-center gap-1.5 text-gray-400 text-sm mb-3 hover:text-white transition-colors">
-                    <ChevronLeft size={18} />
-                    <span>Alunos</span>
-                </button>
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        {/* Avatar com Upload */}
-                        <div className="relative group shrink-0">
-                            <label className="cursor-pointer block">
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    className="hidden"
-                                    onChange={handleAvatarUpload}
-                                    disabled={uploading}
-                                />
-                                <div className="w-14 h-14 rounded-full bg-[var(--bg-card)] flex items-center justify-center border-2 border-white/10 overflow-hidden relative overflow-hidden">
-                                    {uploading ? (
-                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10 text-white animate-spin">
-                                            <Loader2 size={20} />
-                                        </div>
-                                    ) : (
-                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 flex items-center justify-center transition-colors">
-                                            <Camera size={16} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                                        </div>
-                                    )}
-                                    {fotoUrl ? (
-                                        <img src={fotoUrl} alt={ficha.nome} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <User className="text-gray-600" size={24} />
-                                    )}
-                                </div>
-                                {/* Badge de edição no mobile (Always Visible) */}
-                                <div className="absolute -bottom-1 -right-1 bg-[var(--color-accent)] text-black p-1 rounded-full border-2 border-background-dark">
-                                    <Camera size={10} />
-                                </div>
-                            </label>
-                        </div>
-                        <div>
-                            <h1 className="text-white text-xl font-black">{ficha.nome}</h1>
-                            <p className="text-gray-500 text-xs mt-0.5">{ficha.email}</p>
-                        </div>
-                    </div>
-                    <NivelBadge nivel={ficha.nivel} />
-                </div>
-            </div>
+            <HeaderAluno
+                nome={ficha.nome}
+                email={ficha.email}
+                fotoUrl={fotoUrl}
+                nivel={ficha.nivel}
+                loading={loading}
+                uploading={uploading}
+                onVoltar={onVoltar}
+                onAvatarUpload={handleAvatarUpload}
+            />
 
-            <div className="px-4 pt-5 space-y-4">
-                {/* Score */}
-                <div className="bg-surface rounded-2xl p-4 border border-white/5">
-                    <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-3">📊 Score Shape-V</p>
-                    <div className="flex items-end justify-between">
-                        <div>
-                            <p className="text-[var(--color-accent)] text-4xl font-black">{ficha.score}</p>
-                            <p className="text-gray-500 text-xs mt-0.5">pontos</p>
-                        </div>
-                        <div className={`flex items-center gap-1 text-sm font-bold ${ficha.evolucaoSemana > 0 ? 'text-emerald-400' : ficha.evolucaoSemana < 0 ? 'text-red-400' : 'text-gray-500'}`}>
-                            {ficha.evolucaoSemana > 0
-                                ? <TrendingUp size={16} />
-                                : ficha.evolucaoSemana < 0
-                                    ? <TrendingDown size={16} />
-                                    : null}
-                            {ficha.evolucaoSemana !== 0 && (
-                                <span>{ficha.evolucaoSemana > 0 ? '+' : ''}{ficha.evolucaoSemana} esta semana</span>
-                            )}
-                            {ficha.evolucaoSemana === 0 && <span className="text-gray-600">Sem evolução semanal</span>}
-                        </div>
-                    </div>
-                </div>
+            <div className="px-4 py-6 space-y-6">
+                {/* 1. Card de Consistência + Heatmap (Ordem solicitada) */}
+                <CardConsistenciaPersonal
+                    checkins={ficha.checkins}
+                    streakAtual={ficha.streak}
+                    recorde={ficha.recorde}
+                    totalTreinos={ficha.totalTreinos}
+                    consistencia={ficha.consistencia}
+                    tempoTotalMinutos={ficha.tempoTotalMinutos}
+                    proximoBadge={ficha.proximoBadge}
+                    atletaId={alunoId}
+                />
 
-                {/* Proporções */}
-                {ficha.proporcoes.length > 0 && (
-                    <div className="bg-surface rounded-2xl p-4 border border-white/5">
-                        <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-3">📐 Proporções</p>
-                        <div className="space-y-4">
-                            {ficha.proporcoes.map(prop => {
-                                const delta = prop.valorAnterior > 0 ? +(prop.valor - prop.valorAnterior).toFixed(1) : null
-                                const cresceu = delta !== null && delta > 0
-                                const diminuiu = delta !== null && delta < 0
-                                return (
-                                    <div key={prop.nome}>
-                                        <div className="flex justify-between items-center mb-1.5">
-                                            <span className="text-gray-300 text-sm">{prop.nome}</span>
-                                            <div className="flex items-center gap-2">
-                                                {/* Medidas lineares: anterior → atual */}
-                                                {prop.valorAnterior > 0 ? (
-                                                    <span className="text-gray-500 text-xs font-mono">
-                                                        {prop.valorAnterior}cm
-                                                        <span className="mx-1 text-gray-600">→</span>
-                                                        <span className={cresceu ? 'text-emerald-400' : diminuiu ? 'text-red-400' : 'text-white'}>
-                                                            {prop.valor}cm
-                                                        </span>
-                                                        {delta !== null && delta !== 0 && (
-                                                            <span className={`ml-1 text-[10px] font-bold ${cresceu ? 'text-emerald-400' : 'text-red-400'}`}>
-                                                                ({cresceu ? '+' : ''}{delta})
-                                                            </span>
-                                                        )}
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-white text-sm font-semibold">{prop.valor} cm</span>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full bg-[var(--color-accent)] rounded-full transition-all"
-                                                style={{ width: `${Math.min(100, prop.percentual)}%` }}
-                                            />
-                                        </div>
-                                        <div className="flex justify-between mt-0.5">
-                                            <span className="text-gray-600 text-[10px]">{prop.percentual}% do ideal</span>
-                                            <span className="text-gray-600 text-[10px]">meta: {prop.meta}cm</span>
-                                        </div>
-                                    </div>
-                                )
-                            })}
-                        </div>
-                    </div>
-                )}
+                {/* 2. Últimos Registros */}
+                <CardUltimosRegistros registros={ficha.ultimosRegistros} />
 
-                {/* Consistência */}
-                <div className="bg-surface rounded-2xl p-4 border border-white/5">
-                    <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-3">📅 Consistência</p>
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <Flame size={20} className="text-orange-400" />
-                            <div>
-                                <p className="text-white text-lg font-black">{ficha.streak}</p>
-                                <p className="text-gray-500 text-xs">treinos no mês</p>
+                {/* 3. Insight do Vitrúvio */}
+                <div className="bg-surface-deep rounded-3xl p-5 border border-white/5 shadow-xl transition-all hover:border-white/10 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <Sparkles size={40} className="text-indigo-400" />
+                    </div>
+
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-xl bg-indigo-500/10 flex items-center justify-center">
+                                <Sparkles size={18} className="text-indigo-400" />
                             </div>
+                            <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">Insight do Vitrúvio</h3>
                         </div>
-                        <div className="text-right">
-                            <p className="text-white text-lg font-black">{consistenciaPct}%</p>
-                            <p className="text-gray-500 text-xs">consistência</p>
-                        </div>
-                        <div className="text-right">
-                            <p className="text-white text-sm font-semibold">{ficha.checkinsMes}/{ficha.totalDiasMes}</p>
-                            <p className="text-gray-500 text-xs">dias treinados</p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Insight IA */}
-                <div className="bg-surface rounded-2xl p-4 border border-white/5">
-                    <div className="flex items-center justify-between mb-3">
-                        <p className="text-gray-400 text-xs font-bold uppercase tracking-wider">🤖 Insight do Vitrúvio</p>
                         {!insight && !insightLoading && (
                             <button
                                 onClick={gerarInsight}
-                                className="flex items-center gap-1.5 bg-[var(--color-accent)]/10 text-[var(--color-accent)] text-xs font-bold px-3 py-1.5 rounded-full border border-[var(--color-accent)]/30 hover:bg-[var(--color-accent)]/20 transition-colors"
+                                className="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
                             >
-                                <Sparkles size={12} />
-                                Gerar
+                                Gerar Insight
                             </button>
                         )}
                     </div>
+
                     {insightLoading && (
-                        <div className="flex items-center gap-2 text-gray-500">
-                            <Loader2 size={14} className="animate-spin" />
-                            <span className="text-sm">Analisando...</span>
+                        <div className="flex items-center gap-3 py-4 text-gray-400 animate-pulse">
+                            <Loader2 size={16} className="animate-spin text-indigo-400" />
+                            <span className="text-sm font-medium">Analisando dados e literatura científica...</span>
                         </div>
                     )}
+
                     {insight && (
-                        <p className="text-gray-300 text-sm leading-relaxed">{insight}</p>
+                        <div className="relative">
+                            <p className="text-gray-300 text-sm leading-relaxed mb-4 border-l-2 border-indigo-500/30 pl-4 py-1">
+                                {insight}
+                            </p>
+                            <div className="flex justify-end">
+                                <button className="text-[9px] font-black text-indigo-400 uppercase tracking-widest hover:text-indigo-300" onClick={() => setInsight(null)}>
+                                    Nova Análise
+                                </button>
+                            </div>
+                        </div>
                     )}
+
                     {!insight && !insightLoading && (
-                        <p className="text-gray-600 text-sm">Toque em "Gerar" para obter um insight personalizado sobre este aluno.</p>
+                        <p className="text-gray-500 text-xs leading-relaxed">
+                            Toque em "Gerar" para obter uma análise técnica baseada na consistência e nos registros recentes deste aluno.
+                        </p>
                     )}
                 </div>
+
+                {/* 4. Metas do Trimestre (Unificado) */}
+                <CardMetasTrimestrePersonal
+                    metasProporcoes={ficha.metasProporcoes}
+                    diagnosticoDados={ficha.diagnosticoDados}
+                    medidas={ficha.medidas}
+                    sexo={ficha.sexo || 'M'}
+                    composicaoAtual={{
+                        peso: ficha.peso || 0,
+                        gorduraPct: ficha.gorduraPct || 0
+                    }}
+                    scoreAtual={ficha.score}
+                    scoreMeta3M={ficha.scoreMeta3M}
+                />
             </div>
         </div>
     )

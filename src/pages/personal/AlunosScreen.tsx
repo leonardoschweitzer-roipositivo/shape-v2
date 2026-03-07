@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useMemo } from 'react'
-import { Search, ChevronRight, ChevronLeft, TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { Search, ChevronRight, ChevronLeft, TrendingUp, TrendingDown, Minus, Users } from 'lucide-react'
 import type { AlunoCard, StatusAluno } from '@/types/personal-portal'
 import { AlunoFichaScreen } from './AlunoFichaScreen'
 
@@ -80,107 +80,134 @@ export function AlunosScreen({ alunos, onVoltar, alunoInicialId, onAlunoFechou }
     ]
 
     return (
-        <div className="min-h-screen bg-background-dark pb-24">
-            {/* Header fixo */}
-            <div className="sticky top-0 bg-background-dark pt-6 pb-3 px-4 z-10 border-b border-white/5">
-                <h1 className="text-white text-xl font-black mb-4">Meus Alunos</h1>
+        <div className="min-h-screen bg-background-dark pb-24 px-4 pt-8 relative overflow-hidden">
+            {/* Efeito de Gradiente de Topo (igual ao Aluno) */}
+            <div className="absolute top-0 left-0 right-0 h-80 bg-gradient-to-b from-indigo-500/10 via-indigo-900/5 to-transparent pointer-events-none" />
+            <div className="absolute top-0 left-0 right-0 h-40 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent pointer-events-none" />
 
-                {/* Busca */}
-                <div className="relative mb-3">
-                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-                    <input
-                        type="text"
-                        placeholder="Buscar por nome ou email..."
-                        value={busca}
-                        onChange={e => setBusca(e.target.value)}
-                        className="w-full bg-surface text-white text-sm placeholder-gray-600 rounded-xl pl-9 pr-4 py-2.5 border border-white/5 focus:outline-none focus:border-[var(--color-accent)]/50"
-                    />
+            <div className="relative z-10">
+                {/* Header fixo */}
+                <div className="mb-8">
+                    <h1 className="text-white text-3xl font-black tracking-tight mb-6">Meus Alunos</h1>
+
+                    {/* Busca Premium */}
+                    <div className="relative mb-6 group">
+                        <div className="absolute inset-0 bg-indigo-500/5 rounded-2xl blur-xl group-focus-within:bg-indigo-500/10 transition-all opacity-0 group-focus-within:opacity-100" />
+                        <div className="relative">
+                            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-indigo-400 transition-colors" />
+                            <input
+                                type="text"
+                                placeholder="Buscar por nome ou email..."
+                                value={busca}
+                                onChange={e => setBusca(e.target.value)}
+                                className="w-full bg-surface-deep text-white text-sm font-medium placeholder-zinc-600 rounded-2xl pl-12 pr-4 py-4 border border-white/5 focus:outline-none focus:border-indigo-500/30 transition-all shadow-inner shadow-black/20"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Filtros (chips) */}
+                    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1">
+                        {filtros.map(f => (
+                            <button
+                                key={f.id}
+                                onClick={() => setFiltro(f.id)}
+                                className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all ${filtro === f.id
+                                    ? 'bg-indigo-600 text-white border-indigo-500 shadow-lg shadow-indigo-600/20'
+                                    : 'bg-surface-deep text-zinc-500 border-white/5 hover:border-white/10'
+                                    }`}
+                            >
+                                {f.label}
+                                <span className={`px-1.5 py-0.5 rounded-md ${filtro === f.id ? 'bg-white/20 text-white' : 'bg-white/5 text-zinc-600'}`}>
+                                    {f.count}
+                                </span>
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
-                {/* Filtros (chips) */}
-                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                    {filtros.map(f => (
-                        <button
-                            key={f.id}
-                            onClick={() => setFiltro(f.id)}
-                            className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${filtro === f.id
-                                ? 'bg-[var(--color-accent)] text-black border-[var(--color-accent)]'
-                                : 'bg-transparent text-gray-400 border-white/10'
-                                }`}
-                        >
-                            {f.label}
-                            <span className={`text-[10px] ${filtro === f.id ? 'opacity-70' : 'opacity-50'}`}>
-                                {f.count}
-                            </span>
-                        </button>
-                    ))}
-                </div>
-            </div>
+                {/* Lista */}
+                <div>
+                    {alunosFiltrados.length === 0 ? (
+                        <div className="text-center py-16 bg-surface-deep rounded-3xl border border-white/5 mx-1">
+                            <Users size={40} className="text-zinc-800 mx-auto mb-4" />
+                            <p className="text-zinc-500 text-sm font-medium">Nenhum aluno encontrado.</p>
+                        </div>
+                    ) : (
+                        <div className="bg-surface-deep rounded-3xl border border-white/5 overflow-hidden shadow-2xl relative">
+                            <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
+                                <Users size={120} className="text-white" />
+                            </div>
 
-            {/* Lista */}
-            <div className="px-4 pt-4">
-                {alunosFiltrados.length === 0 ? (
-                    <div className="text-center py-16">
-                        <p className="text-gray-500 text-sm">Nenhum aluno encontrado.</p>
-                    </div>
-                ) : (
-                    <div className="bg-surface rounded-2xl border border-white/5 overflow-hidden">
-                        {alunosFiltrados.map((aluno, idx) => {
-                            const status = getStatusConfig(aluno.status)
-                            const temEvolucao = aluno.evolucaoSemana !== 0
-                            return (
-                                <button
-                                    key={aluno.id}
-                                    onClick={() => setAlunoSelecionado(aluno.id)}
-                                    className={`w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors ${idx < alunosFiltrados.length - 1 ? 'border-b border-white/5' : ''}`}
-                                >
-                                    <div className="flex items-start gap-3">
-                                        {/* Avatar */}
-                                        <div className="w-10 h-10 rounded-full bg-[var(--bg-card)] flex items-center justify-center shrink-0 border border-white/10">
-                                            {aluno.fotoUrl
-                                                ? <img src={aluno.fotoUrl} alt={aluno.nome} className="w-10 h-10 rounded-full object-cover" />
-                                                : <span className="text-gray-400 text-sm font-bold">{aluno.nome[0].toUpperCase()}</span>
-                                            }
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <p className="text-white text-sm font-semibold">{aluno.nome}</p>
-                                                {aluno.nivel && (
-                                                    <span className="text-[10px] text-[var(--color-accent)] font-bold">
-                                                        {aluno.nivel}
-                                                    </span>
+                            <div className="divide-y divide-white/5">
+                                {alunosFiltrados.map((aluno) => {
+                                    const status = getStatusConfig(aluno.status)
+                                    const temEvolucao = aluno.evolucaoSemana !== 0
+                                    return (
+                                        <button
+                                            key={aluno.id}
+                                            onClick={() => setAlunoSelecionado(aluno.id)}
+                                            className="w-full flex items-center justify-between p-6 text-left hover:bg-white/5 transition-all active:scale-[0.99] group relative"
+                                        >
+                                            <div className="flex items-center gap-4 relative z-10">
+                                                {/* Avatar Premium */}
+                                                <div className="relative shrink-0">
+                                                    <div className="w-14 h-14 rounded-2xl bg-zinc-900 flex items-center justify-center border border-white/10 shadow-lg overflow-hidden group-hover:border-indigo-500/30 transition-colors">
+                                                        {aluno.fotoUrl
+                                                            ? <img src={aluno.fotoUrl} alt={aluno.nome} className="w-14 h-14 object-cover" />
+                                                            : <span className="text-zinc-500 text-lg font-black">{aluno.nome[0].toUpperCase()}</span>
+                                                        }
+                                                    </div>
+                                                    <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#09090b] ${status.dot} shadow-[0_0_8px_rgba(0,0,0,0.5)]`} />
+                                                </div>
+
+                                                <div>
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="text-white text-base font-black tracking-tight">{aluno.nome}</p>
+                                                        {aluno.nivel && (
+                                                            <span className="text-[9px] font-black bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded-md border border-indigo-500/20 uppercase tracking-widest">
+                                                                {aluno.nivel}
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="flex items-center gap-2 mt-1.5">
+                                                        <span className={`text-[10px] font-black uppercase tracking-widest ${status.cor}`}>{status.label}</span>
+                                                        {aluno.score > 0 && (
+                                                            <div className="flex items-center gap-1">
+                                                                <span className="text-zinc-700 text-[10px]">•</span>
+                                                                <span className="text-white text-[10px] font-black">{aluno.score}</span>
+                                                                <span className="text-zinc-600 text-[9px] font-bold uppercase">PTS</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    <p className="text-zinc-600 text-[9px] font-bold uppercase tracking-widest mt-1">
+                                                        Treinou {formatarUltimaMedicao(aluno.ultimaMedicao)}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center gap-4 relative z-10">
+                                                {temEvolucao && (
+                                                    <div className={`flex flex-col items-end ${aluno.evolucaoSemana > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                                        <div className="flex items-center gap-0.5 font-black text-xs">
+                                                            {aluno.evolucaoSemana > 0 ? '+' : ''}{aluno.evolucaoSemana}
+                                                            {aluno.evolucaoSemana > 0 ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
+                                                        </div>
+                                                        <span className="text-[8px] text-zinc-600 font-bold uppercase tracking-widest">SEMANA</span>
+                                                    </div>
                                                 )}
+                                                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-indigo-500/10 transition-colors">
+                                                    <ChevronRight size={20} className="text-zinc-600 group-hover:text-indigo-400 transition-colors" />
+                                                </div>
                                             </div>
-                                            <div className="flex items-center gap-2 mt-0.5">
-                                                <div className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
-                                                <span className={`text-xs ${status.cor}`}>{status.label}</span>
-                                                {aluno.score > 0 && (
-                                                    <span className="text-gray-600 text-xs">• {aluno.score} pts</span>
-                                                )}
-                                            </div>
-                                            <p className="text-gray-600 text-[11px] mt-0.5">
-                                                {formatarUltimaMedicao(aluno.ultimaMedicao)}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        {temEvolucao && (
-                                            <div className={`flex items-center gap-0.5 text-xs font-bold ${aluno.evolucaoSemana > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                                                {aluno.evolucaoSemana > 0
-                                                    ? <TrendingUp size={12} />
-                                                    : <TrendingDown size={12} />
-                                                }
-                                                {aluno.evolucaoSemana > 0 ? '+' : ''}{aluno.evolucaoSemana}
-                                            </div>
-                                        )}
-                                        {!temEvolucao && <Minus size={12} className="text-gray-700" />}
-                                        <ChevronRight size={16} className="text-gray-600" />
-                                    </div>
-                                </button>
-                            )
-                        })}
-                    </div>
-                )}
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     )

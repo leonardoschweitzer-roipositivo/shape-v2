@@ -52,7 +52,7 @@ export function BottomNavigationPersonal({
                             >
                                 {/* Active indicator */}
                                 {isActive && (
-                                    <div className="absolute top-0 left-0 right-0 h-0.5 bg-[var(--color-accent)]" />
+                                    <div className="absolute top-0 left-0 right-0 h-0.5 bg-indigo-400" />
                                 )}
 
                                 {/* Icon with badge */}
@@ -60,13 +60,13 @@ export function BottomNavigationPersonal({
                                     <Icon
                                         size={24}
                                         className={`transition-colors ${isActive
-                                            ? 'text-[var(--color-accent)]'
-                                            : 'text-gray-500'
+                                            ? 'text-indigo-400'
+                                            : 'text-zinc-500'
                                             }`}
                                         strokeWidth={isActive ? 2.5 : 2}
                                     />
                                     {showBadge && (
-                                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[14px] h-[14px] flex items-center justify-center px-0.5">
+                                        <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[9px] font-black rounded-full min-w-[14px] h-[14px] flex items-center justify-center px-0.5 border border-zinc-900 shadow-lg">
                                             {alertasNaoLidos > 9 ? '9+' : alertasNaoLidos}
                                         </span>
                                     )}
@@ -74,9 +74,9 @@ export function BottomNavigationPersonal({
 
                                 {/* Label */}
                                 <span
-                                    className={`text-[10px] font-bold uppercase tracking-wider transition-colors ${isActive
-                                        ? 'text-[var(--color-accent)]'
-                                        : 'text-gray-600'
+                                    className={`text-[9px] font-black uppercase tracking-[0.15em] transition-colors ${isActive
+                                        ? 'text-indigo-400'
+                                        : 'text-zinc-600'
                                         }`}
                                 >
                                     {item.label}

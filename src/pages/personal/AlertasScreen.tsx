@@ -116,96 +116,109 @@ export function AlertasScreen({ personalId, onAbrirAluno, onAtualizarContador }:
     }
 
     return (
-        <div className="min-h-screen bg-background-dark pb-24">
-            {/* Header */}
-            <div className="sticky top-0 bg-background-dark px-4 pt-6 pb-3 border-b border-white/5 z-10">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-white text-xl font-black">Alertas</h1>
+        <div className="min-h-screen bg-background-dark pb-24 px-4 pt-8 relative overflow-hidden">
+            {/* Efeito de Gradiente de Topo (igual ao Aluno) */}
+            <div className="absolute top-0 left-0 right-0 h-80 bg-gradient-to-b from-indigo-500/10 via-indigo-900/5 to-transparent pointer-events-none" />
+            <div className="absolute top-0 left-0 right-0 h-40 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent pointer-events-none" />
+
+            <div className="relative z-10">
+                {/* Header */}
+                <div className="mb-8">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-white text-3xl font-black tracking-tight">Alertas</h1>
+                            {naoLidas > 0 && (
+                                <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em] mt-1">
+                                    {naoLidas} Pendentes
+                                </p>
+                            )}
+                        </div>
                         {naoLidas > 0 && (
-                            <p className="text-gray-400 text-xs mt-0.5">{naoLidas} não {naoLidas === 1 ? 'lida' : 'lidas'}</p>
+                            <button
+                                onClick={marcarTodasLidas}
+                                disabled={marcandoTodas}
+                                className="flex items-center gap-2 bg-indigo-500/10 text-indigo-400 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-indigo-500/20 active:scale-95 transition-all"
+                            >
+                                {marcandoTodas
+                                    ? <Loader2 size={12} className="animate-spin" />
+                                    : <CheckCheck size={14} />
+                                }
+                                Limpar Tudo
+                            </button>
                         )}
                     </div>
-                    {naoLidas > 0 && (
-                        <button
-                            onClick={marcarTodasLidas}
-                            disabled={marcandoTodas}
-                            className="flex items-center gap-1.5 text-[var(--color-accent)] text-xs font-bold"
-                        >
-                            {marcandoTodas
-                                ? <Loader2 size={12} className="animate-spin" />
-                                : <CheckCheck size={14} />
-                            }
-                            Limpar
-                        </button>
+                </div>
+
+                {/* Notificações */}
+                <div className="space-y-8">
+                    {notificacoes.length === 0 ? (
+                        <div className="text-center py-20 bg-surface-deep rounded-3xl border border-white/5 shadow-2xl">
+                            <Bell size={48} className="text-zinc-800 mx-auto mb-4" />
+                            <p className="text-zinc-500 text-sm font-medium">Nenhum alerta agora.</p>
+                            <p className="text-zinc-700 text-xs mt-1 font-black uppercase tracking-widest">Tudo sob controle</p>
+                        </div>
+                    ) : (
+                        ordemGrupos.map(grupo => {
+                            const items = grupos[grupo]
+                            if (!items || items.length === 0) return null
+                            return (
+                                <div key={grupo}>
+                                    <div className="flex items-center gap-2 mb-4 px-1">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-zinc-800" />
+                                        <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em]">
+                                            {GRUPO_LABEL[grupo]}
+                                        </p>
+                                    </div>
+                                    <div className="bg-surface-deep rounded-3xl border border-white/5 overflow-hidden shadow-xl divide-y divide-white/5">
+                                        {items.map((notif) => {
+                                            const prioConfig = PRIORIDADE_CONFIG[notif.prioridade]
+                                            return (
+                                                <button
+                                                    key={notif.id}
+                                                    onClick={() => handleClickNotificacao(notif)}
+                                                    className={`w-full flex items-start gap-4 p-5 text-left transition-all hover:bg-white/5 active:scale-[0.99] group ${!notif.lida ? 'bg-white/[0.02]' : ''}`}
+                                                >
+                                                    {/* Ícone / indicador */}
+                                                    <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-xl shadow-inner ${!notif.lida ? 'bg-indigo-500/10' : 'bg-white/5'}`}>
+                                                        {prioConfig.icone}
+                                                    </div>
+
+                                                    {/* Conteúdo */}
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            <p className={`text-[13px] font-black tracking-tight leading-snug ${!notif.lida ? 'text-white' : 'text-zinc-400'}`}>
+                                                                {stripHtml(notif.titulo)}
+                                                            </p>
+                                                            <span className="text-zinc-600 text-[9px] font-black uppercase shrink-0">{formatarHora(notif.created_at)}</span>
+                                                        </div>
+                                                        <p className="text-zinc-500 text-[11px] font-medium mt-1.5 leading-relaxed line-clamp-2">
+                                                            {stripHtml(notif.mensagem)}
+                                                        </p>
+                                                    </div>
+
+                                                    {/* Ponto não lida */}
+                                                    {!notif.lida && (
+                                                        <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.6)] shrink-0 mt-1.5 animate-pulse" />
+                                                    )}
+                                                </button>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
+                            )
+                        })
                     )}
                 </div>
-            </div>
 
-            {/* Notificações */}
-            <div className="px-4 pt-4 space-y-5">
-                {notificacoes.length === 0 ? (
-                    <div className="text-center py-16">
-                        <Bell size={40} className="text-gray-700 mx-auto mb-3" />
-                        <p className="text-gray-500 text-sm">Nenhuma notificação.</p>
-                        <p className="text-gray-600 text-xs mt-1">As atividades dos alunos aparecerão aqui.</p>
-                    </div>
-                ) : (
-                    ordemGrupos.map(grupo => {
-                        const items = grupos[grupo]
-                        if (!items || items.length === 0) return null
-                        return (
-                            <div key={grupo}>
-                                <p className="text-gray-500 text-[11px] font-bold uppercase tracking-widest mb-2 px-1">
-                                    {GRUPO_LABEL[grupo]}
-                                </p>
-                                <div className="bg-surface rounded-2xl border border-white/5 overflow-hidden">
-                                    {items.map((notif, idx) => {
-                                        const prioConfig = PRIORIDADE_CONFIG[notif.prioridade]
-                                        return (
-                                            <button
-                                                key={notif.id}
-                                                onClick={() => handleClickNotificacao(notif)}
-                                                className={`w-full flex items-start gap-3 p-4 text-left transition-colors hover:bg-white/5 ${idx < items.length - 1 ? 'border-b border-white/5' : ''} ${!notif.lida ? 'bg-white/[0.02]' : ''}`}
-                                            >
-                                                {/* Ícone / indicador */}
-                                                <div className="shrink-0 mt-0.5">
-                                                    <span className="text-lg">{prioConfig.icone}</span>
-                                                </div>
-
-                                                {/* Conteúdo */}
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-start justify-between gap-2">
-                                                        <p className={`text-sm font-semibold leading-snug ${!notif.lida ? 'text-white' : 'text-gray-300'}`}>
-                                                            {stripHtml(notif.titulo)}
-                                                        </p>
-                                                        <span className="text-gray-600 text-[11px] shrink-0">{formatarHora(notif.created_at)}</span>
-                                                    </div>
-                                                    <p className="text-gray-500 text-xs mt-0.5 leading-relaxed">{stripHtml(notif.mensagem)}</p>
-                                                </div>
-
-                                                {/* Ponto não lida */}
-                                                {!notif.lida && (
-                                                    <div className="w-2 h-2 rounded-full bg-[var(--color-accent)] shrink-0 mt-1.5" />
-                                                )}
-                                            </button>
-                                        )
-                                    })}
-                                </div>
-                            </div>
-                        )
-                    })
+                {/* Modal de detalhes da notificação */}
+                {notifSelecionada && (
+                    <NotificationDetailModal
+                        notificacao={notifSelecionada}
+                        onFechar={() => setNotifSelecionada(null)}
+                        onAcao={handleAcaoModal}
+                    />
                 )}
             </div>
-
-            {/* Modal de detalhes da notificação */}
-            {notifSelecionada && (
-                <NotificationDetailModal
-                    notificacao={notifSelecionada}
-                    onFechar={() => setNotifSelecionada(null)}
-                    onAcao={handleAcaoModal}
-                />
-            )}
         </div>
     )
 }
