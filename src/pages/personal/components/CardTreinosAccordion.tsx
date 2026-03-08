@@ -9,7 +9,7 @@ interface CardTreinosAccordionProps {
 }
 
 export function CardTreinosAccordion({ planoTreino, atletaId }: CardTreinosAccordionProps) {
-    const [openIndex, setOpenIndex] = useState<number | null>(0)
+    const [openIndex, setOpenIndex] = useState<number | null>(null)
     const [lastCompletedIndex, setLastCompletedIndex] = useState<number>(-1)
 
     useEffect(() => {
@@ -61,8 +61,8 @@ export function CardTreinosAccordion({ planoTreino, atletaId }: CardTreinosAccor
                         >
                             <div className="flex items-center gap-3">
                                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm ${isHoje
-                                        ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
-                                        : 'bg-white/5 text-gray-400'
+                                    ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
+                                    : 'bg-white/5 text-gray-400'
                                     }`}>
                                     {treino.letra}
                                 </div>
