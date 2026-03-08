@@ -38,6 +38,7 @@ export function AlunoFichaScreen({ alunoId, onVoltar }: AlunoFichaScreenProps) {
     const [loading, setLoading] = useState(true)
     const [insightLoading, setInsightLoading] = useState(false)
     const [insight, setInsight] = useState<string | null>(null)
+    const [insightError, setInsightError] = useState<string | null>(null)
     const [uploading, setUploading] = useState(false)
     const [fotoUrl, setFotoUrl] = useState<string | null>(null)
 
@@ -78,6 +79,7 @@ export function AlunoFichaScreen({ alunoId, onVoltar }: AlunoFichaScreenProps) {
     const gerarInsight = async () => {
         if (!ficha || insightLoading) return
         setInsightLoading(true)
+        setInsightError(null)
 
         // Buscar fontes científicas para o prompt
         const fontes = getFontesCientificas('diagnostico')
@@ -95,44 +97,47 @@ export function AlunoFichaScreen({ alunoId, onVoltar }: AlunoFichaScreenProps) {
 Analise os dados reais do aluno ${ficha.nome} e gere um insight TÉCNICO, ANALÍTICO e EMBASADO.
 
 DADOS REAIS DO ALUNO:
-- Nome: ${ficha.nome}
-- Score Atual: ${ficha.score} pts (Meta 12M: ${ficha.scoreMeta12M} pts)
-- Consistência Geral: ${ficha.consistencia}% (Streak Atual: ${ficha.streak} dias)
-- Treinos no mês: ${ficha.checkinsMes} de ${ficha.totalDiasMes} dias
-- Composição: BF ${ficha.gorduraPct?.toFixed(1)}%, Massa Magra ${ficha.massaMagra?.toFixed(1)} kg, Peso ${ficha.peso} kg
+- Score: ${ficha.score} pts (Meta 12M: ${ficha.scoreMeta12M} pts)
+- Consistência: ${ficha.consistencia}% (Streak: ${ficha.streak} dias)
+- Treinos no mês: ${ficha.checkinsMes} / ${ficha.totalDiasMes}
+- Atualmente: BF ${ficha.gorduraPct?.toFixed(1)}%, Massa Magra ${ficha.massaMagra?.toFixed(1)} kg
 
-PADRÃO DE CHECK-INS (Últimos 14 dias):
-${ultimos14Dias.map(d => `${d.data}: ${d.treinou ? '✅ TREINOU' : '❌ NÃO TREINOU'}`).join('\n')}
+PADRÃO DE CHECK-INS (14 dias):
+${ultimos14Dias.map(d => `${d.data}: ${d.treinou ? '✅' : '❌'}`).join('|')}
 
-ÚLTIMOS REGISTROS DIÁRIOS (Saúde, trackers e feedback):
-${ficha.ultimosRegistros.map(r => `- ${new Date(r.data).toLocaleDateString('pt-BR')}: [${r.tipo}] ${r.valor} - ${r.descricao}`).join('\n')}
+ÚLTIMOS REGISTROS (Saúde e Feedback):
+${ficha.ultimosRegistros.slice(0, 10).map(r => `- ${r.tipo}: ${r.valor} (${r.descricao})`).join('\n')}
 
-FONTES CIENTÍFICAS DISPONÍVEIS:
+FONTES CIENTÍFICAS:
 ${fontes}
 
-OBJETIVO DA ANÁLISE:
-1. Correlacione a consistência de treinos com os registros diários (ex: relação entre sono/água e performance/dor).
-2. Identifique gargalos reais (ex: fadiga acumulada, baixa hidratação, falhas no padrão de sono).
-3. Seja EXTREMAMENTE específico para o Personal Trainer agir. Não dê dicas genéricas.
-4. Se o aluno estiver consistente, elogie e aponte o próximo passo de carga/intensidade. Se estiver falhando, analise o porquê baseado nos registros.
+OBJETIVO:
+1. Correlacione consistência com os registros (sono, água, dor).
+2. Identifique gargalos reais.
+3. Seja EXTREMAMENTE específico para o Personal Trainer.
+4. Responda APENAS o JSON.
 
-INTRUÇÃO DE FORMATO:
-Retorne APENAS um objeto JSON no formato:
+FORMATO OBRIGATÓRIO (JSON):
 { 
-  "insight": "string contendo a análise completa, use negrito para pontos chave" 
+  "insight": "string com análise técnica profunda, use negrito (**texto**) para pontos chave" 
 }`
 
-        const resultado = await gerarConteudoIA<{ insight: string }>(prompt).catch(() => null)
+        try {
+            const resultado = await gerarConteudoIA<{ insight: string }>(prompt)
 
-        let insightFinal: string | null = null
-        if (resultado && typeof resultado === 'object' && 'insight' in resultado) {
-            insightFinal = resultado.insight
-        } else if (resultado && typeof resultado === 'object') {
-            insightFinal = String(Object.values(resultado)[0] ?? '')
+            if (resultado && typeof resultado === 'object' && 'insight' in resultado) {
+                setInsight(resultado.insight)
+            } else {
+                // Fallback inteligente se a IA falhar mas os dados existirem
+                setInsightError('A IA não conseguiu gerar uma análise estruturada no momento.')
+                setInsight(`${ficha.nome} mantém ${ficha.checkinsMes} treinos no mês. A consistência é o pilar primário da hipertrofia. Continue monitorando os feedbacks recentes.`)
+            }
+        } catch (err) {
+            console.error('[AlunoFicha] Erro ao gerar insight:', err)
+            setInsightError('Ocorreu um erro na comunicação com o serviço de IA.')
+        } finally {
+            setInsightLoading(false)
         }
-
-        setInsight(insightFinal ?? `${ficha.nome} mantém ${ficha.checkinsMes} treinos no mês. Segundo Schoenfeld (2017), a consistência é o pilar primário da hipertrofia. Continue monitorando os feedbacks recentes para ajustes finos.`)
-        setInsightLoading(false)
     }
 
     if (loading) {
@@ -229,8 +234,13 @@ Retorne APENAS um objeto JSON no formato:
                             <p className="text-gray-300 text-sm leading-relaxed mb-4 border-l-2 border-indigo-500/30 pl-4 py-1">
                                 {insight}
                             </p>
-                            <div className="flex justify-end">
-                                <button className="text-[9px] font-black text-indigo-400 uppercase tracking-widest hover:text-indigo-300" onClick={() => setInsight(null)}>
+                            <div className="flex justify-end gap-4">
+                                {insightError && (
+                                    <span className="text-[9px] text-red-400 font-medium">
+                                        ⚠️ {insightError}
+                                    </span>
+                                )}
+                                <button className="text-[9px] font-black text-indigo-400 uppercase tracking-widest hover:text-indigo-300" onClick={() => { setInsight(null); setInsightError(null); }}>
                                     Nova Análise
                                 </button>
                             </div>
@@ -238,9 +248,17 @@ Retorne APENAS um objeto JSON no formato:
                     )}
 
                     {!insight && !insightLoading && (
-                        <p className="text-gray-500 text-xs leading-relaxed">
-                            Toque em "Gerar" para obter uma análise técnica baseada na consistência e nos registros recentes deste aluno.
-                        </p>
+                        <div>
+                            {insightError && (
+                                <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] flex items-center gap-2">
+                                    <Sparkles size={14} />
+                                    <span>{insightError}</span>
+                                </div>
+                            )}
+                            <p className="text-gray-500 text-xs leading-relaxed">
+                                Toque em "Gerar" para obter uma análise técnica baseada na consistência e nos registros recentes deste aluno.
+                            </p>
+                        </div>
                     )}
                 </div>
 

@@ -47,7 +47,7 @@ function getModel(): GenerativeModel | null {
 
     if (!model) {
         model = genAI.getGenerativeModel({
-            model: 'gemini-2.0-flash',
+            model: 'gemini-1.5-flash',
             generationConfig: {
                 temperature: 0.7,
                 topP: 0.9,
@@ -75,7 +75,7 @@ function getGenerateModel(): GenerativeModel | null {
 
     if (!generateModel) {
         generateModel = genAI.getGenerativeModel({
-            model: 'gemini-2.0-flash',
+            model: 'gemini-1.5-flash',
             generationConfig: {
                 temperature: 0.4,
                 topP: 0.85,
@@ -104,32 +104,60 @@ export async function gerarConteudoIA<T = unknown>(prompt: string): Promise<T | 
     const aiModel = getGenerateModel()
 
     if (!aiModel) {
-        console.warn('[VitruviusAI] Modelo não disponível — usando fallback determinístico')
+        console.warn('[VitruviusAI] Modelo não disponível (API Key faltando ou erro na inicialização)')
         return null
     }
 
     try {
-        console.info('[VitruviusAI] Gerando conteúdo IA...')
+        console.info('[VitruviusAI] Gerando conteúdo IA... Prompt Length:', prompt.length)
         const result = await aiModel.generateContent(prompt)
-        const text = result.response.text()
+        const response = result.response
+        const text = response.text()
 
         if (!text) {
             console.warn('[VitruviusAI] Resposta vazia do Gemini')
             return null
         }
 
-        // Limpar possíveis markdown code fences
-        const cleaned = text
-            .replace(/```json\n?/g, '')
-            .replace(/```\n?/g, '')
-            .trim()
+        console.debug('[VitruviusAI] Raw response:', text)
 
-        const parsed = JSON.parse(cleaned) as T
-        console.info('[VitruviusAI] ✅ Conteúdo IA gerado com sucesso')
-        return parsed
+        // Limpeza robusta: tenta encontrar o primeiro { e o último }
+        // Isso resolve problemas se a IA incluir texto extra antes ou depois do JSON
+        let jsonContent = text.trim()
+        const firstBrace = jsonContent.indexOf('{')
+        const lastBrace = jsonContent.lastIndexOf('}')
+
+        if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+            jsonContent = jsonContent.substring(firstBrace, lastBrace + 1)
+        } else {
+            // Se não encontrou delimitadores de objeto, tenta limpar markdown tradicional
+            jsonContent = jsonContent
+                .replace(/```json\n?/g, '')
+                .replace(/```\n?/g, '')
+                .trim()
+        }
+
+        try {
+            const parsed = JSON.parse(jsonContent) as T
+            console.info('[VitruviusAI] ✅ Conteúdo IA gerado e parseado com sucesso')
+            return parsed
+        } catch (parseError) {
+            console.error('[VitruviusAI] ❌ Erro ao parsear JSON:', parseError)
+            console.error('[VitruviusAI] Conteúdo que falhou:', jsonContent)
+            return null
+        }
     } catch (error: unknown) {
         const errMsg = error instanceof Error ? error.message : String(error);
-        console.error('[VitruviusAI] ❌ Erro na geração:', errMsg)
+
+        // Tratar erros específicos do Gemini
+        if (errMsg.includes('SAFETY')) {
+            console.error('[VitruviusAI] ⚠️ Bloqueado por filtro de segurança')
+        } else if (errMsg.includes('429') || errMsg.includes('QUOTA')) {
+            console.error('[VitruviusAI] ⚠️ Limite de cota atingido (429)')
+        } else {
+            console.error('[VitruviusAI] ❌ Erro na geração:', errMsg)
+        }
+
         return null
     }
 }
