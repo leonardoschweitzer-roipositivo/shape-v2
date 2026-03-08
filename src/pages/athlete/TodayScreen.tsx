@@ -11,6 +11,7 @@ import { CardDieta } from '../../components/organisms/CardDieta'
 import { TrackersRapidos } from '../../components/organisms/TrackersRapidos'
 import { FeedbackTextual } from '../../components/organisms/FeedbackTextual'
 import { DicaCoach } from '../../components/molecules/DicaCoach'
+import { AccordionProximoTreino } from './components'
 import { TodayScreenData, TrackerRapido } from '../../types/athlete-portal'
 import type { ExercicioTimerState } from '../../types/athlete-portal'
 import type { ProximoTreino } from '../../services/portalDataService'
@@ -19,6 +20,7 @@ interface TodayScreenProps {
     atletaId: string
     data: TodayScreenData
     proximoTreino?: ProximoTreino | null
+    proximosTreinos?: ProximoTreino[]
     sexo?: string
     altura?: number
     peso?: number
@@ -41,6 +43,7 @@ export function TodayScreen({
     atletaId,
     data,
     proximoTreino,
+    proximosTreinos = [],
     sexo,
     altura,
     peso,
@@ -93,6 +96,21 @@ export function TodayScreen({
                     onCompletei={onCompletarTreino}
                     onPular={() => setModalPularOpen(true)}
                 />
+
+                {/* Próximos Treinos (Accordions) */}
+                {proximosTreinos.length > 0 && (
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between px-1">
+                            <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
+                                PRÓXIMOS TREINOS NA SEQUÊNCIA
+                            </h4>
+                            <div className="h-px flex-1 bg-white/5 ml-4" />
+                        </div>
+                        {proximosTreinos.map((t, idx) => (
+                            <AccordionProximoTreino key={idx} treino={t} />
+                        ))}
+                    </div>
+                )}
 
                 {/* Feedback Textual - Relato do dia */}
                 <FeedbackTextual atletaId={atletaId} personalId={personalId} />

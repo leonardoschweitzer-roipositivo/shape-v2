@@ -141,6 +141,54 @@ export function derivarProximoTreino(plano: PlanoTreino | null, currentPendingIn
         exercicios,
     };
 }
+
+/**
+ * Deriva a lista de próximos treinos na sequência (excluindo o atual).
+ */
+export function derivarProximosTreinos(plano: PlanoTreino | null, currentPendingIndex: number = 0): ProximoTreino[] {
+    if (!plano) return [];
+
+    const treinos = plano.treinos || [];
+    if (treinos.length <= 1) return [];
+
+    const proximos: ProximoTreino[] = [];
+    const totalTreinos = treinos.length;
+
+    // Começamos do próximo (index + 1) e pegamos o resto da sequência (até dar a volta ou acabar)
+    // Se o plano tem 5 treinos (A, B, C, D, E) e o atual é C (index 2):
+    // Queremos mostrar D (index 3), E (index 4), A (index 0), B (index 1).
+    for (let i = 1; i < totalTreinos; i++) {
+        const nextIndex = (currentPendingIndex + i) % totalTreinos;
+        const treino = treinos[nextIndex];
+        if (!treino) continue;
+
+        const grupoNomes = treino.blocos.map(b => b.nomeGrupo).join(' + ');
+        const letra = (treino as unknown as Record<string, unknown>).letra as string || String.fromCharCode(65 + nextIndex);
+
+        const exercicios = treino.blocos.flatMap((bloco, bIdx) =>
+            bloco.exercicios.map((ex, iEx: number) => {
+                const raw = ex as unknown as Record<string, unknown>;
+                return {
+                    id: `next-${nextIndex}-ex-${bIdx}-${iEx}`,
+                    nome: ex.nome || (raw.exercicio as string) || '',
+                    series: ex.series || 0,
+                    repeticoes: ex.repeticoes || (raw.reps as string) || '',
+                    foco: bloco.nomeGrupo || '',
+                };
+            })
+        );
+
+        proximos.push({
+            data: `Sequência ${nextIndex + 1}/${totalTreinos}`,
+            letraLabel: `Treino ${letra}`,
+            grupoMuscular: grupoNomes,
+            nomeTreino: treino.nome || grupoNomes,
+            exercicios,
+        });
+    }
+
+    return proximos;
+}
 export function derivarDietaDoDia(plano: PlanoDieta | null, isTreinoDay: boolean = true): DietOfDay {
     if (!plano) {
         return {

@@ -33,6 +33,7 @@ import {
     buscarDadosPersonal,
     type PortalContext,
     type ProximoTreino,
+    derivarProximosTreinos,
 } from '../services/portalDataService'
 
 interface AthletePortalProps {
@@ -57,6 +58,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
     const [dadosBasicos, setDadosBasicos] = useState<DadosBasicos | null>(null)
     const [personal, setPersonal] = useState<MeuPersonal | null>(null)
     const [proximoTreino, setProximoTreino] = useState<ProximoTreino | null>(null)
+    const [proximosTreinos, setProximosTreinos] = useState<ProximoTreino[]>([])
     const [lastPeso, setLastPeso] = useState<number | undefined>(undefined)
     const [showRefeicaoModal, setShowRefeicaoModal] = useState(false)
     const [avaliacaoDados, setAvaliacaoDados] = useState<any | null>(null)
@@ -122,6 +124,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                 setTodayData(today)
                 setDadosBasicos(extrairDadosBasicos(context))
                 setProximoTreino(derivarProximoTreino(context.planoTreino, today?.treino?.indiceTreino))
+                setProximosTreinos(derivarProximosTreinos(context.planoTreino, today?.treino?.indiceTreino))
             } catch (err) {
                 console.error('[AthletePortal] Erro ao carregar dados críticos:', err)
             }
@@ -206,6 +209,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
             const today = await montarDadosHoje(ctx)
             setTodayData(today)
             setProximoTreino(derivarProximoTreino(ctx.planoTreino, today?.treino?.indiceTreino))
+            setProximosTreinos(derivarProximosTreinos(ctx.planoTreino, today?.treino?.indiceTreino))
         }
     }
 
@@ -216,6 +220,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
             const today = await montarDadosHoje(ctx)
             setTodayData(today)
             setProximoTreino(derivarProximoTreino(ctx.planoTreino, today?.treino?.indiceTreino))
+            setProximosTreinos(derivarProximosTreinos(ctx.planoTreino, today?.treino?.indiceTreino))
         }
     }
 
@@ -348,6 +353,8 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
         if (ctx) {
             const today = await montarDadosHoje(ctx)
             setTodayData(today)
+            setProximoTreino(derivarProximoTreino(ctx.planoTreino, today?.treino?.indiceTreino))
+            setProximosTreinos(derivarProximosTreinos(ctx.planoTreino, today?.treino?.indiceTreino))
         }
     }
 
@@ -417,6 +424,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                         atletaId={atletaId}
                         data={todayData}
                         proximoTreino={proximoTreino}
+                        proximosTreinos={proximosTreinos}
                         sexo={ctx?.ficha?.sexo}
                         altura={ctx?.ficha?.altura}
                         peso={lastPeso}

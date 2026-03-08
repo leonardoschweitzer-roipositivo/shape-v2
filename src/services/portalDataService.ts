@@ -18,7 +18,7 @@ export { carregarContextoPortal } from './portal/portalContext';
 
 // Tela HOJE
 export {
-    derivarTreinoDoDia, derivarProximoTreino, derivarDietaDoDia,
+    derivarTreinoDoDia, derivarProximoTreino, derivarProximosTreinos, derivarDietaDoDia,
     buscarRegistrosDoDia, gerarDicaCoach, montarDadosHoje,
 } from './portal/portalHoje';
 export type { ProximoTreino } from './portal/portalHoje';
