@@ -76,6 +76,8 @@ export interface FichaAlunoResumo {
     diagnosticoDados?: any
     ultimosRegistros: RegistroAtividade[]
     metasProporcoes: MetaProporcao[]
+    planoTreino?: any | null // PlanoTreino (using any to avoid circular dependency if needed, but will try to use the type)
+    evolucaoPlanCreatedAt?: string | null
 }
 
 export interface RegistroAtividade {

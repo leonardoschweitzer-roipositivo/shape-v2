@@ -31,7 +31,8 @@ interface CardConsistenciaPersonalProps {
     totalTreinos: number
     consistencia: number
     tempoTotalMinutos: number
-    atletaId: string // keeping for compatibility but not used for fetching anymore
+    atletaId: string
+    startDateOverride?: string | null
 }
 
 export function CardConsistenciaPersonal({
@@ -41,7 +42,8 @@ export function CardConsistenciaPersonal({
     proximoBadge,
     totalTreinos,
     consistencia,
-    tempoTotalMinutos
+    tempoTotalMinutos,
+    startDateOverride
 }: CardConsistenciaPersonalProps) {
     const ano = new Date().getFullYear()
     const emojiStreak = getEmojiStreak(streakAtual)
@@ -59,16 +61,31 @@ export function CardConsistenciaPersonal({
         hoje.setHours(0, 0, 0, 0)
         const hojeKey = hoje.toISOString().split('T')[0]
 
-        // Janela de 6 meses (Março a Agosto de 2026 conforme imagem do usuário)
-        // No portal do aluno, ele pega 6 meses. Vamos ajustar para pegar os últimos 6 meses a partir de hoje.
-        const startDate = new Date(hoje)
-        startDate.setMonth(startDate.getMonth() - 5)
-        startDate.setDate(1) // Primeiro dia de 5 meses atrás
+        // Janela de visualização
+        let startDate: Date;
 
-        // Ajustar para segunda-feira
+        if (startDateOverride) {
+            startDate = new Date(startDateOverride);
+            startDate.setHours(0, 0, 0, 0);
+        } else {
+            // Default: Janela de 6 meses
+            startDate = new Date(hoje);
+            startDate.setMonth(startDate.getMonth() - 5);
+            startDate.setDate(1); // Primeiro dia de 5 meses atrás
+        }
+
+        // Ajustar para segunda-feira (início da semana para a grade)
         const diaSemana = startDate.getDay()
         const offset = diaSemana === 0 ? 6 : diaSemana - 1
         startDate.setDate(startDate.getDate() - offset)
+
+        // Calcular dinamicamente o número de semanas se tiver startDateOverride
+        let actualWeeksToShow = numWeeksToShow;
+        if (startDateOverride) {
+            const diffTime = Math.abs(hoje.getTime() - startDate.getTime());
+            const diffWeeks = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 7));
+            actualWeeksToShow = Math.max(8, diffWeeks + 2); // Pelo menos 2 meses, ou as semanas reais + margem
+        }
 
         const semanas: { key: string; cor: string; mes: number }[][] = []
         const mesesLabels: { mes: number; coluna: number }[] = []
@@ -76,7 +93,7 @@ export function CardConsistenciaPersonal({
         let mesAnterior = -1
         const cursor = new Date(startDate)
 
-        for (let col = 0; col < numWeeksToShow; col++) {
+        for (let col = 0; col < actualWeeksToShow; col++) {
             const semana: { key: string; cor: string; mes: number }[] = []
 
             for (let d = 0; d < 7; d++) {
@@ -106,10 +123,10 @@ export function CardConsistenciaPersonal({
             semanas.push(semana)
         }
 
-        return { semanas, mesesLabels }
-    }, [checkins, numWeeksToShow])
+        return { semanas, mesesLabels, actualWeeksToShow }
+    }, [checkins, numWeeksToShow, startDateOverride])
 
-    const svgWidth = numWeeksToShow * totalCellSize
+    const svgWidth = gradeData.actualWeeksToShow * totalCellSize
     const svgHeight = 7 * totalCellSize
 
     return (
@@ -163,7 +180,7 @@ export function CardConsistenciaPersonal({
                 {/* Labels dos meses */}
                 <div className="relative h-4 w-full mb-1">
                     {gradeData.mesesLabels.map((ml, i) => {
-                        const leftPercentage = (ml.coluna / numWeeksToShow) * 100;
+                        const leftPercentage = (ml.coluna / gradeData.actualWeeksToShow) * 100;
                         const isUltimo = i === gradeData.mesesLabels.length - 1;
 
                         return (

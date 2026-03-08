@@ -258,7 +258,8 @@ export async function buscarFichaAluno(atletaId: string): Promise<FichaAlunoResu
         { data: fichaData },
         { data: assessData },
         { data: registrosData },
-        { data: diagConfirmadoData }
+        { data: diagConfirmadoData },
+        { data: planoTreinoData }
     ] = await Promise.all([
         supabase.from('fichas').select('*').eq('atleta_id', atletaId).limit(1),
         supabase.from('assessments').select('*').eq('atleta_id', atletaId).order('date', { ascending: false }).limit(2),
@@ -273,13 +274,21 @@ export async function buscarFichaAluno(atletaId: string): Promise<FichaAlunoResu
             .eq('status', 'confirmado')
             .order('created_at', { ascending: false })
             .limit(1)
-            .single()
+            .maybeSingle(), // Use maybeSingle to avoid errors if not found
+        supabase.from('planos_treino')
+            .select('*')
+            .eq('atleta_id', atletaId)
+            .eq('status', 'ativo')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
     ])
 
     const ficha = fichaData?.[0]
     const assessments = (assessData ?? []) as any[]
     const registros = registrosData ?? []
     const diagConfirmado = diagConfirmadoData as any
+    const planoTreinoRaw = planoTreinoData as any
 
     // 3. Processar Score e Composição
     // (Assumindo que trackers também estão em registros_diarios conforme portalHoje.ts)
@@ -440,7 +449,9 @@ export async function buscarFichaAluno(atletaId: string): Promise<FichaAlunoResu
         medidas: medidasParaCard,
         diagnosticoDados: diagnostico,
         ultimosRegistros: combinados,
-        metasProporcoes
+        metasProporcoes,
+        planoTreino: planoTreinoRaw?.dados || null,
+        evolucaoPlanCreatedAt: diagConfirmado?.created_at || diagConfirmadoData?.created_at || null
     }
 }
 

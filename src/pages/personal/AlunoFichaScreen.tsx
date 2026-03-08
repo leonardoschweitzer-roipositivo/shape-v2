@@ -5,6 +5,7 @@ import { HeaderAluno } from './components/HeaderAluno'
 import { CardConsistenciaPersonal } from './components/CardConsistenciaPersonal'
 import { CardUltimosRegistros } from './components/CardUltimosRegistros'
 import { CardMetasTrimestrePersonal } from './components/CardMetasTrimestrePersonal'
+import { CardTreinosAccordion } from './components/CardTreinosAccordion'
 import { buscarFichaAluno } from '@/services/personalPortal.service'
 import { atletaService } from '@/services/atleta.service'
 import { storageService } from '@/services/storage.service'
@@ -26,7 +27,7 @@ function NivelBadge({ nivel }: { nivel: string | null }) {
     }
     const estilo = cfg[nivel] ?? 'text-gray-400 bg-gray-400/10 border-gray-400/30'
     return (
-        <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${estilo}`}>
+        <span className={`text - [10px] font - black uppercase tracking - wider px - 2 py - 0.5 rounded - full border ${estilo} `}>
             {nivel}
         </span>
     )
@@ -56,8 +57,8 @@ export function AlunoFichaScreen({ alunoId, onVoltar }: AlunoFichaScreenProps) {
             setUploading(true)
 
             // 1. Upload para o Supabase Storage (bucket 'avatars')
-            const fileName = `atleta-${alunoId}-${Date.now()}.jpg`
-            const publicUrl = await storageService.uploadImage('avatars', `atleta-avatars/${fileName}`, file)
+            const fileName = `atleta - ${alunoId} -${Date.now()}.jpg`
+            const publicUrl = await storageService.uploadImage('avatars', `atleta - avatars / ${fileName} `, file)
 
             // 2. Atualiza a URL na tabela 'atletas'
             const atualizado = await atletaService.atualizar(alunoId, { foto_url: publicUrl })
@@ -85,17 +86,17 @@ export function AlunoFichaScreen({ alunoId, onVoltar }: AlunoFichaScreenProps) {
 Analise os dados reais do aluno ${ficha.nome} e gere um insight TÉCNICO, ANALÍTICO e EMBASADO.
 
 DADOS REAIS DO ALUNO:
-- Score Atual: ${ficha.score} pts (Meta 12M: ${ficha.scoreMeta12M} pts)
-- Consistência Anual: ${ficha.consistencia}% (Streak Atual: ${ficha.streak} dias)
+- Score Atual: ${ficha.score} pts(Meta 12M: ${ficha.scoreMeta12M} pts)
+    - Consistência Anual: ${ficha.consistencia}% (Streak Atual: ${ficha.streak} dias)
 - Últimos Registros: ${ficha.ultimosRegistros.map(r => `${r.valor} (${r.descricao || 'sem detalhes'})`).join(', ')}
-- Composição: BF ${ficha.gorduraPct?.toFixed(1)}%, Massa Magra ${ficha.massaMagra?.toFixed(1)}kg, Peso ${ficha.peso}kg
+- Composição: BF ${ficha.gorduraPct?.toFixed(1)}%, Massa Magra ${ficha.massaMagra?.toFixed(1)} kg, Peso ${ficha.peso} kg
 
 FONTES CIENTÍFICAS DISPONÍVEIS:
 ${fontes}
 
 REGRAS OBRIGATÓRIAS:
-1. Cite pelo menos UMA fonte científica específica (ex: Schoenfeld, Morton, ACSM) para embasar sua recomendação.
-2. Seja direto e profissional (máximo 4 frases).
+1. Cite pelo menos UMA fonte científica específica(ex: Schoenfeld, Morton, ACSM) para embasar sua recomendação.
+2. Seja direto e profissional(máximo 4 frases).
 3. Foque na ação prática que o Personal deve tomar na próxima sessão com base nos últimos registros e na consistência.
 
 Responda APENAS com o insight em português brasileiro, use tom de consultor técnico.`
@@ -109,7 +110,7 @@ Responda APENAS com o insight em português brasileiro, use tom de consultor té
             insightFinal = String(Object.values(resultado as Record<string, unknown>)[0] ?? '')
         }
 
-        setInsight(insightFinal ?? `${ficha.nome} mantém ${ficha.checkinsMes} treinos no mês. Segundo Schoenfeld (2017), a consistência é o pilar primário da hipertrofia. Continue monitorando os feedbacks recentes para ajustes finos.`)
+        setInsight(insightFinal ?? `${ficha.nome} mantém ${ficha.checkinsMes} treinos no mês.Segundo Schoenfeld(2017), a consistência é o pilar primário da hipertrofia.Continue monitorando os feedbacks recentes para ajustes finos.`)
         setInsightLoading(false)
     }
 
@@ -159,6 +160,13 @@ Responda APENAS com o insight em português brasileiro, use tom de consultor té
                     consistencia={ficha.consistencia}
                     tempoTotalMinutos={ficha.tempoTotalMinutos}
                     proximoBadge={ficha.proximoBadge}
+                    atletaId={alunoId}
+                    startDateOverride={ficha.evolucaoPlanCreatedAt}
+                />
+
+                {/* 1.1 Accordion de Treinos (Nova funcionalidade conforme pedido) */}
+                <CardTreinosAccordion
+                    planoTreino={ficha.planoTreino}
                     atletaId={alunoId}
                 />
 
