@@ -27,10 +27,49 @@ function NivelBadge({ nivel }: { nivel: string | null }) {
     }
     const estilo = cfg[nivel] ?? 'text-gray-400 bg-gray-400/10 border-gray-400/30'
     return (
-        <span className={`text - [10px] font - black uppercase tracking - wider px - 2 py - 0.5 rounded - full border ${estilo} `}>
+        <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${estilo}`}>
             {nivel}
         </span>
     )
+}
+
+function FormattedInsight({ text }: { text: string }) {
+    if (!text) return null;
+
+    // Divide o texto em linhas, removendo vazias
+    const lines = text.split('\n').filter(line => line.trim() !== '');
+
+    return (
+        <div className="space-y-3">
+            {lines.map((line, i) => {
+                const trimmedLine = line.trim();
+                const isBullet = trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ') || /^\d+\./.test(trimmedLine);
+
+                // Processa o conteúdo (mesmo que seja bullet)
+                const textWithoutBullet = isBullet ? trimmedLine.replace(/^[-*]\s|^\d+\.\s/, '') : line;
+                const parts = textWithoutBullet.split(/(\*\*.*?\*\*)/g);
+                const content = parts.map((part, j) => {
+                    if (part.startsWith('**') && part.endsWith('**')) {
+                        return (
+                            <strong key={j} className="text-white font-bold">
+                                {part.slice(2, -2)}
+                            </strong>
+                        );
+                    }
+                    return part;
+                });
+
+                return (
+                    <div key={i} className={`flex gap-2 ${isBullet ? 'pl-2' : ''}`}>
+                        {isBullet && <span className="text-indigo-400 mt-1 shrink-0">•</span>}
+                        <p className={`text-gray-300 text-sm leading-relaxed ${isBullet ? 'flex-1' : ''}`}>
+                            {content}
+                        </p>
+                    </div>
+                );
+            })}
+        </div>
+    );
 }
 
 export function AlunoFichaScreen({ alunoId, onVoltar }: AlunoFichaScreenProps) {
@@ -94,33 +133,30 @@ export function AlunoFichaScreen({ alunoId, onVoltar }: AlunoFichaScreenProps) {
         }).reverse()
 
         const prompt = `Você é o Vitrúvio IA, um assistente científico de alta performance para personal trainers.
-Analise os dados reais do aluno ${ficha.nome} e gere um insight TÉCNICO, ANALÍTICO e EMBASADO.
+Analise os dados reais do aluno ${ficha.nome} e gere uma análise técnica e estratégica.
 
-DADOS REAIS DO ALUNO:
-- Score: ${ficha.score} pts (Meta 12M: ${ficha.scoreMeta12M} pts)
+DADOS DO ALUNO:
+- Score: ${ficha.score} / 100
+- Meta 12M: ${ficha.scoreMeta12M}
 - Consistência: ${ficha.consistencia}% (Streak: ${ficha.streak} dias)
-- Treinos no mês: ${ficha.checkinsMes} / ${ficha.totalDiasMes}
-- Atualmente: BF ${ficha.gorduraPct?.toFixed(1)}%, Massa Magra ${ficha.massaMagra?.toFixed(1)} kg
+- Composição: BF ${ficha.gorduraPct?.toFixed(1)}%, Massa Magra ${ficha.massaMagra?.toFixed(1)} kg
 
-PADRÃO DE CHECK-INS (14 dias):
-${ultimos14Dias.map(d => `${d.data}: ${d.treinou ? '✅' : '❌'}`).join('|')}
-
-ÚLTIMOS REGISTROS (Saúde e Feedback):
-${ficha.ultimosRegistros.slice(0, 10).map(r => `- ${r.tipo}: ${r.valor} (${r.descricao})`).join('\n')}
+ESTRUTURA DA RESPOSTA (Use esta ordem e emojis):
+1. 📊 **Análise de Progresso**: Breve resumo do score e consistência.
+2. ⚠️ **Gargalos Identificados**: Aponte falhas em sono, água ou frequência baseada nos 14 dias: [${ultimos14Dias.map(d => d.treinou ? '✅' : '❌').join('')}].
+3. 🔬 **Fundamentação**: Relacione com uma das fontes científicas abaixo.
+4. 🚀 **Plano de Ação p/ o Personal**: 2-3 passos práticos para o professor aplicar agora.
 
 FONTES CIENTÍFICAS:
 ${fontes}
 
-OBJETIVO:
-1. Correlacione consistência com os registros (sono, água, dor).
-2. Identifique gargalos reais.
-3. Seja EXTREMAMENTE específico para o Personal Trainer.
-4. Responda APENAS o JSON.
+REGRAS:
+- Use parágrafos claros separando as seções.
+- Use negrito (**texto**) para destacar dados e conclusões importantes.
+- Seja direto e profissional (comunicação entre especialistas).
 
-FORMATO OBRIGATÓRIO (JSON):
-{ 
-  "insight": "string com análise técnica profunda, use negrito (**texto**) para pontos chave" 
-}`
+FORMATO:
+{ "insight": "string formatada com quebras de linha \\n" }`
 
         try {
             const resultado = await gerarConteudoIA<{ insight: string }>(prompt)
@@ -231,9 +267,9 @@ FORMATO OBRIGATÓRIO (JSON):
 
                     {insight && (
                         <div className="relative">
-                            <p className="text-gray-300 text-sm leading-relaxed mb-4 border-l-2 border-indigo-500/30 pl-4 py-1">
-                                {insight}
-                            </p>
+                            <div className="border-l-2 border-indigo-500/30 pl-4 py-1 mb-4">
+                                <FormattedInsight text={insight} />
+                            </div>
                             <div className="flex justify-end gap-4">
                                 {insightError && (
                                     <span className="text-[9px] text-red-400 font-medium">

@@ -33,7 +33,7 @@ export function CardUltimosRegistros({ registros }: CardUltimosRegistrosProps) {
                 <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">Últimos Registros</h3>
             </div>
 
-            <div className="space-y-3 max-h-[380px] overflow-y-auto pr-2 custom-scrollbar transition-all">
+            <div className="space-y-3 max-h-[280px] overflow-y-auto pr-2 custom-scrollbar transition-all">
                 {registros.map((reg) => (
                     <div key={reg.id} className="flex gap-4 p-3 bg-white/5 rounded-2xl border border-white/5 transition-colors hover:bg-white/10">
                         <div className="flex-shrink-0 mt-1">
