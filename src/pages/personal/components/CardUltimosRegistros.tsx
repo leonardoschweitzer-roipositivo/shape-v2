@@ -13,6 +13,7 @@ export function CardUltimosRegistros({ registros }: CardUltimosRegistrosProps) {
 
     const getIcon = (tipo: RegistroAtividade['tipo']) => {
         switch (tipo) {
+            case 'TREINO': return <History size={14} className="text-orange-400" />;
             case 'FEEDBACK': return <MessageSquare size={14} className="text-indigo-400" />;
             case 'REFEICAO': return <Utensils size={14} className="text-emerald-400" />;
             case 'AGUA': return <Droplets size={14} className="text-blue-400" />;

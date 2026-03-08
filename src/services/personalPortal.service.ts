@@ -346,61 +346,51 @@ export async function buscarFichaAluno(atletaId: string): Promise<FichaAlunoResu
         tornozelo: Number(ficha?.tornozelo) || 0,
     }
 
-    // 5. Mapear Últimos 3 Registros (Conforme pedido pelo usuário)
+    // 5. Mapear Registros Recentes (Para análise da IA e exibição no card)
     const ultimosRegistros: RegistroAtividade[] = []
 
-    // Pegar treinos recentes com feedback
-    const treinosComFeedback = registros
-        .filter(r => r.tipo === 'treino' && r.dados?.status === 'completo' && r.dados?.observacoes)
-        .slice(0, 3)
-        .map(r => ({
-            id: r.id,
-            tipo: 'FEEDBACK' as const,
-            data: r.data,
-            valor: 'Feedback',
-            descricao: r.dados.observacoes,
-            emoji: '💬'
-        }))
-
-    // Pegar trackers recentes (água, sono, etc)
-    const trackersMapeados = trackers.slice(0, 3).map(t => {
+    // Mapear TODOS os registros relevantes (limitando a 20 para não sobrecarregar)
+    const todosMapeados = registros.slice(0, 20).map(r => {
         const tipos: Record<string, { label: string, emoji: string }> = {
+            treino: { label: 'Treino', emoji: '🏋️' },
+            refeicao: { label: 'Refeição', emoji: '🍽️' },
             agua: { label: 'Água', emoji: '💧' },
             sono: { label: 'Sono', emoji: '😴' },
             peso: { label: 'Peso', emoji: '⚖️' },
             dor: { label: 'Dor', emoji: '🚨' },
-            refeicao: { label: 'Refeição', emoji: '🍽️' }
+            feedback: { label: 'Feedback', emoji: '💬' }
         }
-        const info = tipos[t.tipo] || { label: t.tipo, emoji: '📝' }
+        const info = tipos[r.tipo] || { label: r.tipo, emoji: '📝' }
 
-        // Extração inteligente do valor baseado no tipo
         let valorExibicao = '---'
-        if (t.tipo === 'refeicao') {
-            valorExibicao = t.dados?.calorias ? `${t.dados.calorias} kcal` : 'Registrada'
-        } else if (t.tipo === 'agua') {
-            valorExibicao = t.dados?.quantidade ? `${t.dados.quantidade}ml` : 'Registrada'
-        } else if (t.tipo === 'peso') {
-            valorExibicao = t.dados?.quantidade ? `${t.dados.quantidade}kg` : '---'
-        } else if (t.tipo === 'sono') {
-            valorExibicao = t.dados?.quantidade ? `${t.dados.quantidade}h` : '---'
-        } else if (t.tipo === 'dor') {
-            valorExibicao = t.dados?.quantidade ? `${t.dados.quantidade}/10` : '---'
+        let descricaoExibicao = r.dados?.observacoes || r.dados?.local || info.label
+
+        if (r.tipo === 'treino') {
+            valorExibicao = r.dados?.status === 'completo' ? 'Concluído' : 'Pulado'
+            descricaoExibicao = r.dados?.grupamento || r.dados?.observacoes || 'Treino do dia'
+        } else if (r.tipo === 'refeicao') {
+            valorExibicao = r.dados?.calorias ? `${r.dados.calorias} kcal` : 'Registrada'
+        } else if (r.tipo === 'agua') {
+            valorExibicao = r.dados?.quantidade ? `${r.dados.quantidade}ml` : 'Registrada'
+        } else if (r.tipo === 'peso') {
+            valorExibicao = r.dados?.quantidade ? `${r.dados.quantidade}kg` : '---'
+        } else if (r.tipo === 'sono') {
+            valorExibicao = r.dados?.quantidade ? `${r.dados.quantidade}h` : '---'
+        } else if (r.tipo === 'dor') {
+            valorExibicao = r.dados?.quantidade ? `${r.dados.quantidade}/10` : '---'
         }
 
         return {
-            id: t.id,
-            tipo: (t.tipo as string).toUpperCase() as any,
-            data: t.data,
+            id: r.id,
+            tipo: r.tipo.toUpperCase() as any,
+            data: r.data,
             valor: valorExibicao,
-            descricao: t.dados?.observacoes || t.dados?.local || info.label,
+            descricao: descricaoExibicao,
             emoji: info.emoji
         }
     })
 
-    // Combinar e pegar os 3 mais recentes cronologicamente
-    const combinados = [...treinosComFeedback, ...trackersMapeados]
-        .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime())
-        .slice(0, 3)
+    const combinados = todosMapeados.slice(0, 15) // Top 15 para os cards e IA
 
     // 5. Proporções e Metas
     const proporcoes: ProporçãoResumo[] = diagnostico?.analiseEstetica?.proporcoes?.slice(0, 3).map((p: any) => ({

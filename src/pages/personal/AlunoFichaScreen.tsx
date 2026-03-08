@@ -82,35 +82,56 @@ export function AlunoFichaScreen({ alunoId, onVoltar }: AlunoFichaScreenProps) {
         // Buscar fontes científicas para o prompt
         const fontes = getFontesCientificas('diagnostico')
 
+        // Resumo dos últimos 14 dias de check-ins para análise de consistência
+        const hoje = new Date()
+        const ultimos14Dias = Array.from({ length: 14 }, (_, i) => {
+            const d = new Date(hoje)
+            d.setDate(d.getDate() - i)
+            const key = d.toISOString().split('T')[0]
+            return { data: key, treinou: ficha.checkins?.includes(key) }
+        }).reverse()
+
         const prompt = `Você é o Vitrúvio IA, um assistente científico de alta performance para personal trainers.
 Analise os dados reais do aluno ${ficha.nome} e gere um insight TÉCNICO, ANALÍTICO e EMBASADO.
 
 DADOS REAIS DO ALUNO:
-- Score Atual: ${ficha.score} pts(Meta 12M: ${ficha.scoreMeta12M} pts)
-    - Consistência Anual: ${ficha.consistencia}% (Streak Atual: ${ficha.streak} dias)
-- Últimos Registros: ${ficha.ultimosRegistros.map(r => `${r.valor} (${r.descricao || 'sem detalhes'})`).join(', ')}
+- Nome: ${ficha.nome}
+- Score Atual: ${ficha.score} pts (Meta 12M: ${ficha.scoreMeta12M} pts)
+- Consistência Geral: ${ficha.consistencia}% (Streak Atual: ${ficha.streak} dias)
+- Treinos no mês: ${ficha.checkinsMes} de ${ficha.totalDiasMes} dias
 - Composição: BF ${ficha.gorduraPct?.toFixed(1)}%, Massa Magra ${ficha.massaMagra?.toFixed(1)} kg, Peso ${ficha.peso} kg
+
+PADRÃO DE CHECK-INS (Últimos 14 dias):
+${ultimos14Dias.map(d => `${d.data}: ${d.treinou ? '✅ TREINOU' : '❌ NÃO TREINOU'}`).join('\n')}
+
+ÚLTIMOS REGISTROS DIÁRIOS (Saúde, trackers e feedback):
+${ficha.ultimosRegistros.map(r => `- ${new Date(r.data).toLocaleDateString('pt-BR')}: [${r.tipo}] ${r.valor} - ${r.descricao}`).join('\n')}
 
 FONTES CIENTÍFICAS DISPONÍVEIS:
 ${fontes}
 
-REGRAS OBRIGATÓRIAS:
-1. Cite pelo menos UMA fonte científica específica(ex: Schoenfeld, Morton, ACSM) para embasar sua recomendação.
-2. Seja direto e profissional(máximo 4 frases).
-3. Foque na ação prática que o Personal deve tomar na próxima sessão com base nos últimos registros e na consistência.
+OBJETIVO DA ANÁLISE:
+1. Correlacione a consistência de treinos com os registros diários (ex: relação entre sono/água e performance/dor).
+2. Identifique gargalos reais (ex: fadiga acumulada, baixa hidratação, falhas no padrão de sono).
+3. Seja EXTREMAMENTE específico para o Personal Trainer agir. Não dê dicas genéricas.
+4. Se o aluno estiver consistente, elogie e aponte o próximo passo de carga/intensidade. Se estiver falhando, analise o porquê baseado nos registros.
 
-Responda APENAS com o insight em português brasileiro, use tom de consultor técnico.`
+INTRUÇÃO DE FORMATO:
+Retorne APENAS um objeto JSON no formato:
+{ 
+  "insight": "string contendo a análise completa, use negrito para pontos chave" 
+}`
 
-        const resultado = await gerarConteudoIA<string>(prompt).catch(() => null)
+        const resultado = await gerarConteudoIA<{ insight: string }>(prompt).catch(() => null)
 
         let insightFinal: string | null = null
-        if (typeof resultado === 'string') {
-            insightFinal = resultado
+        if (resultado && typeof resultado === 'object' && 'insight' in resultado) {
+            insightFinal = resultado.insight
         } else if (resultado && typeof resultado === 'object') {
-            insightFinal = String(Object.values(resultado as Record<string, unknown>)[0] ?? '')
+            insightFinal = String(Object.values(resultado)[0] ?? '')
         }
 
-        setInsight(insightFinal ?? `${ficha.nome} mantém ${ficha.checkinsMes} treinos no mês.Segundo Schoenfeld(2017), a consistência é o pilar primário da hipertrofia.Continue monitorando os feedbacks recentes para ajustes finos.`)
+        setInsight(insightFinal ?? `${ficha.nome} mantém ${ficha.checkinsMes} treinos no mês. Segundo Schoenfeld (2017), a consistência é o pilar primário da hipertrofia. Continue monitorando os feedbacks recentes para ajustes finos.`)
         setInsightLoading(false)
     }
 
