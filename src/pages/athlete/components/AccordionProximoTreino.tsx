@@ -41,34 +41,29 @@ export function AccordionProximoTreino({ treino }: AccordionProximoTreinoProps) 
             </button>
 
             {isOpen && (
-                <div className="px-6 pb-5 space-y-4 animate-in slide-in-from-top-1 duration-200">
-                    <div className="bg-white/[0.03] rounded-xl p-4 border border-white/5">
-                        <h4 className="text-xs font-black text-indigo-400 mb-3 uppercase tracking-widest">
-                            {treino.nomeTreino}
-                        </h4>
+                <div className="px-6 pb-5 animate-in slide-in-from-top-1 duration-200">
 
-                        <div className="space-y-2">
-                            {treino.exercicios.map((ex, i) => (
-                                <div
-                                    key={ex.id}
-                                    className="flex items-center gap-3 py-1.5 border-b border-white/[0.02] last:border-0"
-                                >
-                                    <span className="text-[10px] text-indigo-500/50 font-mono w-5 text-right">
-                                        {(i + 1).toString().padStart(2, '0')}
+                    <div className="space-y-1">
+                        {treino.exercicios.map((ex, i) => (
+                            <div
+                                key={ex.id}
+                                className="flex items-center gap-3 py-2 border-b border-white/[0.03] last:border-0"
+                            >
+                                <span className="text-[10px] text-indigo-500/40 font-mono w-5 text-right">
+                                    {(i + 1).toString().padStart(2, '0')}
+                                </span>
+                                <div className="flex-1">
+                                    <span className="text-sm text-gray-300 font-medium">
+                                        {ex.nome}
                                     </span>
-                                    <div className="flex-1">
-                                        <span className="text-sm text-gray-300">
-                                            {ex.nome}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-[10px] text-gray-500 font-mono bg-white/5 px-1.5 py-0.5 rounded">
-                                            {ex.series}×{ex.repeticoes}
-                                        </span>
-                                    </div>
                                 </div>
-                            ))}
-                        </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[10px] text-gray-500 font-mono bg-white/5 px-2 py-1 rounded-lg border border-white/5">
+                                        {ex.series}×{ex.repeticoes}
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             )}
