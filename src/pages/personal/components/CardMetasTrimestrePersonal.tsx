@@ -79,9 +79,10 @@ function calcularCm(
         case 'Peitoral':
         case 'Proporção de Braço':
         case 'Braço':
-            if (!medidas.punho) return null;
+            const baseMedida = medidas.punho;
+            if (!baseMedida) return null;
             return {
-                atualCm: Math.round(ratio * medidas.punho * 10) / 10,
+                atualCm: Math.round(ratio * baseMedida * 10) / 10,
                 metaCm: 0,
                 nomeMedida: grupo === 'Peitoral' ? 'Peitoral' : 'Braço',
             };
@@ -134,14 +135,21 @@ function ItemProporcao({
     const pct = proporcaoAtual?.pct ?? 0;
 
     const cmInfo = calcularCm(item.grupo, item.atual, medidas);
+
+    // Se for Braço, tentamos usar a medida real se disponível, caso contrário o cálculo baseado na proporção base
+    let atualCmValor = cmInfo?.atualCm ?? 0;
+    if ((item.grupo === 'Braço' || item.grupo === 'Proporção de Braço') && medidas.braco && medidas.braco > 0) {
+        atualCmValor = medidas.braco;
+    }
+
     let metaCmValor: number | null = null;
-    if (cmInfo) {
-        const denominador = item.atual > 0 ? cmInfo.atualCm / item.atual : 0;
+    if (item.atual > 0 && atualCmValor > 0) {
+        const denominador = atualCmValor / item.atual;
         metaCmValor = Math.round(denominador * item.meta3M * 10) / 10;
     }
 
-    const deltaCm = cmInfo && metaCmValor !== null
-        ? Math.round((metaCmValor - cmInfo.atualCm) * 10) / 10
+    const deltaCm = atualCmValor > 0 && metaCmValor !== null
+        ? Math.round((metaCmValor - atualCmValor) * 10) / 10
         : null;
 
     const deltaPct = item.atual > 0
@@ -164,10 +172,10 @@ function ItemProporcao({
                 </span>
             </div>
 
-            {cmInfo && metaCmValor !== null && deltaCm !== null && (
+            {atualCmValor > 0 && metaCmValor !== null && deltaCm !== null && (
                 <div className="flex items-center gap-2 mb-2">
                     <span className="text-white font-black text-lg">
-                        {cmInfo.atualCm} cm
+                        {atualCmValor} cm
                     </span>
                     <span className="text-zinc-600 text-sm">→</span>
                     <span className="text-indigo-400 font-black text-lg">
@@ -188,7 +196,7 @@ function ItemProporcao({
                 <span className="text-indigo-400 text-[10px] font-mono font-black">
                     {item.meta3M.toFixed(2)}
                 </span>
-                {!cmInfo && (
+                {atualCmValor === 0 && (
                     <span className="text-emerald-400 text-[10px] font-black ml-auto uppercase tracking-wider">
                         +{deltaPct}% evolução
                     </span>

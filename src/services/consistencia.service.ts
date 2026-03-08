@@ -49,7 +49,10 @@ const BADGES = [
 
 /** Retorna 'YYYY-MM-DD' de um Date */
 function toDateKey(d: Date): string {
-    return d.toISOString().split('T')[0]
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
 }
 
 /** Emoji baseado no streak */
@@ -68,11 +71,16 @@ export function formatarTempo(minutos: number): string {
     return `${h}h${m.toString().padStart(2, '0')}m`
 }
 
-/** Calcula streak atual (dias consecutivos até hoje, de trás pra frente) */
 function calcularStreakAtual(checkinsSet: Set<string>, hoje: Date): number {
     let streak = 0
     const dia = new Date(hoje)
     dia.setHours(0, 0, 0, 0)
+
+    // Se hoje não treinou ainda, verificamos se ontem treinou para manter o streak ativo
+    const hojeKey = toDateKey(dia)
+    if (!checkinsSet.has(hojeKey)) {
+        dia.setDate(dia.getDate() - 1)
+    }
 
     while (true) {
         const key = toDateKey(dia)

@@ -16,7 +16,10 @@ const CORES = {
 const MESES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
 
 function toDateKey(d: Date): string {
-    return d.toISOString().split('T')[0]
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
 }
 
 interface CardConsistenciaPersonalProps {
@@ -59,74 +62,72 @@ export function CardConsistenciaPersonal({
         const checkinsSet = new Set(checkins)
         const hoje = new Date()
         hoje.setHours(0, 0, 0, 0)
-        const hojeKey = hoje.toISOString().split('T')[0]
+        const hojeKey = toDateKey(hoje)
 
-        // Janela de visualização
-        let startDate: Date;
+        // Data de ancoragem: Criação do plano ou hoje se não houver
+        const anchorDate = startDateOverride ? new Date(startDateOverride) : new Date()
+        anchorDate.setHours(0, 0, 0, 0)
 
-        if (startDateOverride) {
-            startDate = new Date(startDateOverride);
-            startDate.setHours(0, 0, 0, 0);
-        } else {
-            // Default: Janela de 6 meses
-            startDate = new Date(hoje);
-            startDate.setMonth(startDate.getMonth() - 5);
-            startDate.setDate(1); // Primeiro dia de 5 meses atrás
-        }
+        // Calcular quantos trimesteres exibir (13 semanas cada)
+        const diffTime = Math.abs(hoje.getTime() - anchorDate.getTime())
+        const totalWeeksElapsed = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 7))
+        const numTrimesters = Math.floor(totalWeeksElapsed / 13) + 1
 
-        // Ajustar para segunda-feira (início da semana para a grade)
-        const diaSemana = startDate.getDay()
-        const offset = diaSemana === 0 ? 6 : diaSemana - 1
-        startDate.setDate(startDate.getDate() - offset)
+        const trimesters = []
 
-        // Calcular dinamicamente o número de semanas se tiver startDateOverride
-        let actualWeeksToShow = numWeeksToShow;
-        if (startDateOverride) {
-            const diffTime = Math.abs(hoje.getTime() - startDate.getTime());
-            const diffWeeks = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 7));
-            actualWeeksToShow = Math.max(8, diffWeeks + 2); // Pelo menos 2 meses, ou as semanas reais + margem
-        }
+        for (let t = 0; t < numTrimesters; t++) {
+            // Data de início real do trimestre (T0 + t*13 semanas)
+            const tStart = new Date(anchorDate)
+            tStart.setDate(tStart.getDate() + (t * 13 * 7))
 
-        const semanas: { key: string; cor: string; mes: number }[][] = []
-        const mesesLabels: { mes: number; coluna: number }[] = []
+            // Ajuste para segunda-feira para alinhamento visual
+            const displayStart = new Date(tStart)
+            const diaSemana = displayStart.getDay()
+            const offset = diaSemana === 0 ? 6 : diaSemana - 1
+            displayStart.setDate(displayStart.getDate() - offset)
 
-        let mesAnterior = -1
-        const cursor = new Date(startDate)
+            const semanas: { key: string; cor: string; mes: number }[][] = []
+            const mesesLabels: { mes: number; coluna: number }[] = []
+            let mesAnterior = -1
+            const cursor = new Date(displayStart)
 
-        for (let col = 0; col < actualWeeksToShow; col++) {
-            const semana: { key: string; cor: string; mes: number }[] = []
+            for (let col = 0; col < 13; col++) {
+                const semana: { key: string; cor: string; mes: number }[] = []
+                for (let d = 0; d < 7; d++) {
+                    const key = toDateKey(cursor)
+                    const cursorMes = cursor.getMonth()
 
-            for (let d = 0; d < 7; d++) {
-                const key = toDateKey(cursor)
-                const cursorMes = cursor.getMonth()
-
-                let cor: string
-                if (key === hojeKey) {
-                    cor = checkinsSet.has(key) ? CORES.hoje : CORES.hojePendente
-                } else if (cursor > hoje) {
-                    cor = CORES.futuro
-                } else {
-                    cor = checkinsSet.has(key) ? CORES.treinou : CORES.naoTreinou
+                    let cor: string
+                    if (key === hojeKey) {
+                        cor = checkinsSet.has(key) ? CORES.hoje : CORES.hojePendente
+                    } else if (cursor > hoje) {
+                        cor = CORES.futuro
+                    } else if (cursor < anchorDate && t === 0) {
+                        // Dias antes do início do plano no primeiro trimestre (devido ao offset da segunda-feira)
+                        cor = 'transparent'
+                    } else {
+                        cor = checkinsSet.has(key) ? CORES.treinou : CORES.naoTreinou
+                    }
+                    semana.push({ key, cor, mes: cursorMes })
+                    cursor.setDate(cursor.getDate() + 1)
                 }
 
-                semana.push({ key, cor, mes: cursorMes })
-                cursor.setDate(cursor.getDate() + 1)
+                // Registrar label do mês
+                const mesAtual = semana[0].mes
+                if (mesAtual !== mesAnterior) {
+                    mesesLabels.push({ mes: mesAtual, coluna: col })
+                    mesAnterior = mesAtual
+                }
+                semanas.push(semana)
             }
-
-            // Registrar label do mês
-            const mesAtual = semana[0].mes
-            if (mesAtual !== mesAnterior) {
-                mesesLabels.push({ mes: mesAtual, coluna: col })
-                mesAnterior = mesAtual
-            }
-
-            semanas.push(semana)
+            trimesters.push({ semanas, mesesLabels, num: t + 1 })
         }
 
-        return { semanas, mesesLabels, actualWeeksToShow }
-    }, [checkins, numWeeksToShow, startDateOverride])
+        return { trimesters }
+    }, [checkins, startDateOverride])
 
-    const svgWidth = gradeData.actualWeeksToShow * totalCellSize
+    const totalWeeksInTrimester = 13
+    const svgWidth = totalWeeksInTrimester * totalCellSize
     const svgHeight = 7 * totalCellSize
 
     return (
@@ -175,52 +176,62 @@ export function CardConsistenciaPersonal({
                 )}
             </div>
 
-            {/* Heatmap */}
-            <div className="mb-8 w-full">
-                {/* Labels dos meses */}
-                <div className="relative h-4 w-full mb-1">
-                    {gradeData.mesesLabels.map((ml, i) => {
-                        const leftPercentage = (ml.coluna / gradeData.actualWeeksToShow) * 100;
-                        const isUltimo = i === gradeData.mesesLabels.length - 1;
+            {/* Heatmaps (Trimesteres) */}
+            <div className="space-y-8 mb-8">
+                {gradeData.trimesters.map((tri, tIdx) => (
+                    <div key={tIdx} className="w-full">
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="text-[10px] font-black text-indigo-500 uppercase tracking-tighter">
+                                {gradeData.trimesters.length > 1 ? `Trimestre ${tri.num}` : 'Plano de Evolução'}
+                            </div>
+                        </div>
 
-                        return (
-                            <span
-                                key={i}
-                                className="text-[9px] text-gray-500 font-black uppercase inline-block"
-                                style={{
-                                    position: 'absolute',
-                                    left: isUltimo ? undefined : `${leftPercentage}%`,
-                                    right: isUltimo ? '0%' : undefined,
-                                    transform: isUltimo ? 'none' : 'translateX(-50%)'
-                                }}
-                            >
-                                {MESES[ml.mes]}
-                            </span>
-                        );
-                    })}
-                </div>
+                        {/* Labels dos meses */}
+                        <div className="relative h-4 w-full mb-1">
+                            {tri.mesesLabels.map((ml, i) => {
+                                const leftPercentage = (ml.coluna / totalWeeksInTrimester) * 100;
+                                const isUltimo = i === tri.mesesLabels.length - 1 && ml.coluna > 10;
 
-                {/* Grade SVG */}
-                <svg
-                    width="100%"
-                    viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-                    preserveAspectRatio="xMinYMin meet"
-                    className="w-full h-auto"
-                >
-                    {gradeData.semanas.map((semana, col) =>
-                        semana.map((dia, row) => (
-                            <rect
-                                key={dia.key}
-                                x={col * totalCellSize}
-                                y={row * totalCellSize}
-                                width={cellSize}
-                                height={cellSize}
-                                rx={3}
-                                fill={dia.cor}
-                            />
-                        ))
-                    )}
-                </svg>
+                                return (
+                                    <span
+                                        key={i}
+                                        className="text-[9px] text-gray-500 font-black uppercase inline-block"
+                                        style={{
+                                            position: 'absolute',
+                                            left: isUltimo ? undefined : `${leftPercentage}%`,
+                                            right: isUltimo ? '0%' : undefined,
+                                            transform: isUltimo ? 'none' : 'translateX(-50%)'
+                                        }}
+                                    >
+                                        {MESES[ml.mes]}
+                                    </span>
+                                );
+                            })}
+                        </div>
+
+                        {/* Grade SVG */}
+                        <svg
+                            width="100%"
+                            viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+                            preserveAspectRatio="xMinYMin meet"
+                            className="w-full h-auto"
+                        >
+                            {tri.semanas.map((semana, col) =>
+                                semana.map((dia, row) => (
+                                    <rect
+                                        key={dia.key}
+                                        x={col * totalCellSize}
+                                        y={row * totalCellSize}
+                                        width={cellSize}
+                                        height={cellSize}
+                                        rx={4}
+                                        fill={dia.cor}
+                                    />
+                                ))
+                            )}
+                        </svg>
+                    </div>
+                ))}
             </div>
 
             {/* Métricas */}

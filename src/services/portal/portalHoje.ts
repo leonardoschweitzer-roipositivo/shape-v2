@@ -169,7 +169,8 @@ export function derivarDietaDoDia(plano: PlanoDieta | null, isTreinoDay: boolean
  * Busca registros do dia para preencher trackers
  */
 export async function buscarRegistrosDoDia(atletaId: string): Promise<TrackerRapido[]> {
-    const hoje = new Date().toISOString().split('T')[0];
+    const d = new Date();
+    const hoje = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
     const { data: registros } = await supabase
         .from('registros_diarios')
@@ -295,7 +296,7 @@ async function calcularStreak(atletaId: string): Promise<number> {
     for (let i = 0; i < 60; i++) {
         const dia = new Date(hoje);
         dia.setDate(dia.getDate() - i);
-        const diaISO = dia.toISOString().split('T')[0];
+        const diaISO = `${dia.getFullYear()}-${String(dia.getMonth() + 1).padStart(2, '0')}-${String(dia.getDate()).padStart(2, '0')}`;
 
         const reg = (data as unknown as SupaRegistroDiario[]).find(r => r.data === diaISO);
         if (reg && reg.dados?.status === 'completo') {
