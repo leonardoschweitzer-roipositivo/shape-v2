@@ -20,6 +20,7 @@ interface HomeScreenProps {
     notificacoesRecentes?: Notificacao[]
     onVerAlertas?: () => void
     onVerAlunos?: () => void
+    unreadCount?: number
 }
 
 function stripHtml(html: string): string {
@@ -36,7 +37,7 @@ function formatarTempo(isoDate: string): string {
     return `Há ${d} dias`
 }
 
-export function HomeScreen({ contexto, alunosAtencao, todosAlunos, atividadeRecente, onAbrirAluno, notificacoesRecentes = [], onVerAlertas, onVerAlunos }: HomeScreenProps) {
+export function HomeScreen({ contexto, alunosAtencao, todosAlunos, atividadeRecente, onAbrirAluno, notificacoesRecentes = [], onVerAlertas, onVerAlunos, unreadCount = 0 }: HomeScreenProps) {
     const saudacao = () => {
         const hora = new Date().getHours()
         if (hora < 12) return 'Bom dia'
@@ -74,9 +75,17 @@ export function HomeScreen({ contexto, alunosAtencao, todosAlunos, atividadeRece
                     </div>
                 </div>
 
-                <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20 backdrop-blur-md shadow-xl shadow-orange-500/10">
-                    <Flame size={24} className="text-orange-500" />
-                </div>
+                <button
+                    onClick={onVerAlertas}
+                    className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 backdrop-blur-md shadow-xl shadow-indigo-500/10 relative active:scale-95 transition-transform"
+                >
+                    <Bell size={24} className="text-indigo-400" />
+                    {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center text-[10px] font-black text-white border-2 border-zinc-900 animate-in zoom-in duration-300">
+                            {unreadCount > 9 ? '9+' : unreadCount}
+                        </span>
+                    )}
+                </button>
             </div>
 
             <div className="px-4 relative z-10">

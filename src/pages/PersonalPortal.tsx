@@ -114,6 +114,7 @@ export function PersonalPortal({ personalId, onLogout }: PersonalPortalProps) {
                         notificacoesRecentes={notificacoesRecentes}
                         onVerAlertas={() => setActiveTab('alertas')}
                         onVerAlunos={() => setActiveTab('alunos')}
+                        unreadCount={alertasNaoLidos}
                     />
                 )
             case 'alunos':
