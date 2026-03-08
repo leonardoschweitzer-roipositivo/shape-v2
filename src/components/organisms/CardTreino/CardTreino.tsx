@@ -367,13 +367,11 @@ export function CardTreino({
                 <div className="flex items-start justify-between mb-6">
                     <div>
                         <p className="text-lg font-semibold text-white mb-1">
+                            {treino.subtitulo?.includes(' — ') ? treino.subtitulo.split(' — ')[1] : treino.subtitulo}
+                        </p>
+                        <p className="text-sm text-gray-400">
                             {treino.titulo}
                         </p>
-                        {treino.subtitulo && (
-                            <p className="text-sm text-gray-400">
-                                {treino.subtitulo}
-                            </p>
-                        )}
                     </div>
 
                     {/* Botão Global de Play/Pause e Timer */}
