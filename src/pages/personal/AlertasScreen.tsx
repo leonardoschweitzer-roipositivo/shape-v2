@@ -10,7 +10,7 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { Bell, Loader2, CheckCheck } from 'lucide-react'
 import { notificacaoService } from '@/services/notificacao.service'
 import type { Notificacao } from '@/types/notificacao.types'
-import { PRIORIDADE_CONFIG } from '@/types/notificacao.constants'
+import { PRIORIDADE_CONFIG, getContextualIcon } from '@/types/notificacao.constants'
 import { NotificationDetailModal } from '@/components/molecules/NotificationDetailModal/NotificationDetailModal'
 
 interface AlertasScreenProps {
@@ -179,8 +179,8 @@ export function AlertasScreen({ personalId, onAbrirAluno, onAtualizarContador }:
                                                     className={`w-full flex items-start gap-4 p-5 text-left transition-all hover:bg-white/5 active:scale-[0.99] group ${!notif.lida ? 'bg-white/[0.02]' : ''}`}
                                                 >
                                                     {/* Ícone / indicador */}
-                                                    <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-xl shadow-inner ${!notif.lida ? 'bg-indigo-500/10' : 'bg-white/5'}`}>
-                                                        {prioConfig.icone}
+                                                    <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center shadow-inner transition-colors group-hover:bg-white/10 ${!notif.lida ? 'bg-indigo-500/10' : 'bg-white/5'}`}>
+                                                        {getContextualIcon(notif.titulo, notif.mensagem, notif.tipo) || prioConfig.icone}
                                                     </div>
 
                                                     {/* Conteúdo */}

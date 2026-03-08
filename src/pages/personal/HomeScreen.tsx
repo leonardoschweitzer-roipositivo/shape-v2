@@ -9,7 +9,7 @@ import React from 'react'
 import { Users, AlertTriangle, Activity, ChevronRight, Clock, Bell, User, Play, Flame, CheckCircle2, SkipForward, Ruler, FileText, Star, Info, AlertCircle, Trophy } from 'lucide-react'
 import type { AlunoCard, AtividadeRecente, PersonalPortalContext } from '@/types/personal-portal'
 import type { Notificacao } from '@/types/notificacao.types'
-import { PRIORIDADE_CONFIG } from '@/types/notificacao.constants'
+import { PRIORIDADE_CONFIG, getContextualIcon } from '@/types/notificacao.constants'
 
 interface HomeScreenProps {
     contexto: PersonalPortalContext
@@ -165,7 +165,9 @@ export function HomeScreen({ contexto, alunosAtencao, todosAlunos, atividadeRece
                                         onClick={() => notif.atleta_id && onAbrirAluno(notif.atleta_id)}
                                         className={`w-full flex items-start gap-4 p-5 text-left hover:bg-white/5 transition-all active:scale-[0.98] ${idx < Math.min(3, notificacoesRecentes.length) - 1 ? 'border-b border-white/5' : ''}`}
                                     >
-                                        <span className="text-xl shrink-0">{prioConfig.icone}</span>
+                                        <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center shrink-0 shadow-inner group-hover:bg-white/10 transition-colors">
+                                            {getContextualIcon(notif.titulo, notif.mensagem, notif.tipo) || prioConfig.icone}
+                                        </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-white text-xs font-black tracking-tight leading-snug truncate">
                                                 {stripHtml(notif.titulo)}
