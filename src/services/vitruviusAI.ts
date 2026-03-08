@@ -47,7 +47,7 @@ function getModel(): GenerativeModel | null {
 
     if (!model) {
         model = genAI.getGenerativeModel({
-            model: 'gemini-1.5-flash',
+            model: 'gemini-2.0-flash',
             generationConfig: {
                 temperature: 0.7,
                 topP: 0.9,
@@ -75,7 +75,7 @@ function getGenerateModel(): GenerativeModel | null {
 
     if (!generateModel) {
         generateModel = genAI.getGenerativeModel({
-            model: 'gemini-1.5-flash',
+            model: 'gemini-2.0-flash',
             generationConfig: {
                 temperature: 0.4,
                 topP: 0.85,
@@ -109,7 +109,8 @@ export async function gerarConteudoIA<T = unknown>(prompt: string): Promise<T | 
     }
 
     try {
-        console.info('[VitruviusAI] Gerando conteúdo IA... Prompt Length:', prompt.length)
+        const modelName = aiModel.model
+        console.info(`[VitruviusAI] Gerando conteúdo IA com ${modelName}... Prompt Length:`, prompt.length)
         const result = await aiModel.generateContent(prompt)
         const response = result.response
         const text = response.text()
