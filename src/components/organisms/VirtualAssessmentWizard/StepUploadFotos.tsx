@@ -100,8 +100,8 @@ export const StepUploadFotos = memo(function StepUploadFotos({
                     onClick={onNext}
                     disabled={!allPhotosReady}
                     className={`flex-1 py-3 rounded-xl text-sm font-black uppercase tracking-wider transition-all ${allPhotosReady
-                            ? 'bg-indigo-600 text-white hover:bg-indigo-500 active:scale-[0.98]'
-                            : 'bg-white/5 text-gray-600 cursor-not-allowed'
+                        ? 'bg-indigo-600 text-white hover:bg-indigo-500 active:scale-[0.98]'
+                        : 'bg-white/5 text-gray-600 cursor-not-allowed'
                         }`}
                 >
                     Revisar →
@@ -183,7 +183,6 @@ function PhotoSlot({ slotId, label, Icon, photo, onSelect, onRemove }: PhotoSlot
                 ref={inputRef}
                 type="file"
                 accept="image/*"
-                capture="environment"
                 onChange={handleFileChange}
                 className="hidden"
             />
