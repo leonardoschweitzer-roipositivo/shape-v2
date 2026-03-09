@@ -13,6 +13,7 @@ import type { TodayScreenData, ScoreGeral, GraficoEvolucaoData, ProporcaoResumo,
 import { Loader2 } from 'lucide-react'
 import { RegistrarRefeicaoModal } from '../components/organisms/RegistrarRefeicaoModal'
 import { RegistrarTrackerModal } from '../components/organisms/RegistrarTrackerModal/RegistrarTrackerModal'
+import { VirtualAssessmentWizard } from '../components/organisms/VirtualAssessmentWizard'
 import { TrackerRapidoType } from '../types/athlete-portal'
 import { enviarMensagemIA, type AtletaContextoIA } from '../services/vitruviusAI'
 import {
@@ -62,6 +63,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
         isOpen: false,
         tipo: null
     })
+    const [showVirtualAssessment, setShowVirtualAssessment] = useState(false)
 
     const timerStorageKey = `exercicioTimers_${atletaId}`
     const [exercicioTimers, setExercicioTimersRaw] = useState<Record<string, ExercicioTimerState>>(() => {
@@ -479,6 +481,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                         altura={ctx?.ficha?.altura}
                         peso={lastPeso}
                         personalNome={ctx?.personalNome}
+                        onStartVirtualAssessment={() => setShowVirtualAssessment(true)}
                     />
                 )
 
@@ -512,6 +515,30 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                 onClose={() => setTrackerModal({ isOpen: false, tipo: null })}
                 onSave={handleSalvarTracker}
             />
+
+            {showVirtualAssessment && ctx?.ficha?.sexo && ctx?.ficha?.altura && (
+                <VirtualAssessmentWizard
+                    atletaId={atletaId}
+                    sexo={ctx.ficha.sexo as 'M' | 'F'}
+                    altura={ctx.ficha.altura}
+                    pesoInicial={lastPeso}
+                    onComplete={async () => {
+                        setShowVirtualAssessment(false)
+                        // Refresh assessment data
+                        try {
+                            const dados = await buscarTodosDadosSecundarios(atletaId)
+                            setScoreGeral(dados.score)
+                            setGraficoEvolucao(dados.grafico)
+                            setProporcoes(dados.proporcoes)
+                            setHistoricoAvaliacoes(dados.historico)
+                            setAvaliacaoDados(dados.avaliacao)
+                        } catch (err) {
+                            console.error('[AthletePortal] Erro ao atualizar dados pós-avaliação virtual:', err)
+                        }
+                    }}
+                    onClose={() => setShowVirtualAssessment(false)}
+                />
+            )}
         </div>
     )
 }

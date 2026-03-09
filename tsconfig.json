@@ -29,5 +29,8 @@
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true
-  }
+  },
+  "exclude": [
+    "supabase/functions"
+  ]
 }

@@ -285,7 +285,7 @@ export type Database = {
                     dobra_suprailiaca: number | null
                     dobra_abdominal: number | null
                     dobra_coxa: number | null
-                    registrado_por: 'PORTAL' | 'COACH_IA' | 'PERSONAL' | 'APP'
+                    registrado_por: 'PORTAL' | 'COACH_IA' | 'PERSONAL' | 'APP' | 'IA_VISION'
                     personal_id: string | null
                     score: number | null
                     ratio: number | null
@@ -318,7 +318,7 @@ export type Database = {
                     dobra_suprailiaca?: number | null
                     dobra_abdominal?: number | null
                     dobra_coxa?: number | null
-                    registrado_por?: 'PORTAL' | 'COACH_IA' | 'PERSONAL' | 'APP'
+                    registrado_por?: 'PORTAL' | 'COACH_IA' | 'PERSONAL' | 'APP' | 'IA_VISION'
                     personal_id?: string | null
                     score?: number | null
                     ratio?: number | null
@@ -351,10 +351,63 @@ export type Database = {
                     dobra_suprailiaca?: number | null
                     dobra_abdominal?: number | null
                     dobra_coxa?: number | null
-                    registrado_por?: 'PORTAL' | 'COACH_IA' | 'PERSONAL' | 'APP'
+                    registrado_por?: 'PORTAL' | 'COACH_IA' | 'PERSONAL' | 'APP' | 'IA_VISION'
                     personal_id?: string | null
                     score?: number | null
                     ratio?: number | null
+                    created_at?: string
+                }
+            }
+            medidas_ia_metadata: {
+                Row: {
+                    id: string
+                    medida_id: string
+                    atleta_id: string
+                    frontal_image_path: string
+                    costas_image_path: string
+                    lateral_esq_image_path: string
+                    lateral_dir_image_path: string
+                    reference_object: 'credit_card' | 'a4_paper' | 'tape_measure'
+                    overall_confidence: 'high' | 'medium' | 'low'
+                    image_quality_score: number | null
+                    analysis_notes: string[] | null
+                    confidence_per_measurement: Json | null
+                    ai_model_used: string
+                    processing_time_ms: number | null
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    medida_id: string
+                    atleta_id: string
+                    frontal_image_path: string
+                    costas_image_path: string
+                    lateral_esq_image_path: string
+                    lateral_dir_image_path: string
+                    reference_object: 'credit_card' | 'a4_paper' | 'tape_measure'
+                    overall_confidence: 'high' | 'medium' | 'low'
+                    image_quality_score?: number | null
+                    analysis_notes?: string[] | null
+                    confidence_per_measurement?: Json | null
+                    ai_model_used?: string
+                    processing_time_ms?: number | null
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    medida_id?: string
+                    atleta_id?: string
+                    frontal_image_path?: string
+                    costas_image_path?: string
+                    lateral_esq_image_path?: string
+                    lateral_dir_image_path?: string
+                    reference_object?: 'credit_card' | 'a4_paper' | 'tape_measure'
+                    overall_confidence?: 'high' | 'medium' | 'low'
+                    image_quality_score?: number | null
+                    analysis_notes?: string[] | null
+                    confidence_per_measurement?: Json | null
+                    ai_model_used?: string
+                    processing_time_ms?: number | null
                     created_at?: string
                 }
             }
@@ -698,6 +751,7 @@ export type Avaliacao = Tables<'avaliacoes'>
 export type Assessment = Tables<'assessments'>
 export type Registro = Tables<'registros'>
 export type Consultoria = Tables<'consultorias'>
+export type MedidaIAMetadata = Tables<'medidas_ia_metadata'>
 
 // Views
 export type AtletaComAvaliacao = Views<'v_atletas_com_avaliacao'>

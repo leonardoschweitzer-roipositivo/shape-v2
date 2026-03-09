@@ -11,7 +11,7 @@
  */
 
 import React, { memo } from 'react'
-import { ClipboardList } from 'lucide-react'
+import { ClipboardList, Camera } from 'lucide-react'
 import { ScoreGeralAvaliacao } from './components/ScoreGeralAvaliacao'
 import { DiagnosticoSection } from './components/DiagnosticoSection'
 import { ProporcoesSection } from './components/ProporcoesSection'
@@ -27,6 +27,7 @@ interface AssessmentScreenProps {
     altura?: number
     peso?: number
     personalNome?: string
+    onStartVirtualAssessment?: () => void
 }
 
 function formatDate(date: Date): string {
@@ -35,7 +36,7 @@ function formatDate(date: Date): string {
     return `${dias[date.getDay()]}, ${date.getDate().toString().padStart(2, '0')} ${meses[date.getMonth()]} ${date.getFullYear()}`
 }
 
-function EmptyState() {
+function EmptyState({ onStartVirtual }: { onStartVirtual?: () => void }) {
     return (
         <div className="flex flex-col items-center justify-center py-20 px-6">
             <div className="w-16 h-16 rounded-full bg-indigo-500/10 flex items-center justify-center mb-4">
@@ -44,10 +45,19 @@ function EmptyState() {
             <h3 className="text-lg font-bold text-white mb-2">
                 Nenhuma Avaliação
             </h3>
-            <p className="text-sm text-gray-500 text-center max-w-[280px]">
-                Peça ao seu Personal para realizar sua primeira avaliação física para
-                ver seus resultados aqui.
+            <p className="text-sm text-gray-500 text-center max-w-[280px] mb-6">
+                Peça ao seu Personal para realizar sua primeira avaliação física ou
+                faça uma avaliação virtual por foto.
             </p>
+            {onStartVirtual && (
+                <button
+                    onClick={onStartVirtual}
+                    className="flex items-center gap-2 px-5 py-3 rounded-xl bg-indigo-600 text-white text-sm font-black uppercase tracking-wider hover:bg-indigo-500 active:scale-[0.97] transition-all"
+                >
+                    <Camera size={16} />
+                    Avaliação Virtual
+                </button>
+            )}
         </div>
     )
 }
@@ -60,6 +70,7 @@ export const AssessmentScreen = memo(function AssessmentScreen({
     altura,
     peso,
     personalNome,
+    onStartVirtualAssessment,
 }: AssessmentScreenProps) {
     if (isLoading) {
         return (
@@ -87,7 +98,7 @@ export const AssessmentScreen = memo(function AssessmentScreen({
 
             {/* Content */}
             {!avaliacao ? (
-                <EmptyState />
+                <EmptyState onStartVirtual={onStartVirtualAssessment} />
             ) : (
                 <div className="px-4 py-4 space-y-4">
                     {/* 1. Score Geral */}
@@ -114,6 +125,19 @@ export const AssessmentScreen = memo(function AssessmentScreen({
                     <AssimetriaSection
                         assimetria={avaliacao.assimetria}
                     />
+                </div>
+            )}
+
+            {/* Botão flutuante de avaliação virtual (quando já tem avaliação) */}
+            {avaliacao && onStartVirtualAssessment && (
+                <div className="fixed bottom-24 right-4 z-40">
+                    <button
+                        onClick={onStartVirtualAssessment}
+                        className="flex items-center gap-2 px-4 py-3 rounded-full bg-indigo-600 text-white text-xs font-black uppercase shadow-lg shadow-indigo-500/25 hover:bg-indigo-500 active:scale-[0.95] transition-all"
+                    >
+                        <Camera size={14} />
+                        Nova Avaliação Virtual
+                    </button>
                 </div>
             )}
         </div>
