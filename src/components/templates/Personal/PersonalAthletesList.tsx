@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, UserPlus, Eye, Activity, MoreVertical, TrendingUp, ClipboardList } from 'lucide-react';
+import { Search, UserPlus, Eye, Activity, MoreVertical, TrendingUp, ClipboardList, Trash2, AlertTriangle, X } from 'lucide-react';
 import { mockPersonalAthletes, PersonalAthlete } from '@/mocks/personal';
 
 interface PersonalAthletesListProps {
@@ -9,6 +9,7 @@ interface PersonalAthletesListProps {
     onRegisterStudent: () => void;
     onRegisterMeasurement: (athleteId: string) => void;
     onViewLatestAssessment: (athleteId: string) => void;
+    onDeleteAthlete?: (athleteId: string) => void;
     athletes?: PersonalAthlete[];
 }
 
@@ -21,8 +22,11 @@ export const PersonalAthletesList: React.FC<PersonalAthletesListProps> = ({
     onRegisterStudent,
     onRegisterMeasurement,
     onViewLatestAssessment,
+    onDeleteAthlete,
     athletes = mockPersonalAthletes,
 }) => {
+    const [athleteToDelete, setAthleteToDelete] = useState<PersonalAthlete | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
     // State for student details modal
 
     const [searchQuery, setSearchQuery] = useState('');
@@ -235,6 +239,18 @@ export const PersonalAthletesList: React.FC<PersonalAthletesListProps> = ({
                                                         <span className="text-[9px] text-gray-500 group-hover:text-primary transition-colors font-medium">Resultado</span>
                                                     </button>
                                                 )}
+
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setAthleteToDelete(athlete);
+                                                    }}
+                                                    className="flex flex-col items-center gap-0.5 p-1.5 hover:bg-rose-500/10 rounded-lg transition-colors group"
+                                                    title="Excluir Aluno"
+                                                >
+                                                    <Trash2 size={16} className="text-gray-400 group-hover:text-rose-500 transition-colors" />
+                                                    <span className="text-[9px] text-gray-500 group-hover:text-rose-500 transition-colors font-medium">Excluir</span>
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -297,6 +313,72 @@ export const PersonalAthletesList: React.FC<PersonalAthletesListProps> = ({
                     </div>
                 )}
             </div>
+
+            {/* Modal de Confirmação de Exclusão */}
+            {athleteToDelete && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
+                        onClick={() => !isDeleting && setAthleteToDelete(null)}
+                    />
+                    <div className="relative bg-zinc-900 border border-white/10 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in slide-in-from-bottom-4 duration-300">
+                        <div className="p-6 pb-2 flex justify-between items-start">
+                            <div className="w-12 h-12 rounded-full bg-rose-500/10 flex items-center justify-center">
+                                <AlertTriangle className="text-rose-500" size={24} />
+                            </div>
+                            <button
+                                onClick={() => setAthleteToDelete(null)}
+                                className="p-2 hover:bg-white/5 rounded-full text-gray-500 hover:text-white transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className="p-6 pt-2">
+                            <h3 className="text-xl font-bold text-white mb-2 uppercase tracking-tight">Excluir Aluno</h3>
+                            <p className="text-gray-400 text-sm leading-relaxed mb-6">
+                                Tem certeza que deseja excluir <span className="text-white font-semibold">{athleteToDelete.name}</span>?
+                                <br />
+                                <span className="text-rose-500/80 font-medium">Esta ação é irreversível e apagará todo o histórico de medidas e avaliações.</span>
+                            </p>
+
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setAthleteToDelete(null)}
+                                    disabled={isDeleting}
+                                    className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-bold transition-all disabled:opacity-50"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        if (onDeleteAthlete) {
+                                            setIsDeleting(true);
+                                            try {
+                                                await onDeleteAthlete(athleteToDelete.id);
+                                            } finally {
+                                                setIsDeleting(false);
+                                                setAthleteToDelete(null);
+                                            }
+                                        }
+                                    }}
+                                    disabled={isDeleting}
+                                    className="flex-1 py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-rose-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
+                                >
+                                    {isDeleting ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            Excluindo...
+                                        </>
+                                    ) : (
+                                        'Sim, Excluir'
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

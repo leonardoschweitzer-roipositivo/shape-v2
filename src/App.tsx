@@ -399,6 +399,74 @@ const App: React.FC = () => {
     console.warn("Quick login not supported with Supabase yet");
   };
 
+  const handleDeleteAthlete = async (athleteId: string) => {
+    try {
+      console.info('[App] 🗑️ Iniciando exclusão do atleta:', athleteId);
+      const personalId = useAuthStore.getState().entity?.personal?.id;
+      const authUserId = useAuthStore.getState().user?.id;
+      console.info('[App] personalId:', personalId, 'authUserId:', authUserId);
+
+      // 1. Deletar planos de treino
+      const r1 = await supabase.from('planos_treino').delete().eq('atleta_id', athleteId);
+      console.info('[App] planos_treino:', r1.error ? `❌ ${r1.error.message}` : '✅');
+
+      // 2. Deletar planos de dieta
+      const r2 = await supabase.from('planos_dieta').delete().eq('atleta_id', athleteId);
+      console.info('[App] planos_dieta:', r2.error ? `❌ ${r2.error.message}` : '✅');
+
+      // 3. Deletar diagnósticos
+      const r3 = await supabase.from('diagnosticos').delete().eq('atleta_id', athleteId);
+      console.info('[App] diagnosticos:', r3.error ? `❌ ${r3.error.message}` : '✅');
+
+      // 4. Deletar medidas
+      const r4 = await supabase.from('medidas').delete().eq('atleta_id', athleteId);
+      console.info('[App] medidas:', r4.error ? `❌ ${r4.error.message}` : '✅');
+
+      // 5. Deletar assessments
+      const r5 = await supabase.from('assessments').delete().eq('atleta_id', athleteId);
+      console.info('[App] assessments:', r5.error ? `❌ ${r5.error.message}` : '✅');
+
+      // 6. Deletar ficha do atleta
+      const r6 = await supabase.from('fichas').delete().eq('atleta_id', athleteId);
+      console.info('[App] fichas:', r6.error ? `❌ ${r6.error.message}` : '✅');
+
+      // 7. Deletar registros diários (logs de treino, água, sono, etc)
+      const r_logs = await supabase.from('registros_diarios').delete().eq('atleta_id', athleteId);
+      console.info('[App] registros_diarios:', r_logs.error ? `❌ ${r_logs.error.message}` : '✅');
+
+      // 8. Deletar notificações vinculadas ao atleta
+      const r_notif = await supabase.from('notificacoes').delete().eq('atleta_id', athleteId);
+      console.info('[App] notificacoes:', r_notif.error ? `❌ ${r_notif.error.message}` : '✅');
+
+      // 9. Deletar o atleta
+      const r7 = await supabase.from('atletas').delete().eq('id', athleteId).select('id');
+      console.info('[App] atletas delete result:', JSON.stringify({ error: r7.error, data: r7.data }));
+
+      if (r7.error) {
+        console.error('[App] ❌ atletas delete ERRO:', r7.error.code, r7.error.message);
+        alert(`Erro ao excluir aluno:\n${r7.error.message}`);
+        return;
+      }
+
+      if (!r7.data || r7.data.length === 0) {
+        console.error('[App] ❌ atletas delete: nenhuma linha deletada');
+        alert('Falha ao excluir: RLS pode estar bloqueando a operação.');
+        return;
+      }
+
+      console.info('[App] ✅ Atleta excluído com sucesso:', athleteId);
+
+      // 8. Recarregar dados e navegar
+      if (personalId) {
+        await useDataStore.getState().loadFromSupabase(personalId);
+      }
+      setCurrentView('students');
+    } catch (error) {
+      console.error('[App] ❌ Exceção ao excluir atleta:', error);
+      alert('Erro ao excluir aluno.');
+    }
+  };
+
 
 
   const renderContent = () => {
@@ -591,6 +659,7 @@ const App: React.FC = () => {
                 setCurrentView('assessment');
               }}
               onViewLatestAssessment={handleViewLatestAssessment}
+              onDeleteAthlete={handleDeleteAthlete}
             />
           );
         case 'athlete-details':
@@ -609,65 +678,7 @@ const App: React.FC = () => {
                 setCurrentView('assessment');
               }}
               onViewPlan={handleViewEvolutionPlan}
-              onDeleteAthlete={async (athleteId) => {
-                try {
-                  console.info('[App] 🗑️ Iniciando exclusão do atleta:', athleteId);
-                  const personalId = useAuthStore.getState().entity?.personal?.id;
-                  const authUserId = useAuthStore.getState().user?.id;
-                  console.info('[App] personalId:', personalId, 'authUserId:', authUserId);
-
-                  // 1. Deletar planos de treino
-                  const r1 = await supabase.from('planos_treino').delete().eq('atleta_id', athleteId);
-                  console.info('[App] planos_treino:', r1.error ? `❌ ${r1.error.message}` : '✅');
-
-                  // 2. Deletar planos de dieta
-                  const r2 = await supabase.from('planos_dieta').delete().eq('atleta_id', athleteId);
-                  console.info('[App] planos_dieta:', r2.error ? `❌ ${r2.error.message}` : '✅');
-
-                  // 3. Deletar diagnósticos
-                  const r3 = await supabase.from('diagnosticos').delete().eq('atleta_id', athleteId);
-                  console.info('[App] diagnosticos:', r3.error ? `❌ ${r3.error.message}` : '✅');
-
-                  // 4. Deletar medidas
-                  const r4 = await supabase.from('medidas').delete().eq('atleta_id', athleteId);
-                  console.info('[App] medidas:', r4.error ? `❌ ${r4.error.message}` : '✅');
-
-                  // 5. Deletar assessments
-                  const r5 = await supabase.from('assessments').delete().eq('atleta_id', athleteId);
-                  console.info('[App] assessments:', r5.error ? `❌ ${r5.error.message}` : '✅');
-
-                  // 6. Deletar ficha do atleta
-                  const r6 = await supabase.from('fichas').delete().eq('atleta_id', athleteId);
-                  console.info('[App] fichas:', r6.error ? `❌ ${r6.error.message}` : '✅');
-
-                  // 7. Deletar o atleta — verificar se realmente foi deletado
-                  const r7 = await supabase.from('atletas').delete().eq('id', athleteId).select('id');
-                  console.info('[App] atletas delete result:', JSON.stringify({ error: r7.error, data: r7.data, count: r7.count }));
-
-                  if (r7.error) {
-                    console.error('[App] ❌ atletas delete ERRO:', r7.error.code, r7.error.message, r7.error.details, r7.error.hint);
-                    alert(`Erro ao excluir aluno:\n${r7.error.message}\n\nCódigo: ${r7.error.code}`);
-                    return;
-                  }
-
-                  if (!r7.data || r7.data.length === 0) {
-                    console.error('[App] ❌ atletas delete: nenhuma linha deletada (possível bloqueio de RLS)');
-                    alert('Falha ao excluir: RLS pode estar bloqueando a operação.\nVeja o console F12 e verifique as políticas no Supabase.');
-                    return;
-                  }
-
-                  console.info('[App] ✅ Atleta excluído com sucesso:', athleteId);
-
-                  // 8. Recarregar dados e navegar
-                  if (personalId) {
-                    await useDataStore.getState().loadFromSupabase(personalId);
-                  }
-                  setCurrentView('students');
-                } catch (error) {
-                  console.error('[App] ❌ Exceção ao excluir atleta:', error);
-                  alert('Erro ao excluir aluno. Verifique o console (F12) para detalhes.');
-                }
-              }}
+              onDeleteAthlete={handleDeleteAthlete}
             />
           );
         case 'assessment':
