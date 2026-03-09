@@ -39,6 +39,7 @@ export interface RecentActivity {
 
 export interface MeasurementHistory {
     id: string;
+    _source?: 'assessments' | 'medidas';
     date: string;
     score?: number;
     ratio?: number;

@@ -102,10 +102,55 @@ export function mapAtletaToPersonalAthlete(
         };
     });
 
-    // Fallback: Não incorporamos medidas brutas no histórico de avaliações.
-    // O histórico deve ser o reflexo fiel da tabela 'assessments'.
+    // Fallback: Se não existem assessments formais, mapear medidas brutas
+    // para que o Personal possa visualizar as medidas na ficha do atleta.
     if (mappedAssessments.length === 0 && medidas.length > 0) {
-        console.info(`[Mapper] 📊 Atleta ${atleta.nome} possui medidas brutas, mas o histórico de avaliações permanece limpo.`);
+        for (const m of medidas) {
+            mappedAssessments.push({
+                id: m.id,
+                _source: 'medidas' as const,
+                date: m.data,
+                score: 0,
+                ratio: 0,
+                bf: 0,
+                ffmi: 0,
+                proporcoes: null,
+                measurements: {
+                    weight: Number(m.peso) || 0,
+                    height: alturaCm || 0,
+                    neck: Number(m.pescoco) || 0,
+                    shoulders: Number(m.ombros) || 0,
+                    chest: Number(m.peitoral) || 0,
+                    waist: Number(m.cintura) || 0,
+                    hips: Number(m.quadril) || 0,
+                    pelvis: Number(ficha?.pelve) || 0,
+                    armRight: Number(m.braco_direito) || 0,
+                    armLeft: Number(m.braco_esquerdo) || 0,
+                    forearmRight: Number(m.antebraco_direito) || 0,
+                    forearmLeft: Number(m.antebraco_esquerdo) || 0,
+                    thighRight: Number(m.coxa_direita) || 0,
+                    thighLeft: Number(m.coxa_esquerda) || 0,
+                    calfRight: Number(m.panturrilha_direita) || 0,
+                    calfLeft: Number(m.panturrilha_esquerda) || 0,
+                    wristRight: Number(ficha?.punho) || 17,
+                    wristLeft: Number(ficha?.punho) || 17,
+                    kneeRight: Number(ficha?.joelho) || 40,
+                    kneeLeft: Number(ficha?.joelho) || 40,
+                    ankleRight: Number(ficha?.tornozelo) || 22,
+                    ankleLeft: Number(ficha?.tornozelo) || 22,
+                },
+                skinfolds: {
+                    tricep: Number((m as Record<string, unknown>).dobra_tricipital) || 0,
+                    subscapular: Number((m as Record<string, unknown>).dobra_subescapular) || 0,
+                    chest: Number((m as Record<string, unknown>).dobra_peitoral) || 0,
+                    axillary: Number((m as Record<string, unknown>).dobra_axilar_media) || 0,
+                    suprailiac: Number((m as Record<string, unknown>).dobra_suprailiaca) || 0,
+                    abdominal: Number((m as Record<string, unknown>).dobra_abdominal) || 0,
+                    thigh: Number((m as Record<string, unknown>).dobra_coxa) || 0,
+                },
+            });
+        }
+        console.info(`[Mapper] 📊 Atleta ${atleta.nome}: ${medidas.length} medida(s) bruta(s) mapeadas para exibição.`);
     }
 
 
