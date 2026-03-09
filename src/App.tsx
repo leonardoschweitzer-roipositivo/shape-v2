@@ -63,6 +63,7 @@ import {
   LazyBibliotecaExerciciosPage as BibliotecaExerciciosPage,
   LazyPersonalPortal as PersonalPortal,
 } from '@/lazyPages';
+import { AthleteLogin } from '@/pages/athlete/AthleteLogin';
 // import { GamificationPage } from './pages/GamificationPage'; // DISABLED - Feature para depois
 
 import { calculateAge } from '@/utils/dateUtils';
@@ -97,6 +98,16 @@ const App: React.FC = () => {
   const personalPortalId = (() => {
     const match = window.location.pathname.match(/^\/personal\/([a-zA-Z0-9\-]+)/);
     return match ? match[1] : null;
+  })();
+
+  // Athlete Portal URL detection (/atleta)
+  const isAtletaRoute = window.location.pathname.startsWith('/atleta');
+  const atletaUrlParams = (() => {
+    const params = new URLSearchParams(window.location.search);
+    return {
+      email: params.get('email') || undefined,
+      password: params.get('p') || undefined,
+    };
   })();
   const [diagnosticoPlanId, setDiagnosticoPlanId] = useState<string | null>(null);
   const [consultaDiagData, setConsultaDiagData] = useState<DiagnosticoDados | null>(null);
@@ -991,24 +1002,41 @@ const App: React.FC = () => {
 
   // getPageTitle extracted to @/utils/getPageTitle.ts
 
-  // Portal do Atleta via token (bypass auth — atleta acessa via link de convite)
-  if (portalToken) {
-    return (
-      <Suspense fallback={
+  // Portal do Atleta via URL (/atleta)
+  if (isAtletaRoute) {
+    if (isAuthLoading) {
+      return (
         <div className="flex h-screen w-full items-center justify-center bg-background-dark text-white">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
         </div>
-      }>
-        <PortalLanding
-          token={portalToken}
-          onClose={() => {
-            setPortalToken(null);
-            const url = new URL(window.location.href);
-            url.searchParams.delete('token');
-            window.history.replaceState({}, '', url.pathname);
-          }}
-        />
-      </Suspense>
+      );
+    }
+
+    // Autenticado como ATLETA — mostrar portal
+    const atletaId = entity?.atleta?.id;
+    if (isAuthenticated && atletaId) {
+      return (
+        <Suspense fallback={
+          <div className="flex h-screen w-full items-center justify-center bg-background-dark text-white">
+            <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          </div>
+        }>
+          <AthletePortal atletaId={atletaId} />
+        </Suspense>
+      );
+    }
+
+    // Não autenticado — mostrar login do atleta
+    return (
+      <AthleteLogin
+        initialEmail={atletaUrlParams.email}
+        initialPassword={atletaUrlParams.password}
+        onLoginSuccess={(id) => {
+          // Limpar params da URL (não expor credenciais)
+          window.history.replaceState({}, '', '/atleta');
+          window.location.reload();
+        }}
+      />
     );
   }
 

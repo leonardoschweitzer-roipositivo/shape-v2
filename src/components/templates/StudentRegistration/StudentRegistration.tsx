@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Check, User, Mail, Sparkles, UserPlus, Activity } from 'lucide-react';
+import { ArrowLeft, Check, User, Mail, Sparkles, UserPlus, Activity, KeyRound, Copy } from 'lucide-react';
 import { supabase } from '@/services/supabase';
-import { portalService } from '@/services/portalService';
 import { useAuthStore } from '@/stores/authStore';
 import { useDataStore } from '@/stores/dataStore';
+
+const DEFAULT_ATHLETE_PASSWORD = 'Shape2026!';
 
 interface StudentRegistrationProps {
     onBack: () => void;
@@ -30,9 +31,10 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
     const [formData, setFormData] = useState<RegistrationData>(initialData);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
-    const [portalLink, setPortalLink] = useState<string | null>(null);
+    const [loginLink, setLoginLink] = useState<string | null>(null);
     const [linkCopied, setLinkCopied] = useState(false);
     const [createdAtletaId, setCreatedAtletaId] = useState<string | null>(null);
+    const [athleteEmail, setAthleteEmail] = useState<string | null>(null);
 
     const { entity } = useAuthStore();
     const { loadFromSupabase } = useDataStore();
@@ -91,14 +93,60 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
             if (fichaError) console.warn('[Cadastro Rápido] Aviso ficha:', fichaError.message);
             else console.info('[Cadastro Rápido] ✅ Ficha atualizada');
 
-            // 3. Gerar portal token se solicitado
-            if (formData.sendInvite) {
+            // 3. Criar conta de acesso ao Portal se o aluno tem email
+            const athleteEmailTrimmed = formData.email.trim();
+            if (formData.sendInvite && athleteEmailTrimmed) {
                 try {
-                    const { url } = await portalService.generateToken(atleta.id);
-                    console.info('[Cadastro Rápido] ✅ Portal token gerado:', url);
-                    setPortalLink(url);
+                    console.info('[Cadastro Rápido] Criando conta Auth para o aluno...');
+
+                    // Salvar sessão do Personal
+                    const { data: { session: personalSession } } = await supabase.auth.getSession();
+
+                    // Criar conta do aluno via signUp
+                    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+                        email: athleteEmailTrimmed,
+                        password: DEFAULT_ATHLETE_PASSWORD,
+                        options: {
+                            data: {
+                                full_name: formData.name.trim(),
+                                role: 'ATLETA',
+                            },
+                        },
+                    });
+
+                    // Restaurar sessão do Personal IMEDIATAMENTE
+                    if (personalSession) {
+                        await supabase.auth.setSession({
+                            access_token: personalSession.access_token,
+                            refresh_token: personalSession.refresh_token,
+                        });
+                        console.info('[Cadastro Rápido] ✅ Sessão do Personal restaurada');
+                    }
+
+                    if (signUpError) {
+                        console.warn('[Cadastro Rápido] Aviso ao criar conta:', signUpError.message);
+                    } else if (signUpData.user) {
+                        // Vincular auth_user_id ao atleta
+                        await supabase
+                            .from('atletas')
+                            .update({ auth_user_id: signUpData.user.id } as Record<string, unknown>)
+                            .eq('id', atleta.id);
+
+                        console.info('[Cadastro Rápido] ✅ Conta Auth criada e vinculada:', signUpData.user.id);
+
+                        // Gerar link de login com credenciais pré-preenchidas
+                        const baseUrl = window.location.origin;
+                        const loginUrl = `${baseUrl}/atleta?email=${encodeURIComponent(athleteEmailTrimmed)}&p=${encodeURIComponent(DEFAULT_ATHLETE_PASSWORD)}`;
+                        setLoginLink(loginUrl);
+                        setAthleteEmail(athleteEmailTrimmed);
+                    }
                 } catch (tokenErr) {
-                    console.warn('[Cadastro Rápido] Aviso token:', tokenErr);
+                    console.warn('[Cadastro Rápido] Aviso ao criar conta:', tokenErr);
+                    // Restaurar sessão do Personal em caso de erro
+                    const { data: { session: fallbackSession } } = await supabase.auth.getSession();
+                    if (!fallbackSession) {
+                        console.error('[Cadastro Rápido] ❌ Sessão do Personal perdida! Recarregue a página.');
+                    }
                 }
             }
 
@@ -152,59 +200,78 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                                 </p>
                             </div>
 
-                            {/* Portal Link (if generated) */}
-                            {portalLink && (
-                                <div className="p-6 bg-background-dark border border-primary/30 rounded-2xl space-y-4">
+                            {/* Login Credentials (if account created) */}
+                            {loginLink && athleteEmail && (
+                                <div className="p-6 bg-background-dark border border-indigo-500/30 rounded-2xl space-y-4">
                                     <div className="flex items-center gap-2 mb-1">
-                                        <Mail className="text-primary" size={16} />
-                                        <span className="text-xs font-bold text-primary uppercase tracking-wider">Link de Convite</span>
+                                        <KeyRound className="text-indigo-400" size={16} />
+                                        <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider">Acesso ao Portal do Aluno</span>
                                     </div>
+
+                                    {/* Credentials */}
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-3 p-3 bg-white/[0.03] rounded-lg border border-white/5">
+                                            <Mail size={14} className="text-gray-500" />
+                                            <div className="flex-1">
+                                                <span className="text-[10px] text-gray-500 uppercase tracking-wider">Email</span>
+                                                <p className="text-white text-sm font-mono">{athleteEmail}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3 p-3 bg-white/[0.03] rounded-lg border border-white/5">
+                                            <KeyRound size={14} className="text-gray-500" />
+                                            <div className="flex-1">
+                                                <span className="text-[10px] text-gray-500 uppercase tracking-wider">Senha</span>
+                                                <p className="text-white text-sm font-mono">{DEFAULT_ATHLETE_PASSWORD}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Login Link */}
                                     <div className="flex items-center gap-2">
                                         <input
                                             type="text"
                                             readOnly
-                                            value={portalLink}
+                                            value={loginLink}
                                             className="flex-1 bg-background-dark border border-white/10 rounded-lg px-4 py-3 text-white text-xs font-mono truncate"
                                         />
                                         <button
                                             onClick={() => {
-                                                navigator.clipboard.writeText(portalLink);
+                                                navigator.clipboard.writeText(loginLink);
                                                 setLinkCopied(true);
                                                 setTimeout(() => setLinkCopied(false), 2000);
                                             }}
-                                            className={`px-5 py-3 rounded-lg font-bold text-xs uppercase tracking-wider transition-all ${linkCopied
+                                            className={`px-5 py-3 rounded-lg font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1 ${linkCopied
                                                 ? 'bg-emerald-500 text-white'
-                                                : 'bg-primary hover:bg-primary/80 text-black'
+                                                : 'bg-indigo-600 hover:bg-indigo-500 text-white'
                                                 }`}
                                         >
-                                            {linkCopied ? '✓ Copiado!' : 'Copiar'}
+                                            <Copy size={12} />
+                                            {linkCopied ? 'Copiado!' : 'Copiar'}
                                         </button>
                                     </div>
 
                                     {/* Share buttons */}
                                     <div className="flex items-center gap-3 pt-2">
                                         <a
-                                            href={`https://wa.me/?text=${encodeURIComponent(`Olá ${formData.name}! 🏋️\n\nSeu cadastro na VITRU IA foi realizado.\nAcesse o link abaixo para registrar suas medidas:\n\n${portalLink}`)}`}
+                                            href={`https://wa.me/?text=${encodeURIComponent(`Olá ${formData.name}! 🏋️\n\nSeu acesso ao Portal VITRU IA foi criado!\n\n📧 Email: ${athleteEmail}\n🔑 Senha: ${DEFAULT_ATHLETE_PASSWORD}\n\nAcesse aqui:\n${loginLink}`)}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="flex items-center gap-2 px-4 py-2 bg-emerald-600/20 border border-emerald-600/30 rounded-lg text-emerald-400 hover:bg-emerald-600/30 transition-all text-xs font-bold"
                                         >
                                             📱 WhatsApp
                                         </a>
-                                        {formData.email && (
-                                            <a
-                                                href={`mailto:${formData.email}?subject=Acesso VITRU IA&body=${encodeURIComponent(`Olá ${formData.name}!\n\nSeu cadastro na VITRU IA foi realizado.\nAcesse o link abaixo para registrar suas medidas:\n\n${portalLink}`)}`}
-                                                className="flex items-center gap-2 px-4 py-2 bg-blue-500/20 border border-blue-500/30 rounded-lg text-blue-400 hover:bg-blue-500/30 transition-all text-xs font-bold"
-                                            >
-                                                ✉️ Email
-                                            </a>
-                                        )}
+                                        <a
+                                            href={`mailto:${athleteEmail}?subject=Acesso VITRU IA&body=${encodeURIComponent(`Olá ${formData.name}!\n\nSeu acesso ao Portal VITRU IA foi criado!\n\nEmail: ${athleteEmail}\nSenha: ${DEFAULT_ATHLETE_PASSWORD}\n\nAcesse aqui: ${loginLink}`)}`}
+                                            className="flex items-center gap-2 px-4 py-2 bg-blue-500/20 border border-blue-500/30 rounded-lg text-blue-400 hover:bg-blue-500/30 transition-all text-xs font-bold"
+                                        >
+                                            ✉️ Email
+                                        </a>
                                     </div>
 
-                                    <div className="p-3 bg-primary/5 border border-primary/20 rounded-xl flex items-start gap-3">
-                                        <Sparkles className="text-primary mt-0.5" size={14} />
+                                    <div className="p-3 bg-indigo-500/5 border border-indigo-500/20 rounded-xl flex items-start gap-3">
+                                        <Sparkles className="text-indigo-400 mt-0.5" size={14} />
                                         <p className="text-xs text-gray-400 leading-relaxed">
-                                            O link é válido por <span className="text-white font-bold">30 dias</span>.
+                                            O aluno pode alterar a senha a qualquer momento pelo <span className="text-white font-bold">"Esqueci minha senha"</span> na tela de login.
                                         </p>
                                     </div>
                                 </div>
@@ -346,8 +413,8 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                                     {formData.sendInvite && <Check size={12} strokeWidth={3} />}
                                 </div>
                                 <div className="space-y-0.5">
-                                    <span className="text-white font-bold block text-sm uppercase tracking-wider">Gerar Link de Convite</span>
-                                    <span className="text-gray-500 text-xs">O aluno receberá um link para acessar o portal e acompanhar seu progresso.</span>
+                                    <span className="text-white font-bold block text-sm uppercase tracking-wider">Criar Acesso ao Portal</span>
+                                    <span className="text-gray-500 text-xs">Cria login com email e senha padrão (<strong className="text-gray-300">{DEFAULT_ATHLETE_PASSWORD}</strong>). Requer email preenchido.</span>
                                 </div>
                             </label>
                         </div>
