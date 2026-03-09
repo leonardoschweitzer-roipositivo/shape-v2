@@ -2146,4 +2146,4 @@ Timeline total: ~6 semanas
 ---
 
 **Documento gerado em:** 2026-03-09  
-**Próxima revisão:** Após conclusão da Fase 1
+**Próxima revisão:** Após conclusão da Fase 1.0
