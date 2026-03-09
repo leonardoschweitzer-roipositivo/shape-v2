@@ -3,6 +3,7 @@
  */
 import { supabase } from '@/services/supabase';
 import type { SupaRegistroDiario } from './portalTypes';
+import { getHojeLocal } from './dateUtils';
 
 /**
  * Registra tracker diário (água, peso, sono, dor, treino)
@@ -17,7 +18,7 @@ export async function registrarTracker(
         .from('registros_diarios')
         .insert({
             atleta_id: atletaId,
-            data: dataOverride || new Date().toISOString().split('T')[0],
+            data: dataOverride || getHojeLocal(),
             tipo,
             dados,
         } as Record<string, unknown>);

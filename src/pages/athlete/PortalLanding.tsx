@@ -214,7 +214,7 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
 
     // ---- Score & Meta (dados do Diagnóstico / Fallback) ----
     const scoreAtual = lastAval?.score_geral ?? 0;
-    const classificacaoAtual = lastAval?.classificacao_geral || getClassificacao(scoreAtual);
+    const classificacaoAtual = getClassificacao(scoreAtual);
     const dataUltimaAvaliacao = lastAval ? new Date(lastAval.data) : new Date();
 
     // Pull goals from diagnostico
@@ -392,6 +392,22 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
                 personalRanking={3}
             />
 
+            {/* Card de Consistência */}
+            {dadosConsistencia && (
+                <CardConsistencia dados={dadosConsistencia} />
+            )}
+
+            {/* Botão "VER TREINO DE HOJE" (Centralizado, estilo Primário) */}
+            <div className="max-w-2xl mx-auto px-6 mt-6 mb-6">
+                <button
+                    onClick={() => onGoToPortal('hoje')}
+                    className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-4 rounded-xl font-black tracking-widest text-sm uppercase transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
+                >
+                    <Play size={18} fill="white" />
+                    VER TREINO DE HOJE
+                </button>
+            </div>
+
             {/* 3. Card Score + Meta */}
             <CardScoreMeta
                 scoreAtual={scoreAtual}
@@ -406,22 +422,6 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
                 percentualMeta={percentualMeta}
                 pontosRestantes={pontosRestantes}
             />
-
-            {/* Card de Consistência */}
-            {dadosConsistencia && (
-                <CardConsistencia dados={dadosConsistencia} />
-            )}
-
-            {/* 3.3 Botão "VER TREINO DE HOJE" (Centralizado, estilo Primário) */}
-            <div className="max-w-2xl mx-auto px-6 mt-6 mb-6">
-                <button
-                    onClick={() => onGoToPortal('hoje')}
-                    className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-4 rounded-xl font-black tracking-widest text-sm uppercase transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
-                >
-                    <Play size={18} fill="white" />
-                    VER TREINO DE HOJE
-                </button>
-            </div>
 
             {/* 4. Card Metas do Trimestre (baseado no Diagnóstico IA) */}
             {diagTyped && (

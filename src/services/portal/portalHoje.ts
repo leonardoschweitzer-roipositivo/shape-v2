@@ -11,6 +11,7 @@ import type { PlanoTreino } from '@/services/calculations/treino';
 import type { PlanoDieta } from '@/services/calculations/dieta';
 import type { SupaRegistroDiario, PortalContext } from './portalTypes';
 import { getUltimoTreinoIndex } from './portalContext';
+import { getHojeLocal } from './dateUtils';
 
 /**
  * Deriva o treino do dia (o próximo treino pendente na sequência) a partir do PlanoTreino.
@@ -368,7 +369,7 @@ export async function montarDadosHoje(ctx: PortalContext): Promise<TodayScreenDa
     ]);
 
     // Buscar trackers, refeições e status do treino hoje em PARALELO
-    const hoje = new Date().toISOString().split('T')[0];
+    const hoje = getHojeLocal();
     const [trackers, { data: refeicoes }, { data: treinoReg }] = await Promise.all([
         buscarRegistrosDoDia(ctx.atletaId),
         supabase
