@@ -1,7 +1,7 @@
 /**
  * StepDadosBasicos - Step 1 do Wizard
  * 
- * Coleta altura, peso atual e seleção de objeto de referência.
+ * Coleta data de nascimento, altura, peso atual e seleção de objeto de referência.
  * Valores pré-preenchidos se disponíveis na ficha.
  */
 
@@ -10,9 +10,11 @@ import { Scale, CreditCard, FileText, Ruler } from 'lucide-react';
 import type { ReferenceObject } from '@/services/virtualAssessment.service';
 
 interface StepDadosBasicosProps {
+    dataNascimento: string;
     altura: number;
     peso: number;
     referenceObject: ReferenceObject;
+    onDataNascimentoChange: (date: string) => void;
     onAlturaChange: (altura: number) => void;
     onPesoChange: (peso: number) => void;
     onReferenceChange: (ref: ReferenceObject) => void;
@@ -46,16 +48,24 @@ const REFERENCE_OPTIONS: Array<{
     ];
 
 export const StepDadosBasicos = memo(function StepDadosBasicos({
+    dataNascimento,
     altura,
     peso,
     referenceObject,
+    onDataNascimentoChange,
     onAlturaChange,
     onPesoChange,
     onReferenceChange,
     onNext,
 }: StepDadosBasicosProps) {
+    const [dataNascInput, setDataNascInput] = useState(dataNascimento || '');
     const [alturaInput, setAlturaInput] = useState(altura > 0 ? String(altura) : '');
     const [pesoInput, setPesoInput] = useState(peso > 0 ? String(peso) : '');
+
+    const handleDataNascChange = (value: string) => {
+        setDataNascInput(value);
+        onDataNascimentoChange(value);
+    };
 
     const handleAlturaChange = (value: string) => {
         setAlturaInput(value);
@@ -77,7 +87,8 @@ export const StepDadosBasicos = memo(function StepDadosBasicos({
     const pesoNum = parseFloat(pesoInput);
     const isAlturaValid = alturaNum >= 100 && alturaNum <= 250;
     const isPesoValid = pesoNum >= 30 && pesoNum <= 300;
-    const isValid = isAlturaValid && isPesoValid;
+    const isDataNascValid = !!dataNascInput;
+    const isValid = isDataNascValid && isAlturaValid && isPesoValid;
 
     return (
         <div className="px-4 py-6 space-y-6">
@@ -88,8 +99,24 @@ export const StepDadosBasicos = memo(function StepDadosBasicos({
                 </div>
                 <h3 className="text-lg font-black text-white uppercase">Dados Básicos</h3>
                 <p className="text-xs text-gray-500 mt-1">
-                    Informe sua altura, peso atual e escolha o objeto de referência
+                    Informe seus dados e escolha o objeto de referência
                 </p>
+            </div>
+
+            {/* Data de Nascimento */}
+            <div>
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">
+                    Data de Nascimento
+                </label>
+                <input
+                    type="date"
+                    value={dataNascInput}
+                    onChange={(e) => handleDataNascChange(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-lg font-bold placeholder-gray-600 focus:outline-none focus:border-indigo-500/50 transition-colors [color-scheme:dark]"
+                />
+                {!isDataNascValid && dataNascInput === '' && (
+                    <p className="text-xs text-gray-600 mt-1">Obrigatório para o cálculo da avaliação</p>
+                )}
             </div>
 
             {/* Altura */}

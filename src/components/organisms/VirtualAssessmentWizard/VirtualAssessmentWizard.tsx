@@ -21,6 +21,7 @@ import {
     type ReferenceObject,
     type VirtualAssessmentResult,
 } from '@/services/virtualAssessment.service';
+import { supabase } from '@/services/supabase';
 
 // ===== TYPES =====
 
@@ -31,6 +32,7 @@ interface VirtualAssessmentWizardProps {
     sexo: 'M' | 'F';
     altura: number;
     pesoInicial?: number;
+    dataNascimentoInicial?: string;
     onComplete: () => void;
     onClose: () => void;
 }
@@ -50,11 +52,13 @@ export const VirtualAssessmentWizard = memo(function VirtualAssessmentWizard({
     sexo,
     altura,
     pesoInicial,
+    dataNascimentoInicial,
     onComplete,
     onClose,
 }: VirtualAssessmentWizardProps) {
     // State
     const [step, setStep] = useState<WizardStep>('dados');
+    const [dataNascimento, setDataNascimento] = useState(dataNascimentoInicial || '');
     const [alturaState, setAlturaState] = useState(altura || 0);
     const [peso, setPeso] = useState(pesoInicial ?? 0);
     const [referenceObject, setReferenceObject] = useState<ReferenceObject>('credit_card');
@@ -107,6 +111,23 @@ export const VirtualAssessmentWizard = memo(function VirtualAssessmentWizard({
 
             setResult(res);
             setStep('resultado');
+
+            // Salvar data_nascimento e altura na ficha do atleta
+            try {
+                const fichaUpdate: Record<string, unknown> = {
+                    altura: alturaState,
+                };
+                if (dataNascimento) {
+                    fichaUpdate.data_nascimento = dataNascimento;
+                }
+                await supabase
+                    .from('fichas')
+                    .update(fichaUpdate)
+                    .eq('atleta_id', atletaId);
+                console.info('[VirtualAssessmentWizard] ✅ Ficha atualizada: altura + data_nascimento');
+            } catch (fichaErr) {
+                console.warn('[VirtualAssessmentWizard] Aviso ao atualizar ficha:', fichaErr);
+            }
         } catch (err) {
             console.error('[VirtualAssessmentWizard] Submit error:', err);
             setResult({
@@ -117,7 +138,7 @@ export const VirtualAssessmentWizard = memo(function VirtualAssessmentWizard({
         } finally {
             setIsSubmitting(false);
         }
-    }, [photos, referenceObject, peso, alturaState, sexo, atletaId]);
+    }, [photos, referenceObject, peso, alturaState, sexo, atletaId, dataNascimento]);
 
     const handleViewAssessment = useCallback(() => {
         onComplete();
@@ -152,9 +173,11 @@ export const VirtualAssessmentWizard = memo(function VirtualAssessmentWizard({
             <div className="flex-1 overflow-auto">
                 {step === 'dados' && (
                     <StepDadosBasicos
+                        dataNascimento={dataNascimento}
                         altura={alturaState}
                         peso={peso}
                         referenceObject={referenceObject}
+                        onDataNascimentoChange={setDataNascimento}
                         onAlturaChange={setAlturaState}
                         onPesoChange={setPeso}
                         onReferenceChange={setReferenceObject}

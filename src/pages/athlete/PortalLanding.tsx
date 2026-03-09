@@ -179,6 +179,7 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
                 sexo={(athleteData.ficha?.sexo as 'M' | 'F') || 'M'}
                 altura={athleteData.ficha?.altura || 170}
                 pesoInicial={athleteData.medidas?.[0]?.peso ?? undefined}
+                dataNascimentoInicial={athleteData.ficha?.data_nascimento || ''}
                 onComplete={async () => {
                     const updated = await portalService.validateToken(token);
                     if (updated) setAthleteData(updated);
@@ -360,7 +361,7 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
     // ---- Ações Rápidas ----
 
     // ---- Estado: Sem medidas (Primeiro acesso) ----
-    const temAvaliacao = !!lastAval;
+    const temAvaliacao = !!lastAval || !!lastMedida;
 
     if (!temAvaliacao) {
         return (

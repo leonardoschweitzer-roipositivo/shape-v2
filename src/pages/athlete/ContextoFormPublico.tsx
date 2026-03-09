@@ -146,6 +146,14 @@ export function ContextoFormPublico({ atletaId, atletaNome, onBack }: ContextoFo
         }
     }
 
+    // Auto-redirect após sucesso (3s)
+    React.useEffect(() => {
+        if (success) {
+            const timer = setTimeout(() => onBack(), 3000)
+            return () => clearTimeout(timer)
+        }
+    }, [success, onBack])
+
     // ---- Estado: Sucesso ----
     if (success) {
         return (
@@ -162,6 +170,9 @@ export function ContextoFormPublico({ atletaId, atletaNome, onBack }: ContextoFo
                             Obrigado, <strong className="text-white">{atletaNome}</strong>! Seu Personal
                             foi notificado e vai usar essas informações para personalizar
                             ainda mais o seu plano. 🎯
+                        </p>
+                        <p className="text-zinc-600 text-xs mt-2">
+                            Redirecionando para o Portal em instantes…
                         </p>
                     </div>
                     <button

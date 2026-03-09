@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { ArrowLeft, Check, User, Mail, Sparkles, UserPlus, Activity } from 'lucide-react';
 import { supabase } from '@/services/supabase';
 import { portalService } from '@/services/portalService';
@@ -15,8 +15,6 @@ interface RegistrationData {
     email: string;
     phone: string;
     gender: 'MALE' | 'FEMALE';
-    birthDate: string;
-    height: string;
     sendInvite: boolean;
 }
 
@@ -25,8 +23,6 @@ const initialData: RegistrationData = {
     email: '',
     phone: '',
     gender: 'MALE',
-    birthDate: '',
-    height: '',
     sendInvite: false,
 };
 
@@ -45,18 +41,7 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
         setFormData((prev) => ({ ...prev, [field]: value }));
     };
 
-    // Derive age from birthDate
-    const derivedAge = useMemo(() => {
-        if (!formData.birthDate) return null;
-        const birth = new Date(formData.birthDate);
-        const now = new Date();
-        let age = now.getFullYear() - birth.getFullYear();
-        const m = now.getMonth() - birth.getMonth();
-        if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--;
-        return age > 0 ? age : null;
-    }, [formData.birthDate]);
-
-    const isFormValid = formData.name.trim().length >= 2 && formData.birthDate && formData.gender;
+    const isFormValid = formData.name.trim().length >= 2 && formData.gender;
 
     const handleSubmit = async () => {
         if (!isFormValid) return;
@@ -93,14 +78,11 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
 
             // 2. Atualizar ficha (auto-criada pelo trigger)
             const sexo = formData.gender === 'MALE' ? 'M' : 'F';
-            const height = parseFloat(formData.height) || null;
 
             const { error: fichaError } = await supabase
                 .from('fichas')
                 .update({
                     sexo,
-                    data_nascimento: formData.birthDate || null,
-                    altura: height,
                     objetivo: 'HIPERTROFIA',
                     objetivo_vitruvio: 'RECOMP',
                 } as Record<string, unknown>)
@@ -285,7 +267,7 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Nome */}
-                                <div className="space-y-2">
+                                <div className="md:col-span-2 space-y-2">
                                     <label className="text-xs font-bold text-gray-300 uppercase tracking-widest">Nome Completo *</label>
                                     <input
                                         type="text"
@@ -297,22 +279,8 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                                     />
                                 </div>
 
-                                {/* Data de Nascimento */}
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-300 uppercase tracking-widest">Data de Nascimento *</label>
-                                    <input
-                                        type="date"
-                                        className="w-full bg-background-dark border border-white/10 rounded-lg px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all calendar-picker-indicator-white"
-                                        value={formData.birthDate}
-                                        onChange={(e) => handleInputChange('birthDate', e.target.value)}
-                                    />
-                                    {derivedAge && (
-                                        <span className="text-xs text-gray-500">{derivedAge} anos</span>
-                                    )}
-                                </div>
-
                                 {/* Gênero */}
-                                <div className="space-y-2">
+                                <div className="md:col-span-2 space-y-2">
                                     <label className="text-xs font-bold text-gray-300 uppercase tracking-widest">Gênero *</label>
                                     <div className="grid grid-cols-2 gap-4">
                                         <button
@@ -336,18 +304,6 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                                             ♀ Feminino
                                         </button>
                                     </div>
-                                </div>
-
-                                {/* Altura */}
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-300 uppercase tracking-widest">Altura (cm)</label>
-                                    <input
-                                        type="number"
-                                        className="w-full bg-background-dark border border-white/10 rounded-lg px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder-gray-700 font-mono"
-                                        placeholder="Ex: 175"
-                                        value={formData.height}
-                                        onChange={(e) => handleInputChange('height', e.target.value)}
-                                    />
                                 </div>
 
                                 {/* Email */}
