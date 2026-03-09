@@ -163,6 +163,7 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
                     if (result.success) {
                         const updated = await portalService.validateToken(token);
                         if (updated) setAthleteData(updated);
+                        setView('contexto');
                     }
                     return result.success;
                 }}
@@ -177,11 +178,11 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
                 atletaId={athleteData.id}
                 sexo={(athleteData.ficha?.sexo as 'M' | 'F') || 'M'}
                 altura={athleteData.ficha?.altura || 170}
-                pesoInicial={athleteData.medidas?.[0]?.peso}
+                pesoInicial={athleteData.medidas?.[0]?.peso ?? undefined}
                 onComplete={async () => {
                     const updated = await portalService.validateToken(token);
                     if (updated) setAthleteData(updated);
-                    setView('home');
+                    setView('contexto');
                 }}
                 onClose={() => setView('home')}
             />

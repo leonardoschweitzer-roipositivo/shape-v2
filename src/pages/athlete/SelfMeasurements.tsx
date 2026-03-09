@@ -72,7 +72,6 @@ const SECTIONS = [
 export function SelfMeasurements({ atletaId, atletaNome, sexo, onSave, onBack }: SelfMeasurementsProps) {
     const [values, setValues] = useState<Record<string, string>>({});
     const [saving, setSaving] = useState(false);
-    const [saved, setSaved] = useState(false);
 
     const handleChange = (key: string, value: string) => {
         setValues(prev => ({ ...prev, [key]: value }));
@@ -100,35 +99,10 @@ export function SelfMeasurements({ atletaId, atletaNome, sexo, onSave, onBack }:
 
         const success = await onSave(numericValues);
         setSaving(false);
-        if (success) setSaved(true);
+        // Redirecionamento é feito pelo parent (PortalLanding → contexto)
     };
 
-    if (saved) {
-        return (
-            <div className="min-h-screen bg-background-dark flex items-center justify-center p-6">
-                <div className="max-w-md w-full text-center space-y-8 animate-fade-in">
-                    <div className="w-24 h-24 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto animate-pulse">
-                        <CheckCircle className="text-emerald-400" size={48} />
-                    </div>
-                    <div className="space-y-3">
-                        <h1 className="text-3xl font-black text-white tracking-tight">
-                            MEDIDAS ENVIADAS!
-                        </h1>
-                        <p className="text-gray-400 text-sm leading-relaxed">
-                            Suas medidas foram registradas com sucesso, <span className="text-white font-bold">{atletaNome}</span>.
-                            Seu personal será notificado e poderá realizar sua avaliação com a <span className="text-indigo-400 font-bold italic">VITRU IA</span>.
-                        </p>
-                    </div>
-                    <div className="p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
-                        <Sparkles className="text-indigo-400 mx-auto mb-2" size={20} />
-                        <p className="text-xs text-gray-500">
-                            Você pode acessar este link novamente a qualquer momento para atualizar suas medidas.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+
 
     return (
         <div className="min-h-screen bg-background-dark">

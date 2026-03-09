@@ -81,6 +81,9 @@ export const virtualAssessmentService = {
                 },
             });
 
+            console.log('[VirtualAssessment] Raw response - data:', JSON.stringify(data)?.substring(0, 500));
+            console.log('[VirtualAssessment] Raw response - error:', error);
+
             if (error) {
                 console.error('[VirtualAssessment] Edge function error:', error);
                 return {
@@ -90,6 +93,7 @@ export const virtualAssessmentService = {
             }
 
             if (!data?.success) {
+                console.error('[VirtualAssessment] Data indicates failure:', data);
                 return {
                     success: false,
                     error: data?.error || 'Erro desconhecido na análise',

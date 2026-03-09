@@ -185,6 +185,17 @@ serve(async (req) => {
         // 4. Criar Supabase client (service role p/ bypass RLS)
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+        // 4b. Salvar altura na ficha do atleta (mesma lógica do saveMeasurements)
+        const { error: fichaError } = await supabase
+            .from("fichas")
+            .update({ altura: body.heightCm })
+            .eq("atleta_id", body.atletaId);
+
+        if (fichaError) {
+            console.error("[analyze-body] Ficha update error:", fichaError);
+            // Não falhar — continuar mesmo sem atualizar ficha
+        }
+
         // 5. Upload das 4 imagens para o bucket
         const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
         const basePath = `${body.atletaId}/${timestamp}`;
@@ -194,9 +205,11 @@ serve(async (req) => {
         // 6. Chamar Gemini Vision
         const userPrompt = buildUserPrompt(body);
         const geminiResult = await callGeminiVision(body, userPrompt);
+        console.log("[analyze-body] Gemini analysis complete, scaleDetected:", geminiResult.scaleDetected);
 
         // 7. Inserir na tabela medidas
         const medidaData = mapToMedidas(geminiResult, body);
+        console.log("[analyze-body] Inserting medida:", JSON.stringify(medidaData).substring(0, 200));
 
         const { data: medida, error: insertError } = await supabase
             .from("medidas")
@@ -205,9 +218,10 @@ serve(async (req) => {
             .single();
 
         if (insertError || !medida) {
-            console.error("[analyze-body] Insert medidas error:", insertError);
-            throw new Error("Falha ao salvar medidas");
+            console.error("[analyze-body] Insert medidas error:", JSON.stringify(insertError));
+            throw new Error(`Falha ao salvar medidas: ${insertError?.message || 'unknown'}`);
         }
+        console.log("[analyze-body] Medida inserted successfully, id:", medida.id);
 
         // 8. Inserir metadados IA
         const confidenceMap: Record<string, string> = {};

@@ -26,6 +26,7 @@ import {
     ClipboardList,
 } from 'lucide-react'
 import { portalService } from '@/services/portalService'
+import { AudioInputButton } from '@/components/atoms/AudioInputButton'
 
 // ===== TYPES =====
 
@@ -209,9 +210,9 @@ export function ContextoFormPublico({ atletaId, atletaNome, onBack }: ContextoFo
                         <div
                             key={i}
                             className={`h-1 flex-1 rounded-full transition-all duration-300 ${i < currentStep ? 'bg-indigo-500'
-                                    : i === currentStep ? 'bg-indigo-400'
-                                        : (form[CONTEXT_FIELDS[i].key] || '').trim() ? 'bg-indigo-500/30'
-                                            : 'bg-white/10'
+                                : i === currentStep ? 'bg-indigo-400'
+                                    : (form[CONTEXT_FIELDS[i].key] || '').trim() ? 'bg-indigo-500/30'
+                                        : 'bg-white/10'
                                 }`}
                         />
                     ))}
@@ -234,20 +235,28 @@ export function ContextoFormPublico({ atletaId, atletaNome, onBack }: ContextoFo
                         </p>
                     </div>
 
-                    {/* Textarea */}
-                    <textarea
-                        value={form[currentField.key] || ''}
-                        onChange={e => updateField(currentField.key, e.target.value)}
-                        placeholder={currentField.placeholder}
-                        rows={5}
-                        autoFocus
-                        className="w-full bg-white/[0.03] text-white text-sm rounded-xl border border-white/10 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 outline-none p-4 resize-none placeholder-gray-600 transition-all font-light leading-relaxed"
-                    />
-
-                    {/* Dica */}
-                    <p className="text-[10px] text-gray-600 mt-2 text-center">
-                        💡 Quanto mais detalhes, melhor o plano do seu Personal
-                    </p>
+                    {/* Textarea + Áudio */}
+                    <div className="space-y-2">
+                        <textarea
+                            value={form[currentField.key] || ''}
+                            onChange={e => updateField(currentField.key, e.target.value)}
+                            placeholder={currentField.placeholder}
+                            rows={5}
+                            autoFocus
+                            className="w-full bg-white/[0.03] text-white text-sm rounded-xl border border-white/10 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 outline-none p-4 resize-none placeholder-gray-600 transition-all font-light leading-relaxed"
+                        />
+                        <div className="flex items-center justify-between">
+                            <p className="text-[10px] text-gray-600">
+                                💡 Quanto mais detalhes, melhor o plano do seu Personal
+                            </p>
+                            <AudioInputButton
+                                onTranscript={(text) => {
+                                    const current = (form[currentField.key] || '').trim()
+                                    updateField(currentField.key, current ? `${current} ${text}` : text)
+                                }}
+                            />
+                        </div>
+                    </div>
                 </div>
 
                 {/* Navegação */}
@@ -268,8 +277,8 @@ export function ContextoFormPublico({ atletaId, atletaNome, onBack }: ContextoFo
                             onClick={handleSubmit}
                             disabled={saving || filledCount === 0}
                             className={`flex-1 py-3.5 rounded-xl text-sm font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${filledCount === 0
-                                    ? 'bg-white/5 text-gray-600 cursor-not-allowed'
-                                    : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg shadow-indigo-500/20 active:scale-95'
+                                ? 'bg-white/5 text-gray-600 cursor-not-allowed'
+                                : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg shadow-indigo-500/20 active:scale-95'
                                 }`}
                         >
                             {saving ? (
@@ -298,10 +307,10 @@ export function ContextoFormPublico({ atletaId, atletaNome, onBack }: ContextoFo
                                 key={i}
                                 onClick={() => setCurrentStep(i)}
                                 className={`w-2.5 h-2.5 rounded-full transition-all ${i === currentStep
-                                        ? 'bg-indigo-400 scale-125'
-                                        : filled
-                                            ? 'bg-indigo-500/50 hover:bg-indigo-500/70'
-                                            : 'bg-white/10 hover:bg-white/20'
+                                    ? 'bg-indigo-400 scale-125'
+                                    : filled
+                                        ? 'bg-indigo-500/50 hover:bg-indigo-500/70'
+                                        : 'bg-white/10 hover:bg-white/20'
                                     }`}
                             />
                         )
