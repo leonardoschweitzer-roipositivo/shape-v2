@@ -516,11 +516,11 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                 onSave={handleSalvarTracker}
             />
 
-            {showVirtualAssessment && ctx?.ficha?.sexo && ctx?.ficha?.altura && (
+            {showVirtualAssessment && (
                 <VirtualAssessmentWizard
                     atletaId={atletaId}
-                    sexo={ctx.ficha.sexo as 'M' | 'F'}
-                    altura={ctx.ficha.altura}
+                    sexo={(ctx?.ficha?.sexo as 'M' | 'F') || 'M'}
+                    altura={ctx?.ficha?.altura || 170}
                     pesoInicial={lastPeso}
                     onComplete={async () => {
                         setShowVirtualAssessment(false)
