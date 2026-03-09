@@ -55,6 +55,7 @@ export const VirtualAssessmentWizard = memo(function VirtualAssessmentWizard({
 }: VirtualAssessmentWizardProps) {
     // State
     const [step, setStep] = useState<WizardStep>('dados');
+    const [alturaState, setAlturaState] = useState(altura || 0);
     const [peso, setPeso] = useState(pesoInicial ?? 0);
     const [referenceObject, setReferenceObject] = useState<ReferenceObject>('credit_card');
     const [photos, setPhotos] = useState<Record<PhotoSlotId, string | null>>({
@@ -99,7 +100,7 @@ export const VirtualAssessmentWizard = memo(function VirtualAssessmentWizard({
                 lateralDirImage: photos.lateralDir,
                 referenceObject,
                 weightKg: peso,
-                heightCm: altura,
+                heightCm: alturaState,
                 sexo,
                 atletaId,
             });
@@ -116,7 +117,7 @@ export const VirtualAssessmentWizard = memo(function VirtualAssessmentWizard({
         } finally {
             setIsSubmitting(false);
         }
-    }, [photos, referenceObject, peso, altura, sexo, atletaId]);
+    }, [photos, referenceObject, peso, alturaState, sexo, atletaId]);
 
     const handleViewAssessment = useCallback(() => {
         onComplete();
@@ -151,8 +152,10 @@ export const VirtualAssessmentWizard = memo(function VirtualAssessmentWizard({
             <div className="flex-1 overflow-auto">
                 {step === 'dados' && (
                     <StepDadosBasicos
+                        altura={alturaState}
                         peso={peso}
                         referenceObject={referenceObject}
+                        onAlturaChange={setAlturaState}
                         onPesoChange={setPeso}
                         onReferenceChange={setReferenceObject}
                         onNext={() => setStep('fotos')}
