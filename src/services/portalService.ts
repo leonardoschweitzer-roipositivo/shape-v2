@@ -396,13 +396,16 @@ export const portalService = {
             if (joelhoMedia !== undefined) updates.joelho = joelhoMedia;
             if (tornozeloMedia !== undefined) updates.tornozelo = tornozeloMedia;
 
-            const { error: fichaError } = await supabase
+            const { data: fichaData, error: fichaError } = await supabase
                 .from('fichas')
                 .update(updates)
-                .eq('atleta_id', atletaId);
+                .eq('atleta_id', atletaId)
+                .select('id');
 
             if (fichaError) {
-                console.error('[PortalService] Erro ao salvar medidas estruturais na ficha:', fichaError);
+                console.error('[PortalService] Erro ao salvar medidas estruturais na ficha:', fichaError.code, fichaError.message);
+            } else if (!fichaData || fichaData.length === 0) {
+                console.error('[PortalService] ❌ Ficha NÃO atualizou medidas estruturais — possível bloqueio de RLS');
             }
         }
 
@@ -449,13 +452,20 @@ export const portalService = {
             atualizado_por: 'ALUNO',
         };
 
-        const { error } = await supabase
+        const { data, error } = await supabase
             .from('fichas')
             .update({ contexto: contextoComMeta } as Record<string, unknown>)
-            .eq('atleta_id', atletaId);
+            .eq('atleta_id', atletaId)
+            .select('id');
 
         if (error) {
-            console.error('[PortalService] Erro ao salvar contexto:', error);
+            console.error('[PortalService] Erro ao salvar contexto:', error.code, error.message, error.hint);
+            return { success: false };
+        }
+
+        // RLS pode bloquear silenciosamente (0 rows afetadas sem erro)
+        if (!data || data.length === 0) {
+            console.error('[PortalService] ❌ Contexto NÃO gravou — possível bloqueio de RLS. atleta_id:', atletaId);
             return { success: false };
         }
 

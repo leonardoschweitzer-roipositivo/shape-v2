@@ -132,6 +132,7 @@ DROP POLICY IF EXISTS "fichas_personal_update" ON fichas;
 DROP POLICY IF EXISTS "fichas_atleta_select" ON fichas;
 DROP POLICY IF EXISTS "fichas_academia_select" ON fichas;
 DROP POLICY IF EXISTS "fichas_portal_select" ON fichas;
+DROP POLICY IF EXISTS "fichas_portal_update" ON fichas;
 
 -- Personal pode gerenciar fichas dos seus atletas
 CREATE POLICY "ficha_via_personal" ON fichas FOR ALL
@@ -164,6 +165,18 @@ CREATE POLICY "fichas_academia_select" ON fichas FOR SELECT
 
 -- Portal: atleta pode ver sua ficha via token
 CREATE POLICY "fichas_portal_select" ON fichas FOR SELECT
+    TO anon
+    USING (
+        atleta_id IN (
+            SELECT id FROM atletas
+            WHERE portal_token IS NOT NULL
+            AND portal_token != ''
+            AND (portal_token_expira IS NULL OR portal_token_expira > now())
+        )
+    );
+
+-- Portal: atleta pode atualizar sua ficha via token (contexto, altura, data_nascimento)
+CREATE POLICY "fichas_portal_update" ON fichas FOR UPDATE
     TO anon
     USING (
         atleta_id IN (

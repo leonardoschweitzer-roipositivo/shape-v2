@@ -119,6 +119,7 @@ export function ContextoFormPublico({ atletaId, atletaNome, onBack }: ContextoFo
     const [form, setForm] = useState<FormData>(EMPTY_FORM)
     const [saving, setSaving] = useState(false)
     const [success, setSuccess] = useState(false)
+    const [error, setError] = useState<string | null>(null)
     const [currentStep, setCurrentStep] = useState(0)
 
     const updateField = (key: string, value: string) => {
@@ -129,20 +130,29 @@ export function ContextoFormPublico({ atletaId, atletaNome, onBack }: ContextoFo
 
     const handleSubmit = async () => {
         setSaving(true)
-        const result = await portalService.saveContexto(atletaId, {
-            problemas_saude: form.problemas_saude || '',
-            medicacoes: form.medicacoes || '',
-            dores_lesoes: form.dores_lesoes || '',
-            exames: form.exames || '',
-            estilo_vida: form.estilo_vida || '',
-            profissao: form.profissao || '',
-            historico_treino: form.historico_treino || '',
-            historico_dietas: form.historico_dietas || '',
-        })
-        setSaving(false)
+        setError(null)
+        try {
+            const result = await portalService.saveContexto(atletaId, {
+                problemas_saude: form.problemas_saude || '',
+                medicacoes: form.medicacoes || '',
+                dores_lesoes: form.dores_lesoes || '',
+                exames: form.exames || '',
+                estilo_vida: form.estilo_vida || '',
+                profissao: form.profissao || '',
+                historico_treino: form.historico_treino || '',
+                historico_dietas: form.historico_dietas || '',
+            })
+            setSaving(false)
 
-        if (result.success) {
-            setSuccess(true)
+            if (result.success) {
+                setSuccess(true)
+            } else {
+                setError('Não foi possível salvar seu contexto. Tente novamente.')
+            }
+        } catch (err) {
+            setSaving(false)
+            setError('Erro de conexão. Verifique sua internet e tente novamente.')
+            console.error('[ContextoFormPublico] Erro ao salvar:', err)
         }
     }
 
@@ -152,6 +162,7 @@ export function ContextoFormPublico({ atletaId, atletaNome, onBack }: ContextoFo
             const timer = setTimeout(() => onBack(), 3000)
             return () => clearTimeout(timer)
         }
+        return undefined
     }, [success, onBack])
 
     // ---- Estado: Sucesso ----
@@ -271,6 +282,11 @@ export function ContextoFormPublico({ atletaId, atletaNome, onBack }: ContextoFo
                 </div>
 
                 {/* Navegação */}
+                {error && (
+                    <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs text-center">
+                        ❌ {error}
+                    </div>
+                )}
                 <div className="flex gap-3 mt-6">
                     {/* Pular */}
                     {!isLast && (
