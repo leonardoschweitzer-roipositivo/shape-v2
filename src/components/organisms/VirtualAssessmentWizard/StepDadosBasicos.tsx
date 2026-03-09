@@ -92,19 +92,21 @@ export const StepDadosBasicos = memo(function StepDadosBasicos({
 
     return (
         <div className="px-4 py-6 space-y-6">
-            {/* Header */}
-            <div className="text-center">
-                <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 flex items-center justify-center mx-auto mb-3">
-                    <Scale size={24} className="text-indigo-400" />
+            {/* Header — left-aligned, estilo seções do Portal */}
+            <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Scale size={20} className="text-indigo-400" />
                 </div>
-                <h3 className="text-lg font-black text-white uppercase">Dados Básicos</h3>
-                <p className="text-xs text-gray-500 mt-1">
-                    Informe seus dados e escolha o objeto de referência
-                </p>
+                <div>
+                    <h3 className="text-base font-black text-white uppercase tracking-wider">Dados Básicos</h3>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                        Informe seus dados e escolha o objeto de referência
+                    </p>
+                </div>
             </div>
 
             {/* Data de Nascimento */}
-            <div>
+            <div className="min-w-0">
                 <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">
                     Data de Nascimento
                 </label>
@@ -112,63 +114,67 @@ export const StepDadosBasicos = memo(function StepDadosBasicos({
                     type="date"
                     value={dataNascInput}
                     onChange={(e) => handleDataNascChange(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-lg font-bold placeholder-gray-600 focus:outline-none focus:border-indigo-500/50 transition-colors [color-scheme:dark]"
+                    className="w-full max-w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-base font-bold placeholder-gray-600 focus:outline-none focus:border-indigo-500/50 transition-colors [color-scheme:dark] box-border"
+                    style={{ minWidth: 0 }}
                 />
                 {!isDataNascValid && dataNascInput === '' && (
                     <p className="text-xs text-gray-600 mt-1">Obrigatório para o cálculo da avaliação</p>
                 )}
             </div>
 
-            {/* Altura */}
-            <div>
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">
-                    Altura (cm)
-                </label>
-                <div className="relative">
-                    <input
-                        type="number"
-                        inputMode="decimal"
-                        step="0.1"
-                        min="100"
-                        max="250"
-                        value={alturaInput}
-                        onChange={(e) => handleAlturaChange(e.target.value)}
-                        placeholder="Ex: 175"
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-lg font-bold placeholder-gray-600 focus:outline-none focus:border-indigo-500/50 transition-colors"
-                    />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
-                        cm
-                    </span>
+            {/* Altura + Peso — side by side */}
+            <div className="grid grid-cols-2 gap-3">
+                {/* Altura */}
+                <div>
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">
+                        Altura (cm)
+                    </label>
+                    <div className="relative">
+                        <input
+                            type="number"
+                            inputMode="decimal"
+                            step="0.1"
+                            min="100"
+                            max="250"
+                            value={alturaInput}
+                            onChange={(e) => handleAlturaChange(e.target.value)}
+                            placeholder="175"
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-10 text-white text-base font-bold placeholder-gray-600 focus:outline-none focus:border-indigo-500/50 transition-colors"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs">
+                            cm
+                        </span>
+                    </div>
+                    {alturaInput && !isAlturaValid && (
+                        <p className="text-xs text-red-400 mt-1">100–250 cm</p>
+                    )}
                 </div>
-                {alturaInput && !isAlturaValid && (
-                    <p className="text-xs text-red-400 mt-1">Altura deve ser entre 100 e 250 cm</p>
-                )}
-            </div>
 
-            {/* Peso */}
-            <div>
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">
-                    Peso Atual (kg)
-                </label>
-                <div className="relative">
-                    <input
-                        type="number"
-                        inputMode="decimal"
-                        step="0.1"
-                        min="30"
-                        max="300"
-                        value={pesoInput}
-                        onChange={(e) => handlePesoChange(e.target.value)}
-                        placeholder="Ex: 82.5"
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-lg font-bold placeholder-gray-600 focus:outline-none focus:border-indigo-500/50 transition-colors"
-                    />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
-                        kg
-                    </span>
+                {/* Peso */}
+                <div>
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">
+                        Peso (kg)
+                    </label>
+                    <div className="relative">
+                        <input
+                            type="number"
+                            inputMode="decimal"
+                            step="0.1"
+                            min="30"
+                            max="300"
+                            value={pesoInput}
+                            onChange={(e) => handlePesoChange(e.target.value)}
+                            placeholder="82.5"
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-10 text-white text-base font-bold placeholder-gray-600 focus:outline-none focus:border-indigo-500/50 transition-colors"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs">
+                            kg
+                        </span>
+                    </div>
+                    {pesoInput && !isPesoValid && (
+                        <p className="text-xs text-red-400 mt-1">30–300 kg</p>
+                    )}
                 </div>
-                {pesoInput && !isPesoValid && (
-                    <p className="text-xs text-red-400 mt-1">Peso deve ser entre 30 e 300 kg</p>
-                )}
             </div>
 
             {/* Objeto de Referência */}
