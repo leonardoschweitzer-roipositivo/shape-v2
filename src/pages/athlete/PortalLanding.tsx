@@ -26,6 +26,7 @@ import { type DiagnosticoDados } from '@/services/calculations/diagnostico';
 import { SelfMeasurements } from './SelfMeasurements';
 import { ContextoFormPublico } from './ContextoFormPublico';
 import { AthletePortal } from '../AthletePortal';
+import { VirtualAssessmentWizard } from '../../components/organisms/VirtualAssessmentWizard';
 import { BottomNavigation } from '../../components/organisms/BottomNavigation/BottomNavigation';
 import { AthletePortalTab } from '../../types/athlete-portal';
 import {
@@ -42,7 +43,7 @@ interface PortalLandingProps {
     onClose: () => void;
 }
 
-type PortalView = 'home' | 'measurements' | 'portal' | 'contexto';
+type PortalView = 'home' | 'measurements' | 'virtual-assessment' | 'portal' | 'contexto';
 
 // ---- Helpers de classificação ----
 const CLASSIFICACOES = [
@@ -170,6 +171,23 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
         );
     }
 
+    if (view === 'virtual-assessment') {
+        return (
+            <VirtualAssessmentWizard
+                atletaId={athleteData.id}
+                sexo={(athleteData.ficha?.sexo as 'M' | 'F') || 'M'}
+                altura={athleteData.ficha?.altura || 170}
+                pesoInicial={athleteData.medidas?.[0]?.peso}
+                onComplete={async () => {
+                    const updated = await portalService.validateToken(token);
+                    if (updated) setAthleteData(updated);
+                    setView('home');
+                }}
+                onClose={() => setView('home')}
+            />
+        );
+    }
+
     // ===========================================================
     //  HOME v2.0 — Layout baseado na SPEC
     // ===========================================================
@@ -182,6 +200,7 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
                 setView('portal');
             }}
             onGoToMeasurements={() => setView('measurements')}
+            onGoToVirtualAssessment={() => setView('virtual-assessment')}
             onGoToContexto={() => setView('contexto')}
         />
     );
@@ -195,10 +214,11 @@ interface HomeAtletaV2Props {
     dadosConsistencia: DadosConsistencia | null;
     onGoToPortal: (tab: AthletePortalTab) => void;
     onGoToMeasurements: () => void;
+    onGoToVirtualAssessment: () => void;
     onGoToContexto: () => void;
 }
 
-function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeasurements, onGoToContexto }: HomeAtletaV2Props) {
+function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeasurements, onGoToVirtualAssessment, onGoToContexto }: HomeAtletaV2Props) {
 
     const lastAval = athleteData.avaliacoes?.[0];
     const lastMedida = athleteData.medidas?.[0];
@@ -360,17 +380,37 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
                         COMECE SUA JORNADA
                     </h2>
                     <p className="text-gray-400 text-sm leading-relaxed max-w-xs mx-auto mb-6">
-                        Registre suas medidas para descobrir seu <strong className="text-white">Score Shape-V</strong> e
+                        Escolha como registrar suas medidas para descobrir seu <strong className="text-white">Score Shape-V</strong> e
                         receber seu plano personalizado de evolução.
                     </p>
+
+                    {/* Opção 1: Fita Métrica (primária) */}
                     <button
                         onClick={onGoToMeasurements}
-                        className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-4 rounded-xl font-black tracking-widest text-sm uppercase transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
+                        className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-4 rounded-xl font-black tracking-widest text-sm uppercase transition-all active:scale-95 shadow-lg shadow-indigo-500/20 mb-3"
                     >
-                        📏 REGISTRAR MINHAS MEDIDAS
+                        📏 COM FITA MÉTRICA
                     </button>
-                    <p className="text-gray-600 text-xs mt-4 font-medium">
-                        ⏱️ Leva apenas 5 minutos
+                    <p className="text-gray-600 text-[10px] font-medium mb-5">
+                        Use fita métrica e adipômetro • Máxima precisão • ~5 min
+                    </p>
+
+                    {/* Divisor */}
+                    <div className="flex items-center gap-3 mb-5">
+                        <div className="flex-1 h-px bg-white/5" />
+                        <span className="text-[10px] text-gray-600 font-bold uppercase">ou</span>
+                        <div className="flex-1 h-px bg-white/5" />
+                    </div>
+
+                    {/* Opção 2: Fotos IA (secundária) */}
+                    <button
+                        onClick={onGoToVirtualAssessment}
+                        className="w-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-indigo-500/30 text-white py-4 rounded-xl font-black tracking-widest text-sm uppercase transition-all active:scale-95"
+                    >
+                        📸 COM FOTOS (IA)
+                    </button>
+                    <p className="text-gray-600 text-[10px] font-medium mt-3">
+                        Tire 4 fotos e a IA estima suas medidas • ~2 min
                     </p>
                 </div>
 
