@@ -238,12 +238,17 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
         || lastMedida?.cintura
         || 1;
 
-    // Proporção Shape-V (Ombros/Cintura)
-    const metasProporcoes = diag?.metasProporcoes as unknown as Array<Record<string, unknown>> | undefined;
-    const ratioAtual = Number(lastAval?.results?.classificacao as unknown as Record<string, unknown>) // fallback
+    // Proporção Principal (Shape-V ou Ampulheta)
+    const primaryGroupName = athleteData.ficha?.sexo === 'F' ? 'Ampulheta' : 'Shape-V';
+    const metasProporcoes = diag?.metasProporcoes as unknown as MetaProporcao[] | undefined;
+    const itemPrincipal = metasProporcoes?.find(p => p.grupo === primaryGroupName);
+
+    const ratioAtual = Number(analiseEstetica?.scoreAtual) // Score para Ampulheta
         || (ombrosAtual > 0 && cinturaAtual > 0 ? ombrosAtual / cinturaAtual : 0);
-    const itemShapeV = metasProporcoes?.find(p => p.grupo === 'Shape-V');
-    const ratioMeta12M = Number(itemShapeV?.meta12M) || 1.618;
+
+    // Se não tiver o item no diagnóstico, simulamos a progressão linear para 3, 6, 9 meses
+    const fallbackIdeal = athleteData.ficha?.sexo === 'F' ? 100 : 1.618;
+    const ratioMeta12M = Number(itemPrincipal?.meta12M) || fallbackIdeal;
 
     // Medida Ombros cm (para impressionar mais como solicitado)
     // Cálculo reverso da meta em CM para 12 meses
