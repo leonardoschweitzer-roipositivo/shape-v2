@@ -374,3 +374,233 @@ export interface AvaliacaoDadosResult {
         emoji: string;
     };
 }
+
+/**
+ * ══════════════════════════════════════════════════════════════
+ * buscarTodosDadosSecundarios — OTIMIZADO v2
+ *
+ * Substitui 7 queries separadas (buscarScoreGeral, buscarGraficoEvolucao,
+ * buscarProporcoes, buscarHistoricoAvaliacoes, buscarDadosAvaliacao,
+ * buscarDadosPersonal, buscarMensagensChat) por apenas 3 queries:
+ *   1) assessments (limit 10 — cobre score, proporcoes, historico, avaliacao)
+ *   2) medidas (para gráfico evolução)
+ *   3) chat messages
+ *
+ * Personal data é extraído do contexto (já carregado na Phase 1).
+ * ══════════════════════════════════════════════════════════════
+ */
+export interface DadosSecundarios {
+    score: ScoreGeral;
+    grafico: GraficoEvolucaoData;
+    proporcoes: ProporcaoResumo[];
+    historico: Record<string, unknown>[];
+    avaliacao: AvaliacaoDadosResult | null;
+}
+
+export async function buscarTodosDadosSecundarios(atletaId: string): Promise<DadosSecundarios> {
+    // ── 2 queries em paralelo (antes eram 5 separadas só para assessments + medidas) ──
+    const [{ data: rawAssessments }, { data: rawMedidas }] = await Promise.all([
+        supabase
+            .from('assessments')
+            .select('id, date, score, results, body_fat, measurements')
+            .eq('atleta_id', atletaId)
+            .order('date', { ascending: false })
+            .order('created_at', { ascending: false })
+            .limit(10),
+        supabase
+            .from('medidas')
+            .select('data, peso')
+            .eq('atleta_id', atletaId)
+            .order('data', { ascending: true })
+            .order('created_at', { ascending: true })
+            .limit(50),
+    ]);
+
+    const assessments = (rawAssessments || []) as unknown as SupaAssessment[];
+
+    // ── Score Geral (derivado em memória) ──
+    let score: ScoreGeral;
+    if (assessments.length === 0) {
+        score = { score: 0, classificacao: 'SEM AVALIAÇÃO', emoji: '📊', variacaoVsMes: 0 };
+    } else {
+        const ultimo = assessments[0];
+        const anterior = assessments.length > 1 ? assessments[1] : null;
+        const s = ultimo.score || 0;
+        const variacao = anterior ? s - (anterior.score || 0) : 0;
+        let classificacao = 'INICIANDO';
+        let emoji = '🏃';
+        if (s >= 90) { classificacao = 'DIVINO'; emoji = '⚡'; }
+        else if (s >= 80) { classificacao = 'ATLÉTICO'; emoji = '🔥'; }
+        else if (s >= 70) { classificacao = 'QUASE LÁ'; emoji = '💪'; }
+        else if (s >= 60) { classificacao = 'EVOLUINDO'; emoji = '📈'; }
+        else if (s >= 50) { classificacao = 'CAMINHO'; emoji = '🏃'; }
+        score = { score: s, classificacao, emoji, variacaoVsMes: variacao };
+    }
+
+    // ── Gráfico Evolução (medidas) ──
+    const dadosGrafico = ((rawMedidas || []) as unknown as SupaMedida[]).map(m => ({
+        data: new Date(m.data),
+        valor: m.peso || 0,
+    })).filter(d => d.valor > 0);
+    const grafico: GraficoEvolucaoData = { metrica: 'peso', periodo: '3m', dados: dadosGrafico };
+
+    // ── Proporções (do último assessment — já temos em memória) ──
+    let proporcoes: ProporcaoResumo[] = [];
+    if (assessments.length > 0) {
+        const results = assessments[0].results || {};
+        const rawProps = (results?.proporcoes || results?.proportions || []) as Record<string, unknown>[];
+        proporcoes = rawProps.slice(0, 5).map((p) => {
+            const atual = Number(p.ratio || p.atual) || 0;
+            const meta = Number(p.idealRatio || p.meta) || 1.618;
+            const percentual = meta > 0 ? Math.round((atual / meta) * 100) : 0;
+            let classificacao = 'CAMINHO';
+            let emoji = '🏃';
+            if (percentual >= 100) { classificacao = 'META'; emoji = '🎯'; }
+            else if (percentual >= 90) { classificacao = 'QUASE LÁ'; emoji = '💪'; }
+            else if (percentual >= 75) { classificacao = 'EVOLUINDO'; emoji = '📈'; }
+            return {
+                nome: String(p.name || p.nome || ''),
+                atual: parseFloat(atual.toFixed(2)),
+                meta: parseFloat(meta.toFixed(2)),
+                percentual,
+                classificacao,
+                emoji,
+            };
+        });
+    }
+
+    // ── Histórico Avaliações (já temos em memória) ──
+    const historico = assessments.map(a => ({
+        id: a.id,
+        data: new Date(a.date),
+        score: a.score || 0,
+        classificacao: (a.results?.classificacao as Record<string, unknown>)?.nivel as string || '',
+    }));
+
+    // ── Avaliação Detalhada (do último assessment — já temos em memória) ──
+    let avaliacao: AvaliacaoDadosResult | null = null;
+    if (assessments.length > 0) {
+        avaliacao = _derivarAvaliacaoDetalhada(assessments[0]);
+    }
+
+    return { score, grafico, proporcoes, historico, avaliacao };
+}
+
+/** Helper interno: deriva avaliação detalhada a partir de um SupaAssessment já carregado */
+function _derivarAvaliacaoDetalhada(a: SupaAssessment): AvaliacaoDadosResult {
+    const results = a.results || {};
+    const scoreVal = a.score || 0;
+
+    const classFromDB = results?.classificacao;
+    const classificacaoGeral = classFromDB?.nivel || getClassificacaoLabel(scoreVal);
+    const emojiGeral = classFromDB?.emoji || getClassificacaoEmoji(scoreVal);
+
+    const scoresDB = results?.scores || {};
+    const scoreProporcoes = scoresDB?.proporcoes?.valor || 0;
+    const scoreComposicao = scoresDB?.composicao?.valor || 0;
+    const scoreSimetria = scoresDB?.simetria?.valor || 100;
+
+    const compDetalhes = scoresDB?.composicao?.detalhes || {};
+    const compDetalhesSub = compDetalhes?.detalhes || {};
+
+    const bf = Number(compDetalhesSub?.bf?.valor) || a.body_fat || 0;
+    const scoreBF = Number(compDetalhesSub?.bf?.score) || 0;
+    const ffmi = Number(compDetalhesSub?.ffmi?.valor) || 0;
+    const scoreFFMI = Number(compDetalhesSub?.ffmi?.score) || 0;
+    const pesoRelativoVal = Number(compDetalhesSub?.pesoRelativo?.valor) || 0;
+    const scorePesoRelativo = Number(compDetalhesSub?.pesoRelativo?.score) || 0;
+    const pesoMagro = compDetalhes?.pesoMagro || 0;
+    const pesoGordo = compDetalhes?.pesoGordo || 0;
+
+    const genero = a.measurements?.genero || a.measurements?.gender || 'MALE';
+    let classComp = 'ACEITÁVEL';
+    let emojiComp = '🏃';
+
+    if (genero === 'MALE' || genero === 'male' || genero === 'M') {
+        if (bf < 6) { classComp = 'ESSENCIAL'; emojiComp = '💎'; }
+        else if (bf < 13) { classComp = 'ATLETA'; emojiComp = '🥇'; }
+        else if (bf < 17) { classComp = 'FITNESS'; emojiComp = '💪'; }
+        else if (bf < 25) { classComp = 'ACEITÁVEL'; emojiComp = '🏃'; }
+        else if (bf < 30) { classComp = 'ACIMA'; emojiComp = '⚠️'; }
+        else { classComp = 'OBESIDADE'; emojiComp = '❌'; }
+    } else {
+        if (bf < 14) { classComp = 'ESSENCIAL'; emojiComp = '💎'; }
+        else if (bf < 21) { classComp = 'ATLETA'; emojiComp = '🥇'; }
+        else if (bf < 25) { classComp = 'FITNESS'; emojiComp = '💪'; }
+        else if (bf < 32) { classComp = 'ACEITÁVEL'; emojiComp = '🏃'; }
+        else if (bf < 39) { classComp = 'ACIMA'; emojiComp = '⚠️'; }
+        else { classComp = 'OBESIDADE'; emojiComp = '❌'; }
+    }
+
+    const diagnostico = {
+        bf, scoreBF, ffmi, scoreFFMI,
+        massaMagra: pesoMagro, massaGorda: pesoGordo,
+        pesoRelativo: pesoRelativoVal, scorePesoRelativo,
+        scoreTotal: scoreComposicao,
+        classificacao: classComp, emoji: emojiComp,
+    };
+
+    const rawProporcoes = results?.proporcoes_aureas || [];
+    const INVERSAS = ['Cintura', 'Upper vs Lower'];
+    const FORMULAS: Record<string, string> = {
+        'Shape-V': 'Ombros ÷ Cintura', 'Costas': 'Costas ÷ Cintura',
+        'Peitoral': 'Peitoral ÷ Punho', 'Braço': 'Braço ÷ Punho',
+        'Antebraço': 'Antebraço ÷ Braço', 'Tríade': 'Pescoço ≈ Braço ≈ Panturrilha',
+        'Cintura': 'Cintura ÷ Pélvis', 'Coxa': 'Coxa ÷ Joelho',
+        'Coxa vs Pantur.': 'Coxa ÷ Panturrilha', 'Panturrilha': 'Panturrilha ÷ Tornozelo',
+        'Upper vs Lower': 'Braço+Ante. ÷ Coxa+Pant.',
+    };
+
+    const propsAureas = (rawProporcoes || []).map((p: Record<string, unknown>) => ({
+        nome: p.nome || '', categoria: '',
+        indiceAtual: parseFloat(((p.atual as number) || 0).toFixed(3)),
+        indiceMeta: parseFloat(((p.ideal as number) || 1.618).toFixed(3)),
+        percentualDoIdeal: p.pct || 0,
+        ehInversa: INVERSAS.includes(p.nome as string),
+        formulaBase: FORMULAS[p.nome as string] || '',
+        medidaAtual: undefined, medidaMeta: undefined, diferencaCm: undefined,
+        classificacao: {} as Record<string, unknown>, posicaoBarra: 0,
+    }));
+
+    const simetriaDetalhes = scoresDB?.simetria?.detalhes?.detalhes || [];
+    const GRUPO_LABELS: Record<string, string> = {
+        braco: 'Braço', antebraco: 'Antebraço', coxa: 'Coxa',
+        panturrilha: 'Panturrilha', peitoral: 'Peitoral',
+    };
+
+    const membros = (simetriaDetalhes as Record<string, unknown>[]).map((s) => {
+        const diferencaPercentual = Number(s.diferencaPercent) || 0;
+        let status = 'simetrico'; let emoji = '✅'; let label = 'Simétrico';
+        if (diferencaPercentual > 10) { status = 'significativa'; emoji = '❌'; label = 'Assimetria significativa'; }
+        else if (diferencaPercentual > 5) { status = 'moderada'; emoji = '🔶'; label = 'Assimetria moderada'; }
+        else if (diferencaPercentual > 2) { status = 'leve'; emoji = '⚠️'; label = 'Leve assimetria'; }
+        return {
+            membro: GRUPO_LABELS[s.grupo as string] || String(s.grupo) || '',
+            ladoEsquerdo: Number(s.esquerdo) || 0, ladoDireito: Number(s.direito) || 0,
+            diferencaCm: Math.round((Number(s.diferenca) || 0) * 10) / 10,
+            diferencaPercentual: Math.round(diferencaPercentual * 10) / 10,
+            status, emoji, label,
+        };
+    });
+
+    let classSimetria = 'EXCELENTE'; let emojiSimetria = '✅';
+    if (scoreSimetria < 70) { classSimetria = 'PRECISA MELHORAR'; emojiSimetria = '❌'; }
+    else if (scoreSimetria < 85) { classSimetria = 'BOM'; emojiSimetria = '⚠️'; }
+    else if (scoreSimetria < 95) { classSimetria = 'MUITO BOM'; emojiSimetria = '💪'; }
+
+    const penalizacoes = results?.penalizacoes || { vTaper: 1.0, cintura: 1.0 };
+
+    return {
+        id: a.id, data: new Date(a.date), scoreGeral: scoreVal,
+        classificacaoGeral, emojiGeral,
+        scores: {
+            proporcoes: { valor: scoreProporcoes, peso: 0.40, contribuicao: (scoresDB?.proporcoes?.contribuicao || scoreProporcoes * 0.40) },
+            composicao: { valor: scoreComposicao, peso: 0.35, contribuicao: (scoresDB?.composicao?.contribuicao || scoreComposicao * 0.35) },
+            simetria: { valor: scoreSimetria, peso: 0.25, contribuicao: (scoresDB?.simetria?.contribuicao || scoreSimetria * 0.25) },
+        },
+        penalizacoes: penalizacoes || { vTaper: 1.0, cintura: 1.0 },
+        diagnostico, proporcoes: propsAureas,
+        assimetria: { membros, scoreGeral: Math.round(scoreSimetria), classificacao: classSimetria, emoji: emojiSimetria },
+    };
+}
+

@@ -325,72 +325,134 @@ export function gerarDicaCoach(
 
 
 /**
- * Calcula o streak (sequência consecutiva de dias com treino completo)
- */
-async function calcularStreak(atletaId: string): Promise<number> {
-    const { data } = await supabase
-        .from('registros_diarios')
-        .select('data, dados')
-        .eq('atleta_id', atletaId)
-        .eq('tipo', 'treino')
-        .order('data', { ascending: false })
-        .limit(60);
-
-    if (!data || data.length === 0) return 0;
-
-    let streak = 0;
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-
-    for (let i = 0; i < 60; i++) {
-        const dia = new Date(hoje);
-        dia.setDate(dia.getDate() - i);
-        const diaISO = `${dia.getFullYear()}-${String(dia.getMonth() + 1).padStart(2, '0')}-${String(dia.getDate()).padStart(2, '0')}`;
-
-        const reg = (data as unknown as SupaRegistroDiario[]).find(r => r.data === diaISO);
-        if (reg && reg.dados?.status === 'completo') {
-            streak++;
-        } else if (i > 0) {
-            // Primeiro dia sem treino (exceto hoje) quebra o streak
-            break;
-        }
-    }
-    return streak;
-}
-
-/**
  * Monta dados completos da tela HOJE
- * OTIMIZADO: trackers e refeições carregam em paralelo
+ * 
+ * OTIMIZADO v2: Usa apenas 2 queries ao Supabase:
+ *  1) registros_diarios de TREINO dos últimos 60 dias (streak + lastIndex + status hoje)
+ *  2) registros_diarios de HOJE (todos os tipos: agua, sono, peso, dor, refeicao)
+ *
+ * Antes: 7 queries separadas (getUltimoTreinoIndex, calcularStreak, 
+ *        buscarRegistrosDoDia, refeicoes, treinoReg)
  */
 export async function montarDadosHoje(ctx: PortalContext): Promise<TodayScreenData> {
-    const [lastCompletedIndex, streak] = await Promise.all([
-        getUltimoTreinoIndex(ctx.atletaId),
-        calcularStreak(ctx.atletaId),
-    ]);
-
-    // Buscar trackers, refeições e status do treino hoje em PARALELO
     const hoje = getHojeLocal();
-    const [trackers, { data: refeicoes }, { data: treinoReg }] = await Promise.all([
-        buscarRegistrosDoDia(ctx.atletaId),
+
+    // ── 2 queries em paralelo (antes eram 7) ──
+    const [{ data: treinoHistory }, { data: registrosHoje }] = await Promise.all([
+        // Query 1: Histórico de treinos para streak + lastIndex (último 60 dias)
         supabase
             .from('registros_diarios')
-            .select('dados')
+            .select('data, dados')
             .eq('atleta_id', ctx.atletaId)
-            .eq('data', hoje)
-            .eq('tipo', 'refeicao'),
-        supabase
-            .from('registros_diarios')
-            .select('dados')
-            .eq('atleta_id', ctx.atletaId)
-            .eq('data', hoje)
             .eq('tipo', 'treino')
+            .order('data', { ascending: false })
             .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle(),
+            .limit(60),
+        // Query 2: TODOS os registros de HOJE (agua, sono, peso, dor, refeicao, treino)
+        supabase
+            .from('registros_diarios')
+            .select('tipo, dados')
+            .eq('atleta_id', ctx.atletaId)
+            .eq('data', hoje),
     ]);
 
-    const treinoRegTyped = treinoReg as unknown as SupaRegistroDiario | null;
-    const dHoje = treinoRegTyped?.dados ?? null;
+    const histRegs = (treinoHistory || []) as unknown as SupaRegistroDiario[];
+
+    // ── Derivar lastCompletedIndex (antes: getUltimoTreinoIndex) ──
+    let lastCompletedIndex = -1;
+    for (const rec of histRegs) {
+        const d = rec.dados;
+        if (d && (d.status === 'completo' || d.status === 'pulado')) {
+            if (typeof d.treinoIndex === 'number') {
+                lastCompletedIndex = d.treinoIndex;
+                break;
+            }
+            if (rec.data) {
+                const parts = rec.data.split('-');
+                if (parts.length === 3) {
+                    const dataRecordLocal = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+                    let tsIndex = dataRecordLocal.getDay() - 1;
+                    if (tsIndex < 0) tsIndex = 0;
+                    lastCompletedIndex = tsIndex;
+                    break;
+                }
+            }
+        }
+    }
+
+    // ── Calcular streak in-memory (antes: calcularStreak com query própria) ──
+    let streak = 0;
+    {
+        const checkinsSet = new Set<string>();
+        for (const rec of histRegs) {
+            if (rec.dados?.status === 'completo') {
+                checkinsSet.add(rec.data);
+            }
+        }
+        const hojeDt = new Date();
+        hojeDt.setHours(0, 0, 0, 0);
+        const hojeKey = `${hojeDt.getFullYear()}-${String(hojeDt.getMonth() + 1).padStart(2, '0')}-${String(hojeDt.getDate()).padStart(2, '0')}`;
+        const startDt = new Date(hojeDt);
+        if (!checkinsSet.has(hojeKey)) {
+            startDt.setDate(startDt.getDate() - 1);
+        }
+        while (true) {
+            const key = `${startDt.getFullYear()}-${String(startDt.getMonth() + 1).padStart(2, '0')}-${String(startDt.getDate()).padStart(2, '0')}`;
+            if (checkinsSet.has(key)) {
+                streak++;
+                startDt.setDate(startDt.getDate() - 1);
+            } else {
+                break;
+            }
+        }
+    }
+
+    // ── Processar registrosHoje em memória (antes: buscarRegistrosDoDia + 2 queries extras) ──
+    const regsHoje = (registrosHoje || []) as unknown as SupaRegistroDiario[];
+
+    // Trackers
+    const aguaRegs = regsHoje.filter(r => r.tipo === 'agua');
+    const totalAgua = aguaRegs.reduce((acc, r) => acc + (Number(r.dados?.quantidade) || 0), 0);
+    const sonoReg = regsHoje.find(r => r.tipo === 'sono');
+    const sonoHoras = sonoReg?.dados?.quantidade ?? null;
+    const pesoReg = regsHoje.find(r => r.tipo === 'peso');
+    const peso = pesoReg?.dados?.quantidade ?? null;
+    const dorReg = regsHoje.find(r => r.tipo === 'dor');
+    const dorIntensidade = dorReg?.dados?.quantidade ?? null;
+
+    const trackers: TrackerRapido[] = [
+        {
+            id: 'agua', icone: '💧', label: 'Água',
+            valor: totalAgua > 0 ? (totalAgua / 1000).toFixed(1) : undefined,
+            unidade: 'L', status: totalAgua > 0 ? 'registrado' : 'pendente',
+        },
+        {
+            id: 'sono', icone: '😴', label: 'Sono',
+            valor: sonoHoras != null ? String(sonoHoras) : undefined,
+            unidade: 'h', status: sonoHoras ? 'registrado' : 'pendente',
+        },
+        {
+            id: 'peso', icone: '⚖️', label: 'Peso',
+            valor: peso != null ? String(peso) : undefined,
+            unidade: 'kg', status: peso ? 'registrado' : 'pendente',
+        },
+        {
+            id: 'dor', icone: '🤕', label: 'Dor',
+            valor: dorIntensidade ? `${dorIntensidade}/10` : undefined,
+            status: dorReg ? 'registrado' : 'pendente',
+        },
+    ];
+
+    // Refeições de hoje (filtrado em memória)
+    const refeicoes = regsHoje.filter(r => r.tipo === 'refeicao');
+
+    // Status do treino de hoje (filtrado em memória — pegar o mais recente)
+    const treinoRegsHoje = regsHoje.filter(r => r.tipo === 'treino');
+    // O mais recente (já vem em ordem de created_at descendente? Não... veio sem order)  
+    // Vamos pegar o último (mais recente por posição na array retornada)
+    const treinoRegHoje = treinoRegsHoje.length > 0 ? treinoRegsHoje[treinoRegsHoje.length - 1] : null;
+
+    const dHoje = treinoRegHoje?.dados ?? null;
     const jaFezTreinoHoje = dHoje && (dHoje.status === 'completo' || (dHoje.status === 'pulado' && dHoje.continuarHoje !== true));
 
     // Se ele já completou/pulou um treino HOJE, queremos renderizar exatamente esse treino
@@ -418,9 +480,9 @@ export async function montarDadosHoje(ctx: PortalContext): Promise<TodayScreenDa
 
     const dicaCoach = gerarDicaCoach(dieta, treino, trackers);
 
-    if (refeicoes && refeicoes.length > 0) {
+    if (refeicoes.length > 0) {
         for (const ref of refeicoes) {
-            const d = (ref as unknown as SupaRegistroDiario).dados;
+            const d = ref.dados;
             if (d) {
                 dieta.consumidoCalorias += Number(d.calorias) || 0;
                 dieta.consumidoProteina += Number(d.proteina) || 0;

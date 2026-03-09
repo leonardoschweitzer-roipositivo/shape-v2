@@ -28,8 +28,9 @@ export {
     buscarScoreGeral, buscarGraficoEvolucao, buscarProporcoes,
     buscarHistoricoAvaliacoes, buscarDadosAvaliacao,
     getClassificacaoLabel, getClassificacaoEmoji,
+    buscarTodosDadosSecundarios,
 } from './portal/portalProgresso';
-export type { AvaliacaoDadosResult } from './portal/portalProgresso';
+export type { AvaliacaoDadosResult, DadosSecundarios } from './portal/portalProgresso';
 
 // Coach / Chat
 export { buscarMensagensChat, salvarMensagemChat } from './portal/portalCoach';

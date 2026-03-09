@@ -19,18 +19,13 @@ import {
     carregarContextoPortal,
     montarDadosHoje,
     derivarProximoTreino,
-    buscarScoreGeral,
-    buscarGraficoEvolucao,
-    buscarProporcoes,
-    buscarHistoricoAvaliacoes,
+    buscarTodosDadosSecundarios,
     buscarMensagensChat,
     salvarMensagemChat,
-    buscarDadosAvaliacao,
     registrarTracker,
     completarTreino,
     pularTreino,
     extrairDadosBasicos,
-    buscarDadosPersonal,
     type PortalContext,
     type ProximoTreino,
     derivarProximosTreinos,
@@ -134,29 +129,34 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
     }, [atletaId])
 
     // Phase 2: Load secondary data in background (after screen is visible)
+    // OTIMIZADO v2: 3 queries paralelas (antes eram 7 separadas)
     useEffect(() => {
         if (!ctx) return
         async function loadSecondary() {
             try {
-                const [score, grafico, props, historico, msgs, personalData, avaliacaoData] = await Promise.all([
-                    buscarScoreGeral(atletaId),
-                    buscarGraficoEvolucao(atletaId),
-                    buscarProporcoes(atletaId),
-                    buscarHistoricoAvaliacoes(atletaId),
+                // Personal data already loaded in Phase 1 context — extract here
+                setPersonal({
+                    id: ctx!.personalId,
+                    nome: ctx!.personalNome || 'Personal',
+                    cref: '',
+                    telefone: '',
+                    email: '',
+                })
+
+                // 2 queries: combined assessments+medidas + chat messages
+                const [dados, msgs] = await Promise.all([
+                    buscarTodosDadosSecundarios(atletaId),
                     buscarMensagensChat(atletaId),
-                    buscarDadosPersonal(ctx?.personalId ?? ''),
-                    buscarDadosAvaliacao(atletaId),
                 ])
 
-                setScoreGeral(score)
-                setGraficoEvolucao(grafico)
-                setProporcoes(props)
-                setHistoricoAvaliacoes(historico)
+                setScoreGeral(dados.score)
+                setGraficoEvolucao(dados.grafico)
+                setProporcoes(dados.proporcoes)
+                setHistoricoAvaliacoes(dados.historico)
                 setChatMessages(msgs)
-                setPersonal(personalData)
-                setAvaliacaoDados(avaliacaoData)
-                if (grafico.dados.length > 0) {
-                    setLastPeso(grafico.dados[grafico.dados.length - 1].valor)
+                setAvaliacaoDados(dados.avaliacao)
+                if (dados.grafico.dados.length > 0) {
+                    setLastPeso(dados.grafico.dados[dados.grafico.dados.length - 1].valor)
                 }
             } catch (err) {
                 console.error('[AthletePortal] Erro ao carregar dados secundários:', err)

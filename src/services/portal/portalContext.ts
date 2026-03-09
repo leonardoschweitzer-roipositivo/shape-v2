@@ -72,28 +72,33 @@ export async function carregarContextoPortal(atletaId: string): Promise<PortalCo
         console.info('[PortalDataService] Plano Treino:', treino ? 'ENCONTRADO' : 'NÃO ENCONTRADO');
         console.info('[PortalDataService] Plano Dieta:', dieta ? 'ENCONTRADO' : 'NÃO ENCONTRADO');
 
-        // Vincular exercícios à Biblioteca (adiciona urlVideo para player no portal)
-        let planoTreinoVinculado = treino?.dados ?? null;
-        if (planoTreinoVinculado) {
-            try {
-                const { vincularPlanoTreino } = await import('@/services/exercicioVinculacao.service');
-                planoTreinoVinculado = await vincularPlanoTreino(planoTreinoVinculado);
-                console.info('[PortalDataService] ✅ Vinculação vídeos OK');
-            } catch (err) {
-                console.warn('[PortalDataService] Vinculação vídeos falhou (não crítico):', err);
-            }
-        }
+        // Retorna imediatamente com o plano original — Vinculação de vídeos acontece em background
+        const planoTreinoOriginal = treino?.dados ?? null;
 
-        return {
+        const context: PortalContext = {
             atletaId,
             atletaNome: atleta.nome || 'Atleta',
             personalId: personal?.id || '',
             personalNome: personal?.nome || 'Personal',
             ficha: ficha || null,
             diagnostico: diag?.dados ?? null,
-            planoTreino: planoTreinoVinculado,
+            planoTreino: planoTreinoOriginal,
             planoDieta: dieta?.dados ?? null,
         };
+
+        // Vincular exercícios à Biblioteca em BACKGROUND (não bloqueia a tela)
+        if (planoTreinoOriginal) {
+            import('@/services/exercicioVinculacao.service').then(({ vincularPlanoTreino }) => {
+                vincularPlanoTreino(planoTreinoOriginal).then(vinculado => {
+                    context.planoTreino = vinculado;
+                    console.info('[PortalDataService] ✅ Vinculação vídeos OK (background)');
+                }).catch(err => {
+                    console.warn('[PortalDataService] Vinculação vídeos falhou (não crítico):', err);
+                });
+            }).catch(() => { });
+        }
+
+        return context;
     } catch (err) {
         console.error('[PortalDataService] Erro ao carregar contexto:', err);
         return null;
