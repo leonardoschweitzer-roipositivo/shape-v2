@@ -91,7 +91,7 @@ export const StepDadosBasicos = memo(function StepDadosBasicos({
     const isValid = isDataNascValid && isAlturaValid && isPesoValid;
 
     return (
-        <div className="px-4 py-6 space-y-6">
+        <div className="px-4 py-6 space-y-6 overflow-hidden">
             {/* Header — left-aligned, estilo seções do Portal */}
             <div className="flex items-start gap-3">
                 <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -106,17 +106,19 @@ export const StepDadosBasicos = memo(function StepDadosBasicos({
             </div>
 
             {/* Data de Nascimento */}
-            <div className="min-w-0">
+            <div className="min-w-0 overflow-hidden">
                 <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">
                     Data de Nascimento
                 </label>
-                <input
-                    type="date"
-                    value={dataNascInput}
-                    onChange={(e) => handleDataNascChange(e.target.value)}
-                    className="w-full max-w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-base font-bold placeholder-gray-600 focus:outline-none focus:border-indigo-500/50 transition-colors [color-scheme:dark] box-border"
-                    style={{ minWidth: 0 }}
-                />
+                <div className="overflow-hidden rounded-xl">
+                    <input
+                        type="date"
+                        value={dataNascInput}
+                        onChange={(e) => handleDataNascChange(e.target.value)}
+                        className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-base font-bold placeholder-gray-600 focus:outline-none focus:border-indigo-500/50 transition-colors [color-scheme:dark]"
+                        style={{ width: '100%', maxWidth: '100%', minWidth: 0, boxSizing: 'border-box', display: 'block' }}
+                    />
+                </div>
                 {!isDataNascValid && dataNascInput === '' && (
                     <p className="text-xs text-gray-600 mt-1">Obrigatório para o cálculo da avaliação</p>
                 )}
