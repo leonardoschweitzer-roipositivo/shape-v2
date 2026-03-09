@@ -7,7 +7,6 @@
 
 import React, { memo } from 'react';
 import {
-    Camera,
     CheckCircle,
     XCircle,
     User,
@@ -54,13 +53,6 @@ export const InstrucoesCaptura = memo(function InstrucoesCaptura({
 
     return (
         <div className="space-y-4">
-            {/* Header */}
-            <div className="flex items-center gap-2 text-indigo-400">
-                <Camera size={18} />
-                <h4 className="text-sm font-bold uppercase tracking-wider">
-                    Instruções de Captura
-                </h4>
-            </div>
 
             {/* Vestuário */}
             <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-3">

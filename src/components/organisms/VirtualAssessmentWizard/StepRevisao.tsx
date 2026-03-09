@@ -35,16 +35,21 @@ export const StepRevisao = memo(function StepRevisao({
     isSubmitting,
 }: StepRevisaoProps) {
     return (
-        <div className="px-4 py-6 space-y-5">
-            {/* Header */}
-            <div className="text-center">
-                <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 flex items-center justify-center mx-auto mb-3">
-                    <Eye size={24} className="text-indigo-400" />
+        <div className="px-4 py-6 space-y-5 overflow-hidden">
+            {/* Header — left-aligned */}
+            <div>
+                <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Eye size={20} className="text-indigo-400" />
+                    </div>
+                    <div>
+                        <h3 className="text-base font-black text-white uppercase tracking-wider">Revisão</h3>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                            Confira as fotos e dados antes de enviar
+                        </p>
+                    </div>
                 </div>
-                <h3 className="text-lg font-black text-white uppercase">Revisão</h3>
-                <p className="text-xs text-gray-500 mt-1">
-                    Confira as fotos e dados antes de enviar para análise
-                </p>
+                <div className="mt-4 h-px bg-white/5" />
             </div>
 
             {/* Dados resumidos */}
@@ -107,8 +112,8 @@ export const StepRevisao = memo(function StepRevisao({
                     onClick={onSubmit}
                     disabled={isSubmitting}
                     className={`flex-1 py-3.5 rounded-xl text-sm font-black uppercase tracking-wider transition-all ${isSubmitting
-                            ? 'bg-indigo-600/50 text-indigo-300 cursor-wait'
-                            : 'bg-indigo-600 text-white hover:bg-indigo-500 active:scale-[0.98]'
+                        ? 'bg-indigo-600/50 text-indigo-300 cursor-wait'
+                        : 'bg-indigo-600 text-white hover:bg-indigo-500 active:scale-[0.98]'
                         }`}
                 >
                     {isSubmitting ? (

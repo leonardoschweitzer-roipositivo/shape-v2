@@ -1,11 +1,12 @@
 /**
  * VirtualAssessmentWizard - Wizard de Avaliação Corporal Virtual
  * 
- * Modal fullscreen com 4 steps:
- * 1. Dados Básicos (peso + referência)
- * 2. Upload de 4 Fotos
- * 3. Revisão
- * 4. Resultado com medidas estimadas
+ * Modal fullscreen com 5 steps:
+ * 1. Dados Básicos (data nascimento, altura, peso + referência)
+ * 2. Instruções de Captura
+ * 3. Upload de 4 Fotos
+ * 4. Revisão
+ * 5. Resultado com medidas estimadas
  * 
  * Integra com virtualAssessment.service para envio ao Edge Function.
  */
@@ -13,6 +14,7 @@
 import React, { memo, useState, useCallback } from 'react';
 import { X } from 'lucide-react';
 import { StepDadosBasicos } from './StepDadosBasicos';
+import { StepInstrucoes } from './StepInstrucoes';
 import { StepUploadFotos, type PhotoSlotId } from './StepUploadFotos';
 import { StepRevisao } from './StepRevisao';
 import { StepResultado } from './StepResultado';
@@ -25,7 +27,7 @@ import { supabase } from '@/services/supabase';
 
 // ===== TYPES =====
 
-type WizardStep = 'dados' | 'fotos' | 'revisao' | 'resultado';
+type WizardStep = 'dados' | 'instrucoes' | 'fotos' | 'revisao' | 'resultado';
 
 interface VirtualAssessmentWizardProps {
     atletaId: string;
@@ -43,7 +45,7 @@ const REFERENCE_LABELS: Record<ReferenceObject, string> = {
     tape_measure: 'Fita Métrica',
 };
 
-const STEPS: WizardStep[] = ['dados', 'fotos', 'revisao', 'resultado'];
+const STEPS: WizardStep[] = ['dados', 'instrucoes', 'fotos', 'revisao', 'resultado'];
 
 // ===== COMPONENT =====
 
@@ -181,7 +183,15 @@ export const VirtualAssessmentWizard = memo(function VirtualAssessmentWizard({
                         onAlturaChange={setAlturaState}
                         onPesoChange={setPeso}
                         onReferenceChange={setReferenceObject}
+                        onNext={() => setStep('instrucoes')}
+                    />
+                )}
+
+                {step === 'instrucoes' && (
+                    <StepInstrucoes
+                        sexo={sexo}
                         onNext={() => setStep('fotos')}
+                        onBack={() => setStep('dados')}
                     />
                 )}
 
@@ -192,7 +202,7 @@ export const VirtualAssessmentWizard = memo(function VirtualAssessmentWizard({
                         onPhotoSelect={handlePhotoSelect}
                         onPhotoRemove={handlePhotoRemove}
                         onNext={() => setStep('revisao')}
-                        onBack={() => setStep('dados')}
+                        onBack={() => setStep('instrucoes')}
                     />
                 )}
 

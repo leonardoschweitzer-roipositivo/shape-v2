@@ -93,16 +93,19 @@ export const StepDadosBasicos = memo(function StepDadosBasicos({
     return (
         <div className="px-4 py-6 space-y-6 overflow-hidden">
             {/* Header — left-aligned, estilo seções do Portal */}
-            <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Scale size={20} className="text-indigo-400" />
+            <div>
+                <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Scale size={20} className="text-indigo-400" />
+                    </div>
+                    <div>
+                        <h3 className="text-base font-black text-white uppercase tracking-wider">Dados Básicos</h3>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                            Informe seus dados e escolha o objeto de referência
+                        </p>
+                    </div>
                 </div>
-                <div>
-                    <h3 className="text-base font-black text-white uppercase tracking-wider">Dados Básicos</h3>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                        Informe seus dados e escolha o objeto de referência
-                    </p>
-                </div>
+                <div className="mt-4 h-px bg-white/5" />
             </div>
 
             {/* Data de Nascimento */}

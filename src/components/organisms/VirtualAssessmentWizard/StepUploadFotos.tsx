@@ -1,13 +1,12 @@
 /**
- * StepUploadFotos - Step 2 do Wizard
+ * StepUploadFotos - Step 3 do Wizard
  * 
- * 4 slots de upload com preview, instruções de pose e vestuário.
+ * 4 slots de upload com preview.
  * Cada slot permite refazer a foto individualmente.
  */
 
 import React, { memo, useCallback, useRef } from 'react';
 import { Camera, X, User, RotateCcw, ArrowLeft, ArrowRight } from 'lucide-react';
-import { InstrucoesCaptura } from './InstrucoesCaptura';
 
 export type PhotoSlotId = 'frontal' | 'costas' | 'lateralEsq' | 'lateralDir';
 
@@ -42,29 +41,22 @@ export const StepUploadFotos = memo(function StepUploadFotos({
     const allPhotosReady = SLOTS.every((s) => photos[s.id] !== null);
 
     return (
-        <div className="px-4 py-6 space-y-5">
-            {/* Header */}
-            <div className="text-center">
-                <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 flex items-center justify-center mx-auto mb-3">
-                    <Camera size={24} className="text-indigo-400" />
+        <div className="px-4 py-6 space-y-5 overflow-hidden">
+            {/* Header — left-aligned */}
+            <div>
+                <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Camera size={20} className="text-indigo-400" />
+                    </div>
+                    <div>
+                        <h3 className="text-base font-black text-white uppercase tracking-wider">Suas Fotos</h3>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                            Envie 4 fotos seguindo as instruções
+                        </p>
+                    </div>
                 </div>
-                <h3 className="text-lg font-black text-white uppercase">Suas Fotos</h3>
-                <p className="text-xs text-gray-500 mt-1">
-                    Envie 4 fotos seguindo as instruções abaixo
-                </p>
+                <div className="mt-4 h-px bg-white/5" />
             </div>
-
-            {/* Instruções colapsáveis */}
-            <details className="group">
-                <summary className="text-xs text-indigo-400 font-bold cursor-pointer flex items-center gap-1 uppercase tracking-wider">
-                    <span className="group-open:hidden">▶</span>
-                    <span className="hidden group-open:inline">▼</span>
-                    Ver instruções de captura
-                </summary>
-                <div className="mt-3">
-                    <InstrucoesCaptura sexo={sexo} />
-                </div>
-            </details>
 
             {/* Grid de 4 slots */}
             <div className="grid grid-cols-2 gap-3">
