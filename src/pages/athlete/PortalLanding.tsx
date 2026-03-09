@@ -49,10 +49,9 @@ const CLASSIFICACOES = [
     { min: 0, max: 30, nome: 'INICIANDO' },
     { min: 30, max: 50, nome: 'COMEÇANDO' },
     { min: 50, max: 65, nome: 'EVOLUINDO' },
-    { min: 65, max: 80, nome: 'ATLETA' },
-    { min: 80, max: 90, nome: 'AVANÇADO' },
-    { min: 90, max: 95, nome: 'ELITE' },
-    { min: 95, max: 100, nome: 'DEUS GREGO' },
+    { min: 65, max: 80, nome: 'AVANÇADO' },
+    { min: 80, max: 95, nome: 'ATLETA' },
+    { min: 95, max: 101, nome: 'ELITE' },
 ];
 
 function getClassificacao(score: number): string {
@@ -222,7 +221,7 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
     const diag = athleteData.diagnostico?.dados as Record<string, Record<string, unknown>> | undefined;
     const analiseEstetica = diag?.analiseEstetica as Record<string, unknown> | undefined;
     const scoreMeta = Number(analiseEstetica?.scoreMeta12M) || 65;
-    const classificacaoMeta = analiseEstetica?.scoreMeta12M ? (scoreMeta >= 80 ? 'ATLETA' : 'EVOLUINDO') : 'ATLETA';
+    const classificacaoMeta = analiseEstetica?.scoreMeta12M ? getClassificacao(scoreMeta) : 'ATLETA';
 
     const firstMedida = athleteData.medidas?.[athleteData.medidas.length - 1] || lastMedida;
 

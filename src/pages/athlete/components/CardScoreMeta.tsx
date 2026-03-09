@@ -7,9 +7,8 @@ const CLASSIFICACOES = [
     { min: 30, max: 50, nome: 'COMEÇANDO', cor: '#F97316' },
     { min: 50, max: 65, nome: 'EVOLUINDO', cor: '#EAB308' },
     { min: 65, max: 80, nome: 'AVANÇADO', cor: '#22C55E' },
-    { min: 80, max: 90, nome: 'ATLETA', cor: '#3B82F6' },
-    { min: 90, max: 95, nome: 'ELITE', cor: '#8B5CF6' },
-    { min: 95, max: 100, nome: 'DEUS GREGO', cor: '#FFD700' },
+    { min: 80, max: 95, nome: 'ATLETA', cor: '#8B5CF6' },
+    { min: 95, max: 101, nome: 'ELITE', cor: '#FFD700' },
 ]
 
 function getClassificacaoCor(nome: string) {
