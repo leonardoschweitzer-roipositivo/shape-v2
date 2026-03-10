@@ -10,6 +10,7 @@ import { Search, ChevronRight, ChevronLeft, TrendingUp, TrendingDown, Minus, Use
 import type { AlunoCard, StatusAluno } from '@/types/personal-portal'
 import { AlunoFichaScreen } from './AlunoFichaScreen'
 import { NovoAlunoScreen } from './NovoAlunoScreen'
+import { ScreenHeader } from './components/ScreenHeader'
 
 type FiltroStatus = 'todos' | StatusAluno
 
@@ -98,10 +99,11 @@ export function AlunosScreen({ alunos, onVoltar, alunoInicialId, onAlunoFechou }
             <div className="absolute top-0 left-0 right-0 h-40 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent pointer-events-none" />
 
             <div className="relative z-10">
-                {/* Header fixo */}
-                <div className="mb-8">
-                    <div className="flex items-center justify-between mb-6">
-                        <h1 className="text-white text-3xl font-black tracking-tight">Meus Alunos</h1>
+                <ScreenHeader
+                    icon={<Users size={16} className="text-indigo-400" />}
+                    titulo="Meus Alunos"
+                    subtitulo={`${alunos.length} aluno${alunos.length !== 1 ? 's' : ''}`}
+                    rightContent={
                         <button
                             onClick={() => setCadastrando(true)}
                             className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-indigo-600/20 active:scale-95 transition-all"
@@ -109,41 +111,41 @@ export function AlunosScreen({ alunos, onVoltar, alunoInicialId, onAlunoFechou }
                             <UserPlus size={14} strokeWidth={2.5} />
                             Novo Aluno
                         </button>
-                    </div>
+                    }
+                />
 
-                    {/* Busca Premium */}
-                    <div className="relative mb-6 group">
-                        <div className="absolute inset-0 bg-indigo-500/5 rounded-2xl blur-xl group-focus-within:bg-indigo-500/10 transition-all opacity-0 group-focus-within:opacity-100" />
-                        <div className="relative">
-                            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-indigo-400 transition-colors" />
-                            <input
-                                type="text"
-                                placeholder="Buscar por nome ou email..."
-                                value={busca}
-                                onChange={e => setBusca(e.target.value)}
-                                className="w-full bg-surface-deep text-white text-sm font-medium placeholder-zinc-600 rounded-2xl pl-12 pr-4 py-4 border border-white/5 focus:outline-none focus:border-indigo-500/30 transition-all shadow-inner shadow-black/20"
-                            />
-                        </div>
+                {/* Busca Premium */}
+                <div className="relative mb-6 group">
+                    <div className="absolute inset-0 bg-indigo-500/5 rounded-2xl blur-xl group-focus-within:bg-indigo-500/10 transition-all opacity-0 group-focus-within:opacity-100" />
+                    <div className="relative">
+                        <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-indigo-400 transition-colors" />
+                        <input
+                            type="text"
+                            placeholder="Buscar por nome ou email..."
+                            value={busca}
+                            onChange={e => setBusca(e.target.value)}
+                            className="w-full bg-surface-deep text-white text-sm font-medium placeholder-zinc-600 rounded-2xl pl-12 pr-4 py-4 border border-white/5 focus:outline-none focus:border-indigo-500/30 transition-all shadow-inner shadow-black/20"
+                        />
                     </div>
+                </div>
 
-                    {/* Filtros (chips) */}
-                    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1">
-                        {filtros.map(f => (
-                            <button
-                                key={f.id}
-                                onClick={() => setFiltro(f.id)}
-                                className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all ${filtro === f.id
-                                    ? 'bg-indigo-600 text-white border-indigo-500 shadow-lg shadow-indigo-600/20'
-                                    : 'bg-surface-deep text-zinc-500 border-white/5 hover:border-white/10'
-                                    }`}
-                            >
-                                {f.label}
-                                <span className={`px-1.5 py-0.5 rounded-md ${filtro === f.id ? 'bg-white/20 text-white' : 'bg-white/5 text-zinc-600'}`}>
-                                    {f.count}
-                                </span>
-                            </button>
-                        ))}
-                    </div>
+                {/* Filtros (chips) */}
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1">
+                    {filtros.map(f => (
+                        <button
+                            key={f.id}
+                            onClick={() => setFiltro(f.id)}
+                            className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all ${filtro === f.id
+                                ? 'bg-indigo-600 text-white border-indigo-500 shadow-lg shadow-indigo-600/20'
+                                : 'bg-surface-deep text-zinc-500 border-white/5 hover:border-white/10'
+                                }`}
+                        >
+                            {f.label}
+                            <span className={`px-1.5 py-0.5 rounded-md ${filtro === f.id ? 'bg-white/20 text-white' : 'bg-white/5 text-zinc-600'}`}>
+                                {f.count}
+                            </span>
+                        </button>
+                    ))}
                 </div>
 
                 {/* Lista */}
@@ -230,6 +232,6 @@ export function AlunosScreen({ alunos, onVoltar, alunoInicialId, onAlunoFechou }
                     )}
                 </div>
             </div>
-        </div>
+        </div >
     )
 }

@@ -12,6 +12,7 @@ import { notificacaoService } from '@/services/notificacao.service'
 import type { Notificacao } from '@/types/notificacao.types'
 import { PRIORIDADE_CONFIG, getContextualIcon } from '@/types/notificacao.constants'
 import { NotificationDetailModal } from '@/components/molecules/NotificationDetailModal/NotificationDetailModal'
+import { ScreenHeader } from './components/ScreenHeader'
 
 interface AlertasScreenProps {
     personalId: string
@@ -122,32 +123,24 @@ export function AlertasScreen({ personalId, onAbrirAluno, onAtualizarContador }:
             <div className="absolute top-0 left-0 right-0 h-40 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent pointer-events-none" />
 
             <div className="relative z-10">
-                {/* Header */}
-                <div className="mb-8">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-white text-3xl font-black tracking-tight">Alertas</h1>
-                            {naoLidas > 0 && (
-                                <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em] mt-1">
-                                    {naoLidas} Pendentes
-                                </p>
-                            )}
-                        </div>
-                        {naoLidas > 0 && (
-                            <button
-                                onClick={marcarTodasLidas}
-                                disabled={marcandoTodas}
-                                className="flex items-center gap-2 bg-indigo-500/10 text-indigo-400 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-indigo-500/20 active:scale-95 transition-all"
-                            >
-                                {marcandoTodas
-                                    ? <Loader2 size={12} className="animate-spin" />
-                                    : <CheckCheck size={14} />
-                                }
-                                Limpar Tudo
-                            </button>
-                        )}
-                    </div>
-                </div>
+                <ScreenHeader
+                    icon={<Bell size={16} className="text-indigo-400" />}
+                    titulo="Alertas"
+                    subtitulo={naoLidas > 0 ? `${naoLidas} pendentes` : 'Tudo em dia'}
+                    rightContent={naoLidas > 0 ? (
+                        <button
+                            onClick={marcarTodasLidas}
+                            disabled={marcandoTodas}
+                            className="flex items-center gap-2 bg-indigo-500/10 text-indigo-400 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-indigo-500/20 active:scale-95 transition-all"
+                        >
+                            {marcandoTodas
+                                ? <Loader2 size={12} className="animate-spin" />
+                                : <CheckCheck size={14} />
+                            }
+                            Limpar Tudo
+                        </button>
+                    ) : undefined}
+                />
 
                 {/* Notificações */}
                 <div className="space-y-8">

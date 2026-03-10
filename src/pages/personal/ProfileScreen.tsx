@@ -6,6 +6,7 @@
 
 import React from 'react'
 import { LogOut, Mail, User } from 'lucide-react'
+import { ScreenHeader } from './components/ScreenHeader'
 import type { PersonalPortalContext } from '@/types/personal-portal'
 
 interface ProfileScreenProps {
@@ -27,7 +28,11 @@ export function ProfileScreen({ contexto, onLogout }: ProfileScreenProps) {
             <div className="absolute top-0 left-0 right-0 h-40 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent pointer-events-none" />
 
             <div className="relative z-10">
-                <h1 className="text-white text-3xl font-black tracking-tight mb-8">Perfil</h1>
+                <ScreenHeader
+                    icon={<User size={16} className="text-indigo-400" />}
+                    titulo="Perfil"
+                    subtitulo="Personal Trainer"
+                />
 
                 {/* Avatar + dados Premium */}
                 <div className="bg-surface-deep rounded-3xl p-8 border border-white/5 text-center mb-6 shadow-2xl relative overflow-hidden group">

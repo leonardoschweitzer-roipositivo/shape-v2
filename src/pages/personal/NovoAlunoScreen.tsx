@@ -7,6 +7,7 @@
 
 import React, { useState } from 'react'
 import { ChevronLeft, UserPlus, Check, KeyRound, Copy, Mail, Sparkles, Loader2 } from 'lucide-react'
+import { ScreenHeader } from './components/ScreenHeader'
 import { supabase } from '@/services/supabase'
 import { useAuthStore } from '@/stores/authStore'
 import { useDataStore } from '@/stores/dataStore'
@@ -179,11 +180,13 @@ export function NovoAlunoScreen({ onVoltar, onCadastrado }: NovoAlunoScreenProps
                 <div className="absolute top-0 left-0 right-0 h-80 bg-gradient-to-b from-emerald-500/10 via-emerald-900/5 to-transparent pointer-events-none" />
 
                 {/* Header */}
-                <div className="relative px-4 pt-8 pb-4 flex items-center gap-3 z-10">
-                    <button onClick={onCadastrado} className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center border border-white/5 active:scale-95 transition-transform">
-                        <ChevronLeft size={20} className="text-zinc-400" />
-                    </button>
-                    <h1 className="text-white text-xl font-black tracking-tight uppercase">Cadastro Realizado</h1>
+                <div className="relative px-4 pt-6 z-10">
+                    <ScreenHeader
+                        icon={<Check size={16} className="text-emerald-400" />}
+                        titulo="Cadastro Realizado"
+                        comVoltar
+                        onVoltar={onCadastrado}
+                    />
                 </div>
 
                 <div className="px-4 pt-4 relative z-10 space-y-6">
@@ -231,8 +234,8 @@ export function NovoAlunoScreen({ onVoltar, onCadastrado }: NovoAlunoScreenProps
                                     setTimeout(() => setLinkCopiado(false), 2000)
                                 }}
                                 className={`w-full py-3 rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${linkCopiado
-                                        ? 'bg-emerald-500 text-white'
-                                        : 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                                    ? 'bg-emerald-500 text-white'
+                                    : 'bg-indigo-600 hover:bg-indigo-500 text-white'
                                     }`}
                             >
                                 <Copy size={12} />
@@ -274,14 +277,14 @@ export function NovoAlunoScreen({ onVoltar, onCadastrado }: NovoAlunoScreenProps
             <div className="absolute top-0 left-0 right-0 h-80 bg-gradient-to-b from-indigo-500/10 via-indigo-900/5 to-transparent pointer-events-none" />
 
             {/* Header */}
-            <div className="relative px-4 pt-8 pb-4 flex items-center gap-3 z-10">
-                <button onClick={onVoltar} className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center border border-white/5 active:scale-95 transition-transform">
-                    <ChevronLeft size={20} className="text-zinc-400" />
-                </button>
-                <div>
-                    <h1 className="text-white text-xl font-black tracking-tight uppercase">Novo Aluno</h1>
-                    <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Cadastro Rápido</p>
-                </div>
+            <div className="relative px-4 pt-6 z-10">
+                <ScreenHeader
+                    icon={<UserPlus size={16} className="text-indigo-400" />}
+                    titulo="Novo Aluno"
+                    subtitulo="Cadastro Rápido"
+                    comVoltar
+                    onVoltar={onVoltar}
+                />
             </div>
 
             <div className="px-4 relative z-10 space-y-6">
@@ -313,8 +316,8 @@ export function NovoAlunoScreen({ onVoltar, onCadastrado }: NovoAlunoScreenProps
                                 type="button"
                                 onClick={() => handleChange('sexo', 'MALE')}
                                 className={`py-3 rounded-xl border font-black text-xs uppercase tracking-widest transition-all ${form.sexo === 'MALE'
-                                        ? 'bg-indigo-600/20 border-indigo-500/40 text-indigo-400 shadow-[0_0_12px_rgba(99,102,241,0.15)]'
-                                        : 'bg-background-dark border-white/5 text-zinc-600'
+                                    ? 'bg-indigo-600/20 border-indigo-500/40 text-indigo-400 shadow-[0_0_12px_rgba(99,102,241,0.15)]'
+                                    : 'bg-background-dark border-white/5 text-zinc-600'
                                     }`}
                             >
                                 ♂ Masculino
@@ -323,8 +326,8 @@ export function NovoAlunoScreen({ onVoltar, onCadastrado }: NovoAlunoScreenProps
                                 type="button"
                                 onClick={() => handleChange('sexo', 'FEMALE')}
                                 className={`py-3 rounded-xl border font-black text-xs uppercase tracking-widest transition-all ${form.sexo === 'FEMALE'
-                                        ? 'bg-pink-500/20 border-pink-500/40 text-pink-400 shadow-[0_0_12px_rgba(236,72,153,0.15)]'
-                                        : 'bg-background-dark border-white/5 text-zinc-600'
+                                    ? 'bg-pink-500/20 border-pink-500/40 text-pink-400 shadow-[0_0_12px_rgba(236,72,153,0.15)]'
+                                    : 'bg-background-dark border-white/5 text-zinc-600'
                                     }`}
                             >
                                 ♀ Feminino
@@ -362,8 +365,8 @@ export function NovoAlunoScreen({ onVoltar, onCadastrado }: NovoAlunoScreenProps
                     type="button"
                     onClick={() => handleChange('criarAcesso', !form.criarAcesso)}
                     className={`w-full flex items-center gap-4 p-5 rounded-2xl border transition-all ${form.criarAcesso
-                            ? 'bg-indigo-600/10 border-indigo-500/30 shadow-[0_0_12px_rgba(99,102,241,0.1)]'
-                            : 'bg-surface-deep border-white/5'
+                        ? 'bg-indigo-600/10 border-indigo-500/30 shadow-[0_0_12px_rgba(99,102,241,0.1)]'
+                        : 'bg-surface-deep border-white/5'
                         }`}
                 >
                     <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all shrink-0 ${form.criarAcesso ? 'border-indigo-500 bg-indigo-500' : 'border-zinc-700'
@@ -398,8 +401,8 @@ export function NovoAlunoScreen({ onVoltar, onCadastrado }: NovoAlunoScreenProps
                     onClick={handleSubmit}
                     disabled={salvando || !formValido}
                     className={`w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all active:scale-[0.98] ${salvando || !formValido
-                            ? 'bg-zinc-800 text-zinc-600 cursor-not-allowed'
-                            : 'bg-indigo-600 text-white shadow-xl shadow-indigo-600/20 hover:shadow-indigo-600/30'
+                        ? 'bg-zinc-800 text-zinc-600 cursor-not-allowed'
+                        : 'bg-indigo-600 text-white shadow-xl shadow-indigo-600/20 hover:shadow-indigo-600/30'
                         }`}
                 >
                     {salvando ? (
