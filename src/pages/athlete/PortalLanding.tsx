@@ -221,6 +221,7 @@ export function PortalLanding({ token, atletaId, onClose }: PortalLandingProps) 
             onGoToMeasurements={() => setView('measurements')}
             onGoToVirtualAssessment={() => setView('virtual-assessment')}
             onGoToContexto={() => setView('contexto')}
+            onLogout={onClose || (() => { })}
         />
     );
 }
@@ -235,9 +236,10 @@ interface HomeAtletaV2Props {
     onGoToMeasurements: () => void;
     onGoToVirtualAssessment: () => void;
     onGoToContexto: () => void;
+    onLogout: () => void;
 }
 
-function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeasurements, onGoToVirtualAssessment, onGoToContexto }: HomeAtletaV2Props) {
+function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeasurements, onGoToVirtualAssessment, onGoToContexto, onLogout }: HomeAtletaV2Props) {
 
     const lastAval = athleteData.avaliacoes?.[0];
     const lastMedida = athleteData.medidas?.[0];
@@ -514,7 +516,7 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
             {/* Discreet Logout */}
             <div className="py-8 text-center opacity-30 hover:opacity-100 transition-opacity">
                 <button
-                    onClick={onClose}
+                    onClick={onLogout}
                     className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium"
                 >
                     Sair da conta

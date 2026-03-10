@@ -1039,8 +1039,8 @@ const App: React.FC = () => {
         }>
           <PortalLanding
             atletaId={atletaId}
-            onClose={() => {
-              signOut();
+            onClose={async () => {
+              await signOut();
               window.location.href = '/';
             }}
           />
@@ -1079,8 +1079,8 @@ const App: React.FC = () => {
       }>
         <PersonalPortal
           personalId={personalPortalId}
-          onLogout={() => {
-            signOut();
+          onLogout={async () => {
+            await signOut();
             window.location.href = '/';
           }}
         />
@@ -1097,8 +1097,8 @@ const App: React.FC = () => {
         </div>
       }>
         <AtletaIndependentePortal
-          onLogout={() => {
-            signOut();
+          onLogout={async () => {
+            await signOut();
             window.location.href = '/';
           }}
         />
@@ -1116,8 +1116,8 @@ const App: React.FC = () => {
       }>
         <AcademiaPortal
           academiaId={academiaPortalId}
-          onLogout={() => {
-            signOut();
+          onLogout={async () => {
+            await signOut();
             window.location.href = '/';
           }}
         />
@@ -1134,8 +1134,8 @@ const App: React.FC = () => {
         </div>
       }>
         <GodPortal
-          onLogout={() => {
-            signOut();
+          onLogout={async () => {
+            await signOut();
             window.location.href = '/';
           }}
         />
