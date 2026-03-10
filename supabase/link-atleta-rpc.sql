@@ -30,8 +30,8 @@ BEGIN
         INSERT INTO public.profiles (id, role, full_name, email)
         VALUES (v_user_id, 'ATLETA', v_atleta_nome, p_email)
         ON CONFLICT (id) DO UPDATE 
-        SET role = 'ATLETA' 
-        WHERE public.profiles.role IS NULL OR public.profiles.role = 'USER';
+        SET role = 'ATLETA', full_name = v_atleta_nome
+        WHERE public.profiles.role IS NULL;
 
         RETURN v_user_id;
     END IF;
