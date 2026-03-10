@@ -131,17 +131,26 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 <div className="max-w-md w-full flex flex-col gap-8">
 
                     <div className="space-y-3 text-center lg:text-left">
-                        {/* Mobile: Logo image | Desktop: Text title */}
+                        {/* Mobile view logic */}
                         <div className="flex justify-center lg:hidden">
-                            <img
-                                src="/logo-vitru.png"
-                                alt="VITRU IA"
-                                className="h-10 object-contain"
-                            />
+                            {isNewUser ? (
+                                <h2 className="text-3xl font-bold tracking-tight text-white">
+                                    Selecione seu Perfil
+                                </h2>
+                            ) : (
+                                <img
+                                    src="/logo-vitru.png"
+                                    alt="VITRU IA"
+                                    className="h-10 object-contain"
+                                />
+                            )}
                         </div>
+
+                        {/* Desktop: Text title */}
                         <h2 className="hidden lg:block text-3xl font-bold tracking-tight">
-                            {isNewUser ? 'Crie sua Conta' : 'Acesse o Painel'}
+                            {isNewUser ? 'Selecione seu Perfil' : 'Acesse o Painel'}
                         </h2>
+
                         <p className="text-gray-400 text-sm lg:text-base">
                             {isNewUser
                                 ? 'Preencha os dados abaixo para começar.'
@@ -169,8 +178,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
                         {/* Profile Selector (Only for Sign Up to choose role) */}
                         {isNewUser && (
-                            <div className="space-y-4">
-                                <label className="text-xs text-gray-400 font-medium ml-1 mb-1.5 block">Selecione seu Perfil</label>
+                            <div className="space-y-1">
                                 <ProfileSelector
                                     selected={profile}
                                     onSelect={setProfile}

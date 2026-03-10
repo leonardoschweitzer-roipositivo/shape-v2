@@ -28,7 +28,6 @@ export const ProfileSelector: React.FC<ProfileSelectorProps> = ({ selected, onSe
 
     return (
         <div className="space-y-3">
-            <label className="text-xs text-gray-400 font-medium ml-1">Selecione seu perfil</label>
             <div className={`grid gap-3 ${visibleProfiles.length === 4 ? 'grid-cols-4' : 'grid-cols-3'}`}>
                 {visibleProfiles.map((profile) => {
                     const Icon = profile.icon;
