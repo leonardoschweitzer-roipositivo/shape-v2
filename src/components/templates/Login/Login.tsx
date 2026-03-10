@@ -165,7 +165,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+                    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
 
                         {/* Profile Selector (Only for Sign Up to choose role) */}
                         {isNewUser && (
@@ -253,7 +253,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                             {!isLoading && <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />}
                         </button>
 
-                        <div className="relative flex items-center justify-center py-2">
+                        <div className="relative flex items-center justify-center py-1">
                             <div className="absolute w-full h-px bg-white/5"></div>
                             <span className="relative bg-background-dark px-2 text-xs text-gray-500">ou</span>
                         </div>
@@ -269,6 +269,18 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                         >
                             {isNewUser ? 'Já tenho uma conta' : 'Criar conta gratuitamente'}
                         </button>
+
+                        {/* Branding Labels - Mobile Only */}
+                        {!isNewUser && (
+                            <div className="flex justify-center gap-3 mt-1 lg:hidden">
+                                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[10px] font-bold uppercase tracking-wider">
+                                    <FlaskConical size={12} /> Science Based
+                                </div>
+                                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-500 text-[10px] font-bold uppercase tracking-wider">
+                                    <Sparkles size={12} /> AI Powered
+                                </div>
+                            </div>
+                        )}
                     </form>
 
                     <div className="flex items-center justify-center gap-6 mt-8">
