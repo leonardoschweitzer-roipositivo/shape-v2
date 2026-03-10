@@ -1,16 +1,15 @@
 /**
- * TodayScreen - Tela HOJE do Portal do Atleta
+ * TodayScreen - Tela TREINO do Portal do Atleta
  * 
- * Tela principal do dia-a-dia com treino, dieta, trackers e dica do coach
+ * Tela principal de treino com exercícios, trackers e feedback
+ * (Dieta e Dica do Coach foram movidos para DietScreen)
  */
 
 import React from 'react'
 import { HeaderIdentidade } from './components/HeaderIdentidade'
 import { CardTreino } from '../../components/organisms/CardTreino'
-import { CardDieta } from '../../components/organisms/CardDieta'
 import { TrackersRapidos } from '../../components/organisms/TrackersRapidos'
 import { FeedbackTextual } from '../../components/organisms/FeedbackTextual'
-import { DicaCoach } from '../../components/molecules/DicaCoach'
 import { AccordionProximoTreino } from './components'
 import { TodayScreenData, TrackerRapido } from '../../types/athlete-portal'
 import type { ExercicioTimerState } from '../../types/athlete-portal'
@@ -34,9 +33,7 @@ interface TodayScreenProps {
     onVerTreino: () => void
     onCompletarTreino: (dataOverride?: string) => void
     onPularTreino: (continuarHoje?: boolean) => void
-    onRegistrarRefeicao: () => void
     onTrackerClick: (tipo: TrackerRapido['id']) => void
-    onFalarComCoach: () => void
 }
 
 export function TodayScreen({
@@ -57,9 +54,7 @@ export function TodayScreen({
     onVerTreino,
     onCompletarTreino,
     onPularTreino,
-    onRegistrarRefeicao,
     onTrackerClick,
-    onFalarComCoach
 }: TodayScreenProps) {
     const [modalPularOpen, setModalPularOpen] = React.useState(false)
 
@@ -119,18 +114,6 @@ export function TodayScreen({
                 <TrackersRapidos
                     trackers={data.trackers}
                     onTrackerClick={onTrackerClick}
-                />
-
-                {/* Card de Dieta */}
-                <CardDieta
-                    dieta={data.dieta}
-                    onRegistrarRefeicao={onRegistrarRefeicao}
-                />
-
-                {/* Dica do Coach */}
-                <DicaCoach
-                    dica={data.dicaCoach}
-                    onFalarComCoach={onFalarComCoach}
                 />
             </div>
 

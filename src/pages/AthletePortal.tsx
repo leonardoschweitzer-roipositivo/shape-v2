@@ -8,12 +8,12 @@
 import React, { useState, useEffect } from 'react'
 import { BottomNavigation } from '../components/organisms/BottomNavigation'
 import { useAuthStore } from '@/stores/authStore'
-import { TodayScreen, CoachScreen, ProgressScreen, ProfileScreen, AssessmentScreen } from './athlete'
+import { TodayScreen, CoachScreen, ProgressScreen, ProfileScreen, AssessmentScreen, DietScreen } from './athlete'
 import { NotificacoesAtletaScreen } from './athlete/NotificacoesAtletaScreen'
 import { portalNotificacaoService } from '@/services/portal/portalNotificacaoService'
 import { AthletePortalTab } from '../types/athlete-portal'
 import type { TodayScreenData, ScoreGeral, GraficoEvolucaoData, ProporcaoResumo, ChatMessage, MeuPersonal, DadosBasicos, ExercicioTimerState } from '../types/athlete-portal'
-import { Loader2, Bell, Utensils } from 'lucide-react'
+import { Loader2, Bell } from 'lucide-react'
 import { RegistrarRefeicaoModal } from '../components/organisms/RegistrarRefeicaoModal'
 import { RegistrarTrackerModal } from '../components/organisms/RegistrarTrackerModal/RegistrarTrackerModal'
 import { VirtualAssessmentWizard } from '../components/organisms/VirtualAssessmentWizard'
@@ -447,9 +447,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                         onVerTreino={handleVerTreino}
                         onCompletarTreino={handleCompletarTreino}
                         onPularTreino={handlePularTreino}
-                        onRegistrarRefeicao={handleRegistrarRefeicao}
                         onTrackerClick={handleTrackerClick}
-                        onFalarComCoach={handleFalarComCoach}
                     />
                 ) : null
 
@@ -493,17 +491,21 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                 )
 
             case 'dieta':
-                return (
-                    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center pt-24">
-                        <div className="w-20 h-20 rounded-full bg-indigo-500/10 flex items-center justify-center mb-6">
-                            <Utensils size={40} className="text-indigo-400" />
-                        </div>
-                        <h2 className="text-white text-xl font-black uppercase">Minha Dieta</h2>
-                        <p className="text-gray-400 mt-2 max-w-xs">
-                            Sua página de dieta personalizada está sendo preparada e estará disponível em breve.
-                        </p>
-                    </div>
-                )
+                return todayData ? (
+                    <DietScreen
+                        dieta={todayData.dieta}
+                        dicaCoach={todayData.dicaCoach}
+                        planoDieta={ctx?.planoDieta ?? null}
+                        isTreinoDay={todayData.treino?.status !== 'descanso'}
+                        nome={todayData.atleta.nome}
+                        sexo={ctx?.ficha?.sexo}
+                        altura={ctx?.ficha?.altura}
+                        peso={lastPeso}
+                        personalNome={ctx?.personalNome}
+                        onRegistrarRefeicao={handleRegistrarRefeicao}
+                        onFalarComCoach={handleFalarComCoach}
+                    />
+                ) : null
 
             case 'notificacoes':
                 return (
