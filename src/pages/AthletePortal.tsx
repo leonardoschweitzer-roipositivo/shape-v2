@@ -416,7 +416,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
     // Loading state
     if (loading) {
         return (
-            <div className="min-h-screen bg-background-dark flex items-center justify-center">
+            <div className="min-h-screen bg-black flex items-center justify-center">
                 <div className="text-center space-y-4">
                     <Loader2 className="text-indigo-400 mx-auto animate-spin" size={40} />
                     <p className="text-gray-500 text-sm">Carregando seu portal...</p>

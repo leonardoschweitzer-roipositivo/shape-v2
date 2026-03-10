@@ -110,7 +110,7 @@ export function PortalLanding({ token, atletaId, onClose }: PortalLandingProps) 
     // ---- Loading ----
     if (loading) {
         return (
-            <div className="min-h-screen bg-background-dark flex items-center justify-center">
+            <div className="min-h-screen bg-black flex items-center justify-center">
                 <div className="text-center space-y-4">
                     <Loader2 className="text-indigo-400 mx-auto animate-spin" size={40} />
                     <p className="text-zinc-500 text-sm font-medium">Carregando seu portal...</p>

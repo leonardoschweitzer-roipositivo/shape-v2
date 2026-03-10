@@ -1047,7 +1047,7 @@ const App: React.FC = () => {
   // A. Global Auth Loading: Bloqueia render enquanto valida sessão para evitar flashes de login
   if (isAuthLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-background-dark text-white">
+      <div className="flex h-screen w-full items-center justify-center bg-black text-white">
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
           <p className="text-sm text-gray-500 font-medium uppercase tracking-widest">Carregando...</p>
@@ -1059,7 +1059,7 @@ const App: React.FC = () => {
   // B. Dashboard Flash Guard (Mobile @ Root): Evita montar o Dashboard desktop antes do redirect
   if (isAuthenticated && window.location.pathname === '/' && isMobile) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-background-dark text-white">
+      <div className="flex h-screen w-full items-center justify-center bg-black text-white">
         <div className="text-center space-y-4">
           <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
           <p className="text-xs text-gray-500 font-medium uppercase tracking-widest">Acessando seu portal...</p>
@@ -1079,7 +1079,7 @@ const App: React.FC = () => {
     if (isAuthenticated && atletaId) {
       return (
         <Suspense fallback={
-          <div className="flex h-screen w-full items-center justify-center bg-background-dark text-white">
+          <div className="flex h-screen w-full items-center justify-center bg-black text-white">
             <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
           </div>
         }>
@@ -1100,7 +1100,7 @@ const App: React.FC = () => {
   if (personalPortalId) {
     return (
       <Suspense fallback={
-        <div className="flex h-screen w-full items-center justify-center bg-background-dark text-white">
+        <div className="flex h-screen w-full items-center justify-center bg-black text-white">
           <div className="w-8 h-8 border-4 border-[gold] border-t-transparent rounded-full animate-spin" />
         </div>
       }>
@@ -1119,7 +1119,7 @@ const App: React.FC = () => {
   if (isMeuPortalRoute) {
     return (
       <Suspense fallback={
-        <div className="flex h-screen w-full items-center justify-center bg-background-dark text-white">
+        <div className="flex h-screen w-full items-center justify-center bg-black text-white">
           <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
         </div>
       }>
@@ -1137,7 +1137,7 @@ const App: React.FC = () => {
   if (academiaPortalId) {
     return (
       <Suspense fallback={
-        <div className="flex h-screen w-full items-center justify-center bg-background-dark text-white">
+        <div className="flex h-screen w-full items-center justify-center bg-black text-white">
           <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
         </div>
       }>
@@ -1156,7 +1156,7 @@ const App: React.FC = () => {
   if (isGodRoute) {
     return (
       <Suspense fallback={
-        <div className="flex h-screen w-full items-center justify-center bg-background-dark text-white">
+        <div className="flex h-screen w-full items-center justify-center bg-black text-white">
           <div className="w-8 h-8 border-4 border-amber-400 border-t-transparent rounded-full animate-spin" />
         </div>
       }>
