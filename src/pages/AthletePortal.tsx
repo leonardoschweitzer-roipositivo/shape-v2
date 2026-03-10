@@ -13,7 +13,7 @@ import { NotificacoesAtletaScreen } from './athlete/NotificacoesAtletaScreen'
 import { portalNotificacaoService } from '@/services/portal/portalNotificacaoService'
 import { AthletePortalTab } from '../types/athlete-portal'
 import type { TodayScreenData, ScoreGeral, GraficoEvolucaoData, ProporcaoResumo, ChatMessage, MeuPersonal, DadosBasicos, ExercicioTimerState } from '../types/athlete-portal'
-import { Loader2, Bell } from 'lucide-react'
+import { Loader2, Bell, Utensils } from 'lucide-react'
 import { RegistrarRefeicaoModal } from '../components/organisms/RegistrarRefeicaoModal'
 import { RegistrarTrackerModal } from '../components/organisms/RegistrarTrackerModal/RegistrarTrackerModal'
 import { VirtualAssessmentWizard } from '../components/organisms/VirtualAssessmentWizard'
@@ -492,6 +492,19 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                     />
                 )
 
+            case 'dieta':
+                return (
+                    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center pt-24">
+                        <div className="w-20 h-20 rounded-full bg-indigo-500/10 flex items-center justify-center mb-6">
+                            <Utensils size={40} className="text-indigo-400" />
+                        </div>
+                        <h2 className="text-white text-xl font-black uppercase">Minha Dieta</h2>
+                        <p className="text-gray-400 mt-2 max-w-xs">
+                            Sua página de dieta personalizada está sendo preparada e estará disponível em breve.
+                        </p>
+                    </div>
+                )
+
             case 'notificacoes':
                 return (
                     <NotificacoesAtletaScreen
@@ -505,7 +518,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
         }
     }
 
-    const showFloatingBell = ['home', 'hoje', 'avalicao'].includes(activeTab)
+    const showFloatingBell = ['home', 'hoje', 'avalicao', 'dieta'].includes(activeTab)
 
     return (
         <div className="relative min-h-screen flex flex-col">
