@@ -133,12 +133,14 @@ const ExercicioRow: React.FC<{
     return (
         <tr className="border-b border-white/[0.04]">
             <td colSpan={6} className="p-0">
-                <div className="px-2 py-2 space-y-1.5">
+                <div className="px-2.5 py-3.5 space-y-2">
                     {/* Linha 1: Ordem + Nome + Obs + Ações */}
-                    <div className="flex items-start gap-1.5">
-                        {/* Order + Move */}
-                        <div className="flex flex-col items-center gap-0 pt-0.5 shrink-0">
-                            <span className="text-zinc-600 font-mono text-[9px] font-bold">{ex.ordem}</span>
+                    <div className="flex items-start gap-2">
+                        {/* Order badge + Move */}
+                        <div className="flex flex-col items-center gap-0.5 shrink-0">
+                            <div className="w-6 h-6 rounded-lg bg-indigo-500/15 border border-indigo-500/25 flex items-center justify-center">
+                                <span className="text-indigo-400 font-black text-[10px]">{ex.ordem}</span>
+                            </div>
                             <div className="flex gap-0">
                                 {onMoveUp && (
                                     <button onClick={onMoveUp} className="text-zinc-600 hover:text-primary p-0.5 transition-colors">
