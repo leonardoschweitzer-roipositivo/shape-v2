@@ -8,7 +8,8 @@ import {
     ArrowRight,
     Sparkles,
     FlaskConical,
-    User as UserIcon
+    User as UserIcon,
+    CheckCircle2
 } from 'lucide-react';
 import { ProfileSelector, ProfileType } from '@/components/organisms';
 import { useAuthStore } from '@/stores/authStore';
@@ -27,6 +28,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     const [password, setPassword] = useState('');
     const [fullName, setFullName] = useState('');
     const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
     const { signIn, signUp } = useAuthStore();
@@ -34,6 +36,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
+        setSuccess(null);
         setIsLoading(true);
 
         try {
@@ -48,7 +51,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     throw new Error(signUpError instanceof Error ? signUpError.message : String(signUpError));
                 }
 
-                alert('Cadastro realizado! Verifique seu email para confirmar.');
+                setSuccess('Cadastro realizado com sucesso!');
                 setIsNewUser(false); // Switch back to login
             } else {
                 // Sign In Flow
@@ -139,8 +142,18 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     </div>
 
                     {error && (
-                        <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg text-sm">
+                        <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg text-sm animate-in fade-in slide-in-from-top-1 duration-300">
                             {error}
+                        </div>
+                    )}
+
+                    {success && (
+                        <div className="p-4 bg-primary/10 border border-primary/20 text-primary rounded-lg text-sm flex items-start gap-3 animate-in fade-in slide-in-from-top-1 duration-300">
+                            <CheckCircle2 size={20} className="mt-0.5 shrink-0" />
+                            <div>
+                                <p className="font-bold">Seja bem-vindo!</p>
+                                <p className="text-xs text-gray-400 mt-1">Sua conta foi criada com sucesso. Use seu e-mail e senha para acessar o painel.</p>
+                            </div>
                         </div>
                     )}
 
@@ -242,6 +255,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                             onClick={() => {
                                 setIsNewUser(!isNewUser);
                                 setError(null);
+                                setSuccess(null);
                             }}
                             className="w-full bg-transparent border border-white/10 hover:bg-white/5 text-white font-medium py-3.5 rounded-lg transition-all text-sm"
                         >
