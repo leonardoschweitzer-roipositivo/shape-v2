@@ -237,7 +237,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                         </div>
 
                         {!isNewUser && (
-                            <div className="flex justify-end">
+                            <div className="flex justify-center lg:justify-end">
                                 <button type="button" className="text-xs text-primary hover:text-primary/80 transition-colors font-medium">
                                     Esqueci minha senha
                                 </button>
