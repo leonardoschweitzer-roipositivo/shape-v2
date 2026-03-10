@@ -130,14 +130,22 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-background-dark">
                 <div className="max-w-md w-full flex flex-col gap-8">
 
-                    <div className="space-y-2">
-                        <h2 className="text-3xl font-bold tracking-tight">
+                    <div className="space-y-3 text-center lg:text-left">
+                        {/* Mobile: Logo image | Desktop: Text title */}
+                        <div className="flex justify-center lg:hidden">
+                            <img
+                                src="/logo-vitru.png"
+                                alt="VITRU IA"
+                                className="h-10 object-contain"
+                            />
+                        </div>
+                        <h2 className="hidden lg:block text-3xl font-bold tracking-tight">
                             {isNewUser ? 'Crie sua Conta' : 'Acesse o Painel'}
                         </h2>
-                        <p className="text-gray-400">
+                        <p className="text-gray-400 text-sm lg:text-base">
                             {isNewUser
                                 ? 'Preencha os dados abaixo para começar.'
-                                : 'Entre com suas credenciais para continuar sua evolução.'}
+                                : 'Acesse o Painel ou Crie uma Conta Gratuitamente'}
                         </p>
                     </div>
 
