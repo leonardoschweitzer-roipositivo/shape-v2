@@ -89,8 +89,10 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 <div className="relative z-10 p-12 flex flex-col items-start max-w-xl">
                     {/* Logo (Placeholder if image missing) */}
                     <div className="absolute top-12 left-12">
-                        <h1 className="text-2xl font-bold tracking-tighter flex items-center gap-2">
-                            <span className="bg-primary text-black px-2 py-1 rounded">V</span> VITRU IA
+                        <h1 className="text-2xl font-black flex items-center gap-2">
+                            <span className="bg-gradient-to-br from-indigo-600 to-purple-600 text-[#0E1424] px-2 py-0.5 rounded-lg shadow-lg shadow-indigo-600/20">V</span>
+                            <span className="tracking-tighter text-white">VITRU</span>
+                            <span className="tracking-tighter text-indigo-500 text-sm mt-1.5">IA</span>
                         </h1>
                     </div>
 
@@ -134,15 +136,19 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                         {/* Mobile view logic */}
                         <div className="flex justify-center lg:hidden">
                             {isNewUser ? (
-                                <h2 className="text-3xl font-bold tracking-tight text-white">
+                                <h2 className="text-3xl font-bold tracking-tight text-white font-sans uppercase tracking-[0.15em]">
                                     Selecione seu Perfil
                                 </h2>
                             ) : (
-                                <img
-                                    src="/logo-vitru.png"
-                                    alt="VITRU IA"
-                                    className="h-10 object-contain"
-                                />
+                                <div className="flex flex-col items-center">
+                                    <h1 className="text-4xl font-black flex items-center gap-2">
+                                        <span className="bg-gradient-to-br from-indigo-600 to-purple-600 text-[#0E1424] px-2.5 py-1 rounded-xl shadow-lg shadow-indigo-600/20">V</span>
+                                        <div className="flex items-baseline">
+                                            <span className="tracking-tighter text-white">VITRU</span>
+                                            <span className="tracking-tighter text-indigo-500 text-base ml-1">IA</span>
+                                        </div>
+                                    </h1>
+                                </div>
                             )}
                         </div>
 
@@ -255,7 +261,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full bg-primary hover:bg-primary/90 text-black font-bold py-3.5 rounded-lg transition-all shadow-[0_0_20px_rgba(0,201,167,0.2)] flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black py-4 rounded-xl transition-all shadow-[0_4px_20px_rgba(79,70,229,0.25)] flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest active:scale-[0.98]"
                         >
                             {isLoading ? 'CARREGANDO...' : (isNewUser ? 'CRIAR CONTA' : 'ENTRAR')}
                             {!isLoading && <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />}

@@ -199,6 +199,26 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // Redirecionamento automático para o Portal do Personal se estiver no mobile
+  useEffect(() => {
+    // Só redireciona se estiver autenticado, for personal, tiver ID da entidade e for mobile
+    // E claro, se NÃO estivermos já em uma rota de portal (personal ou atleta)
+    const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+    const personalId = entity?.personal?.id;
+
+    if (
+      isAuthenticated &&
+      userProfile === 'personal' &&
+      personalId &&
+      isMobile &&
+      !personalPortalId &&
+      !isAtletaRoute
+    ) {
+      console.info('[App] 📱 Mobile detectado para Personal - Redirecionando para portal mobile...');
+      window.location.href = `/personal/${personalId}`;
+    }
+  }, [isAuthenticated, userProfile, entity?.personal?.id, personalPortalId, isAtletaRoute]);
+
   // State for assessment flow
   const [assessmentData, setAssessmentData] = useState<{ studentName?: string; gender?: 'male' | 'female', assessment?: MeasurementHistory, birthDate?: string, athleteId?: string, age?: number }>({});
   const [athleteForEvaluation, setAthleteForEvaluation] = useState<PersonalAthlete | null>(null);
