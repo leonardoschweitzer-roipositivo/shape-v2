@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { ProfileSelector, ProfileType } from '@/components/organisms';
 import { useAuthStore } from '@/stores/authStore';
+import { isMobileDevice } from '@/utils/mobileDetect';
+import { isGodEmail } from '@/types/auth';
 
 interface LoginProps {
     onLogin: (profile: ProfileType) => void;
@@ -32,6 +34,66 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     const [isLoading, setIsLoading] = useState(false);
 
     const { signIn, signUp } = useAuthStore();
+
+    /**
+     * Redirecionamento inteligente pós-login.
+     * Decide o destino baseado no role do usuário + dispositivo (mobile/desktop).
+     */
+    const handleSmartRedirect = () => {
+        const state = useAuthStore.getState();
+        const userRole = state.profile?.role?.toUpperCase();
+        const userEmail = state.profile?.email || '';
+        const mobile = isMobileDevice();
+
+        // GOD check (email whitelist)
+        if (userEmail && isGodEmail(userEmail)) {
+            if (mobile) {
+                window.location.href = '/god';
+                return;
+            }
+            onLogin('god');
+            return;
+        }
+
+        switch (userRole) {
+            case 'PERSONAL': {
+                const personalId = state.entity?.personal?.id;
+                if (mobile && personalId) {
+                    window.location.href = `/personal/${personalId}`;
+                    return;
+                }
+                onLogin('personal');
+                return;
+            }
+            case 'ATLETA': {
+                const atleta = state.entity?.atleta;
+                const isVinculado = !!atleta?.personal_id;
+                if (isVinculado) {
+                    // Atleta vinculado → sempre Portal do Aluno
+                    window.location.href = '/atleta';
+                    return;
+                }
+                // Atleta independente → mobile vai pro portal, desktop fica no app
+                if (mobile) {
+                    window.location.href = '/meu-portal';
+                    return;
+                }
+                onLogin('atleta');
+                return;
+            }
+            case 'ACADEMIA': {
+                const academiaId = state.entity?.academia?.id;
+                if (mobile && academiaId) {
+                    window.location.href = `/academia/${academiaId}`;
+                    return;
+                }
+                onLogin('academia');
+                return;
+            }
+            default:
+                onLogin('atleta');
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -61,9 +123,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     throw new Error('Email ou senha inválidos.');
                 }
 
-                // Login successful - The hook will update state, parent component will re-render or we call onLogin
-                // For now, let's keep the onLogin prop for callback compatibility
-                onLogin(profile);
+                // Redirecionamento inteligente baseado no role + dispositivo
+                handleSmartRedirect();
             }
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Erro ao autenticar');

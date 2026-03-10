@@ -140,3 +140,12 @@ export const LazyBibliotecaExerciciosPage = lazy(() =>
 export const LazyPersonalPortal = lazy(() =>
     import('@/pages/PersonalPortal').then(m => ({ default: m.PersonalPortal }))
 );
+export const LazyAtletaIndependentePortal = lazy(() =>
+    import('@/pages/AtletaIndependentePortal').then(m => ({ default: m.AtletaIndependentePortal }))
+);
+export const LazyAcademiaPortal = lazy(() =>
+    import('@/pages/AcademiaPortal').then(m => ({ default: m.AcademiaPortal }))
+);
+export const LazyGodPortal = lazy(() =>
+    import('@/pages/GodPortal').then(m => ({ default: m.GodPortal }))
+);

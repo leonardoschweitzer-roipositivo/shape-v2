@@ -62,8 +62,12 @@ import {
   LazyNotificationSettingsPage as NotificationSettingsPage,
   LazyBibliotecaExerciciosPage as BibliotecaExerciciosPage,
   LazyPersonalPortal as PersonalPortal,
+  LazyAtletaIndependentePortal as AtletaIndependentePortal,
+  LazyAcademiaPortal as AcademiaPortal,
+  LazyGodPortal as GodPortal,
 } from '@/lazyPages';
-import { AthleteLogin } from '@/pages/athlete/AthleteLogin';
+// DEPRECATED: AthleteLogin removido — login unificado via Login.tsx
+// import { AthleteLogin } from '@/pages/athlete/AthleteLogin';
 // import { GamificationPage } from './pages/GamificationPage'; // DISABLED - Feature para depois
 
 import { calculateAge } from '@/utils/dateUtils';
@@ -110,6 +114,14 @@ const App: React.FC = () => {
       password: params.get('p') || undefined,
     };
   })();
+
+  // New Portal Route Detection
+  const isMeuPortalRoute = window.location.pathname.startsWith('/meu-portal');
+  const academiaPortalId = (() => {
+    const match = window.location.pathname.match(/^\/academia\/([a-zA-Z0-9\-]+)/);
+    return match ? match[1] : null;
+  })();
+  const isGodRoute = window.location.pathname.startsWith('/god');
   const [diagnosticoPlanId, setDiagnosticoPlanId] = useState<string | null>(null);
   const [consultaDiagData, setConsultaDiagData] = useState<DiagnosticoDados | null>(null);
   const [consultaTreinoData, setConsultaTreinoData] = useState<PlanoTreino | null>(null);
@@ -199,25 +211,8 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // Redirecionamento automático para o Portal do Personal se estiver no mobile
-  useEffect(() => {
-    // Só redireciona se estiver autenticado, for personal, tiver ID da entidade e for mobile
-    // E claro, se NÃO estivermos já em uma rota de portal (personal ou atleta)
-    const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
-    const personalId = entity?.personal?.id;
-
-    if (
-      isAuthenticated &&
-      userProfile === 'personal' &&
-      personalId &&
-      isMobile &&
-      !personalPortalId &&
-      !isAtletaRoute
-    ) {
-      console.info('[App] 📱 Mobile detectado para Personal - Redirecionando para portal mobile...');
-      window.location.href = `/personal/${personalId}`;
-    }
-  }, [isAuthenticated, userProfile, entity?.personal?.id, personalPortalId, isAtletaRoute]);
+  // NOTA: Redirecionamento mobile agora é feito no Login.tsx (handleSmartRedirect)
+  // O useEffect legado de redirect do Personal foi removido.
 
   // State for assessment flow
   const [assessmentData, setAssessmentData] = useState<{ studentName?: string; gender?: 'male' | 'female', assessment?: MeasurementHistory, birthDate?: string, athleteId?: string, age?: number }>({});
@@ -1053,18 +1048,9 @@ const App: React.FC = () => {
       );
     }
 
-    // Não autenticado — mostrar login do atleta
-    return (
-      <AthleteLogin
-        initialEmail={atletaUrlParams.email}
-        initialPassword={atletaUrlParams.password}
-        onLoginSuccess={(id) => {
-          // Limpar params da URL (não expor credenciais)
-          window.history.replaceState({}, '', '/atleta');
-          window.location.reload();
-        }}
-      />
-    );
+    // Não autenticado — redirecionar para login principal
+    window.location.href = '/';
+    return null;
   }
 
   if (isAuthLoading && !personalPortalId) {
@@ -1093,6 +1079,61 @@ const App: React.FC = () => {
       }>
         <PersonalPortal
           personalId={personalPortalId}
+          onLogout={() => {
+            signOut();
+            window.location.href = '/';
+          }}
+        />
+      </Suspense>
+    );
+  }
+
+  // Portal do Atleta Independente via URL (/meu-portal)
+  if (isMeuPortalRoute) {
+    return (
+      <Suspense fallback={
+        <div className="flex h-screen w-full items-center justify-center bg-background-dark text-white">
+          <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      }>
+        <AtletaIndependentePortal
+          onLogout={() => {
+            signOut();
+            window.location.href = '/';
+          }}
+        />
+      </Suspense>
+    );
+  }
+
+  // Portal da Academia via URL (/academia/:id)
+  if (academiaPortalId) {
+    return (
+      <Suspense fallback={
+        <div className="flex h-screen w-full items-center justify-center bg-background-dark text-white">
+          <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      }>
+        <AcademiaPortal
+          academiaId={academiaPortalId}
+          onLogout={() => {
+            signOut();
+            window.location.href = '/';
+          }}
+        />
+      </Suspense>
+    );
+  }
+
+  // Portal GOD via URL (/god)
+  if (isGodRoute) {
+    return (
+      <Suspense fallback={
+        <div className="flex h-screen w-full items-center justify-center bg-background-dark text-white">
+          <div className="w-8 h-8 border-4 border-amber-400 border-t-transparent rounded-full animate-spin" />
+        </div>
+      }>
+        <GodPortal
           onLogout={() => {
             signOut();
             window.location.href = '/';
