@@ -123,9 +123,30 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                         console.info('[Cadastro Rápido] ✅ Sessão do Personal restaurada');
                     }
 
+                    const baseUrl = window.location.origin;
+
                     if (signUpError) {
-                        console.warn('[Cadastro Rápido] Aviso ao criar conta:', signUpError.message);
-                    } else if (signUpData.user) {
+                        if (signUpError.message.includes('already registered')) {
+                            console.info('[Cadastro Rápido] Usuário já existe, tentando vinculação (RPC)...');
+                            const { data: linkedUserId, error: linkError } = await supabase
+                                .rpc('link_existing_user_to_atleta', {
+                                    p_email: athleteEmailTrimmed,
+                                    p_atleta_id: atleta.id,
+                                });
+
+                            if (linkError || !linkedUserId) {
+                                console.warn('[Cadastro Rápido] Erro ao vincular conta existente:', linkError);
+                            } else {
+                                console.info('[Cadastro Rápido] ✅ Conta Auth existente recuperada e vinculada:', linkedUserId);
+                                // Gerar link de login sem a senha, pois ele já tem conta e senha.
+                                const loginUrl = `${baseUrl}/atleta?email=${encodeURIComponent(athleteEmailTrimmed)}`;
+                                setLoginLink(loginUrl);
+                                setAthleteEmail(athleteEmailTrimmed);
+                            }
+                        } else {
+                            console.warn('[Cadastro Rápido] Aviso ao criar conta:', signUpError.message);
+                        }
+                    } else if (signUpData?.user) {
                         // Vincular auth_user_id ao atleta
                         await supabase
                             .from('atletas')
@@ -135,7 +156,6 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                         console.info('[Cadastro Rápido] ✅ Conta Auth criada e vinculada:', signUpData.user.id);
 
                         // Gerar link de login com credenciais pré-preenchidas
-                        const baseUrl = window.location.origin;
                         const loginUrl = `${baseUrl}/atleta?email=${encodeURIComponent(athleteEmailTrimmed)}&p=${encodeURIComponent(DEFAULT_ATHLETE_PASSWORD)}`;
                         setLoginLink(loginUrl);
                         setAthleteEmail(athleteEmailTrimmed);

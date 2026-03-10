@@ -154,12 +154,30 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                 if (signUpError) {
                     // Tratar erro comum onde conta já existe mas auth_user_id não está no bd local
                     if (signUpError.message.includes('already registered')) {
-                        throw new Error('Este email já está registrado. Verifique o cadastro no banco ou no Supabase.');
-                    }
-                    throw new Error(signUpError.message);
-                }
+                        console.info('[AthleteDetails] Usuário já existe, tentando vinculação (RPC)...');
+                        const { data: linkedUserId, error: linkError } = await supabase
+                            .rpc('link_existing_user_to_atleta', {
+                                p_email: athleteEmailTrimmed,
+                                p_atleta_id: athlete.id,
+                            });
 
-                if (signUpData?.user) {
+                        if (linkError || !linkedUserId) {
+                            throw new Error('Este email já está registrado, mas não foi possível vinculá-lo. Peça para o aluno acessar o Portal com a senha que ele já havia criado.');
+                        }
+
+                        console.info('[AthleteDetails] ✅ Conta Auth existente recuperada e vinculada:', linkedUserId);
+
+                        // Update store locally
+                        updateAthlete({ ...athlete, auth_user_id: linkedUserId } as any);
+                        setDraftAthlete(prev => ({ ...prev, auth_user_id: linkedUserId } as any));
+
+                        // Redirecionar apenas com email (sem a senha, para não subscrever a senha real dele)
+                        finalLink = `${baseUrl}/atleta?email=${encodeURIComponent(athleteEmailTrimmed)}`;
+
+                    } else {
+                        throw new Error(signUpError.message);
+                    }
+                } else if (signUpData?.user) {
                     await supabase
                         .from('atletas')
                         .update({ auth_user_id: signUpData.user.id } as Record<string, unknown>)
