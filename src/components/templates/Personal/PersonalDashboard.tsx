@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Activity, TrendingUp, AlertCircle, Trophy, Clock, Calendar } from 'lucide-react';
+import { Users, Activity, TrendingUp, AlertCircle, Trophy, Clock, Calendar, Sparkles, User, Ruler, Target, ChevronRight } from 'lucide-react';
 import { PersonalStatsCard } from './PersonalStatsCard';
 import { HeroCard } from '@/components/organisms/HeroCard';
 import { HeroContent } from '@/features/dashboard/types';
@@ -120,13 +120,13 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
     const getActivityIcon = (type: string) => {
         switch (type) {
             case 'measurement':
-                return '📏';
+                return <Ruler size={18} className="text-amber-500" />;
             case 'goal':
-                return '🎯';
+                return <Target size={18} className="text-amber-500" />;
             case 'record':
-                return '🏆';
+                return <Trophy size={18} className="text-amber-500" />;
             default:
-                return '📊';
+                return <Activity size={18} className="text-amber-500" />;
         }
     };
 
@@ -148,12 +148,21 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
             <div className="max-w-7xl mx-auto flex flex-col gap-8 pb-10 flex-1 w-full">
                 {/* Header de Boas-Vindas */}
                 <div className="flex flex-col animate-fade-in-up">
-                    <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight uppercase">
-                        👋 OLÁ, {personalName.split(' ')[0].toUpperCase()}!
-                    </h1>
-                    <p className="text-gray-400 mt-2 font-light">
-                        Você tem <span className="text-primary font-semibold">{stats.totalAthletes} alunos ativos</span> de {stats.maxAthletes} no seu plano.
-                        {dataSource === 'SUPABASE' && <span className="text-xs text-green-500 ml-2">● Dados reais</span>}
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shadow-lg shadow-indigo-500/5">
+                            <Sparkles size={20} className="text-indigo-400" />
+                        </div>
+                        <h1 className="text-3xl md:text-4xl font-black text-white tracking-tighter uppercase leading-none">
+                            OLÁ, {personalName.split(' ')[0].toUpperCase()}
+                            <span className="text-indigo-500 mx-1">.</span>
+                        </h1>
+                    </div>
+                    <p className="text-zinc-500 mt-3 font-bold text-[11px] uppercase tracking-[0.25em] flex items-center gap-2">
+                        Você tem <span className="text-indigo-400 font-black">{stats.totalAthletes} alunos ativos</span> de {stats.maxAthletes} no seu plano.
+                        {dataSource === 'SUPABASE' && <span className="text-[10px] text-emerald-500 flex items-center gap-1.5 ml-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            Dados reais
+                        </span>}
                     </p>
                 </div>
 
@@ -173,10 +182,10 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
                     />
                     <PersonalStatsCard
                         title="Mediram esta Semana"
-                        value={(stats.measuredThisWeek / stats.totalAthletes) * 100}
+                        value={(stats.measuredThisWeek / (stats.totalAthletes || 1)) * 100}
                         unit="%"
                         icon={Activity}
-                        color="success"
+                        color="primary"
                         showProgress
                         target={80}
                     />
@@ -185,7 +194,7 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
                         value={stats.averageScore}
                         variation={stats.scoreVariation}
                         icon={TrendingUp}
-                        color="success"
+                        color="primary"
                     />
                     <PersonalStatsCard
                         title="Precisam de Atenção"
@@ -196,85 +205,106 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
                 </div>
 
                 {/* Alunos que Precisam de Atenção */}
-                {athletesNeedingAttention.length > 0 && (
-                    <div className="bg-card-bg border border-card-border rounded-xl p-6">
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                                <AlertCircle className="text-amber-500" size={24} />
-                                Alunos que Precisam de Atenção
-                            </h2>
+                <div className="bg-slate-950/25 backdrop-blur-sm border border-white/5 rounded-3xl p-8 shadow-2xl">
+                    <div className="flex items-center gap-4 mb-8">
+                        <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 shadow-xl shadow-amber-500/10">
+                            <AlertCircle className="text-amber-500" size={24} />
                         </div>
-
-                        <div className="space-y-4">
-                            {athletesNeedingAttention.map((athlete) => (
-                                <div
-                                    key={athlete.id}
-                                    className="bg-white/5 border border-white/10 rounded-lg p-4 hover:bg-white/10 transition-all cursor-pointer"
-                                    onClick={() => onNavigateToAthlete(athlete.id)}
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center text-xl">
-                                                👤
-                                            </div>
-                                            <div>
-                                                <h3 className="text-white font-semibold">{athlete.name}</h3>
-                                                <p className="text-sm text-gray-400">{athlete.reason}</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-white font-semibold">Score: {athlete.score}</span>
-                                                {athlete.scoreVariation !== 0 && (
-                                                    <span className={`text-sm ${athlete.scoreVariation > 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                                        ({athlete.scoreVariation > 0 ? '+' : ''}{athlete.scoreVariation})
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <p className="text-xs text-gray-500 mt-1">
-                                                Última medição: {formatRelativeDate(athlete.lastMeasurement)}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
+                        <div>
+                            <h2 className="text-2xl font-black text-white uppercase tracking-tight leading-none">
+                                Alunos Sob Atenção
+                            </h2>
+                            <p className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.2em] mt-1.5">
+                                Casos críticos que exigem ação estratégica imediata
+                            </p>
                         </div>
                     </div>
-                )}
+
+                    {athletesNeedingAttention.map((athlete) => (
+                        <div
+                            key={athlete.id}
+                            className="bg-zinc-900/40 border border-white/5 rounded-2xl p-5 hover:bg-zinc-800/50 hover:border-indigo-500/30 transition-all cursor-pointer group mb-4 last:mb-0"
+                            onClick={() => onNavigateToAthlete(athlete.id)}
+                        >
+                            <div className="flex items-center justify-between group-hover:translate-x-1 transition-transform">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 text-indigo-400 group-hover:bg-indigo-500/20 transition-colors">
+                                        <User size={24} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-white font-black text-sm uppercase tracking-tight">{athlete.name}</h3>
+                                        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1.5">{athlete.reason}</p>
+                                        <p className="text-[8px] font-black text-zinc-600 uppercase tracking-widest mt-1">
+                                            Última medição: {formatRelativeDate(athlete.lastMeasurement)}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="text-right flex flex-col items-end gap-1">
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-2xl font-black text-indigo-400 tracking-tighter">{athlete.score}</p>
+                                        {athlete.scoreVariation !== 0 && (
+                                            <span className={`text-[10px] font-black ${athlete.scoreVariation > 0 ? 'text-emerald-500' : 'text-rose-500'} flex items-center gap-0.5 bg-white/5 px-2 py-0.5 rounded-full`}>
+                                                {athlete.scoreVariation > 0 ? '↑' : '↓'} {Math.abs(athlete.scoreVariation)}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-[8px] font-bold text-zinc-600 uppercase tracking-[0.2em]">Score Vitru</p>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
 
                 {/* Grid: Top Performers + Atividade Recente */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Top Performers */}
-                    <div className="bg-card-bg border border-card-border rounded-xl p-6">
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                                <Trophy className="text-amber-500" size={24} />
-                                Top Performers
-                            </h2>
+                    <div className="bg-slate-950/25 backdrop-blur-sm border border-white/5 rounded-3xl p-8 shadow-2xl">
+                        <div className="flex items-center justify-between mb-8">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shadow-xl shadow-indigo-500/10">
+                                    <Trophy className="text-indigo-400" size={24} />
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-black text-white uppercase tracking-tight leading-none">
+                                        Top Performers
+                                    </h2>
+                                    <p className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.2em] mt-1.5">
+                                        Ranking de elite baseado no score Vitru de proporções
+                                    </p>
+                                </div>
+                            </div>
                             <button
                                 onClick={onNavigateToAthletes}
-                                className="text-sm text-primary hover:text-primary/80 transition-colors"
+                                className="text-[10px] font-black uppercase tracking-widest text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-2"
                             >
-                                Ver ranking completo →
+                                Ver ranking completo <ChevronRight size={14} />
                             </button>
                         </div>
 
                         <div className="space-y-3">
-                            {topPerformers.map((athlete) => (
+                            {topPerformers.map((athlete, idx) => (
                                 <div
                                     key={athlete.id}
-                                    className="flex items-center justify-between p-3 rounded-lg hover:bg-white/5 transition-all cursor-pointer"
+                                    className="p-4 rounded-2xl bg-zinc-900/30 border border-transparent hover:bg-zinc-800/40 hover:border-white/5 transition-all cursor-pointer group"
                                     onClick={() => onNavigateToAthlete(athlete.id)}
                                 >
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-2xl">{getMedalEmoji(athlete.position)}</span>
-                                        <div>
-                                            <p className="text-white font-medium">{athlete.name}</p>
-                                            <p className="text-xs text-gray-400">Ratio: {typeof athlete.ratio === 'number' ? athlete.ratio.toFixed(2) : athlete.ratio}</p>
+                                    <div className="flex items-center justify-between group-hover:translate-x-1 transition-transform">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-2xl bg-zinc-900/50 flex items-center justify-center border border-white/5 text-xl group-hover:border-indigo-500/30 transition-colors">
+                                                {idx === 0 ? <Trophy size={20} className="text-amber-500" /> :
+                                                    idx === 1 ? <Trophy size={20} className="text-zinc-400" /> :
+                                                        idx === 2 ? <Trophy size={20} className="text-amber-700" /> :
+                                                            <User size={18} className="text-zinc-600" />}
+                                            </div>
+                                            <div>
+                                                <p className="text-white font-black text-sm uppercase tracking-tight">{athlete.name}</p>
+                                                <p className="text-[10px] font-bold text-indigo-400/80 uppercase tracking-widest mt-0.5">Ratio: {typeof athlete.ratio === 'number' ? athlete.ratio.toFixed(2) : athlete.ratio}</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-lg font-bold text-primary">{athlete.score} pts</p>
+                                        <div className="text-right flex flex-col items-end gap-1">
+                                            <p className="text-xl font-black text-indigo-400 tracking-tighter">{athlete.score}</p>
+                                            <p className="text-[8px] font-bold text-zinc-600 uppercase tracking-[0.2em]">PONTOS</p>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
@@ -282,28 +312,43 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
                     </div>
 
                     {/* Atividade Recente */}
-                    <div className="bg-card-bg border border-card-border rounded-xl p-6">
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                                <Clock className="text-primary" size={24} />
-                                Atividade Recente
-                            </h2>
+                    <div className="bg-slate-950/25 backdrop-blur-sm border border-white/5 rounded-3xl p-8 shadow-2xl">
+                        <div className="flex items-center gap-4 mb-8">
+                            <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shadow-xl shadow-indigo-500/10">
+                                <Clock className="text-indigo-400" size={24} />
+                            </div>
+                            <div>
+                                <h2 className="text-2xl font-black text-white uppercase tracking-tight leading-none">
+                                    Atividade Recente
+                                </h2>
+                                <p className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.2em] mt-1.5">
+                                    Histórico de interações e registros nas últimas 24h
+                                </p>
+                            </div>
                         </div>
 
                         <div className="space-y-3">
                             {recentActivity.map((activity) => (
                                 <div
                                     key={activity.id}
-                                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-white/5 transition-all"
+                                    className="flex items-center gap-4 p-4 rounded-2xl bg-zinc-900/30 border border-transparent hover:bg-zinc-800/40 hover:border-white/5 transition-all cursor-pointer group"
                                 >
-                                    <span className="text-xl">{getActivityIcon(activity.type)}</span>
+                                    <div className="w-12 h-12 rounded-2xl bg-zinc-900/50 flex items-center justify-center border border-white/5 group-hover:border-amber-500/30 transition-colors">
+                                        {getActivityIcon(activity.type)}
+                                    </div>
                                     <div className="flex-1">
-                                        <p className="text-white text-sm">
-                                            <span className="font-semibold">{activity.athleteName}</span> {activity.action.toLowerCase()}
+                                        <p className="text-white text-sm font-black uppercase tracking-tight">
+                                            {activity.athleteName}
                                         </p>
-                                        <p className="text-xs text-gray-500 mt-1">
+                                        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">
+                                            {activity.action.toLowerCase()}
+                                        </p>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-[10px] font-black text-zinc-600 uppercase tracking-widest flex items-center gap-1.5">
+                                            <Clock size={10} />
                                             {formatActivityTime(activity.timestamp)}
-                                        </p>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
@@ -311,26 +356,49 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
                     </div>
                 </div>
 
-                {/* Próximas Ações */}
-                <div className="bg-gradient-to-br from-primary/10 to-secondary/10 border border-white/10 rounded-xl p-6">
-                    <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-4">
-                        <Calendar className="text-primary" size={24} />
-                        Próximas Ações
-                    </h2>
-                    <ul className="space-y-2 text-gray-300">
-                        <li className="flex items-start gap-2">
-                            <span className="text-primary mt-1">•</span>
-                            <span>{stats.totalAthletes - stats.measuredThisWeek} alunos não medem há mais de 7 dias</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                            <span className="text-primary mt-1">•</span>
-                            <span>2 alunos próximos de bater meta</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                            <span className="text-primary mt-1">•</span>
-                            <span>1 aluno com aniversário esta semana 🎂</span>
-                        </li>
-                    </ul>
+                <div className="bg-slate-950/25 backdrop-blur-sm border border-white/5 rounded-3xl p-8 shadow-2xl">
+                    <div className="flex items-center gap-4 mb-8">
+                        <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shadow-xl shadow-indigo-500/10">
+                            <Calendar className="text-indigo-400" size={24} />
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-black text-white uppercase tracking-tight leading-none">
+                                Próximas Ações
+                            </h2>
+                            <p className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.2em] mt-1.5">
+                                Sugestões de atendimento e acompanhamento para hoje
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="p-5 rounded-2xl bg-zinc-900/30 border border-white/5 hover:border-indigo-500/20 transition-all group">
+                            <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center mb-3 group-hover:bg-indigo-500/20 transition-colors">
+                                <AlertCircle size={16} className="text-indigo-400" />
+                            </div>
+                            <p className="text-xs font-bold text-white uppercase tracking-tight leading-relaxed">
+                                <span className="text-indigo-400 font-black">{stats.totalAthletes - stats.measuredThisWeek} alunos</span> sem medidas há mais de 7 dias
+                            </p>
+                        </div>
+
+                        <div className="p-5 rounded-2xl bg-zinc-900/30 border border-white/5 hover:border-emerald-500/20 transition-all group">
+                            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-3 group-hover:bg-emerald-500/20 transition-colors">
+                                <Target size={16} className="text-emerald-400" />
+                            </div>
+                            <p className="text-xs font-bold text-white uppercase tracking-tight leading-relaxed">
+                                <span className="text-emerald-400 font-black">2 alunos</span> extremamente próximos de bater suas metas
+                            </p>
+                        </div>
+
+                        <div className="p-5 rounded-2xl bg-zinc-900/30 border border-white/5 hover:border-amber-500/20 transition-all group">
+                            <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center mb-3 group-hover:bg-amber-500/20 transition-colors">
+                                <Sparkles size={16} className="text-amber-400" />
+                            </div>
+                            <p className="text-xs font-bold text-white uppercase tracking-tight leading-relaxed">
+                                <span className="text-amber-400 font-black">1 aluno</span> celebrando aniversário especial esta semana
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
