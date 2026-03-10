@@ -176,12 +176,29 @@ const App: React.FC = () => {
     return (authProfile?.role?.toLowerCase() as ProfileType) || 'atleta';
   })();
 
-  const { settings, profile, initializeProfile } = useAthleteStore();
-
-  // Check Session on Mount
+  // Phase 1: Authentication Logic
   useEffect(() => {
     checkSession();
-  }, []);
+  }, [checkSession]);
+
+  // 🛡️ Redirecionamento Automático Proativo para Portais (Root Mobile)
+  // Garante que o usuário vá direto ao portal se cair na raiz por engano ou refresh.
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768; // Define isMobile here
+    if (isAuthenticated && window.location.pathname === '/' && isMobile) {
+      const role = userProfile?.toUpperCase();
+      if (role === 'PERSONAL' && entity?.personal?.id) {
+        window.location.replace(`/personal/${entity.personal.id}`);
+      } else if (role === 'ATLETA' && entity?.atleta) {
+        const isVinculado = !!entity.atleta.personal_id;
+        window.location.replace(isVinculado ? '/atleta' : '/meu-portal');
+      } else if (role === 'ACADEMIA' && entity?.academia?.id) {
+        window.location.replace(`/academia/${entity.academia.id}`);
+      } else if (userProfile === 'god') {
+        window.location.replace('/god');
+      }
+    }
+  }, [isAuthenticated, userProfile, entity]); // Removed isMobile from dependency array as it's defined inside
 
   // FORÇA limpeza de caches antigos para todos os usuários com a nova atualização
   useEffect(() => {
@@ -1019,15 +1036,40 @@ const App: React.FC = () => {
   // getPageTitle extracted to @/utils/getPageTitle.ts
 
   // Portal do Atleta via URL (/atleta)
-  if (isAtletaRoute) {
-    if (isAuthLoading) {
-      return (
-        <div className="flex h-screen w-full items-center justify-center bg-background-dark text-white">
-          <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-        </div>
-      );
-    }
+  // ==========================================================
+  // 🛡️ AUTH & ROUTE GUARDS (Phase 1: Decision)
+  // ==========================================================
 
+  // A. Global Auth Loading: Bloqueia render enquanto valida sessão para evitar flashes de login
+  if (isAuthLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background-dark text-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-sm text-gray-500 font-medium uppercase tracking-widest">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // B. Dashboard Flash Guard (Mobile @ Root): Evita montar o Dashboard desktop antes do redirect
+  if (isAuthenticated && window.location.pathname === '/' && isMobile) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background-dark text-white">
+        <div className="text-center space-y-4">
+          <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-xs text-gray-500 font-medium uppercase tracking-widest">Acessando seu portal...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // C. General Unauthenticated: Renderiza Login se não houver sessão ativa
+  if (!isAuthenticated && !isAtletaRoute && !personalPortalId && !academiaPortalId && !isGodRoute && !isMeuPortalRoute) {
+    return <Login onLogin={() => { }} />;
+  }
+
+  if (isAtletaRoute) {
     // Autenticado como ATLETA — mostrar portal
     const atletaId = entity?.atleta?.id;
     if (isAuthenticated && atletaId) {
@@ -1041,32 +1083,13 @@ const App: React.FC = () => {
             atletaId={atletaId}
             onClose={async () => {
               await signOut();
-              window.location.href = '/';
+              window.location.replace('/');
             }}
           />
         </Suspense>
       );
     }
 
-    // Não autenticado — redirecionar para login principal
-    window.location.href = '/';
-    return null;
-  }
-
-  if (isAuthLoading && !personalPortalId) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-background-dark text-white">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-sm text-gray-400">Carregando...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    // Se é URL do portalPersonal e usuário não autenticado, redireciona para login
-    return <Login onLogin={() => { }} />;
   }
 
   // Portal do Personal via URL (/personal/:personalId) — requer auth p/ RLS funcionar
@@ -1081,7 +1104,7 @@ const App: React.FC = () => {
           personalId={personalPortalId}
           onLogout={async () => {
             await signOut();
-            window.location.href = '/';
+            window.location.replace('/');
           }}
         />
       </Suspense>
@@ -1099,7 +1122,7 @@ const App: React.FC = () => {
         <AtletaIndependentePortal
           onLogout={async () => {
             await signOut();
-            window.location.href = '/';
+            window.location.replace('/');
           }}
         />
       </Suspense>
@@ -1118,7 +1141,7 @@ const App: React.FC = () => {
           academiaId={academiaPortalId}
           onLogout={async () => {
             await signOut();
-            window.location.href = '/';
+            window.location.replace('/');
           }}
         />
       </Suspense>
@@ -1136,7 +1159,7 @@ const App: React.FC = () => {
         <GodPortal
           onLogout={async () => {
             await signOut();
-            window.location.href = '/';
+            window.location.replace('/');
           }}
         />
       </Suspense>

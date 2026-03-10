@@ -502,7 +502,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                     <button
                         onClick={async () => {
                             await signOut();
-                            window.location.href = '/';
+                            window.location.replace('/');
                         }}
                         className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium"
                     >

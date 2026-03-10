@@ -151,7 +151,10 @@ export function PersonalPortal({ personalId, onLogout }: PersonalPortalProps) {
                 {/* Discreet Logout */}
                 <div className="py-8 pb-32 text-center opacity-30 hover:opacity-100 transition-opacity">
                     <button
-                        onClick={onLogout ?? (() => { })}
+                        onClick={async () => {
+                            if (onLogout) await onLogout();
+                            window.location.replace('/');
+                        }}
                         className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium"
                     >
                         Sair da conta

@@ -48,7 +48,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
         // GOD check (email whitelist)
         if (userEmail && isGodEmail(userEmail)) {
             if (mobile) {
-                window.location.href = '/god';
+                window.location.replace('/god');
                 return;
             }
             onLogin('god');
@@ -59,7 +59,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             case 'PERSONAL': {
                 const personalId = state.entity?.personal?.id;
                 if (mobile && personalId) {
-                    window.location.href = `/personal/${personalId}`;
+                    window.location.replace(`/personal/${personalId}`);
                     return;
                 }
                 onLogin('personal');
@@ -70,12 +70,12 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 const isVinculado = !!atleta?.personal_id;
                 if (isVinculado) {
                     // Atleta vinculado → sempre Portal do Aluno
-                    window.location.href = '/atleta';
+                    window.location.replace('/atleta');
                     return;
                 }
                 // Atleta independente → mobile vai pro portal, desktop fica no app
                 if (mobile) {
-                    window.location.href = '/meu-portal';
+                    window.location.replace('/meu-portal');
                     return;
                 }
                 onLogin('atleta');
@@ -84,7 +84,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             case 'ACADEMIA': {
                 const academiaId = state.entity?.academia?.id;
                 if (mobile && academiaId) {
-                    window.location.href = `/academia/${academiaId}`;
+                    window.location.replace(`/academia/${academiaId}`);
                     return;
                 }
                 onLogin('academia');
