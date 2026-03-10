@@ -77,9 +77,23 @@ export function NotificationDetailModal({ notificacao, onFechar, onAcao, persona
         if (criado) {
             setComentarios(prev => [...prev, criado])
             setNovoComentario('')
+
+            // Notificar o atleta que o personal respondeu
+            if (notificacao.atleta_id) {
+                try {
+                    const { onRespostaPersonal } = await import('@/services/notificacaoTriggers')
+                    await onRespostaPersonal(notificacao.atleta_id, {
+                        notificacaoOrigem: notificacao.id,
+                        mensagem: criado.mensagem,
+                        personalId,
+                    })
+                } catch (err) {
+                    console.warn('[NotificationDetail] Erro ao notificar atleta:', err)
+                }
+            }
         }
         setEnviando(false)
-    }, [novoComentario, personalId, notificacao.id, enviando])
+    }, [novoComentario, personalId, notificacao.id, notificacao.atleta_id, enviando])
 
     const handleAcao = () => {
         if (notificacao.acao_url && onAcao) {
@@ -406,8 +420,8 @@ export function NotificationDetailModal({ notificacao, onFechar, onAcao, persona
                                     onClick={handleEnviarComentario}
                                     disabled={!novoComentario.trim() || enviando}
                                     className={`px-4 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 ${!novoComentario.trim() || enviando
-                                            ? 'bg-zinc-800 text-zinc-600 cursor-not-allowed'
-                                            : 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
+                                        ? 'bg-zinc-800 text-zinc-600 cursor-not-allowed'
+                                        : 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
                                         }`}
                                 >
                                     {enviando ? '...' : 'Enviar'}

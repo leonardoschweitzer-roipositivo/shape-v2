@@ -401,3 +401,95 @@ export async function onFeedbackTreino(
         acao_label: 'Ver detalhes →',
     }, dados.personalId)
 }
+
+// ===== GATILHOS PERSONAL → ALUNO (destinatario = 'atleta') =====
+
+/**
+ * Helper: Cria notificação destinada ao ATLETA (não ao personal).
+ * Usa Supabase diretamente com destinatario='atleta'.
+ */
+async function criarNotificacaoParaAluno(
+    atletaId: string,
+    personalId: string,
+    dados: Omit<CriarNotificacaoDTO, 'personal_id' | 'atleta_id'>
+): Promise<void> {
+    const { supabase } = await import('./supabase')
+
+    const { error } = await supabase
+        .from('notificacoes')
+        .insert({
+            ...dados,
+            personal_id: personalId,
+            atleta_id: atletaId,
+            destinatario: 'atleta',
+            lida: false,
+            agrupada: false,
+        })
+
+    if (error) {
+        console.error('[notificacaoTriggers] Erro ao notificar aluno:', error.message)
+    }
+}
+
+/**
+ * Busca nome do personal pelo ID.
+ */
+async function buscarNomePersonal(personalId: string): Promise<string> {
+    const { supabase } = await import('./supabase')
+
+    const { data } = await supabase
+        .from('personais')
+        .select('nome')
+        .eq('id', personalId)
+        .single()
+
+    return data?.nome || 'Seu Personal'
+}
+
+/**
+ * Disparar quando Personal edita o treino do aluno.
+ */
+export async function onTreinoEditado(
+    atletaId: string,
+    personalId: string,
+    dados?: { descricao?: string }
+): Promise<void> {
+    const nomePersonal = await buscarNomePersonal(personalId)
+    const descricao = dados?.descricao || 'Treino atualizado com novas configurações'
+
+    await criarNotificacaoParaAluno(atletaId, personalId, {
+        tipo: 'TREINO_EDITADO',
+        categoria: 'treino',
+        prioridade: 'destaque',
+        titulo: `📝 ${nomePersonal} editou seu treino`,
+        mensagem: descricao,
+        dados: { descricao },
+        grupo_id: `treino-editado-${atletaId}-${new Date().toISOString().slice(0, 10)}`,
+    })
+}
+
+/**
+ * Disparar quando Personal responde um comentário em uma notificação do aluno.
+ */
+export async function onRespostaPersonal(
+    atletaId: string,
+    dados: { notificacaoOrigem: string; mensagem: string; personalId: string }
+): Promise<void> {
+    const nomePersonal = await buscarNomePersonal(dados.personalId)
+    const preview = dados.mensagem.length > 80
+        ? dados.mensagem.substring(0, 80) + '...'
+        : dados.mensagem
+
+    await criarNotificacaoParaAluno(atletaId, dados.personalId, {
+        tipo: 'RESPOSTA_PERSONAL',
+        categoria: 'portal',
+        prioridade: 'destaque',
+        titulo: `💬 ${nomePersonal} respondeu`,
+        mensagem: preview,
+        dados: {
+            notificacaoOrigem: dados.notificacaoOrigem,
+            mensagemCompleta: dados.mensagem,
+        },
+    })
+}
+

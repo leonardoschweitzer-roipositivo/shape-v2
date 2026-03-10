@@ -9,9 +9,11 @@ import React, { useState, useEffect } from 'react'
 import { BottomNavigation } from '../components/organisms/BottomNavigation'
 import { useAuthStore } from '@/stores/authStore'
 import { TodayScreen, CoachScreen, ProgressScreen, ProfileScreen, AssessmentScreen } from './athlete'
+import { NotificacoesAtletaScreen } from './athlete/NotificacoesAtletaScreen'
+import { portalNotificacaoService } from '@/services/portal/portalNotificacaoService'
 import { AthletePortalTab } from '../types/athlete-portal'
 import type { TodayScreenData, ScoreGeral, GraficoEvolucaoData, ProporcaoResumo, ChatMessage, MeuPersonal, DadosBasicos, ExercicioTimerState } from '../types/athlete-portal'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Bell } from 'lucide-react'
 import { RegistrarRefeicaoModal } from '../components/organisms/RegistrarRefeicaoModal'
 import { RegistrarTrackerModal } from '../components/organisms/RegistrarTrackerModal/RegistrarTrackerModal'
 import { VirtualAssessmentWizard } from '../components/organisms/VirtualAssessmentWizard'
@@ -66,6 +68,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
         tipo: null
     })
     const [showVirtualAssessment, setShowVirtualAssessment] = useState(false)
+    const [notificacoesBadge, setNotificacoesBadge] = useState(0)
 
     const timerStorageKey = `exercicioTimers_${atletaId}`
     const [exercicioTimers, setExercicioTimersRaw] = useState<Record<string, ExercicioTimerState>>(() => {
@@ -147,11 +150,13 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                     email: '',
                 })
 
-                // 2 queries: combined assessments+medidas + chat messages
-                const [dados, msgs] = await Promise.all([
+                // 3 queries: assessments+medidas + chat messages + notificações badge
+                const [dados, msgs, naoLidas] = await Promise.all([
                     buscarTodosDadosSecundarios(atletaId),
                     buscarMensagensChat(atletaId),
+                    portalNotificacaoService.contarNaoLidas(atletaId),
                 ])
+                setNotificacoesBadge(naoLidas)
 
                 setScoreGeral(dados.score)
                 setGraficoEvolucao(dados.grafico)
@@ -487,14 +492,42 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                     />
                 )
 
+            case 'notificacoes':
+                return (
+                    <NotificacoesAtletaScreen
+                        atletaId={atletaId}
+                        onAtualizarContador={setNotificacoesBadge}
+                    />
+                )
+
             default:
                 return null
         }
     }
 
+    const showFloatingBell = ['home', 'hoje', 'avalicao'].includes(activeTab)
+
     return (
         <div className="relative min-h-screen flex flex-col">
             <div className="flex-1 overflow-y-auto">
+                {/* Floating notification bell — top right */}
+                {showFloatingBell && (
+                    <button
+                        onClick={() => setActiveTab('notificacoes')}
+                        className="fixed top-8 right-4 z-40 w-10 h-10 rounded-full bg-white/5 backdrop-blur-md border border-white/10 flex items-center justify-center transition-all active:scale-90 hover:bg-white/10"
+                        aria-label="Notificações"
+                    >
+                        <Bell size={18} className="text-gray-400" />
+                        {notificacoesBadge > 0 && (
+                            <div className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-rose-500 flex items-center justify-center px-1 shadow-lg shadow-rose-500/30">
+                                <span className="text-[9px] font-black text-white leading-none">
+                                    {notificacoesBadge > 9 ? '9+' : notificacoesBadge}
+                                </span>
+                            </div>
+                        )}
+                    </button>
+                )}
+
                 {renderActiveScreen()}
 
                 {/* Discreet Logout */}
@@ -519,6 +552,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                         setActiveTab(tab)
                     }
                 }}
+                notificacoesBadge={notificacoesBadge}
             />
             <RegistrarRefeicaoModal
                 isOpen={showRefeicaoModal}

@@ -44,6 +44,10 @@ export type TipoNotificacao =
     | 'CONTEXTO_PREENCHIDO'
     | 'REGISTRO_RAPIDO'
     | 'FEEDBACK_TREINO'
+    // Notificações para o Atleta (Personal → Aluno)
+    | 'TREINO_EDITADO'
+    | 'RESPOSTA_PERSONAL'
+    | 'MENSAGEM_PERSONAL'
     // Resumos
     | 'RESUMO_DIARIO'
     | 'RESUMO_SEMANAL'
@@ -55,10 +59,13 @@ export type PrioridadeNotificacao = 'urgente' | 'alerta' | 'destaque' | 'normal'
 
 // ===== Interfaces =====
 
+export type DestinatarioNotificacao = 'personal' | 'atleta'
+
 export interface Notificacao {
     id: string
     personal_id: string
     atleta_id?: string | null
+    destinatario: DestinatarioNotificacao
 
     tipo: TipoNotificacao
     categoria: CategoriaNotificacao

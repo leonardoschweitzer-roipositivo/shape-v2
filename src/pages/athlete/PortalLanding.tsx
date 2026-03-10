@@ -18,10 +18,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
     Shield,
     Loader2,
-    Play
+    Play,
+    Bell
 } from 'lucide-react';
 import { portalService, PortalAthleteData } from '@/services/portalService';
 import { buscarDadosConsistencia, type DadosConsistencia } from '@/services/consistencia.service';
+import { portalNotificacaoService } from '@/services/portal/portalNotificacaoService';
 import { type DiagnosticoDados } from '@/services/calculations/diagnostico';
 import { SelfMeasurements } from './SelfMeasurements';
 import { ContextoFormPublico } from './ContextoFormPublico';
@@ -75,6 +77,7 @@ export function PortalLanding({ token, atletaId, onClose }: PortalLandingProps) 
     const [dadosConsistencia, setDadosConsistencia] = useState<DadosConsistencia | null>(null);
     const [view, setView] = useState<PortalView>('home');
     const [portalTab, setPortalTab] = useState<AthletePortalTab>('hoje');
+    const [notificacoesBadge, setNotificacoesBadge] = useState(0);
 
     useEffect(() => {
         async function loadData() {
@@ -93,6 +96,8 @@ export function PortalLanding({ token, atletaId, onClose }: PortalLandingProps) 
                     setAthleteData(data);
                     // Consistência carrega em background (não bloqueia a HOME)
                     buscarDadosConsistencia(data.id).then(setDadosConsistencia).catch(console.error);
+                    // Badge de notificações
+                    portalNotificacaoService.contarNaoLidas(data.id).then(setNotificacoesBadge).catch(console.error);
                 }
             } catch (err) {
                 setError('Erro ao carregar dados. Tente novamente.');
@@ -222,6 +227,7 @@ export function PortalLanding({ token, atletaId, onClose }: PortalLandingProps) 
             onGoToVirtualAssessment={() => setView('virtual-assessment')}
             onGoToContexto={() => setView('contexto')}
             onLogout={onClose || (() => { })}
+            notificacoesBadge={notificacoesBadge}
         />
     );
 }
@@ -237,9 +243,10 @@ interface HomeAtletaV2Props {
     onGoToVirtualAssessment: () => void;
     onGoToContexto: () => void;
     onLogout: () => void;
+    notificacoesBadge?: number;
 }
 
-function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeasurements, onGoToVirtualAssessment, onGoToContexto, onLogout }: HomeAtletaV2Props) {
+function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeasurements, onGoToVirtualAssessment, onGoToContexto, onLogout, notificacoesBadge = 0 }: HomeAtletaV2Props) {
 
     const lastAval = athleteData.avaliacoes?.[0];
     const lastMedida = athleteData.medidas?.[0];
@@ -441,6 +448,22 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
     // ---- Estado: Com avaliação — HOME COMPLETA v2.0 ----
     return (
         <div className="min-h-screen bg-background-dark text-white pb-4">
+            {/* Floating notification bell — top right */}
+            <button
+                onClick={() => onGoToPortal('notificacoes')}
+                className="fixed top-8 right-4 z-40 w-10 h-10 rounded-full bg-white/5 backdrop-blur-md border border-white/10 flex items-center justify-center transition-all active:scale-90 hover:bg-white/10"
+                aria-label="Notificações"
+            >
+                <Bell size={18} className="text-gray-400" />
+                {notificacoesBadge > 0 && (
+                    <div className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-rose-500 flex items-center justify-center px-1 shadow-lg shadow-rose-500/30">
+                        <span className="text-[9px] font-black text-white leading-none">
+                            {notificacoesBadge > 9 ? '9+' : notificacoesBadge}
+                        </span>
+                    </div>
+                )}
+            </button>
+
             {/* 1. Header Integrado com Personal */}
             <HeaderIdentidade
                 nome={athleteData.nome}
@@ -534,6 +557,7 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
                         onGoToPortal(tab);
                     }
                 }}
+                notificacoesBadge={notificacoesBadge}
             />
         </div>
     );

@@ -1,17 +1,18 @@
 /**
  * BottomNavigation Component
  * 
- * Navegação inferior fixa com 4 abas para o Portal do Atleta
+ * Navegação inferior fixa com 5 abas para o Portal do Atleta
  * Princípio: Mobile-first, sempre visível, transições suaves
  */
 
 import React from 'react'
-import { Home, Dumbbell, MessageCircle, TrendingUp } from 'lucide-react'
+import { Home, Dumbbell, MessageCircle, TrendingUp, Bell } from 'lucide-react'
 import { AthletePortalTab } from '../../../types/athlete-portal'
 
 interface BottomNavigationProps {
     activeTab: AthletePortalTab
     onTabChange: (tab: AthletePortalTab) => void
+    notificacoesBadge?: number
 }
 
 interface NavItem {
@@ -37,20 +38,26 @@ const NAV_ITEMS: NavItem[] = [
         icon: TrendingUp
     },
     {
+        id: 'notificacoes',
+        label: 'ALERTAS',
+        icon: Bell
+    },
+    {
         id: 'coach',
         label: 'COACH IA',
         icon: MessageCircle
     }
 ]
 
-export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationProps) {
+export function BottomNavigation({ activeTab, onTabChange, notificacoesBadge = 0 }: BottomNavigationProps) {
     return (
         <nav className="fixed bottom-0 left-0 right-0 bg-background-dark border-t border-white/5 z-50">
             <div className="max-w-screen-sm mx-auto">
-                <div className="grid grid-cols-4 h-16">
+                <div className="grid grid-cols-5 h-16">
                     {NAV_ITEMS.map((item) => {
                         const Icon = item.icon
                         const isActive = activeTab === item.id
+                        const showBadge = item.id === 'notificacoes' && notificacoesBadge > 0
 
                         return (
                             <button
@@ -65,19 +72,28 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationPro
                                     <div className="absolute top-0 left-0 right-0 h-0.5 bg-indigo-400" />
                                 )}
 
-                                {/* Icon */}
-                                <Icon
-                                    size={24}
-                                    className={`transition-colors ${isActive
-                                        ? 'text-indigo-400'
-                                        : 'text-gray-500'
-                                        }`}
-                                    strokeWidth={isActive ? 2.5 : 2}
-                                />
+                                {/* Icon with badge */}
+                                <div className="relative">
+                                    <Icon
+                                        size={22}
+                                        className={`transition-colors ${isActive
+                                            ? 'text-indigo-400'
+                                            : 'text-gray-500'
+                                            }`}
+                                        strokeWidth={isActive ? 2.5 : 2}
+                                    />
+                                    {showBadge && (
+                                        <div className="absolute -top-1.5 -right-2 min-w-[16px] h-4 rounded-full bg-rose-500 flex items-center justify-center px-1 shadow-lg shadow-rose-500/30">
+                                            <span className="text-[9px] font-black text-white leading-none">
+                                                {notificacoesBadge > 9 ? '9+' : notificacoesBadge}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
 
                                 {/* Label */}
                                 <span
-                                    className={`text-[10px] font-bold uppercase tracking-wider transition-colors ${isActive
+                                    className={`text-[9px] font-bold uppercase tracking-wider transition-colors ${isActive
                                         ? 'text-indigo-400'
                                         : 'text-gray-600'
                                         }`}

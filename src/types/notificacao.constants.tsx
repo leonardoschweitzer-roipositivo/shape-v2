@@ -62,6 +62,10 @@ export const TIPO_ICON_MAP: Partial<Record<string, React.ReactNode>> = {
     'DOR_REPORTADA': <AlertTriangle size={18} className="text-rose-500" />,
     'STREAK_QUEBRADA': <History size={18} className="text-zinc-500" />,
     'PRIMEIRO_ACESSO': <User size={18} className="text-indigo-400" />,
+    // Notificações para o Atleta
+    'TREINO_EDITADO': <Dumbbell size={18} className="text-indigo-400" />,
+    'RESPOSTA_PERSONAL': <MessageCircle size={18} className="text-emerald-400" />,
+    'MENSAGEM_PERSONAL': <MessageCircle size={18} className="text-sky-400" />,
 }
 
 // Helper para detectar ícones contextuais na mensagem
