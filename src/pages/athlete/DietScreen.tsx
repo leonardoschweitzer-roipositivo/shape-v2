@@ -63,18 +63,16 @@ function FaseHeader({ plano }: { plano: PlanoDieta }) {
     const Icon = config.icon
 
     return (
-        <div className={`rounded-2xl p-5 border ${config.bg} ${config.border} flex items-center gap-4`}>
+        <div className={`rounded-2xl p-6 border ${config.bg} ${config.border} flex items-center gap-4`}>
             <div className={`w-14 h-14 rounded-2xl ${config.bg} flex items-center justify-center flex-shrink-0`}>
                 <Icon size={28} className={config.color} />
             </div>
             <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                    <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${config.color}`}>
-                        {config.label}
-                    </span>
-                </div>
+                <h3 className="text-base font-bold text-white uppercase tracking-wide truncate mb-0.5">
+                    {config.label}
+                </h3>
                 <p className="text-xs text-gray-400 leading-relaxed truncate">
-                    {plano.estrategiaPrincipal?.split('.')[0] || plano.faseLabel}
+                    {plano.estrategiaPrincipal || plano.faseLabel}
                 </p>
             </div>
         </div>
@@ -85,12 +83,12 @@ function EstrategiaCard({ plano }: { plano: PlanoDieta }) {
     const isDeficit = plano.deficit > 0
 
     return (
-        <div className="bg-surface-deep rounded-2xl p-5 border border-white/5">
-            <div className="flex items-center gap-3 mb-4">
+        <div className="bg-surface-deep rounded-2xl p-6 border border-white/5">
+            <div className="flex items-center gap-3 mb-5">
                 <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center">
                     <Flame size={20} className="text-amber-400" />
                 </div>
-                <h3 className="text-sm font-bold text-white uppercase tracking-wide">Estratégia Calórica</h3>
+                <h3 className="text-base font-bold text-white uppercase tracking-wide">Estratégia Calórica</h3>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -169,12 +167,12 @@ function MacrosDetalhados({ plano }: { plano: PlanoDieta }) {
     const macros = showDescanso ? plano.macrosDescanso : plano.macrosTreino
 
     return (
-        <div className="bg-surface-deep rounded-2xl p-5 border border-white/5">
-            <div className="flex items-center gap-3 mb-4">
+        <div className="bg-surface-deep rounded-2xl p-6 border border-white/5">
+            <div className="flex items-center gap-3 mb-5">
                 <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
                     <Target size={20} className="text-purple-400" />
                 </div>
-                <h3 className="text-sm font-bold text-white uppercase tracking-wide">Macros Detalhados</h3>
+                <h3 className="text-base font-bold text-white uppercase tracking-wide">Macros Detalhados</h3>
             </div>
 
             {/* Toggle Treino/Descanso */}
@@ -270,13 +268,13 @@ function RefeicoesAccordion({ plano, isTreinoDay }: { plano: PlanoDieta; isTrein
     if (!refeicoes?.length) return null
 
     return (
-        <div className="bg-surface-deep rounded-2xl p-5 border border-white/5">
-            <div className="flex items-center gap-3 mb-4">
+        <div className="bg-surface-deep rounded-2xl p-6 border border-white/5">
+            <div className="flex items-center gap-3 mb-5">
                 <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
                     <Clock size={20} className="text-green-400" />
                 </div>
                 <div>
-                    <h3 className="text-sm font-bold text-white uppercase tracking-wide">Refeições do Dia</h3>
+                    <h3 className="text-base font-bold text-white uppercase tracking-wide">Refeições do Dia</h3>
                     <p className="text-[10px] text-gray-500 mt-0.5">
                         {isTreinoDay ? '🏋️ Dia de Treino' : '😴 Dia de Descanso'} · {refeicoes.length} refeições
                     </p>
@@ -304,12 +302,12 @@ function ProjecaoMensal({ plano }: { plano: PlanoDieta }) {
     const isLoss = proj.perdaGorduraKg > 0
 
     return (
-        <div className="bg-surface-deep rounded-2xl p-5 border border-white/5">
-            <div className="flex items-center gap-3 mb-4">
+        <div className="bg-surface-deep rounded-2xl p-6 border border-white/5">
+            <div className="flex items-center gap-3 mb-5">
                 <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center">
                     <Scale size={20} className="text-cyan-400" />
                 </div>
-                <h3 className="text-sm font-bold text-white uppercase tracking-wide">Projeção Mensal</h3>
+                <h3 className="text-base font-bold text-white uppercase tracking-wide">Projeção Mensal</h3>
             </div>
 
             <div className="space-y-3">
@@ -361,13 +359,13 @@ function CardapioSugerido({ plano }: { plano: PlanoDieta }) {
     if (!plano.cardapio?.length) return null
 
     return (
-        <div className="bg-surface-deep rounded-2xl p-5 border border-white/5">
-            <div className="flex items-center gap-3 mb-4">
+        <div className="bg-surface-deep rounded-2xl p-6 border border-white/5">
+            <div className="flex items-center gap-3 mb-5">
                 <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center">
                     <Apple size={20} className="text-orange-400" />
                 </div>
                 <div>
-                    <h3 className="text-sm font-bold text-white uppercase tracking-wide">Cardápio Sugerido</h3>
+                    <h3 className="text-base font-bold text-white uppercase tracking-wide">Cardápio Sugerido</h3>
                     <p className="text-[10px] text-gray-500 mt-0.5">Opções flexíveis por refeição</p>
                 </div>
             </div>
@@ -430,13 +428,13 @@ function RegrasAjusteCard({ plano }: { plano: PlanoDieta }) {
         <div className="bg-surface-deep rounded-2xl border border-white/5 overflow-hidden">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-full flex items-center gap-3 p-5 text-left"
+                className="w-full flex items-center gap-3 p-6 text-left"
             >
                 <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center flex-shrink-0">
                     <AlertTriangle size={20} className="text-amber-400" />
                 </div>
                 <div className="flex-1">
-                    <h3 className="text-sm font-bold text-white uppercase tracking-wide">Regras de Ajuste</h3>
+                    <h3 className="text-base font-bold text-white uppercase tracking-wide">Regras de Ajuste</h3>
                     <p className="text-[10px] text-gray-500 mt-0.5">Quando e como ajustar a dieta</p>
                 </div>
                 {isOpen ? <ChevronUp size={16} className="text-gray-500" /> : <ChevronDown size={16} className="text-gray-500" />}
