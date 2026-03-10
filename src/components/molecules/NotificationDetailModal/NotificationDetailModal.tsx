@@ -5,7 +5,7 @@
  * como deltas de medidas, detalhes do treino ou feedback do aluno.
  */
 
-import React, { useEffect, useMemo } from 'react'
+import React, { useEffect, useMemo, useState, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import {
     X,
@@ -25,16 +25,24 @@ import {
 } from 'lucide-react'
 import type { Notificacao } from '@/types/notificacao.types'
 import { CATEGORIA_CONFIG, PRIORIDADE_CONFIG } from '@/types/notificacao.constants'
+import { comentarioService, type Comentario } from '@/services/comentario.service'
 
 interface NotificationDetailModalProps {
     notificacao: Notificacao
     onFechar: () => void
     onAcao?: (url: string) => void
+    personalId?: string
 }
 
-export function NotificationDetailModal({ notificacao, onFechar, onAcao }: NotificationDetailModalProps) {
+export function NotificationDetailModal({ notificacao, onFechar, onAcao, personalId }: NotificationDetailModalProps) {
     const categoriaConfig = CATEGORIA_CONFIG[notificacao.categoria]
     const prioridadeConfig = PRIORIDADE_CONFIG[notificacao.prioridade]
+
+    // ─── Estado de Comentários ─────────────────────────────
+    const [comentarios, setComentarios] = useState<Comentario[]>([])
+    const [novoComentario, setNovoComentario] = useState('')
+    const [enviando, setEnviando] = useState(false)
+    const [carregandoComentarios, setCarregandoComentarios] = useState(false)
 
     // Trava o scroll do body
     useEffect(() => {
@@ -44,6 +52,34 @@ export function NotificationDetailModal({ notificacao, onFechar, onAcao }: Notif
             document.body.style.overflow = originalOverflow
         }
     }, [])
+
+    // Carregar comentários ao abrir
+    useEffect(() => {
+        if (!personalId) return
+        setCarregandoComentarios(true)
+        comentarioService.listar(notificacao.id).then(data => {
+            setComentarios(data)
+            setCarregandoComentarios(false)
+        })
+    }, [notificacao.id, personalId])
+
+    const handleEnviarComentario = useCallback(async () => {
+        if (!novoComentario.trim() || !personalId || enviando) return
+        setEnviando(true)
+
+        const criado = await comentarioService.criar({
+            notificacao_id: notificacao.id,
+            autor_id: personalId,
+            autor_tipo: 'personal',
+            mensagem: novoComentario.trim(),
+        })
+
+        if (criado) {
+            setComentarios(prev => [...prev, criado])
+            setNovoComentario('')
+        }
+        setEnviando(false)
+    }, [novoComentario, personalId, notificacao.id, enviando])
 
     const handleAcao = () => {
         if (notificacao.acao_url && onAcao) {
@@ -319,10 +355,66 @@ export function NotificationDetailModal({ notificacao, onFechar, onAcao }: Notif
                     <div className="h-px w-full bg-white/5 mb-6" />
 
                     {/* Área de Dados Contextuais (Diferenciada por tipo) */}
-                    <div className="mb-8">
+                    <div className="mb-6">
                         <h5 className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-4">DETALHES RELEVANTES</h5>
                         {renderContextContent}
                     </div>
+
+                    {/* ─── Seção de Comentários ──────────────────── */}
+                    {personalId && (
+                        <div className="mb-4">
+                            <div className="h-px w-full bg-white/5 mb-4" />
+                            <h5 className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                <MessageSquare size={12} />
+                                Comentários {comentarios.length > 0 && <span className="bg-indigo-500/20 text-indigo-400 px-1.5 py-0.5 rounded text-[9px]">{comentarios.length}</span>}
+                            </h5>
+
+                            {/* Lista de comentários */}
+                            {carregandoComentarios ? (
+                                <p className="text-zinc-600 text-xs text-center py-3">Carregando...</p>
+                            ) : comentarios.length > 0 ? (
+                                <div className="space-y-2 mb-3 max-h-40 overflow-y-auto">
+                                    {comentarios.map(c => (
+                                        <div key={c.id} className="bg-indigo-500/5 border border-indigo-500/10 rounded-xl p-3">
+                                            <div className="flex items-center justify-between mb-1">
+                                                <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">
+                                                    {c.autor_tipo === 'personal' ? 'Você' : 'Aluno'}
+                                                </span>
+                                                <span className="text-[9px] text-zinc-600 font-medium">
+                                                    {new Date(c.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                            </div>
+                                            <p className="text-sm text-zinc-300 leading-relaxed">{c.mensagem}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-zinc-600 text-[10px] text-center py-2 mb-2">Nenhum comentário ainda.</p>
+                            )}
+
+                            {/* Input de novo comentário */}
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={novoComentario}
+                                    onChange={e => setNovoComentario(e.target.value)}
+                                    onKeyDown={e => e.key === 'Enter' && handleEnviarComentario()}
+                                    placeholder="Escreva um comentário..."
+                                    className="flex-1 bg-background-dark text-white text-sm placeholder-zinc-700 rounded-xl px-4 py-3 border border-white/5 focus:outline-none focus:border-indigo-500/30 transition-all"
+                                />
+                                <button
+                                    onClick={handleEnviarComentario}
+                                    disabled={!novoComentario.trim() || enviando}
+                                    className={`px-4 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 ${!novoComentario.trim() || enviando
+                                            ? 'bg-zinc-800 text-zinc-600 cursor-not-allowed'
+                                            : 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20'
+                                        }`}
+                                >
+                                    {enviando ? '...' : 'Enviar'}
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Footer - Ações */}
@@ -330,7 +422,7 @@ export function NotificationDetailModal({ notificacao, onFechar, onAcao }: Notif
                     {notificacao.acao_label && (
                         <button
                             onClick={handleAcao}
-                            className="w-full py-4 rounded-2xl bg-primary text-black font-black uppercase tracking-tighter text-sm flex items-center justify-center gap-2 hover:bg-primary/90 transition-all active:scale-[0.98] shadow-lg shadow-primary/20"
+                            className="w-full py-4 rounded-2xl bg-primary text-white font-black uppercase tracking-tighter text-sm flex items-center justify-center gap-2 hover:bg-primary/90 transition-all active:scale-[0.98] shadow-lg shadow-primary/20"
                         >
                             {notificacao.acao_label.replace('→', '').trim()}
                             <ArrowRight size={18} strokeWidth={3} />

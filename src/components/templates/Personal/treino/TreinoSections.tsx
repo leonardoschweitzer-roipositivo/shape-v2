@@ -219,7 +219,7 @@ export const SecaoTreinosSemanais: React.FC<{ treinos: TreinoDetalhado[] }> = ({
                         key={t.id}
                         onClick={() => setActiveTab(t.id)}
                         className={`flex-1 min-w-[120px] px-4 py-3 rounded-xl font-bold text-sm uppercase transition-all ${activeTab === t.id
-                            ? 'bg-primary text-black shadow-lg shadow-primary/20'
+                            ? 'bg-primary text-white shadow-lg shadow-primary/20'
                             : 'text-gray-500 hover:text-white hover:bg-white/5'
                             }`}
                     >
@@ -282,7 +282,7 @@ export const SecaoTreinosSemanais: React.FC<{ treinos: TreinoDetalhado[] }> = ({
                                                     <td className="py-5 text-center text-gray-500 text-sm">{ex.descansoSegundos}s</td>
                                                     <td className="px-6 py-5 text-right">
                                                         {ex.tecnica ? (
-                                                            <span className="text-[10px] font-black bg-primary/10 text-primary border border-primary/20 px-2 py-1 rounded uppercase tracking-wider shadow-[0_0_10px_rgba(0,201,167,0.05)]">
+                                                            <span className="text-[10px] font-black bg-primary/10 text-primary border border-primary/20 px-2 py-1 rounded uppercase tracking-wider shadow-[0_0_10px_rgba(79,70,229,0.05)]">
                                                                 {ex.tecnica}
                                                             </span>
                                                         ) : (

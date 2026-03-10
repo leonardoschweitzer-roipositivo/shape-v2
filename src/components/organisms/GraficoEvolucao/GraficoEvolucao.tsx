@@ -42,7 +42,7 @@ export function GraficoEvolucao({ dados }: GraficoEvolucaoProps) {
                 <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
                     Evolução do Score
                 </h3>
-                <TrendingUp size={18} className="text-teal-400" />
+                <TrendingUp size={18} className="text-indigo-400" />
             </div>
 
             {/* Gráfico simplificado com barras */}
@@ -76,7 +76,7 @@ export function GraficoEvolucao({ dados }: GraficoEvolucaoProps) {
 
                                     {/* Barra */}
                                     <div
-                                        className={`w-full rounded-t transition-all duration-300 ${isLast ? 'bg-teal-500' : 'bg-gray-600'
+                                        className={`w-full rounded-t transition-all duration-300 ${isLast ? 'bg-indigo-500' : 'bg-gray-600'
                                             } hover:opacity-80`}
                                         style={{ height: `${Math.max(height, 5)}%` }}
                                     />

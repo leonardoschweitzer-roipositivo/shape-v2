@@ -34,8 +34,8 @@ function AvaliacaoItem({ avaliacao, onClick }: { avaliacao: HistoricoAvaliacaoIt
             className="w-full bg-gray-800/50 hover:bg-gray-800 rounded-lg p-4 border border-gray-700 hover:border-gray-600 transition-colors flex items-center justify-between"
         >
             <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center">
-                    <Calendar size={18} className="text-teal-400" />
+                <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                    <Calendar size={18} className="text-indigo-400" />
                 </div>
                 <div className="text-left">
                     <p className="text-sm font-medium text-white">

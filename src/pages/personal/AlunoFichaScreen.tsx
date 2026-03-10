@@ -6,6 +6,7 @@ import { CardConsistenciaPersonal } from './components/CardConsistenciaPersonal'
 import { CardUltimosRegistros } from './components/CardUltimosRegistros'
 import { CardMetasTrimestrePersonal } from './components/CardMetasTrimestrePersonal'
 import { CardTreinosAccordion } from './components/CardTreinosAccordion'
+import { EditarTreinoScreen } from './components/EditarTreinoScreen'
 import { buscarFichaAluno } from '@/services/personalPortal.service'
 import { atletaService } from '@/services/atleta.service'
 import { storageService } from '@/services/storage.service'
@@ -80,6 +81,7 @@ export function AlunoFichaScreen({ alunoId, onVoltar }: AlunoFichaScreenProps) {
     const [insightError, setInsightError] = useState<string | null>(null)
     const [uploading, setUploading] = useState(false)
     const [fotoUrl, setFotoUrl] = useState<string | null>(null)
+    const [editandoTreino, setEditandoTreino] = useState(false)
 
     useEffect(() => {
         buscarFichaAluno(alunoId).then(data => {
@@ -195,6 +197,28 @@ FORMATO:
         )
     }
 
+    // Sub-tela: Edição de Treinos
+    if (editandoTreino && ficha.planoTreino) {
+        return (
+            <EditarTreinoScreen
+                atletaId={alunoId}
+                personalId={ficha.pessoalId}
+                planoTreino={ficha.planoTreino}
+                onVoltar={() => setEditandoTreino(false)}
+                onSalvo={() => {
+                    setEditandoTreino(false)
+                    // Recarregar ficha para refletir o treino atualizado
+                    buscarFichaAluno(alunoId).then(data => {
+                        if (data) {
+                            setFicha(data)
+                            setFotoUrl(data.fotoUrl ?? null)
+                        }
+                    })
+                }}
+            />
+        )
+    }
+
     const consistenciaPct = ficha.totalDiasMes > 0
         ? Math.round((ficha.checkinsMes / ficha.totalDiasMes) * 100)
         : 0
@@ -230,6 +254,7 @@ FORMATO:
                 <CardTreinosAccordion
                     planoTreino={ficha.planoTreino}
                     atletaId={alunoId}
+                    onEditar={ficha.planoTreino ? () => setEditandoTreino(true) : undefined}
                 />
 
                 {/* 2. Últimos Registros */}

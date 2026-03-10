@@ -30,7 +30,7 @@ import {
 // Common Styles
 const INPUT_CLASS = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-gray-600 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all";
 const LABEL_CLASS = "block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2";
-const BUTTON_PRIMARY_CLASS = "flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-black font-bold rounded-xl transition-all shadow-[0_0_15px_rgba(0,201,167,0.2)] hover:shadow-[0_0_20px_rgba(0,201,167,0.4)]";
+const BUTTON_PRIMARY_CLASS = "flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl transition-all shadow-[0_0_15px_rgba(79,70,229,0.2)] hover:shadow-[0_0_20px_rgba(79,70,229,0.4)]";
 const BUTTON_SECONDARY_CLASS = "flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-bold text-gray-400 hover:text-white hover:bg-white/5 transition-colors uppercase tracking-widest";
 
 // ============================================
@@ -550,7 +550,7 @@ export const NutritionForm: React.FC<NutritionFormProps> = ({ initialData, onSav
                             type="button"
                             onClick={() => setData({ ...data, orcamento: opt as OrcamentoAlimentacao })}
                             className={`py-3 px-3 rounded-xl border text-sm font-bold uppercase tracking-wide transition-all ${data.orcamento === opt
-                                ? 'bg-primary/20 border-primary text-primary shadow-[0_0_10px_rgba(0,201,167,0.2)]'
+                                ? 'bg-primary/20 border-primary text-primary shadow-[0_0_10px_rgba(79,70,229,0.2)]'
                                 : 'bg-white/5 border-white/10 text-gray-500 hover:bg-white/10 hover:text-gray-300'
                                 }`}
                         >
@@ -679,7 +679,7 @@ export const ProgressiveProfilingModal: React.FC<ProgressiveProfilingModalProps>
                         </div>
                         <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                             <div
-                                className="h-full bg-primary transition-all duration-500 ease-out shadow-[0_0_10px_rgba(0,201,167,0.5)]"
+                                className="h-full bg-primary transition-all duration-500 ease-out shadow-[0_0_10px_rgba(79,70,229,0.5)]"
                                 style={{ width: `${((currentStepIndex + 1) / STEPS.length) * 100}%` }}
                             />
                         </div>

@@ -62,7 +62,7 @@ export const EditToolbar: React.FC<EditToolbarProps> = ({
             <button
                 onClick={onSave}
                 disabled={!hasChanges}
-                className="inline-flex items-center gap-2 px-5 py-2 text-xs font-bold uppercase tracking-wider text-black bg-primary rounded-xl hover:shadow-[0_0_15px_rgba(0,201,167,0.3)] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 px-5 py-2 text-xs font-bold uppercase tracking-wider text-white bg-primary rounded-xl hover:shadow-[0_0_15px_rgba(79,70,229,0.3)] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
                 <Save size={14} />
                 {saveLabel}

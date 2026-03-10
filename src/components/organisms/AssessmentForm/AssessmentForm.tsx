@@ -445,7 +445,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onConfirm, isMod
 
                 <button
                     onClick={handleSubmit}
-                    className="flex items-center gap-2 px-8 py-4 bg-primary hover:bg-primary/90 text-black rounded-xl font-bold text-sm transition-all shadow-[0_0_20px_rgba(0,201,167,0.2)] hover:shadow-[0_0_30px_rgba(0,201,167,0.4)] transform hover:scale-[1.02] active:scale-[0.98]"
+                    className="flex items-center gap-2 px-8 py-4 bg-primary hover:bg-primary/90 text-white rounded-xl font-bold text-sm transition-all shadow-[0_0_20px_rgba(79,70,229,0.2)] hover:shadow-[0_0_30px_rgba(79,70,229,0.4)] transform hover:scale-[1.02] active:scale-[0.98]"
                 >
                     <Sparkles size={18} />
                     <span>Realizar Avaliação IA</span>

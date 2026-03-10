@@ -22,8 +22,8 @@ export function CardDadosBasicos({ dados }: CardDadosBasicosProps) {
             <div className="space-y-3">
                 {/* Altura */}
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center">
-                        <Ruler size={18} className="text-teal-400" />
+                    <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                        <Ruler size={18} className="text-indigo-400" />
                     </div>
                     <div className="flex-1">
                         <p className="text-xs text-gray-500">Altura</p>

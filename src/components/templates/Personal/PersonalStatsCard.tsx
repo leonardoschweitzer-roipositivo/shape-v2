@@ -25,10 +25,10 @@ export const PersonalStatsCard: React.FC<PersonalStatsCardProps> = ({
     target,
 }) => {
     const colorClasses = {
-        primary: 'from-primary/20 to-primary/5 border-white/10',
-        success: 'from-green-500/20 to-green-500/5 border-white/10',
-        warning: 'from-amber-500/20 to-amber-500/5 border-white/10',
-        error: 'from-red-500/20 to-red-500/5 border-white/10',
+        primary: 'bg-card-bg border-card-border',
+        success: 'bg-card-bg border-card-border',
+        warning: 'bg-card-bg border-primary/40',
+        error: 'bg-card-bg border-card-border',
     };
 
     const iconColorClasses = {
@@ -43,7 +43,7 @@ export const PersonalStatsCard: React.FC<PersonalStatsCardProps> = ({
     const isNegativeVariation = variation && variation < 0;
 
     return (
-        <div className={`bg-gradient-to-br ${colorClasses[color]} border rounded-xl p-6 transition-all hover:scale-[1.02]`}>
+        <div className={`${colorClasses[color]} border rounded-xl p-6 transition-all hover:scale-[1.02]`}>
             <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                     <p className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-1">

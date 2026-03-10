@@ -37,7 +37,7 @@ export const BodyHeatmap: React.FC<BodyHeatmapProps> = ({ data }) => {
     const getColorForStatus = (status: RegionData['status']) => {
         switch (status) {
             case 'excellent': return '#10B981'; // emerald-500
-            case 'good': return 'var(--color-accent)'; // teal
+            case 'good': return 'var(--color-accent)'; // indigo
             case 'attention': return '#F59E0B'; // amber-500
             case 'critical': return '#EF4444'; // red-500
             default: return '#374151'; // gray-700
@@ -148,7 +148,7 @@ export const BodyHeatmap: React.FC<BodyHeatmapProps> = ({ data }) => {
                     <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-900/90 backdrop-blur-sm border border-white/10 p-4 rounded-xl shadow-2xl z-20 min-w-[160px] pointer-events-none animate-fadeIn">
                         <h5 className="text-white font-bold text-lg mb-1">{hoveredRegion.name}</h5>
                         <div className={`text-xs font-bold uppercase tracking-wider mb-3 ${hoveredRegion.status === 'excellent' ? 'text-emerald-500' :
-                            hoveredRegion.status === 'good' ? 'text-teal-400' :
+                            hoveredRegion.status === 'good' ? 'text-indigo-400' :
                                 hoveredRegion.status === 'attention' ? 'text-amber-500' : 'text-red-500'
                             }`}>
                             {hoveredRegion.status}

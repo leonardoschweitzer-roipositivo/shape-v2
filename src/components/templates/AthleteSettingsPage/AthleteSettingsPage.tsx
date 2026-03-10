@@ -294,7 +294,7 @@ const AppearanceSection: React.FC = () => {
     const { primaryColor } = settings.preferences;
 
     const colorOptions = [
-        { name: 'Teal (Original)', value: '#00C9A7', class: 'bg-primary' },
+        { name: 'Indigo (Original)', value: '#4F46E5', class: 'bg-primary' },
         { name: 'Azul', value: '#3b82f6', class: 'bg-status-info' },
         { name: 'Roxo', value: '#7C3AED', class: 'bg-secondary' },
         { name: 'Amarelo', value: '#eab308', class: 'bg-[#eab308]' },
@@ -311,7 +311,7 @@ const AppearanceSection: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            <SettingsCard icon={Palette} title="Cor de Destaque" description="Altere a cor principal (Teal) de toda a interface">
+            <SettingsCard icon={Palette} title="Cor de Destaque" description="Altere a cor principal (Indigo) de toda a interface">
                 <div className="py-4">
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                         {colorOptions.map((color) => (

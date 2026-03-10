@@ -15,15 +15,15 @@ interface ProfileHeaderProps {
 
 export function ProfileHeader({ nome, email, fotoUrl }: ProfileHeaderProps) {
     return (
-        <div className="bg-gradient-to-br from-teal-500/10 to-purple-500/10 border-b border-gray-800 px-4 py-8">
+        <div className="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border-b border-gray-800 px-4 py-8">
             <div className="flex flex-col items-center text-center">
                 {/* Avatar */}
                 <div className="w-24 h-24 rounded-full bg-gray-700 border-4 border-gray-800 overflow-hidden mb-4">
                     {fotoUrl ? (
                         <img src={fotoUrl} alt={nome} className="w-full h-full object-cover" />
                     ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-teal-500/20">
-                            <User size={40} className="text-teal-400" />
+                        <div className="w-full h-full flex items-center justify-center bg-indigo-500/20">
+                            <User size={40} className="text-indigo-400" />
                         </div>
                     )}
                 </div>

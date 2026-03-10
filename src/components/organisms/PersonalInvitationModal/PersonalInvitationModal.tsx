@@ -137,7 +137,7 @@ export const PersonalInvitationModal: React.FC<PersonalInvitationModalProps> = (
                                     placeholder="email@personal.com"
                                     className="w-full max-w-sm bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50 text-sm"
                                 />
-                                <button className="w-full max-w-sm h-12 bg-primary hover:bg-primary/90 text-black rounded-xl font-bold transition-all">
+                                <button className="w-full max-w-sm h-12 bg-primary hover:bg-primary/90 text-white rounded-xl font-bold transition-all">
                                     Enviar Convite
                                 </button>
                             </div>
@@ -154,7 +154,7 @@ export const PersonalInvitationModal: React.FC<PersonalInvitationModalProps> = (
                                     <button
                                         onClick={() => generateInviteLink('LINK_GENERIC')}
                                         disabled={loading}
-                                        className="w-full h-12 bg-primary hover:bg-primary/90 text-black rounded-xl font-bold transition-all"
+                                        className="w-full h-12 bg-primary hover:bg-primary/90 text-white rounded-xl font-bold transition-all"
                                     >
                                         {loading ? 'Gerando...' : 'Gerar Link'}
                                     </button>
@@ -230,7 +230,7 @@ export const PersonalInvitationModal: React.FC<PersonalInvitationModalProps> = (
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="w-full h-12 bg-primary hover:bg-primary/90 text-black rounded-xl font-bold flex items-center justify-center gap-2 transition-all mt-4"
+                                    className="w-full h-12 bg-primary hover:bg-primary/90 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all mt-4"
                                 >
                                     {loading ? 'Cadastrando...' : 'CADASTRAR PERSONAL'}
                                 </button>

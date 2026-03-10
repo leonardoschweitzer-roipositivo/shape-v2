@@ -516,7 +516,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                         </Button>
                         <Button
                             variant="primary"
-                            className="flex items-center gap-2 bg-primary text-background-dark hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(0,201,167,0.3)] px-6"
+                            className="flex items-center gap-2 bg-primary text-background-dark hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(79,70,229,0.3)] px-6"
                             onClick={onNewAssessment}
                         >
                             <Activity size={18} />
@@ -544,7 +544,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                         onClick={() => isEditing ? handleSave() : setIsEditing(true)}
                                         disabled={isSaving}
                                         className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all font-bold text-xs uppercase tracking-wider ${isEditing
-                                            ? 'bg-primary text-background-dark border-primary shadow-[0_0_15px_rgba(0,201,167,0.3)]'
+                                            ? 'bg-primary text-background-dark border-primary shadow-[0_0_15px_rgba(79,70,229,0.3)]'
                                             : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:border-white/30'
                                             } ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
@@ -997,7 +997,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                     onClick={() => isEditing ? handleSave() : setIsEditing(true)}
                                     disabled={isSaving}
                                     className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all font-bold text-xs uppercase tracking-wider ${isEditing
-                                        ? 'bg-primary text-background-dark border-primary shadow-[0_0_15px_rgba(0,201,167,0.3)]'
+                                        ? 'bg-primary text-background-dark border-primary shadow-[0_0_15px_rgba(79,70,229,0.3)]'
                                         : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:border-white/30'
                                         } ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 >
@@ -1162,7 +1162,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                             }}
                                             className={`flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${portalCopied
                                                 ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400'
-                                                : 'bg-primary text-background-dark hover:scale-[1.02] active:scale-95 shadow-[0_0_20px_rgba(0,201,167,0.3)]'
+                                                : 'bg-primary text-background-dark hover:scale-[1.02] active:scale-95 shadow-[0_0_20px_rgba(79,70,229,0.3)]'
                                                 }`}
                                         >
                                             {portalCopied ? (

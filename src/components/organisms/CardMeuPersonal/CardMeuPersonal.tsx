@@ -38,8 +38,8 @@ export function CardMeuPersonal({ personal }: CardMeuPersonalProps) {
                     {personal.fotoUrl ? (
                         <img src={personal.fotoUrl} alt={personal.nome} className="w-full h-full object-cover" />
                     ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-teal-500/20">
-                            <User size={24} className="text-teal-400" />
+                        <div className="w-full h-full flex items-center justify-center bg-indigo-500/20">
+                            <User size={24} className="text-indigo-400" />
                         </div>
                     )}
                 </div>
@@ -60,7 +60,7 @@ export function CardMeuPersonal({ personal }: CardMeuPersonalProps) {
             <div className="space-y-2">
                 <a
                     href={`tel:${personal.telefone}`}
-                    className="flex items-center gap-2 text-sm text-gray-300 hover:text-teal-400 transition-colors"
+                    className="flex items-center gap-2 text-sm text-gray-300 hover:text-indigo-400 transition-colors"
                 >
                     <Phone size={14} />
                     <span>{personal.telefone}</span>
@@ -68,7 +68,7 @@ export function CardMeuPersonal({ personal }: CardMeuPersonalProps) {
 
                 <a
                     href={`mailto:${personal.email}`}
-                    className="flex items-center gap-2 text-sm text-gray-300 hover:text-teal-400 transition-colors"
+                    className="flex items-center gap-2 text-sm text-gray-300 hover:text-indigo-400 transition-colors"
                 >
                     <Mail size={14} />
                     <span>{personal.email}</span>

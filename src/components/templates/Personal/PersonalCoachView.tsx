@@ -368,7 +368,7 @@ export const PersonalCoachView: React.FC<PersonalCoachViewProps> = ({ onStartDia
                     <div
                         ref={planBlockRef}
                         className={`bg-surface border rounded-2xl p-6 md:p-8 transition-all duration-500 ${selectedAthlete
-                            ? 'border-primary/30 shadow-[0_0_20px_rgba(0,201,167,0.08)]'
+                            ? 'border-primary/30 shadow-[0_0_20px_rgba(79,70,229,0.08)]'
                             : 'border-white/10 opacity-60'
                             }`}
                     >
@@ -455,7 +455,7 @@ export const PersonalCoachView: React.FC<PersonalCoachViewProps> = ({ onStartDia
                             onClick={() => selectedAthlete && onStartDiagnostico?.(selectedAthlete.id)}
                             disabled={!selectedAthlete}
                             className={`w-full flex items-center justify-center gap-3 h-14 rounded-xl font-bold text-sm uppercase tracking-wider transition-all ${selectedAthlete
-                                ? 'bg-primary text-black shadow-[0_0_20px_rgba(0,201,167,0.2)] hover:shadow-[0_0_30px_rgba(0,201,167,0.4)] hover:scale-[1.02] active:scale-[0.98] cursor-pointer'
+                                ? 'bg-primary text-white shadow-[0_0_20px_rgba(79,70,229,0.2)] hover:shadow-[0_0_30px_rgba(79,70,229,0.4)] hover:scale-[1.02] active:scale-[0.98] cursor-pointer'
                                 : 'bg-white/5 text-gray-600 cursor-not-allowed border border-white/5'
                                 }`}
                         >

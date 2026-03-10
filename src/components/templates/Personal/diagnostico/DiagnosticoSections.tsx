@@ -27,7 +27,7 @@ export const EvolutionStepper: React.FC<{ etapaAtual: number }> = ({ etapaAtual 
                         <div className={`h-px flex-1 mx-4 ${step.num <= etapaAtual ? 'bg-primary' : 'bg-white/10'}`} />
                     )}
                     <div className={`flex items-center justify-center min-w-[180px] gap-3 px-6 py-3.5 rounded-xl border transition-all ${step.num === etapaAtual
-                        ? 'bg-primary/10 border-primary text-primary shadow-[0_0_15px_rgba(0,201,167,0.1)]'
+                        ? 'bg-primary/10 border-primary text-primary shadow-[0_0_15px_rgba(79,70,229,0.1)]'
                         : step.num < etapaAtual
                             ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
                             : 'bg-white/[0.02] border-white/5 text-gray-600'
@@ -296,7 +296,7 @@ export const SecaoEstetica: React.FC<{ dados: DiagnosticoDados; insightIA?: stri
                                             )}
                                             <div className="flex flex-col items-center shrink-0" style={{ minWidth: '48px' }}>
                                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm border-2 transition-all ${isActive
-                                                    ? 'bg-primary/20 border-primary shadow-[0_0_12px_rgba(0,201,167,0.3)] scale-110'
+                                                    ? 'bg-primary/20 border-primary shadow-[0_0_12px_rgba(79,70,229,0.3)] scale-110'
                                                     : isPast
                                                         ? 'bg-primary/10 border-primary/40'
                                                         : 'bg-white/[0.03] border-white/10'

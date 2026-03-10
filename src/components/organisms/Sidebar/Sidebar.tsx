@@ -136,7 +136,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Logo and Toggle */}
         <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} gap-3`}>
           {!isSidebarCollapsed && (
-            <img src="/logo-vitru.png" alt="VITRU IA Logo" className="h-[1.8rem] w-auto" />
+            <h1 className="text-3xl font-black flex items-center gap-2">
+              <span className="bg-gradient-to-br from-indigo-600 to-purple-600 text-[#0E1424] px-2.5 py-1 rounded-xl shadow-lg shadow-indigo-600/20 text-xl">V</span>
+              <span className="tracking-tighter text-white">VITRU</span>
+              <span className="tracking-tighter text-indigo-500 text-sm mt-2">IA</span>
+            </h1>
           )}
           {isSidebarCollapsed && (
             <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center border border-primary/20">

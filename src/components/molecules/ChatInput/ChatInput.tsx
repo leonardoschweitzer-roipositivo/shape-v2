@@ -40,7 +40,7 @@ export function ChatInput({ onSendMessage, disabled, placeholder = 'Digite sua m
                     placeholder={placeholder}
                     disabled={disabled}
                     rows={1}
-                    className="flex-1 bg-gray-800 text-white placeholder-gray-500 rounded-lg px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed max-h-32"
+                    className="flex-1 bg-gray-800 text-white placeholder-gray-500 rounded-lg px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed max-h-32"
                     style={{
                         minHeight: '44px',
                         maxHeight: '128px'
@@ -50,7 +50,7 @@ export function ChatInput({ onSendMessage, disabled, placeholder = 'Digite sua m
                 <button
                     onClick={handleSend}
                     disabled={!message.trim() || disabled}
-                    className="w-11 h-11 rounded-lg bg-teal-500 hover:bg-teal-600 disabled:bg-gray-700 disabled:cursor-not-allowed flex items-center justify-center transition-colors flex-shrink-0"
+                    className="w-11 h-11 rounded-lg bg-indigo-500 hover:bg-indigo-600 disabled:bg-gray-700 disabled:cursor-not-allowed flex items-center justify-center transition-colors flex-shrink-0"
                     aria-label="Enviar mensagem"
                 >
                     <Send size={20} className="text-white" />

@@ -216,6 +216,7 @@ export function AlertasScreen({ personalId, onAbrirAluno, onAtualizarContador }:
                         notificacao={notifSelecionada}
                         onFechar={() => setNotifSelecionada(null)}
                         onAcao={handleAcaoModal}
+                        personalId={personalId}
                     />
                 )}
             </div>

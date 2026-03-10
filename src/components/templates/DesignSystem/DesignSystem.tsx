@@ -59,10 +59,10 @@ export const DesignSystem: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Brand Primary */}
             <GlassPanel className="p-4 rounded-xl flex flex-col gap-3">
-              <div className="w-full h-32 rounded-lg bg-primary shadow-[0_0_20px_rgba(0,201,167,0.3)]"></div>
+              <div className="w-full h-32 rounded-lg bg-primary shadow-[0_0_20px_rgba(79,70,229,0.3)]"></div>
               <div>
-                <p className="text-white font-bold">Primary Teal</p>
-                <p className="text-xs text-primary font-mono mt-1">#00C9A7</p>
+                <p className="text-white font-bold">Primary Indigo</p>
+                <p className="text-xs text-primary font-mono mt-1">#4F46E5</p>
                 <p className="text-xs text-gray-500 mt-2">Ações principais, destaques, progresso positivo.</p>
               </div>
             </GlassPanel>
@@ -181,7 +181,7 @@ export const DesignSystem: React.FC = () => {
               <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Botões & Ações</h3>
 
               <div className="flex flex-wrap items-center gap-4">
-                <button className="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-black rounded-lg font-bold text-sm transition-all shadow-[0_0_15px_rgba(0,201,167,0.3)]">
+                <button className="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-lg font-bold text-sm transition-all shadow-[0_0_15px_rgba(79,70,229,0.3)]">
                   <Camera size={18} /> Primary Action
                 </button>
                 <button className="flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-white text-xs font-bold transition-all">
@@ -221,7 +221,7 @@ export const DesignSystem: React.FC = () => {
                 <span className="px-3 py-1 rounded-full bg-green-500/10 text-green-400 text-[10px] font-bold border border-green-500/20 shadow-[0_0_10px_rgba(74,222,128,0.1)]">
                   +5% Growth
                 </span>
-                <span className="px-2 py-0.5 bg-primary text-black text-[9px] font-bold rounded">NAVY LABEL</span>
+                <span className="px-2 py-0.5 bg-primary text-white text-[9px] font-bold rounded">NAVY LABEL</span>
                 <span className="inline-block px-2 py-0.5 rounded bg-white/5 border border-white/10 text-primary text-[10px] font-bold uppercase tracking-wider">
                   Badge Outline
                 </span>
@@ -366,7 +366,7 @@ export const DesignSystem: React.FC = () => {
                   { date: 'Mar', ratio: 1.52 },
                   { date: 'Abr', ratio: 1.56 }
                 ]}
-                selectedMetrics={[{ id: 'ratio', label: 'Shape-V Ratio', color: '#00C9A7', unit: '', yAxisId: 'left' }]}
+                selectedMetrics={[{ id: 'ratio', label: 'Shape-V Ratio', color: '#4F46E5', unit: '', yAxisId: 'left' }]}
               />
             </GlassPanel>
 

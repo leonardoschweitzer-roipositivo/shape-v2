@@ -14,10 +14,10 @@ export const InsightCard: React.FC<InsightCardProps> = ({ insight }) => {
     const getTypeStyles = () => {
         switch (type) {
             case 'tip': return {
-                icon: <Lightbulb size={20} className="text-teal-400" />,
-                border: 'border-teal-500/20',
-                bg: 'bg-teal-500/5',
-                title: 'text-teal-400'
+                icon: <Lightbulb size={20} className="text-indigo-400" />,
+                border: 'border-indigo-500/20',
+                bg: 'bg-indigo-500/5',
+                title: 'text-indigo-400'
             };
             case 'warning': return {
                 icon: <AlertTriangle size={20} className="text-amber-400" />,

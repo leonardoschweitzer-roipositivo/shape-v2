@@ -19,11 +19,11 @@ interface MacroBarProps {
     meta: number
     percentual: number
     unidade: string
-    color: 'teal' | 'purple' | 'orange' | 'yellow'
+    color: 'indigo' | 'purple' | 'orange' | 'yellow'
 }
 
 const COLOR_CLASSES = {
-    teal: 'bg-teal-500',
+    indigo: 'bg-indigo-500',
     purple: 'bg-purple-500',
     orange: 'bg-orange-500',
     yellow: 'bg-yellow-500'
@@ -63,8 +63,8 @@ export function CardDieta({ dieta, onRegistrarRefeicao }: CardDietaProps) {
     return (
         <div className="bg-surface-deep rounded-2xl p-6 border border-white/5">
             <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center">
-                    <UtensilsCrossed size={20} className="text-teal-400" />
+                <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                    <UtensilsCrossed size={20} className="text-indigo-400" />
                 </div>
                 <div>
                     <h3 className="text-base font-bold text-white uppercase tracking-wide">DIETA DE HOJE</h3>
@@ -78,7 +78,7 @@ export function CardDieta({ dieta, onRegistrarRefeicao }: CardDietaProps) {
                     meta={dieta.metaCalorias}
                     percentual={dieta.percentualCalorias}
                     unidade="kcal"
-                    color="teal"
+                    color="indigo"
                 />
 
                 <MacroBar

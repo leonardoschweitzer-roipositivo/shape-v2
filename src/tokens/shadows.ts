@@ -17,8 +17,8 @@ export const shadows = {
 
     // === GLOW EFFECTS (para dark theme) ===
     glow: {
-        /** Botões primários, destaques teal */
-        primary: '0 0 15px rgba(0, 201, 167, 0.3)',
+        /** Botões primários, destaques indigo */
+        primary: '0 0 15px rgba(79, 70, 229, 0.3)',
         /** Elementos purple */
         secondary: '0 0 20px rgba(124, 58, 237, 0.3)',
         /** Badges de sucesso */

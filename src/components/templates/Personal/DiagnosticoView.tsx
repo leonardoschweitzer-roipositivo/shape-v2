@@ -460,7 +460,7 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                 <div className="bg-surface border border-white/10 rounded-2xl p-6">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                         <div className="flex items-center gap-5">
-                            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 shadow-[0_0_15px_rgba(0,201,167,0.1)]">
+                            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 shadow-[0_0_15px_rgba(79,70,229,0.1)]">
                                 <span className="text-primary font-bold text-2xl">{atleta.name[0]}</span>
                             </div>
                             <div>
@@ -543,7 +543,7 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                         </p>
                         <button
                             onClick={handleGerar}
-                            className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary text-black font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(0,201,167,0.3)] transition-all"
+                            className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary text-white font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all"
                         >
                             <Stethoscope size={18} />
                             Gerar Diagnóstico
@@ -718,7 +718,7 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                                 {estado === 'saved' && (
                                     <button
                                         onClick={() => onNext(undefined)}
-                                        className="flex items-center gap-3 px-8 py-3.5 bg-primary text-black font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(0,201,167,0.3)] transition-all"
+                                        className="flex items-center gap-3 px-8 py-3.5 bg-primary text-white font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all"
                                     >
                                         Próximo: Plano de Treino
                                         <ArrowRight size={18} />
@@ -728,7 +728,7 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                         ) : (
                             <button
                                 onClick={() => onNext()}
-                                className="flex items-center gap-3 px-8 py-3.5 bg-primary text-black font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(0,201,167,0.3)] transition-all"
+                                className="flex items-center gap-3 px-8 py-3.5 bg-primary text-white font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all"
                             >
                                 Próximo: Plano de Treino
                                 <ArrowRight size={18} />

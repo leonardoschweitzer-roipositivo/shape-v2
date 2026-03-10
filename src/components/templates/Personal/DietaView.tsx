@@ -335,7 +335,7 @@ export const DietaView: React.FC<DietaViewProps> = ({
                 <div className="bg-surface border border-white/10 rounded-2xl p-6">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                         <div className="flex items-center gap-5">
-                            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 shadow-[0_0_15px_rgba(0,201,167,0.1)]">
+                            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 shadow-[0_0_15px_rgba(79,70,229,0.1)]">
                                 <span className="text-primary font-bold text-2xl">{atleta.name[0]}</span>
                             </div>
                             <div>
@@ -348,7 +348,7 @@ export const DietaView: React.FC<DietaViewProps> = ({
                             <button
                                 onClick={handleGerar}
                                 disabled={estado === 'generating'}
-                                className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary text-black font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(0,201,167,0.3)] transition-all disabled:opacity-50"
+                                className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary text-white font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all disabled:opacity-50"
                             >
                                 {estado === 'generating' ? <Loader2 size={18} className="animate-spin" /> : <Salad size={18} />}
                                 Gerar Plano de Dieta
@@ -395,7 +395,7 @@ export const DietaView: React.FC<DietaViewProps> = ({
                         </p>
                         <button
                             onClick={handleGerar}
-                            className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary text-black font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(0,201,167,0.3)] transition-all"
+                            className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary text-white font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all"
                         >
                             <Salad size={18} /> Gerar Plano de Dieta
                         </button>
@@ -867,7 +867,7 @@ export const DietaView: React.FC<DietaViewProps> = ({
                                         <div className="flex flex-col items-end gap-1">
                                             <button
                                                 onClick={onComplete || onBack}
-                                                className="flex items-center gap-3 px-8 py-3.5 bg-primary text-black font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(0,201,167,0.3)] transition-all"
+                                                className="flex items-center gap-3 px-8 py-3.5 bg-primary text-white font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all"
                                             >
                                                 <CheckCircle size={18} /> Concluir Plano
                                             </button>

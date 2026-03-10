@@ -29,7 +29,7 @@ function ChatMessageBubble({ message, key }: { message: ChatMessageType, key?: s
                 className={`
           max-w-[80%] rounded-2xl px-4 py-3
           ${isUser
-                        ? 'bg-teal-500 text-white rounded-br-md'
+                        ? 'bg-indigo-500 text-white rounded-br-md'
                         : 'bg-gray-800 text-gray-100 rounded-bl-md'
                     }
         `}
@@ -41,14 +41,14 @@ function ChatMessageBubble({ message, key }: { message: ChatMessageType, key?: s
 
                 {/* Time and status */}
                 <div className={`flex items-center gap-1.5 mt-1.5 ${isUser ? 'justify-end' : 'justify-start'}`}>
-                    <span className={`text-[10px] ${isUser ? 'text-teal-100' : 'text-gray-500'}`}>
+                    <span className={`text-[10px] ${isUser ? 'text-indigo-100' : 'text-gray-500'}`}>
                         {formatTime(message.timestamp)}
                     </span>
 
                     {isUser && message.status && (
                         <>
                             {message.status === 'sending' && (
-                                <Loader2 size={10} className="animate-spin text-teal-100" />
+                                <Loader2 size={10} className="animate-spin text-indigo-100" />
                             )}
                             {message.status === 'error' && (
                                 <AlertCircle size={10} className="text-red-400" />
@@ -73,7 +73,7 @@ export function ChatMessages({ messages, isTyping }: ChatMessagesProps) {
         <div className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar">
             {messages.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center px-4">
-                    <div className="w-16 h-16 rounded-full bg-teal-500/10 flex items-center justify-center mb-4">
+                    <div className="w-16 h-16 rounded-full bg-indigo-500/10 flex items-center justify-center mb-4">
                         <span className="text-3xl">🤖</span>
                     </div>
                     <h3 className="text-lg font-semibold text-white mb-2">

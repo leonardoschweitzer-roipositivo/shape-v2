@@ -170,7 +170,7 @@ const ContextField: React.FC<ContextFieldProps> = ({
 
     return (
         <div className={`bg-background-dark rounded-xl border transition-all ${isEditing
-            ? 'border-primary/30 shadow-[0_0_10px_rgba(0,201,167,0.05)]'
+            ? 'border-primary/30 shadow-[0_0_10px_rgba(79,70,229,0.05)]'
             : hasContent
                 ? 'border-white/10 hover:border-white/20'
                 : 'border-white/5 hover:border-white/10'
@@ -326,8 +326,8 @@ export const AthleteContextSection: React.FC<AthleteContextSectionProps> = ({
                                         onClick={handleSave}
                                         disabled={isSaving}
                                         className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all font-bold text-[10px] uppercase tracking-wider
-                                        bg-primary text-black border-primary shadow-[0_0_15px_rgba(0,201,167,0.3)]
-                                        ${isSaving ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-[0_0_25px_rgba(0,201,167,0.4)]'}`}
+                                        bg-primary text-white border-primary shadow-[0_0_15px_rgba(79,70,229,0.3)]
+                                        ${isSaving ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-[0_0_25px_rgba(79,70,229,0.4)]'}`}
                                     >
                                         {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
                                         {isSaving ? 'Salvando...' : 'Salvar'}
@@ -383,8 +383,8 @@ export const AthleteContextSection: React.FC<AthleteContextSectionProps> = ({
                                         onClick={handleSave}
                                         disabled={isSaving}
                                         className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all font-bold text-xs uppercase tracking-wider
-                                        bg-primary text-black border-primary shadow-[0_0_15px_rgba(0,201,167,0.3)]
-                                        ${isSaving ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-[0_0_25px_rgba(0,201,167,0.4)]'}`}
+                                        bg-primary text-white border-primary shadow-[0_0_15px_rgba(79,70,229,0.3)]
+                                        ${isSaving ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-[0_0_25px_rgba(79,70,229,0.4)]'}`}
                                     >
                                         {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
                                         {isSaving ? 'Salvando...' : 'Salvar Contexto'}

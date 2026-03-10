@@ -59,7 +59,7 @@ export const THEME_PRESETS: Record<ThemeId, ThemePreset> = {
         id: 'shape-pro',
         name: 'Shape Pro',
         emoji: '💎',
-        description: 'Fundo azul profundo + Teal vibrante — referência do Portal do Aluno',
+        description: 'Fundo azul profundo + Indigo vibrante — referência do Portal do Aluno',
         colors: {
             '--bg-primary': '#0A0F1C',
             '--bg-card': '#131B2C',
@@ -67,7 +67,7 @@ export const THEME_PRESETS: Record<ThemeId, ThemePreset> = {
             '--bg-card-border': 'rgba(255, 255, 255, 0.08)',
             '--bg-backdrop': '#050810',
             '--bg-surface-raised': '#1F2937',
-            '--color-accent': '#00C9A7',
+            '--color-accent': '#4F46E5',
             '--color-secondary': '#7C3AED',
             '--text-primary': '#FFFFFF',
             '--text-secondary': '#D1D5DB',
@@ -79,8 +79,8 @@ export const THEME_PRESETS: Record<ThemeId, ThemePreset> = {
     'vitru-original': {
         id: 'vitru-original',
         name: 'VITRU Original',
-        emoji: '🟢',
-        description: 'Paleta clássica com tons mais quentes — estilo dashboard original',
+        emoji: '🟣',
+        description: 'Paleta clássica com tons indigo — estilo dashboard original',
         colors: {
             '--bg-primary': '#0E1629',
             '--bg-card': '#162033',
@@ -88,7 +88,7 @@ export const THEME_PRESETS: Record<ThemeId, ThemePreset> = {
             '--bg-card-border': 'rgba(255, 255, 255, 0.07)',
             '--bg-backdrop': '#070B14',
             '--bg-surface-raised': '#1E2A3F',
-            '--color-accent': '#10B981',
+            '--color-accent': '#6366F1',
             '--color-secondary': '#8B5CF6',
             '--text-primary': '#F9FAFB',
             '--text-secondary': '#D1D5DB',

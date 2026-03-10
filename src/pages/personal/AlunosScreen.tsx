@@ -6,9 +6,10 @@
  */
 
 import React, { useState, useMemo } from 'react'
-import { Search, ChevronRight, ChevronLeft, TrendingUp, TrendingDown, Minus, Users } from 'lucide-react'
+import { Search, ChevronRight, ChevronLeft, TrendingUp, TrendingDown, Minus, Users, UserPlus } from 'lucide-react'
 import type { AlunoCard, StatusAluno } from '@/types/personal-portal'
 import { AlunoFichaScreen } from './AlunoFichaScreen'
+import { NovoAlunoScreen } from './NovoAlunoScreen'
 
 type FiltroStatus = 'todos' | StatusAluno
 
@@ -40,6 +41,7 @@ export function AlunosScreen({ alunos, onVoltar, alunoInicialId, onAlunoFechou }
     const [busca, setBusca] = useState('')
     const [filtro, setFiltro] = useState<FiltroStatus>('todos')
     const [alunoSelecionado, setAlunoSelecionado] = useState<string | null>(alunoInicialId ?? null)
+    const [cadastrando, setCadastrando] = useState(false)
 
     // Ordenação: ATENCAO primeiro, depois ATIVO, depois INATIVO
     const ORDEM_STATUS: Record<StatusAluno, number> = { ATENCAO: 0, ATIVO: 1, INATIVO: 2 }
@@ -61,6 +63,16 @@ export function AlunosScreen({ alunos, onVoltar, alunoInicialId, onAlunoFechou }
         ATENCAO: alunos.filter(a => a.status === 'ATENCAO').length,
         INATIVO: alunos.filter(a => a.status === 'INATIVO').length,
     }), [alunos])
+
+    // Sub-tela: Cadastro de Novo Aluno
+    if (cadastrando) {
+        return (
+            <NovoAlunoScreen
+                onVoltar={() => setCadastrando(false)}
+                onCadastrado={() => setCadastrando(false)}
+            />
+        )
+    }
 
     // Sub-tela: Ficha do Aluno
     if (alunoSelecionado) {
@@ -88,7 +100,16 @@ export function AlunosScreen({ alunos, onVoltar, alunoInicialId, onAlunoFechou }
             <div className="relative z-10">
                 {/* Header fixo */}
                 <div className="mb-8">
-                    <h1 className="text-white text-3xl font-black tracking-tight mb-6">Meus Alunos</h1>
+                    <div className="flex items-center justify-between mb-6">
+                        <h1 className="text-white text-3xl font-black tracking-tight">Meus Alunos</h1>
+                        <button
+                            onClick={() => setCadastrando(true)}
+                            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-indigo-600/20 active:scale-95 transition-all"
+                        >
+                            <UserPlus size={14} strokeWidth={2.5} />
+                            Novo Aluno
+                        </button>
+                    </div>
 
                     {/* Busca Premium */}
                     <div className="relative mb-6 group">

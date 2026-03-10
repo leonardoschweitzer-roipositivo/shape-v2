@@ -36,7 +36,7 @@ export const AcademyPersonalsList: React.FC<AcademyPersonalsListProps> = ({
                     </div>
                     <button
                         onClick={onInvitePersonal}
-                        className="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-background-dark font-bold rounded-xl transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(0,201,167,0.2)]"
+                        className="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-background-dark font-bold rounded-xl transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(79,70,229,0.2)]"
                     >
                         <Plus size={20} />
                         CONVIDAR PERSONAL

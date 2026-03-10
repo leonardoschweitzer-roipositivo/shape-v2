@@ -60,7 +60,7 @@ export const Accordion = ({ title, icon: Icon, children, isOpen, onToggle, right
                 className="flex-1 flex items-center justify-between p-6 text-left"
             >
                 <div className="flex items-center gap-4">
-                    <div className={`p-2 rounded-lg transition-all ${isOpen ? 'bg-primary text-black' : 'bg-white/5 text-gray-400'}`}>
+                    <div className={`p-2 rounded-lg transition-all ${isOpen ? 'bg-primary text-white' : 'bg-white/5 text-gray-400'}`}>
                         <Icon size={20} />
                     </div>
                     <h3 className="text-lg font-bold text-white uppercase tracking-wide">{title}</h3>

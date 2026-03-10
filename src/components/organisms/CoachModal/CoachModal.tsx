@@ -81,7 +81,7 @@ export const CoachModal: React.FC<CoachModalProps> = ({ isOpen, onClose }) => {
                     <button
                         type="submit"
                         disabled={!question.trim()}
-                        className="w-full h-12 bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-black rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(0,201,167,0.2)] hover:shadow-[0_0_20px_rgba(0,201,167,0.4)]"
+                        className="w-full h-12 bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(79,70,229,0.2)] hover:shadow-[0_0_20px_rgba(79,70,229,0.4)]"
                     >
                         <Send size={18} />
                         PERGUNTAR AO COACH

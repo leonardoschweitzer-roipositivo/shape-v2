@@ -114,7 +114,7 @@ export const DEFAULT_PROFILE_PREFERENCES: ProfilePreferences = {
     proportionMethod: 'golden_ratio',
     theme: 'dark',
     language: 'pt-BR',
-    primaryColor: '#00C9A7', // Default Teal
+    primaryColor: '#4F46E5', // Default Indigo
 };
 
 // ============================================

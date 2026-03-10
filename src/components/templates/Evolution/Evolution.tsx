@@ -535,7 +535,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
                                     <button
                                         onClick={() => setViewMode('charts')}
                                         className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs font-bold transition-all ${viewMode === 'charts'
-                                            ? 'bg-primary text-black shadow-sm hover:brightness-110'
+                                            ? 'bg-primary text-white shadow-sm hover:brightness-110'
                                             : 'text-gray-500 hover:text-white hover:bg-white/5'
                                             }`}
                                     >
@@ -544,7 +544,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
                                     <button
                                         onClick={() => setViewMode('list')}
                                         className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs font-bold transition-all ${viewMode === 'list'
-                                            ? 'bg-primary text-black shadow-sm hover:brightness-110'
+                                            ? 'bg-primary text-white shadow-sm hover:brightness-110'
                                             : 'text-gray-500 hover:text-white hover:bg-white/5'
                                             }`}
                                     >
@@ -578,7 +578,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
                             <button
                                 onClick={() => setViewMode('charts')}
                                 className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs font-bold transition-all ${viewMode === 'charts'
-                                    ? 'bg-primary text-black shadow-sm hover:brightness-110'
+                                    ? 'bg-primary text-white shadow-sm hover:brightness-110'
                                     : 'text-gray-500 hover:text-white hover:bg-white/5'
                                     }`}
                             >
@@ -587,7 +587,7 @@ export const Evolution: React.FC<EvolutionProps> = ({
                             <button
                                 onClick={() => setViewMode('list')}
                                 className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs font-bold transition-all ${viewMode === 'list'
-                                    ? 'bg-primary text-black shadow-sm hover:brightness-110'
+                                    ? 'bg-primary text-white shadow-sm hover:brightness-110'
                                     : 'text-gray-500 hover:text-white hover:bg-white/5'
                                     }`}
                             >

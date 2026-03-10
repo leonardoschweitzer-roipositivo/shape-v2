@@ -29,7 +29,7 @@ export const RatioCard: React.FC = () => {
           <div className="h-full bg-gray-700 w-[20%] border-r border-background-dark/50"></div>
           <div className="h-full bg-gray-600 w-[20%] border-r border-background-dark/50"></div>
           <div className="h-full bg-secondary/80 w-[20%] border-r border-background-dark/50"></div>
-          <div className="h-full bg-primary w-[20%] border-r border-background-dark/50 shadow-[0_0_15px_rgba(0,201,167,0.5)]"></div>
+          <div className="h-full bg-primary w-[20%] border-r border-background-dark/50 shadow-[0_0_15px_rgba(79,70,229,0.5)]"></div>
           <div className="h-full bg-purple-500 w-[20%]"></div>
           <div className="absolute top-0 bottom-0 w-0.5 bg-white shadow-[0_0_8px_rgba(255,255,255,1)] z-20" style={{ left: '78%' }}></div>
         </div>
@@ -63,7 +63,7 @@ export const HeatmapCard: React.FC = () => {
 
       <div className="flex-1 flex items-center justify-center w-full z-10 relative mt-4">
         <div className="relative h-48 w-32 flex flex-col items-center">
-          <div className="w-32 h-10 rounded-full bg-gradient-to-r from-primary/10 via-primary/30 to-primary/10 border border-primary/40 shadow-[0_0_15px_rgba(0,201,167,0.2)] mb-2 relative">
+          <div className="w-32 h-10 rounded-full bg-gradient-to-r from-primary/10 via-primary/30 to-primary/10 border border-primary/40 shadow-[0_0_15px_rgba(79,70,229,0.2)] mb-2 relative">
             <div className="absolute -right-16 top-0 transform translate-y-1/2 flex items-center">
               <div className="h-[1px] w-8 bg-primary/50"></div>
               <div className="px-2 py-1 bg-[#0F1623] border border-primary/40 rounded text-[10px] text-primary font-bold shadow-lg whitespace-nowrap">
@@ -101,7 +101,7 @@ export const ScoreCard: React.FC = () => {
         <div className="relative w-48 h-48">
           <svg className="w-full h-full transform -rotate-90">
             <circle cx="50%" cy="50%" r="70" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="12" />
-            <circle cx="50%" cy="50%" r="70" fill="none" stroke="url(#gradient)" strokeWidth="12" strokeDasharray="440" strokeDashoffset="88" strokeLinecap="round" className="drop-shadow-[0_0_10px_rgba(0,201,167,0.3)]" />
+            <circle cx="50%" cy="50%" r="70" fill="none" stroke="url(#gradient)" strokeWidth="12" strokeDasharray="440" strokeDashoffset="88" strokeLinecap="round" className="drop-shadow-[0_0_10px_rgba(79,70,229,0.3)]" />
             <defs>
               <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor="var(--color-accent)" />

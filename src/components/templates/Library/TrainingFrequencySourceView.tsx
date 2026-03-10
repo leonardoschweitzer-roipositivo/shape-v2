@@ -252,7 +252,7 @@ export const TrainingFrequencySourceView: React.FC<TrainingFrequencySourceViewPr
                                     <button
                                         key={f}
                                         onClick={() => setSelectedFreq(f)}
-                                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${selectedFreq === f ? 'bg-cyan-500 text-black' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${selectedFreq === f ? 'bg-cyan-500 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
                                     >
                                         {f}×/sem
                                     </button>
@@ -404,7 +404,7 @@ export const TrainingFrequencySourceView: React.FC<TrainingFrequencySourceViewPr
                             <button
                                 key={key}
                                 onClick={() => setSelectedSplit(key as 'fullbody' | 'upperlower' | 'ppl')}
-                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${selectedSplit === key ? 'bg-cyan-500 text-black' : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'}`}
+                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${selectedSplit === key ? 'bg-cyan-500 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'}`}
                             >
                                 {s.label}
                             </button>

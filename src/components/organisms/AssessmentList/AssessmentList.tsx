@@ -198,7 +198,7 @@ export const AssessmentList: React.FC<AssessmentListProps> = ({ assessments = mo
                                 key={page}
                                 onClick={() => setCurrentPage(page)}
                                 className={`w-8 h-8 rounded-lg text-xs font-bold transition-all ${currentPage === page
-                                    ? 'bg-primary text-black'
+                                    ? 'bg-primary text-white'
                                     : 'border border-white/10 text-gray-500 hover:text-white hover:bg-white/5'
                                     }`}
                             >

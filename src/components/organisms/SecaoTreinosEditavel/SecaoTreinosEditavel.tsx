@@ -107,7 +107,7 @@ const ExercicioRow: React.FC<{
     if (!isEditing) {
         // Modo display — igual ao original
         return (
-            <tr className="border-b border-white/[0.02] hover:bg-white/[0.01] transition-colors">
+            <tr className="border-b border-white/[0.04] hover:bg-white/[0.01] transition-colors">
                 <td className="px-6 py-5 text-gray-600 font-mono text-lg">{ex.ordem}</td>
                 <td className="py-5">
                     <p className="font-bold text-gray-200 text-lg leading-tight">{ex.nome}</p>
@@ -118,7 +118,7 @@ const ExercicioRow: React.FC<{
                 <td className="py-5 text-center text-gray-500 text-sm">{ex.descansoSegundos}s</td>
                 <td className="px-6 py-5 text-right">
                     {ex.tecnica ? (
-                        <span className="text-[10px] font-black bg-primary/10 text-primary border border-primary/20 px-2 py-1 rounded uppercase tracking-wider shadow-[0_0_10px_rgba(0,201,167,0.05)]">
+                        <span className="text-[10px] font-black bg-primary/10 text-primary border border-primary/20 px-2 py-1 rounded uppercase tracking-wider shadow-[0_0_10px_rgba(79,70,229,0.05)]">
                             {ex.tecnica}
                         </span>
                     ) : (
@@ -129,91 +129,108 @@ const ExercicioRow: React.FC<{
         );
     }
 
-    // Modo edição
+    // Modo edição — layout empilhado para mobile
     return (
-        <tr className="border-b border-primary/10 bg-primary/[0.02]">
-            <td className="px-4 py-3">
-                <div className="flex flex-col items-center gap-1">
-                    <span className="text-gray-600 font-mono text-sm">{ex.ordem}</span>
-                    <div className="flex flex-col gap-0.5">
-                        {onMoveUp && (
-                            <button onClick={onMoveUp} className="text-gray-600 hover:text-primary p-0.5 transition-colors" title="Mover para cima">
-                                <ChevronUp size={12} />
-                            </button>
-                        )}
-                        {onMoveDown && (
-                            <button onClick={onMoveDown} className="text-gray-600 hover:text-primary p-0.5 transition-colors" title="Mover para baixo">
-                                <ChevronDown size={12} />
-                            </button>
-                        )}
+        <tr className="border-b border-white/[0.04]">
+            <td colSpan={6} className="p-0">
+                <div className="px-2 py-2 space-y-1.5">
+                    {/* Linha 1: Ordem + Nome + Obs + Ações */}
+                    <div className="flex items-start gap-1.5">
+                        {/* Order + Move */}
+                        <div className="flex flex-col items-center gap-0 pt-0.5 shrink-0">
+                            <span className="text-zinc-600 font-mono text-[9px] font-bold">{ex.ordem}</span>
+                            <div className="flex gap-0">
+                                {onMoveUp && (
+                                    <button onClick={onMoveUp} className="text-zinc-600 hover:text-primary p-0.5 transition-colors">
+                                        <ChevronUp size={9} />
+                                    </button>
+                                )}
+                                {onMoveDown && (
+                                    <button onClick={onMoveDown} className="text-zinc-600 hover:text-primary p-0.5 transition-colors">
+                                        <ChevronDown size={9} />
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Nome + Obs */}
+                        <div className="flex-1 min-w-0 space-y-0.5">
+                            <EditableField
+                                type="text"
+                                isEditing
+                                value={ex.nome}
+                                onChange={(v) => onUpdate({ ...ex, nome: v })}
+                                placeholder="Nome do exercício"
+                                inputClassName="!text-[11px] !py-2 !px-2 font-bold"
+                            />
+                            <EditableField
+                                type="text"
+                                isEditing
+                                value={ex.observacao || ''}
+                                onChange={(v) => onUpdate({ ...ex, observacao: v || undefined })}
+                                placeholder="Obs (opcional)"
+                                inputClassName="!text-[9px] !py-1.5 !px-2 opacity-60"
+                            />
+                        </div>
+
+                        {/* Remove */}
+                        <button
+                            onClick={onRemove}
+                            className="p-0.5 text-zinc-700 hover:text-red-400 hover:bg-red-500/10 rounded transition-all shrink-0"
+                            title="Remover exercício"
+                        >
+                            <Trash2 size={10} />
+                        </button>
                     </div>
-                </div>
-            </td>
-            <td className="py-3 pr-2">
-                <EditableField
-                    type="text"
-                    isEditing
-                    value={ex.nome}
-                    onChange={(v) => onUpdate({ ...ex, nome: v })}
-                    placeholder="Nome do exercício"
-                    inputClassName="text-sm"
-                />
-                <div className="mt-1">
-                    <EditableField
-                        type="text"
-                        isEditing
-                        value={ex.observacao || ''}
-                        onChange={(v) => onUpdate({ ...ex, observacao: v || undefined })}
-                        placeholder="Observação (opcional)"
-                        inputClassName="text-xs opacity-70"
-                    />
-                </div>
-            </td>
-            <td className="py-3 text-center">
-                <EditableField
-                    type="number"
-                    isEditing
-                    value={ex.series}
-                    onChange={(v) => onUpdate({ ...ex, series: v })}
-                    min={1}
-                    max={10}
-                />
-            </td>
-            <td className="py-3 text-center">
-                <EditableField
-                    type="text"
-                    isEditing
-                    value={ex.repeticoes}
-                    onChange={(v) => onUpdate({ ...ex, repeticoes: v })}
-                    placeholder="8-12"
-                    inputClassName="w-20 text-center"
-                />
-            </td>
-            <td className="py-3 text-center">
-                <EditableField
-                    type="select"
-                    isEditing
-                    value={String(ex.descansoSegundos)}
-                    onChange={(v) => onUpdate({ ...ex, descansoSegundos: Number(v) })}
-                    options={DESCANSO_OPCOES}
-                />
-            </td>
-            <td className="px-4 py-3">
-                <div className="flex items-center gap-2 justify-end">
-                    <EditableField
-                        type="select"
-                        isEditing
-                        value={ex.tecnica || ''}
-                        onChange={(v) => onUpdate({ ...ex, tecnica: v || undefined })}
-                        options={TECNICAS_OPCOES}
-                    />
-                    <button
-                        onClick={onRemove}
-                        className="p-1.5 text-gray-600 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
-                        title="Remover exercício"
-                    >
-                        <Trash2 size={14} />
-                    </button>
+
+                    {/* Linha 2: Séries, Reps, Descanso, Técnica */}
+                    <div className="grid grid-cols-4 gap-1 pl-5">
+                        <div>
+                            <label className="text-[7px] text-zinc-600 font-bold uppercase tracking-wider block mb-0.5">Séries</label>
+                            <EditableField
+                                type="number"
+                                isEditing
+                                value={ex.series}
+                                onChange={(v) => onUpdate({ ...ex, series: v })}
+                                min={1}
+                                max={10}
+                                inputClassName="!text-[10px] !py-1.5 !px-1.5 text-center"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-[7px] text-zinc-600 font-bold uppercase tracking-wider block mb-0.5">Reps</label>
+                            <EditableField
+                                type="text"
+                                isEditing
+                                value={ex.repeticoes}
+                                onChange={(v) => onUpdate({ ...ex, repeticoes: v })}
+                                placeholder="8-12"
+                                inputClassName="!text-[10px] !py-1.5 !px-1.5 text-center"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-[7px] text-zinc-600 font-bold uppercase tracking-wider block mb-0.5">Descanso</label>
+                            <EditableField
+                                type="select"
+                                isEditing
+                                value={String(ex.descansoSegundos)}
+                                onChange={(v) => onUpdate({ ...ex, descansoSegundos: Number(v) })}
+                                options={DESCANSO_OPCOES}
+                                inputClassName="!text-[10px] !py-1.5 !px-1"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-[7px] text-zinc-600 font-bold uppercase tracking-wider block mb-0.5">Técnica</label>
+                            <EditableField
+                                type="select"
+                                isEditing
+                                value={ex.tecnica || ''}
+                                onChange={(v) => onUpdate({ ...ex, tecnica: v || undefined })}
+                                options={TECNICAS_OPCOES}
+                                inputClassName="!text-[10px] !py-0.5 !px-1"
+                            />
+                        </div>
+                    </div>
                 </div>
             </td>
         </tr>
@@ -389,7 +406,7 @@ export const SecaoTreinosEditavel: React.FC<SecaoTreinosEditavelProps> = ({
                         <button
                             onClick={() => setActiveTab(t.id)}
                             className={`w-full px-4 py-3 rounded-xl font-bold text-sm uppercase transition-all ${activeTab === t.id
-                                ? 'bg-primary text-black shadow-lg shadow-primary/20'
+                                ? 'bg-primary text-white shadow-lg shadow-primary/20'
                                 : 'text-gray-500 hover:text-white hover:bg-white/5'
                                 }`}
                         >
@@ -479,16 +496,18 @@ export const SecaoTreinosEditavel: React.FC<SecaoTreinosEditavelProps> = ({
                                 </div>
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-base">
-                                        <thead>
-                                            <tr className="border-b border-white/5 text-[10px] text-gray-600 uppercase tracking-[0.2em]">
-                                                <th className="text-left px-6 py-3 w-16">#</th>
-                                                <th className="text-left py-3">Exercício</th>
-                                                <th className="text-center py-3">Séries</th>
-                                                <th className="text-center py-3">Reps</th>
-                                                <th className="text-center py-3">Descanso</th>
-                                                <th className="text-right px-6 py-3">Técnica</th>
-                                            </tr>
-                                        </thead>
+                                        {!isEditing && (
+                                            <thead>
+                                                <tr className="border-b border-white/[0.04] text-[10px] text-gray-600 uppercase tracking-[0.2em]">
+                                                    <th className="text-left px-6 py-3 w-16">#</th>
+                                                    <th className="text-left py-3">Exercício</th>
+                                                    <th className="text-center py-3">Séries</th>
+                                                    <th className="text-center py-3">Reps</th>
+                                                    <th className="text-center py-3">Descanso</th>
+                                                    <th className="text-right px-6 py-3">Técnica</th>
+                                                </tr>
+                                            </thead>
+                                        )}
                                         <tbody>
                                             {bloco.exercicios.map((ex, exIdx) => (
                                                 <ExercicioRow

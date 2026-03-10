@@ -42,7 +42,7 @@ export const ProfileSelector: React.FC<ProfileSelectorProps> = ({ selected, onSe
                             className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${isSelected
                                 ? isGod
                                     ? 'bg-amber-500/10 border-amber-500/40 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.15)]'
-                                    : 'bg-white/5 border-primary text-primary shadow-[0_0_15px_rgba(0,201,167,0.1)]'
+                                    : 'bg-white/5 border-primary text-primary shadow-[0_0_15px_rgba(79,70,229,0.1)]'
                                 : 'bg-transparent border-white/5 text-gray-500 hover:border-white/10 hover:bg-white/[0.02]'
                                 }`}
                         >

@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react'
-import { Dumbbell, ChevronDown, ChevronUp, Clock, Target, Zap } from 'lucide-react'
+import { Dumbbell, ChevronDown, ChevronUp, Clock, Target, Zap, Pencil } from 'lucide-react'
 import type { PlanoTreino, TreinoDetalhado } from '@/services/calculations/treino'
 import { getUltimoTreinoIndex } from '@/services/portal/portalContext'
 
 interface CardTreinosAccordionProps {
     planoTreino: PlanoTreino | null
     atletaId: string
+    onEditar?: () => void
 }
 
-export function CardTreinosAccordion({ planoTreino, atletaId }: CardTreinosAccordionProps) {
+export function CardTreinosAccordion({ planoTreino, atletaId, onEditar }: CardTreinosAccordionProps) {
     const [openIndex, setOpenIndex] = useState<number | null>(null)
     const [lastCompletedIndex, setLastCompletedIndex] = useState<number>(-1)
 
@@ -39,9 +40,20 @@ export function CardTreinosAccordion({ planoTreino, atletaId }: CardTreinosAccor
 
     return (
         <div className="space-y-3">
-            <div className="flex items-center gap-2 px-1 mb-2">
-                <Dumbbell size={16} className="text-[var(--color-accent)]" />
-                <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">Treinos do Aluno</h3>
+            <div className="flex items-center justify-between px-1 mb-2">
+                <div className="flex items-center gap-2">
+                    <Dumbbell size={16} className="text-[var(--color-accent)]" />
+                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">Treinos do Aluno</h3>
+                </div>
+                {onEditar && (
+                    <button
+                        onClick={onEditar}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600/10 border border-indigo-500/20 text-indigo-400 text-[9px] font-black uppercase tracking-widest active:scale-95 transition-all"
+                    >
+                        <Pencil size={10} />
+                        Editar
+                    </button>
+                )}
             </div>
 
             {treinosOrdenados.map((treino, idx) => {

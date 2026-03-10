@@ -15,7 +15,7 @@ const CLASSIFICATION_COLORS: Record<string, string> = {
     'INICIANTE': 'bg-gray-500',
     'EVOLUINDO': 'bg-blue-500',
     'QUASE LÁ': 'bg-yellow-500',
-    'SHAPE MODELO': 'bg-teal-500',
+    'SHAPE MODELO': 'bg-indigo-500',
     'DEUS GREGO': 'bg-purple-500'
 }
 

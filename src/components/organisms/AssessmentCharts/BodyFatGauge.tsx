@@ -162,7 +162,7 @@ export const BodyFatGauge: React.FC<BodyFatGaugeProps> = ({
                     <button
                         onClick={() => onMethodChange?.('navy')}
                         className={`px-2 py-0.5 text-[9px] font-bold rounded transition-all ${method === 'navy'
-                            ? 'bg-primary text-black'
+                            ? 'bg-primary text-white'
                             : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
                             }`}
                     >
@@ -171,7 +171,7 @@ export const BodyFatGauge: React.FC<BodyFatGaugeProps> = ({
                     <button
                         onClick={() => onMethodChange?.('pollock')}
                         className={`px-2 py-0.5 text-[9px] font-bold rounded transition-all ${method === 'pollock'
-                            ? 'bg-primary text-black'
+                            ? 'bg-primary text-white'
                             : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
                             }`}
                     >

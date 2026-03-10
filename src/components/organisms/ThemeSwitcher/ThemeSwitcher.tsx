@@ -51,7 +51,7 @@ const ThemeCard: React.FC<ThemeCardProps> = ({ preset, isActive, onSelect }) => 
             {/* Active indicator */}
             {isActive && (
                 <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-primary flex items-center justify-center shadow-lg">
-                    <Check size={14} className="text-black" />
+                    <Check size={14} className="text-white" />
                 </div>
             )}
 

@@ -16,7 +16,7 @@ const CLASSIFICATION_COLORS: Record<string, string> = {
     'INICIANTE': 'text-gray-400',
     'EVOLUINDO': 'text-blue-400',
     'QUASE LÁ': 'text-yellow-400',
-    'SHAPE MODELO': 'text-teal-400',
+    'SHAPE MODELO': 'text-indigo-400',
     'DEUS GREGO': 'text-purple-400'
 }
 
@@ -25,7 +25,7 @@ export function CardScoreGeral({ score }: CardScoreGeralProps) {
     const isPositive = score.variacaoVsMes >= 0
 
     return (
-        <div className="bg-gradient-to-br from-teal-500/10 to-purple-500/10 rounded-xl p-6 border border-teal-500/30">
+        <div className="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-xl p-6 border border-indigo-500/30">
             {/* Emoji e Classificação */}
             <div className="text-center mb-4">
                 <div className="text-6xl mb-3">{score.emoji}</div>

@@ -39,7 +39,7 @@ export const AsymmetryRadar: React.FC = () => {
                     <polygon points={leftPath} fill="none" stroke="var(--color-secondary)" strokeWidth="2" className="drop-shadow-[0_0_4px_rgba(124,58,237,0.5)]" />
 
                     {/* Right Data (Teal) */}
-                    <polygon points={rightPath} fill="none" stroke="var(--color-accent)" strokeWidth="2" className="drop-shadow-[0_0_4px_rgba(0,201,167,0.5)]" />
+                    <polygon points={rightPath} fill="none" stroke="var(--color-accent)" strokeWidth="2" className="drop-shadow-[0_0_4px_rgba(79,70,229,0.5)]" />
                 </svg>
 
                 {/* Labels */}

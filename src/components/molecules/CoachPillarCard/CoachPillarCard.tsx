@@ -25,7 +25,7 @@ export const CoachPillarCard: React.FC<CoachPillarCardProps> = ({
     isDisabled = false,
 }) => {
     return (
-        <div className="group relative bg-surface border border-white/10 rounded-2xl p-6 transition-all hover:border-primary/30 hover:shadow-[0_0_30px_rgba(0,201,167,0.1)]">
+        <div className="group relative bg-surface border border-white/10 rounded-2xl p-6 transition-all hover:border-primary/30 hover:shadow-[0_0_30px_rgba(79,70,229,0.1)]">
             {/* PRO Badge */}
             {isPro && (
                 <div className="absolute top-4 right-4 px-2 py-1 rounded-md text-[10px] font-bold bg-secondary/20 text-secondary border border-secondary/20 flex items-center gap-1">
@@ -71,7 +71,7 @@ export const CoachPillarCard: React.FC<CoachPillarCardProps> = ({
                     flex items-center justify-center gap-2 transition-all
                     ${isDisabled
                         ? 'bg-white/5 text-gray-500 cursor-not-allowed'
-                        : 'bg-primary/10 border border-white/10 text-primary hover:bg-primary/20 hover:border-primary/40 hover:shadow-[0_0_15px_rgba(0,201,167,0.2)]'
+                        : 'bg-primary/10 border border-white/10 text-primary hover:bg-primary/20 hover:border-primary/40 hover:shadow-[0_0_15px_rgba(79,70,229,0.2)]'
                     }
                 `}
             >

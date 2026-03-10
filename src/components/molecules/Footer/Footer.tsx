@@ -29,7 +29,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenDesignSystem, onOpenTerms,
           {onOpenAthletePortal && (
             <button
               onClick={onOpenAthletePortal}
-              className="text-xs font-bold text-teal-500 hover:text-teal-400 transition-colors uppercase tracking-wider"
+              className="text-xs font-bold text-indigo-500 hover:text-indigo-400 transition-colors uppercase tracking-wider"
             >
               🏋️ Portal Atleta
             </button>
