@@ -130,6 +130,9 @@ const App: React.FC = () => {
   const [isNotificationDrawerOpen, setIsNotificationDrawerOpen] = useState(false);
   const [selectedNotifDetail, setSelectedNotifDetail] = useState<Notificacao | null>(null);
 
+  // Mobile detection for redirection logic
+  const isMobile = window.innerWidth < 768;
+
   // Notifications hook (polling + state)
   const {
     notificacoes,
@@ -186,7 +189,6 @@ const App: React.FC = () => {
   // 🛡️ Redirecionamento Automático Proativo para Portais (Root Mobile)
   // Garante que o usuário vá direto ao portal se cair na raiz por engano ou refresh.
   useEffect(() => {
-    const isMobile = window.innerWidth < 768; // Define isMobile here
     if (isAuthenticated && window.location.pathname === '/' && isMobile) {
       const role = userProfile?.toUpperCase();
       if (role === 'PERSONAL' && entity?.personal?.id) {
