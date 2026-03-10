@@ -207,33 +207,57 @@ export const portalService = {
             return null;
         }
 
+        return this._fetchSecondaryDataAndFormat(a, true);
+    },
+
+    /**
+     * Retorna os dados completos do atleta via ID (Usado no fluxo autenticado)
+     */
+    async getAthleteDataById(atletaId: string): Promise<PortalAthleteData | null> {
+        const { data: atleta, error: atletaError } = await supabase
+            .from('atletas')
+            .select('*')
+            .eq('id', atletaId)
+            .single();
+
+        if (atletaError || !atleta) {
+            console.warn('[PortalService] Atleta não encontrado para o ID fornecido');
+            return null;
+        }
+
+        return this._fetchSecondaryDataAndFormat(atleta as unknown as SupaAtletaRow, false);
+    },
+
+    async _fetchSecondaryDataAndFormat(a: SupaAtletaRow, isFirstAccessCheck: boolean): Promise<PortalAthleteData | null> {
         const atletaId = a.id;
         const personalId = a.personal_id;
 
         // 3. Incrementar acessos + notificar personal (fire-and-forget)
-        (async () => {
-            try {
-                const acessosAnteriores = a.portal_acessos || 0;
-                await supabase
-                    .from('atletas')
-                    .update({
-                        portal_acessos: acessosAnteriores + 1,
-                        portal_ultimo_acesso: new Date().toISOString(),
-                    } as Record<string, unknown>)
-                    .eq('id', atletaId);
+        if (isFirstAccessCheck) {
+            (async () => {
+                try {
+                    const acessosAnteriores = a.portal_acessos || 0;
+                    await supabase
+                        .from('atletas')
+                        .update({
+                            portal_acessos: acessosAnteriores + 1,
+                            portal_ultimo_acesso: new Date().toISOString(),
+                        } as Record<string, unknown>)
+                        .eq('id', atletaId);
 
-                // Primeiro acesso ao portal? Notificar personal!
-                if (acessosAnteriores === 0) {
-                    import('./notificacaoTriggers').then(({ onPrimeiroAcessoPortal }) => {
-                        onPrimeiroAcessoPortal(atletaId).catch(err =>
-                            console.warn('[PortalService] Erro ao notificar primeiro acesso:', err)
-                        );
-                    });
+                    // Primeiro acesso ao portal? Notificar personal!
+                    if (acessosAnteriores === 0) {
+                        import('./notificacaoTriggers').then(({ onPrimeiroAcessoPortal }) => {
+                            onPrimeiroAcessoPortal(atletaId).catch(err =>
+                                console.warn('[PortalService] Erro ao notificar primeiro acesso:', err)
+                            );
+                        });
+                    }
+                } catch (err) {
+                    console.warn('[PortalService] Erro ao incrementar acessos:', err);
                 }
-            } catch (err) {
-                console.warn('[PortalService] Erro ao incrementar acessos:', err);
-            }
-        })();
+            })();
+        }
 
         // 4-8. Todas as queries em PARALELO
         const [

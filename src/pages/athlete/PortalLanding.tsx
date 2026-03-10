@@ -39,8 +39,9 @@ import {
 } from './components';
 
 interface PortalLandingProps {
-    token: string;
-    onClose: () => void;
+    token?: string;
+    atletaId?: string;
+    onClose?: () => void;
 }
 
 type PortalView = 'home' | 'measurements' | 'virtual-assessment' | 'portal' | 'contexto';
@@ -67,7 +68,7 @@ function getProximaClassificacao(score: number): { nome: string; min: number } {
     return CLASSIFICACOES[CLASSIFICACOES.length - 1];
 }
 
-export function PortalLanding({ token, onClose }: PortalLandingProps) {
+export function PortalLanding({ token, atletaId, onClose }: PortalLandingProps) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [athleteData, setAthleteData] = useState<PortalAthleteData | null>(null);
@@ -79,9 +80,15 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
         async function loadData() {
             setLoading(true);
             try {
-                const data = await portalService.validateToken(token);
+                let data: PortalAthleteData | null = null;
+                if (token) {
+                    data = await portalService.validateToken(token);
+                } else if (atletaId) {
+                    data = await portalService.getAthleteDataById(atletaId);
+                }
+
                 if (!data) {
-                    setError('Link inválido ou expirado. Peça um novo link ao seu Personal.');
+                    setError('Acesso inválido ou expirado. Tente fazer login novamente.');
                 } else {
                     setAthleteData(data);
                     // Consistência carrega em background (não bloqueia a HOME)
@@ -93,7 +100,7 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
             setLoading(false);
         }
         loadData();
-    }, [token]);
+    }, [token, atletaId]);
 
     // ---- Loading ----
     if (loading) {
@@ -161,7 +168,12 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
                 onSave={async (measurements) => {
                     const result = await portalService.saveMeasurements(athleteData.id, measurements);
                     if (result.success) {
-                        const updated = await portalService.validateToken(token);
+                        let updated: PortalAthleteData | null = null;
+                        if (token) {
+                            updated = await portalService.validateToken(token);
+                        } else if (atletaId) {
+                            updated = await portalService.getAthleteDataById(atletaId);
+                        }
                         if (updated) setAthleteData(updated);
                         setView('contexto');
                     }
@@ -181,7 +193,12 @@ export function PortalLanding({ token, onClose }: PortalLandingProps) {
                 pesoInicial={athleteData.medidas?.[0]?.peso ?? undefined}
                 dataNascimentoInicial={athleteData.ficha?.data_nascimento || ''}
                 onComplete={async () => {
-                    const updated = await portalService.validateToken(token);
+                    let updated: PortalAthleteData | null = null;
+                    if (token) {
+                        updated = await portalService.validateToken(token);
+                    } else if (atletaId) {
+                        updated = await portalService.getAthleteDataById(atletaId);
+                    }
                     if (updated) setAthleteData(updated);
                     setView('contexto');
                 }}
@@ -259,9 +276,8 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
         || lastMedida?.cintura
         || 1;
 
-    // Proporção Principal (Shape-V ou Ampulheta)
     const primaryGroupName = athleteData.ficha?.sexo === 'F' ? 'Ampulheta' : 'Shape-V';
-    const metasProporcoes = diag?.metasProporcoes as unknown as MetaProporcao[] | undefined;
+    const metasProporcoes = diag?.metasProporcoes as { grupo: string; meta12M: number }[] | undefined;
     const itemPrincipal = metasProporcoes?.find(p => p.grupo === primaryGroupName);
 
     const ratioAtual = Number(analiseEstetica?.scoreAtual) // Score para Ampulheta

@@ -72,6 +72,7 @@ import { useDataStore } from '@/stores/dataStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useSupabaseSync } from '@/hooks/useSupabaseSync';
 import { useNotificacoes } from '@/hooks/useNotificacoes';
+import { type Notificacao } from '@/types/notificacao.types';
 import { PersonalAthlete, MeasurementHistory } from '@/mocks/personal';
 import { buscarDiagnostico, type DiagnosticoDados } from '@/services/calculations/diagnostico';
 import { buscarPlanoTreino, type PlanoTreino } from '@/services/calculations/treino';
@@ -992,7 +993,7 @@ const App: React.FC = () => {
       // case 'gamification': // DISABLED - Feature para depois
       //   return <GamificationPage />;
       case 'athlete-portal':
-        return <AthletePortal atletaId={selectedAthleteId || ''} />;
+        return <PortalLanding atletaId={selectedAthleteId || ''} onClose={() => setCurrentView('personals')} />
       case 'dashboard':
       default:
         return <DashboardView userProfile={userProfile} />;
@@ -1021,7 +1022,13 @@ const App: React.FC = () => {
             <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
           </div>
         }>
-          <AthletePortal atletaId={atletaId} />
+          <PortalLanding
+            atletaId={atletaId}
+            onClose={() => {
+              signOut();
+              window.location.href = '/atleta';
+            }}
+          />
         </Suspense>
       );
     }

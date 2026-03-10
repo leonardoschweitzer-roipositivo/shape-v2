@@ -687,7 +687,7 @@ function projetarScoreMeta(
     metasProporcoes: MetaProporcao[],
     gorduraMeta12M: number,
     fallbackDelta: number
-): { scoreMeta6M: number; scoreMeta12M: number } {
+): { scoreMeta3M: number; scoreMeta6M: number; scoreMeta12M: number } {
     try {
         const isFemale = input.sexo === 'F';
 
@@ -804,10 +804,11 @@ function projetarScoreMeta(
         // Fallback: método antigo (delta flat)
         const deltaScore3M = Math.round(fallbackDelta * 0.30 * 10) / 10;
         const deltaScore6M = Math.round(fallbackDelta * 0.55 * 10) / 10;
+        const deltaScore12M = fallbackDelta; // Assuming fallbackDelta is for 12M
         return {
             scoreMeta3M: Math.min(100, Math.round((input.score + deltaScore3M) * 10) / 10),
             scoreMeta6M: Math.min(100, Math.round((input.score + deltaScore6M) * 10) / 10),
-            scoreMeta12M: Math.min(100, Math.round((input.score + fallbackDelta) * 10) / 10),
+            scoreMeta12M: Math.min(100, Math.round((input.score + deltaScore12M) * 10) / 10),
         };
     }
 }
@@ -855,7 +856,7 @@ export function gerarDiagnosticoCompleto(
     //    Projeta melhorias reais em composição, proporções e simetria
     //    e calcula o score resultante via calcularAvaliacaoGeral.
     const fallbackDelta = potencial?.deltaPotencialScore12M ?? 6;
-    const { scoreMeta6M, scoreMeta12M } = projetarScoreMeta(
+    const { scoreMeta3M, scoreMeta6M, scoreMeta12M } = projetarScoreMeta(
         input, proporcoes, simetria, metasComposicao, metasProporcoes, gorduraMeta12M, fallbackDelta
     );
     const deltaScore = Math.round((scoreMeta12M - input.score) * 10) / 10;
@@ -865,6 +866,7 @@ export function gerarDiagnosticoCompleto(
     const analiseEstetica: AnaliseEstetica = {
         scoreAtual: input.score,
         classificacaoAtual: input.classificacao,
+        scoreMeta3M,
         scoreMeta6M,
         scoreMeta12M,
         proporcoes,
