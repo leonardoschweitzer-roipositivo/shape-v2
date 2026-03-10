@@ -176,6 +176,8 @@ const App: React.FC = () => {
     return (authProfile?.role?.toLowerCase() as ProfileType) || 'atleta';
   })();
 
+  const { settings, profile, initializeProfile } = useAthleteStore();
+
   // Phase 1: Authentication Logic
   useEffect(() => {
     checkSession();
