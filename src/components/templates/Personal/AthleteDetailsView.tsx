@@ -360,11 +360,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
         date: new Date(),
         title: 'MANTENHA SEUS \n DADOS ATUALIZADOS',
         description: 'Seus registros de medidas e fotos são a base para o uso da Inteligência Artificial. Acompanhe sua evolução e alcance seus objetivos com precisão.',
-        cta: {
-            label: 'Nova Avaliação IA',
-            href: '#',
-            onClick: onNewAssessment
-        },
+
         image: {
             src: '/images/athlete-measurement-hero.png',
             alt: 'Hero Banner',
@@ -495,33 +491,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                 Perfil Arquivado
                             </div>
                         )}
-                        <Button
-                            variant="outline"
-                            className="flex items-center gap-2 border-white/10 hover:border-primary/30 hover:bg-primary/5 px-5"
-                            onClick={() => {
-                                setShowPortalModal(true);
-                                handleGeneratePortalAccess();
-                            }}
-                        >
-                            <Smartphone size={18} />
-                            <span className="font-bold uppercase tracking-wider text-xs">Portal do Aluno</span>
-                        </Button>
-                        <Button
-                            variant="outline"
-                            className="flex items-center gap-2 border-white/10 hover:border-white/20 px-6"
-                            onClick={() => { }}
-                        >
-                            <Clock size={18} />
-                            <span className="font-bold uppercase tracking-wider text-xs">AGENDAR AVALIAÇÃO</span>
-                        </Button>
-                        <Button
-                            variant="primary"
-                            className="flex items-center gap-2 bg-primary text-background-dark hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(79,70,229,0.3)] px-6"
-                            onClick={onNewAssessment}
-                        >
-                            <Activity size={18} />
-                            <span className="font-bold uppercase tracking-wider text-xs">NOVA AVALIAÇÃO IA</span>
-                        </Button>
+
                     </div>
                 </div>
 
@@ -975,23 +945,8 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                             subtitle="Gerencie avaliações e configurações do perfil"
                         />
                         <div className="h-px w-full bg-white/10 mb-6" />
-                        <div className="flex flex-wrap items-center justify-between gap-4">
-                            <div className="flex items-center gap-3">
-                                <button
-                                    onClick={() => { }}
-                                    className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white hover:border-white/30 transition-all text-xs font-bold uppercase tracking-wider"
-                                >
-                                    <Clock size={16} />
-                                    Agendar Avaliação
-                                </button>
-                                <button
-                                    onClick={onNewAssessment}
-                                    className="flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/30 rounded-xl text-primary hover:bg-primary/20 hover:border-primary/50 transition-all text-xs font-bold uppercase tracking-wider"
-                                >
-                                    <Activity size={16} />
-                                    Nova Avaliação IA
-                                </button>
-                            </div>
+                        <div className="flex flex-wrap items-center justify-end gap-4">
+
                             <div className="flex items-center gap-3">
                                 <button
                                     onClick={() => isEditing ? handleSave() : setIsEditing(true)}

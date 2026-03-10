@@ -228,14 +228,14 @@ export function HomeScreen({ contexto, alunosAtencao, todosAlunos, atividadeRece
                     <div className="mb-8">
                         <div className="flex items-center justify-between mb-4 px-1">
                             <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-lg bg-rose-500/20 flex items-center justify-center">
-                                    <AlertTriangle size={12} className="text-rose-400" />
+                                <div className="w-6 h-6 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                                    <AlertTriangle size={12} className="text-amber-500" />
                                 </div>
                                 <p className="text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em]">
                                     Alunos Sob Atenção
                                 </p>
                             </div>
-                            <span className="text-[10px] font-black bg-rose-500/10 text-rose-400 px-2.5 py-1 rounded-full border border-rose-500/20 uppercase tracking-wider">
+                            <span className="text-[10px] font-black bg-amber-500/10 text-amber-500 px-2.5 py-1 rounded-full border border-amber-500/20 uppercase tracking-wider">
                                 {alunosAtencao.length} Críticos
                             </span>
                         </div>
@@ -255,7 +255,7 @@ export function HomeScreen({ contexto, alunosAtencao, todosAlunos, atividadeRece
                                         <div>
                                             <p className="text-white text-base font-black tracking-tight leading-none">{aluno.nome}</p>
                                             <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-wider mt-2 flex items-center gap-2">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]" />
+                                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]" />
                                                 {reason}
                                             </p>
                                         </div>
@@ -266,7 +266,7 @@ export function HomeScreen({ contexto, alunosAtencao, todosAlunos, atividadeRece
                                                     <span className="text-[8px] font-black text-zinc-600 uppercase tracking-widest mt-1">PTS</span>
                                                 </div>
                                             )}
-                                            <div className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-rose-500/10 transition-colors">
+                                            <div className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-amber-500/10 transition-colors">
                                                 <ChevronRight size={18} className="text-zinc-600" />
                                             </div>
                                         </div>

@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useMemo } from 'react'
-import { Search, ChevronRight, ChevronLeft, TrendingUp, TrendingDown, Minus, Users, UserPlus } from 'lucide-react'
+import { Search, ChevronRight, ChevronLeft, TrendingUp, TrendingDown, Minus, Users, UserPlus, User } from 'lucide-react'
 import type { AlunoCard, StatusAluno } from '@/types/personal-portal'
 import { AlunoFichaScreen } from './AlunoFichaScreen'
 import { NovoAlunoScreen } from './NovoAlunoScreen'
@@ -23,8 +23,8 @@ interface AlunosScreenProps {
 
 function getStatusConfig(status: StatusAluno) {
     const cfg: Record<StatusAluno, { label: string; cor: string; dot: string }> = {
-        ATIVO: { label: 'Ativo', cor: 'text-emerald-400', dot: 'bg-emerald-400' },
-        ATENCAO: { label: 'Atenção', cor: 'text-red-400', dot: 'bg-red-400' },
+        ATIVO: { label: 'Ativo', cor: 'text-indigo-400', dot: 'bg-indigo-400' },
+        ATENCAO: { label: 'Atenção', cor: 'text-amber-500', dot: 'bg-amber-500' },
         INATIVO: { label: 'Inativo', cor: 'text-gray-500', dot: 'bg-gray-500' },
     }
     return cfg[status]
@@ -174,10 +174,10 @@ export function AlunosScreen({ alunos, onVoltar, alunoInicialId, onAlunoFechou }
                                             <div className="flex items-center gap-4 relative z-10">
                                                 {/* Avatar Premium */}
                                                 <div className="relative shrink-0">
-                                                    <div className="w-14 h-14 rounded-2xl bg-zinc-900 flex items-center justify-center border border-white/10 shadow-lg overflow-hidden group-hover:border-indigo-500/30 transition-colors">
+                                                    <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shadow-lg overflow-hidden group-hover:border-indigo-500/30 transition-colors">
                                                         {aluno.fotoUrl
                                                             ? <img src={aluno.fotoUrl} alt={aluno.nome} className="w-14 h-14 object-cover" />
-                                                            : <span className="text-zinc-500 text-lg font-black">{aluno.nome[0].toUpperCase()}</span>
+                                                            : <User className="text-indigo-400" size={24} />
                                                         }
                                                     </div>
                                                     <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#09090b] ${status.dot} shadow-[0_0_8px_rgba(0,0,0,0.5)]`} />

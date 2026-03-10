@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, UserPlus, Eye, Activity, MoreVertical, TrendingUp, ClipboardList, Trash2, AlertTriangle, X } from 'lucide-react';
+import { Search, UserPlus, Eye, Activity, MoreVertical, TrendingUp, ClipboardList, Trash2, AlertTriangle, X, User } from 'lucide-react';
 import { mockPersonalAthletes, PersonalAthlete } from '@/mocks/personal';
 
 interface PersonalAthletesListProps {
@@ -66,18 +66,18 @@ export const PersonalAthletesList: React.FC<PersonalAthletesListProps> = ({
         const config = {
             active: {
                 label: 'Ativo',
-                color: 'bg-green-500/20 text-green-400 border-green-500/30',
-                icon: '🟢',
+                color: 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30',
+                icon: '🟣',
             },
             inactive: {
                 label: 'Inativo',
-                color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-                icon: '🟡',
+                color: 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30',
+                icon: '⚪',
             },
             attention: {
                 label: 'Atenção',
-                color: 'bg-red-500/20 text-red-400 border-red-500/30',
-                icon: '🔴',
+                color: 'bg-amber-500/20 text-amber-500 border-amber-500/30',
+                icon: '🟠',
             },
         };
 
@@ -180,8 +180,8 @@ export const PersonalAthletesList: React.FC<PersonalAthletesListProps> = ({
                                     >
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center text-lg">
-                                                    {athlete.avatarUrl ? <img src={athlete.avatarUrl} alt={athlete.name} className="w-full h-full rounded-full" /> : '👤'}
+                                                <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 overflow-hidden shadow-lg">
+                                                    {athlete.avatarUrl ? <img src={athlete.avatarUrl} alt={athlete.name} className="w-full h-full object-cover" /> : <User size={24} />}
                                                 </div>
                                                 <div>
                                                     <p className="text-white font-medium">{athlete.name}</p>
@@ -315,70 +315,72 @@ export const PersonalAthletesList: React.FC<PersonalAthletesListProps> = ({
             </div>
 
             {/* Modal de Confirmação de Exclusão */}
-            {athleteToDelete && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <div
-                        className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
-                        onClick={() => !isDeleting && setAthleteToDelete(null)}
-                    />
-                    <div className="relative bg-zinc-900 border border-white/10 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in slide-in-from-bottom-4 duration-300">
-                        <div className="p-6 pb-2 flex justify-between items-start">
-                            <div className="w-12 h-12 rounded-full bg-rose-500/10 flex items-center justify-center">
-                                <AlertTriangle className="text-rose-500" size={24} />
-                            </div>
-                            <button
-                                onClick={() => setAthleteToDelete(null)}
-                                className="p-2 hover:bg-white/5 rounded-full text-gray-500 hover:text-white transition-colors"
-                            >
-                                <X size={20} />
-                            </button>
-                        </div>
-
-                        <div className="p-6 pt-2">
-                            <h3 className="text-xl font-bold text-white mb-2 uppercase tracking-tight">Excluir Aluno</h3>
-                            <p className="text-gray-400 text-sm leading-relaxed mb-6">
-                                Tem certeza que deseja excluir <span className="text-white font-semibold">{athleteToDelete.name}</span>?
-                                <br />
-                                <span className="text-rose-500/80 font-medium">Esta ação é irreversível e apagará todo o histórico de medidas e avaliações.</span>
-                            </p>
-
-                            <div className="flex gap-3">
+            {
+                athleteToDelete && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <div
+                            className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
+                            onClick={() => !isDeleting && setAthleteToDelete(null)}
+                        />
+                        <div className="relative bg-zinc-900 border border-white/10 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in slide-in-from-bottom-4 duration-300">
+                            <div className="p-6 pb-2 flex justify-between items-start">
+                                <div className="w-12 h-12 rounded-full bg-rose-500/10 flex items-center justify-center">
+                                    <AlertTriangle className="text-rose-500" size={24} />
+                                </div>
                                 <button
                                     onClick={() => setAthleteToDelete(null)}
-                                    disabled={isDeleting}
-                                    className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-bold transition-all disabled:opacity-50"
+                                    className="p-2 hover:bg-white/5 rounded-full text-gray-500 hover:text-white transition-colors"
                                 >
-                                    Cancelar
+                                    <X size={20} />
                                 </button>
-                                <button
-                                    onClick={async () => {
-                                        if (onDeleteAthlete) {
-                                            setIsDeleting(true);
-                                            try {
-                                                await onDeleteAthlete(athleteToDelete.id);
-                                            } finally {
-                                                setIsDeleting(false);
-                                                setAthleteToDelete(null);
+                            </div>
+
+                            <div className="p-6 pt-2">
+                                <h3 className="text-xl font-bold text-white mb-2 uppercase tracking-tight">Excluir Aluno</h3>
+                                <p className="text-gray-400 text-sm leading-relaxed mb-6">
+                                    Tem certeza que deseja excluir <span className="text-white font-semibold">{athleteToDelete.name}</span>?
+                                    <br />
+                                    <span className="text-rose-500/80 font-medium">Esta ação é irreversível e apagará todo o histórico de medidas e avaliações.</span>
+                                </p>
+
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => setAthleteToDelete(null)}
+                                        disabled={isDeleting}
+                                        className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-bold transition-all disabled:opacity-50"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        onClick={async () => {
+                                            if (onDeleteAthlete) {
+                                                setIsDeleting(true);
+                                                try {
+                                                    await onDeleteAthlete(athleteToDelete.id);
+                                                } finally {
+                                                    setIsDeleting(false);
+                                                    setAthleteToDelete(null);
+                                                }
                                             }
-                                        }
-                                    }}
-                                    disabled={isDeleting}
-                                    className="flex-1 py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-rose-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
-                                >
-                                    {isDeleting ? (
-                                        <>
-                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                            Excluindo...
-                                        </>
-                                    ) : (
-                                        'Sim, Excluir'
-                                    )}
-                                </button>
+                                        }}
+                                        disabled={isDeleting}
+                                        className="flex-1 py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-rose-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
+                                    >
+                                        {isDeleting ? (
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                Excluindo...
+                                            </>
+                                        ) : (
+                                            'Sim, Excluir'
+                                        )}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };
