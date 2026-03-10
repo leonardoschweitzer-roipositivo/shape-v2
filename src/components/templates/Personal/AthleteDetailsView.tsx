@@ -45,6 +45,7 @@ import { supabase } from '@/services/supabase';
 import { portalService } from '@/services/portalService';
 import { AthleteContextSection } from './AthleteContextSection';
 import type { ContextoAtleta } from './AthleteContextSection';
+import { DEFAULT_ATHLETE_PASSWORD } from '@/components/templates/StudentRegistration/StudentRegistration';
 
 interface AthleteDetailsViewProps {
     athlete: PersonalAthlete;
@@ -106,6 +107,83 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
     React.useEffect(() => {
         fetchPlans();
     }, [fetchPlans]);
+
+    const handleGeneratePortalAccess = async () => {
+        setPortalLoading(true);
+        setPortalError(null);
+        setPortalLink(null);
+        setPortalCopied(false);
+
+        try {
+            const baseUrl = window.location.origin;
+            let finalLink = '';
+
+            if (athlete.auth_user_id) {
+                // Aluno já tem Auth ID: fornecer o link direto
+                finalLink = `${baseUrl}/atleta`;
+            } else {
+                // Sessão swap para criar conta Auth para aluno antigo
+                console.info('[AthleteDetails] Criando conta Auth para aluno antigo...');
+                const athleteEmailTrimmed = athlete.email?.trim() || '';
+
+                if (!athleteEmailTrimmed) {
+                    throw new Error('Aluno sem email cadastrado! Edite os dados primeiro.');
+                }
+
+                const { data: { session: personalSession } } = await supabase.auth.getSession();
+
+                const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+                    email: athleteEmailTrimmed,
+                    password: DEFAULT_ATHLETE_PASSWORD,
+                    options: {
+                        data: {
+                            full_name: athlete.name.trim(),
+                            role: 'ATLETA',
+                        },
+                    },
+                });
+
+                // Restaurar sessão
+                if (personalSession) {
+                    await supabase.auth.setSession({
+                        access_token: personalSession.access_token,
+                        refresh_token: personalSession.refresh_token,
+                    });
+                }
+
+                if (signUpError) {
+                    // Tratar erro comum onde conta já existe mas auth_user_id não está no bd local
+                    if (signUpError.message.includes('already registered')) {
+                        throw new Error('Este email já está registrado. Verifique o cadastro no banco ou no Supabase.');
+                    }
+                    throw new Error(signUpError.message);
+                }
+
+                if (signUpData?.user) {
+                    await supabase
+                        .from('atletas')
+                        .update({ auth_user_id: signUpData.user.id } as Record<string, unknown>)
+                        .eq('id', athlete.id);
+
+                    // Update store locally
+                    // Type bypass simply to attach auth_user_id easily
+                    updateAthlete({ ...athlete, auth_user_id: signUpData.user.id } as any);
+                    setDraftAthlete(prev => ({ ...prev, auth_user_id: signUpData.user.id } as any));
+
+                    finalLink = `${baseUrl}/atleta?email=${encodeURIComponent(athleteEmailTrimmed)}&p=${encodeURIComponent(DEFAULT_ATHLETE_PASSWORD)}`;
+                } else {
+                    throw new Error('Falha na criação da conta.');
+                }
+            }
+
+            setPortalLink(finalLink);
+        } catch (err: any) {
+            console.error('[AthleteDetails] Erro ao gerar acesso:', err);
+            setPortalError(err.message || 'Erro ao gerar acesso.');
+        } finally {
+            setPortalLoading(false);
+        }
+    };
 
     const handleDeleteAssessment = async (assessmentId: string, source?: string) => {
         if (!confirm('Tem certeza que deseja excluir esta avaliação? Esta ação não pode ser desfeita.')) return;
@@ -402,21 +480,9 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                         <Button
                             variant="outline"
                             className="flex items-center gap-2 border-white/10 hover:border-primary/30 hover:bg-primary/5 px-5"
-                            onClick={async () => {
+                            onClick={() => {
                                 setShowPortalModal(true);
-                                setPortalLoading(true);
-                                setPortalLink(null);
-                                setPortalCopied(false);
-                                setPortalError(null);
-                                try {
-                                    const result = await portalService.generateToken(athlete.id);
-                                    setPortalLink(result.url);
-                                } catch (err) {
-                                    console.error('[AthleteDetails] Erro ao gerar link portal:', err);
-                                    setPortalError('Erro ao gerar link. Tente novamente.');
-                                } finally {
-                                    setPortalLoading(false);
-                                }
+                                handleGeneratePortalAccess();
                             }}
                         >
                             <Smartphone size={18} />
@@ -1019,18 +1085,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                     </div>
                                     <p className="text-red-400 text-sm font-bold">{portalError}</p>
                                     <button
-                                        onClick={async () => {
-                                            setPortalLoading(true);
-                                            setPortalError(null);
-                                            try {
-                                                const result = await portalService.generateToken(athlete.id);
-                                                setPortalLink(result.url);
-                                            } catch (err) {
-                                                setPortalError('Erro ao gerar link. Tente novamente.');
-                                            } finally {
-                                                setPortalLoading(false);
-                                            }
-                                        }}
+                                        onClick={handleGeneratePortalAccess}
                                         className="px-5 py-2 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white text-xs font-bold uppercase tracking-wider transition-all"
                                     >
                                         Tentar novamente
@@ -1038,6 +1093,28 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                 </div>
                             ) : portalLink ? (
                                 <>
+                                    {athlete.auth_user_id ? (
+                                        <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-center mb-4">
+                                            <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                                                <User size={20} className="text-primary" />
+                                            </div>
+                                            <p className="text-sm text-gray-300 font-medium mb-1">
+                                                O aluno já possui acesso ativo com o email
+                                            </p>
+                                            <p className="text-base text-white font-bold">{athlete.email}</p>
+                                        </div>
+                                    ) : (
+                                        <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-4">
+                                            <p className="text-[10px] text-amber-500 font-bold uppercase tracking-widest mb-1">Novo Acesso Gerado!</p>
+                                            <p className="text-sm text-gray-300">
+                                                Foi criada uma conta para <strong className="text-white">{athlete.email}</strong> com a senha <strong className="text-primary font-mono bg-white/5 px-2 py-0.5 rounded">{DEFAULT_ATHLETE_PASSWORD}</strong>.
+                                            </p>
+                                            <p className="text-xs text-gray-400 mt-2">
+                                                Envie o link abaixo para ele. A credencial já está anexada no link para login automático inicial.
+                                            </p>
+                                        </div>
+                                    )}
+
                                     <div>
                                         <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-2">Link de Acesso</p>
                                         <div className="bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 flex items-center gap-3">

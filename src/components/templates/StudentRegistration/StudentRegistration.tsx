@@ -4,7 +4,7 @@ import { supabase } from '@/services/supabase';
 import { useAuthStore } from '@/stores/authStore';
 import { useDataStore } from '@/stores/dataStore';
 
-const DEFAULT_ATHLETE_PASSWORD = 'Shape2026!';
+export const DEFAULT_ATHLETE_PASSWORD = 'Shape2026!';
 
 interface StudentRegistrationProps {
     onBack: () => void;
