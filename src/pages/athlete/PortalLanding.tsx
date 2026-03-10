@@ -511,6 +511,16 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
                 statusMedicao={statusMedicao}
             />
 
+            {/* Discreet Logout */}
+            <div className="py-8 text-center opacity-30 hover:opacity-100 transition-opacity">
+                <button
+                    onClick={onClose}
+                    className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium"
+                >
+                    Sair da conta
+                </button>
+            </div>
+
             {/* Espaço para o menu não sobrepor o footer */}
             <div className="h-20" />
 

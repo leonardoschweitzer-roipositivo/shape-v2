@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { BottomNavigation } from '../components/organisms/BottomNavigation'
+import { useAuthStore } from '@/stores/authStore'
 import { TodayScreen, CoachScreen, ProgressScreen, ProfileScreen, AssessmentScreen } from './athlete'
 import { AthletePortalTab } from '../types/athlete-portal'
 import type { TodayScreenData, ScoreGeral, GraficoEvolucaoData, ProporcaoResumo, ChatMessage, MeuPersonal, DadosBasicos, ExercicioTimerState } from '../types/athlete-portal'
@@ -40,6 +41,7 @@ interface AthletePortalProps {
 }
 
 export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoToHome }: AthletePortalProps) {
+    const { signOut } = useAuthStore()
     const [activeTab, setActiveTab] = useState<AthletePortalTab>(initialTab)
     const [loading, setLoading] = useState(true)
     const [ctx, setCtx] = useState<PortalContext | null>(null)
@@ -491,8 +493,23 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
     }
 
     return (
-        <div className="relative">
-            {renderActiveScreen()}
+        <div className="relative min-h-screen flex flex-col">
+            <div className="flex-1 overflow-y-auto">
+                {renderActiveScreen()}
+
+                {/* Discreet Logout */}
+                <div className="py-8 pb-32 text-center opacity-30 hover:opacity-100 transition-opacity">
+                    <button
+                        onClick={() => {
+                            signOut();
+                            window.location.href = '/';
+                        }}
+                        className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium"
+                    >
+                        Sair da conta
+                    </button>
+                </div>
+            </div>
             <BottomNavigation
                 activeTab={activeTab}
                 onTabChange={(tab) => {

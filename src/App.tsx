@@ -1041,7 +1041,7 @@ const App: React.FC = () => {
             atletaId={atletaId}
             onClose={() => {
               signOut();
-              window.location.href = '/atleta';
+              window.location.href = '/';
             }}
           />
         </Suspense>

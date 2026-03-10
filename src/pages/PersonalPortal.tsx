@@ -144,8 +144,20 @@ export function PersonalPortal({ personalId, onLogout }: PersonalPortalProps) {
     }
 
     return (
-        <div className="relative">
-            {renderActiveScreen()}
+        <div className="relative min-h-screen flex flex-col">
+            <div className="flex-1 overflow-y-auto">
+                {renderActiveScreen()}
+
+                {/* Discreet Logout */}
+                <div className="py-8 pb-32 text-center opacity-30 hover:opacity-100 transition-opacity">
+                    <button
+                        onClick={onLogout ?? (() => { })}
+                        className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium"
+                    >
+                        Sair da conta
+                    </button>
+                </div>
+            </div>
             <BottomNavigationPersonal
                 activeTab={activeTab}
                 onTabChange={(tab) => {

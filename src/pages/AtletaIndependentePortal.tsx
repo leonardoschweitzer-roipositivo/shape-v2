@@ -69,14 +69,15 @@ export function AtletaIndependentePortal({ onLogout }: AtletaIndependentePortalP
                 </div>
             </div>
 
-            {/* Logout */}
-            <button
-                onClick={handleLogout}
-                className="mt-8 flex items-center gap-2 text-gray-600 hover:text-gray-400 text-xs font-medium transition-colors"
-            >
-                <LogOut size={14} />
-                Sair da conta
-            </button>
+            {/* Footer Logout */}
+            <div className="mt-auto py-10 text-center opacity-30 hover:opacity-100 transition-opacity">
+                <button
+                    onClick={handleLogout}
+                    className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium"
+                >
+                    Sair da conta
+                </button>
+            </div>
         </div>
     )
 }
