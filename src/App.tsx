@@ -1106,6 +1106,7 @@ const App: React.FC = () => {
           onRegisterStudent={() => setCurrentView('student-registration')}
           onInvitePersonal={handleInvitePersonal}
           onOpenNotifications={() => setIsNotificationDrawerOpen(true)}
+          onLogout={handleLogout}
           title={getPageTitle(currentView, userProfile)}
           userProfile={userProfile}
           notificacoesNaoLidas={notificacoesNaoLidas}
@@ -1188,10 +1189,6 @@ const App: React.FC = () => {
         )
       }
 
-      <DebugAccess
-        onLogin={handleQuickLogin}
-        isVisible={true}
-      />
     </div>
   );
 };

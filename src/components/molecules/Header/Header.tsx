@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, Camera, MessageCircle, UserPlus } from 'lucide-react';
+import { Bell, Camera, MessageCircle, UserPlus, LogOut } from 'lucide-react';
 import { type ProfileType } from '../../../components';
 
 interface HeaderProps {
@@ -8,6 +8,7 @@ interface HeaderProps {
   onRegisterStudent?: () => void;
   onInvitePersonal?: () => void;
   onOpenNotifications?: () => void;
+  onLogout?: () => void;
   title?: string;
   userProfile?: ProfileType;
   notificacoesNaoLidas?: number;
@@ -19,6 +20,7 @@ export const Header: React.FC<HeaderProps> = ({
   onRegisterStudent,
   onInvitePersonal,
   onOpenNotifications,
+  onLogout,
   title = "INÍCIO",
   userProfile = 'atleta',
   notificacoesNaoLidas = 0,
@@ -83,6 +85,16 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
 
         {renderAction()}
+
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            className="p-2 ml-2 text-gray-400 hover:text-red-400 transition-colors rounded-full hover:bg-white/5"
+            title="Sair"
+          >
+            <LogOut size={20} />
+          </button>
+        )}
       </div>
     </header>
   );
