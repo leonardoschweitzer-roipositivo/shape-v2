@@ -527,9 +527,9 @@ export function CardTreino({
                     <div className="relative" ref={completeiMenuRef}>
                         <button
                             onClick={() => setShowCompleteiMenu(!showCompleteiMenu)}
-                            className="w-full py-2.5 px-4 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-xl text-sm font-bold text-emerald-400 transition-colors flex items-center justify-center gap-2"
+                            className="w-full py-2.5 px-4 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 rounded-xl text-sm font-bold text-amber-500 shadow-lg shadow-amber-500/10 transition-all flex items-center justify-center gap-2"
                         >
-                            <Check size={16} />
+                            <Check size={16} strokeWidth={3} />
                             COMPLETEI
                             <ChevronDown size={14} className={`transition-transform duration-200 ${showCompleteiMenu ? 'rotate-180' : ''}`} />
                         </button>
@@ -542,9 +542,9 @@ export function CardTreino({
                                         setShowCompleteiMenu(false)
                                         onCompletei()
                                     }}
-                                    className="w-full px-4 py-3 flex items-center gap-3 hover:bg-emerald-500/10 transition-colors border-b border-white/5"
+                                    className="w-full px-4 py-3 flex items-center gap-3 hover:bg-amber-500/10 transition-colors border-b border-white/5"
                                 >
-                                    <Check size={16} className="text-emerald-400" />
+                                    <Check size={16} className="text-amber-500" />
                                     <span className="text-sm font-semibold text-white">HOJE</span>
                                 </button>
                                 <button
@@ -552,9 +552,9 @@ export function CardTreino({
                                         setShowCompleteiMenu(false)
                                         onCompletei(getOntemISO())
                                     }}
-                                    className="w-full px-4 py-3 flex items-center gap-3 hover:bg-indigo-500/10 transition-colors"
+                                    className="w-full px-4 py-3 flex items-center gap-3 hover:bg-amber-500/10 transition-colors"
                                 >
-                                    <Clock size={16} className="text-indigo-400" />
+                                    <Clock size={16} className="text-amber-500/60" />
                                     <span className="text-sm font-semibold text-white">ONTEM</span>
                                     <span className="text-[10px] text-gray-500 ml-auto">Esqueci de marcar</span>
                                 </button>
