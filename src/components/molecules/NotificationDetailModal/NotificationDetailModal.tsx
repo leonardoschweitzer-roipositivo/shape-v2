@@ -129,13 +129,13 @@ export function NotificationDetailModal({ notificacao, onFechar, onAcao, persona
                                 </p>
                             </div>
                         </div>
-                        {dados.duracao && (
+                        {!!dados.duracao && (
                             <div className="bg-white/5 rounded-xl p-3 border border-white/5">
                                 <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Duração</p>
                                 <p className="text-sm text-white font-medium mt-1">{String(dados.duracao)}</p>
                             </div>
                         )}
-                        {dados.continuarHoje && (
+                        {!!dados.continuarHoje && (
                             <p className="text-xs text-gray-400 italic">
                                 * O aluno decidiu pular este treino mas continuou para o próximo da sequência hoje.
                             </p>
@@ -232,7 +232,7 @@ export function NotificationDetailModal({ notificacao, onFechar, onAcao, persona
                             <MessageSquare className="absolute -top-3 -left-2 text-primary opacity-20" size={40} />
                             <p className="text-sm text-gray-200 leading-relaxed italic relative z-10">"{String(dados.texto || 'Mensagem vazia')}"</p>
                         </div>
-                        {dados.alerta && (
+                        {!!dados.alerta && (
                             <div className="flex items-center gap-2 text-amber-400 bg-amber-400/10 border border-amber-400/20 p-3 rounded-xl">
                                 <AlertTriangle size={16} />
                                 <p className="text-xs font-bold uppercase tracking-tight">IA Detectou alerta de atenção no feedback</p>
@@ -257,8 +257,8 @@ export function NotificationDetailModal({ notificacao, onFechar, onAcao, persona
                         <div className="text-center">
                             <p className="text-2xl font-black text-white italic tracking-tighter uppercase">PARABÉNS!</p>
                             <p className="text-sm text-gray-400 mt-1">O aluno atingiu o marco de <span className="text-gold font-bold">{Number(dados.scoreAtual || 0).toFixed(1)} pts</span></p>
-                            {dados.scoreMeta && <p className="text-xs text-gray-500">Meta anterior: {Number(dados.scoreMeta).toFixed(0)}</p>}
-                            {dados.maxScoreHistorico && <p className="text-xs text-gray-500">Recorde anterior: {Number(dados.maxScoreHistorico).toFixed(1)}</p>}
+                            {!!dados.scoreMeta && <p className="text-xs text-gray-500">Meta anterior: {Number(dados.scoreMeta).toFixed(0)}</p>}
+                            {!!dados.maxScoreHistorico && <p className="text-xs text-gray-500">Recorde anterior: {Number(dados.maxScoreHistorico).toFixed(1)}</p>}
                         </div>
                     </div>
                 )

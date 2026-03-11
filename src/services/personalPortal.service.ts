@@ -15,6 +15,8 @@ import type {
     AtividadeRecente,
     StatusAluno,
     ProporçãoResumo,
+    RegistroAtividade,
+    MetaProporcao,
 } from '@/types/personal-portal'
 import { buscarDadosConsistencia } from './consistencia.service'
 

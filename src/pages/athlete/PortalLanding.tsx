@@ -3,15 +3,6 @@
  * 
  * Exibida quando o atleta acessa via link de convite (?token=XXX)
  * Foco: Engajamento, Gamificação e Retenção
- * 
- * Layout v2:
- *   1. Header (Identidade)
- *   2. Card Personal (Vínculo)
- *   3. Card Score + Meta (Progresso)
- *   4. Card Ranking (Competição)
- *   5. Card Foco da Semana (Direção)
- *   6. Ações Rápidas (Secundárias)
- *   7. Footer (Última medição)
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -49,7 +40,6 @@ interface PortalLandingProps {
 
 type PortalView = 'home' | 'measurements' | 'virtual-assessment' | 'portal' | 'contexto' | 'onboarding';
 
-// ---- Helpers de classificação ----
 const CLASSIFICACOES = [
     { min: 0, max: 30, nome: 'INICIANDO' },
     { min: 30, max: 50, nome: 'COMEÇANDO' },
@@ -95,9 +85,7 @@ export function PortalLanding({ token, atletaId, onClose }: PortalLandingProps) 
                     setError('Acesso inválido ou expirado. Tente fazer login novamente.');
                 } else {
                     setAthleteData(data);
-                    // Consistência carrega em background (não bloqueia a HOME)
                     buscarDadosConsistencia(data.id).then(setDadosConsistencia).catch(console.error);
-                    // Badge de notificações
                     portalNotificacaoService.contarNaoLidas(data.id).then(setNotificacoesBadge).catch(console.error);
                 }
             } catch (err) {
@@ -108,7 +96,6 @@ export function PortalLanding({ token, atletaId, onClose }: PortalLandingProps) 
         loadData();
     }, [token, atletaId]);
 
-    // ---- Loading ----
     if (loading) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center">
@@ -120,7 +107,6 @@ export function PortalLanding({ token, atletaId, onClose }: PortalLandingProps) 
         );
     }
 
-    // ---- Error ----
     if (error || !athleteData) {
         return (
             <div className="min-h-screen bg-background-dark flex items-center justify-center p-6">
@@ -143,7 +129,6 @@ export function PortalLanding({ token, atletaId, onClose }: PortalLandingProps) 
         );
     }
 
-    // ---- Sub-views ----
     if (view === 'portal') {
         return (
             <AthletePortal
@@ -213,10 +198,7 @@ export function PortalLanding({ token, atletaId, onClose }: PortalLandingProps) 
         );
     }
 
-    // ---- Onboarding: Wizard de Primeira Vez ----
     const temAvaliacaoGlobal = !!(athleteData.avaliacoes?.length) || !!(athleteData.medidas?.length);
-
-    // Se escolheu 'BASICO' mas não tem medidas, forçar a voltar para o onboarding (ex: erro de salvamento)
     const onboardingParcialBasico = athleteData.ficha?.metodo_medidas === 'BASICO' && !temAvaliacaoGlobal;
     const onboardingCompletoGlobal = !!athleteData.ficha?.onboarding_completo && !onboardingParcialBasico;
 
@@ -242,9 +224,6 @@ export function PortalLanding({ token, atletaId, onClose }: PortalLandingProps) 
         );
     }
 
-    // ===========================================================
-    //  HOME v2.0 — Layout baseado na SPEC
-    // ===========================================================
     return (
         <HomeAtletaV2
             athleteData={athleteData}
@@ -262,9 +241,6 @@ export function PortalLanding({ token, atletaId, onClose }: PortalLandingProps) 
     );
 }
 
-// ===========================================================
-//  Componente interno: HomeAtletaV2
-// ===========================================================
 interface HomeAtletaV2Props {
     athleteData: PortalAthleteData;
     dadosConsistencia: DadosConsistencia | null;
@@ -277,100 +253,43 @@ interface HomeAtletaV2Props {
 }
 
 function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeasurements, onGoToVirtualAssessment, onGoToContexto, onLogout, notificacoesBadge = 0 }: HomeAtletaV2Props) {
-
     const lastAval = athleteData.avaliacoes?.[0];
     const lastMedida = athleteData.medidas?.[0];
     const sexoLabel = athleteData.ficha?.sexo === 'F' ? 'FEMININO' : 'MASCULINO';
-
-    // Priorizar peso da avaliação ou diagnóstico sobre a tabela de medidas
     const measurements = lastAval?.measurements as Record<string, Record<string, unknown>> | undefined;
-    const peso = Number(measurements?.linear?.weight)
-        || lastMedida?.peso
-        || undefined;
-
+    const peso = Number(measurements?.linear?.weight) || lastMedida?.peso || undefined;
     const altura = athleteData.ficha?.altura ?? 0;
-
-    // ---- Score & Meta (dados do Diagnóstico / Fallback) ----
     const scoreAtual = lastAval?.score_geral ?? 0;
     const classificacaoAtual = getClassificacao(scoreAtual);
     const dataUltimaAvaliacao = lastAval ? new Date(lastAval.data) : new Date();
-
-    // Pull goals from diagnostico
     const diag = athleteData.diagnostico?.dados as Record<string, Record<string, unknown>> | undefined;
     const analiseEstetica = diag?.analiseEstetica as Record<string, unknown> | undefined;
     const scoreMeta = Number(analiseEstetica?.scoreMeta12M) || 65;
     const classificacaoMeta = analiseEstetica?.scoreMeta12M ? getClassificacao(scoreMeta) : 'ATLETA';
-
     const firstMedida = athleteData.medidas?.[athleteData.medidas.length - 1] || lastMedida;
-
-    // Medidas Atuais: Priorizar Avaliação IA -> Diagnóstico -> Tabela Medidas
     const medidasDiag = diag?._medidas as Record<string, unknown> | undefined;
-    const ombrosAtual = Number(measurements?.linear?.shoulders)
-        || Number(medidasDiag?.ombros)
-        || lastMedida?.ombros
-        || 0;
-
-    const cinturaAtual = Number(measurements?.linear?.waist)
-        || Number(medidasDiag?.cintura)
-        || lastMedida?.cintura
-        || 1;
-
+    const ombrosAtual = Number(measurements?.linear?.shoulders) || Number(medidasDiag?.ombros) || lastMedida?.ombros || 0;
+    const cinturaAtual = Number(measurements?.linear?.waist) || Number(medidasDiag?.cintura) || lastMedida?.cintura || 1;
     const primaryGroupName = athleteData.ficha?.sexo === 'F' ? 'Ampulheta' : 'Shape-V';
     const metasProporcoes = diag?.metasProporcoes as { grupo: string; meta12M: number }[] | undefined;
     const itemPrincipal = metasProporcoes?.find(p => p.grupo === primaryGroupName);
-
-    const ratioAtual = Number(analiseEstetica?.scoreAtual) // Score para Ampulheta
-        || (ombrosAtual > 0 && cinturaAtual > 0 ? ombrosAtual / cinturaAtual : 0);
-
-    // Se não tiver o item no diagnóstico, simulamos a progressão linear para 3, 6, 9 meses
+    const ratioAtual = Number(analiseEstetica?.scoreAtual) || (ombrosAtual > 0 && cinturaAtual > 0 ? ombrosAtual / cinturaAtual : 0);
     const fallbackIdeal = athleteData.ficha?.sexo === 'F' ? 100 : 1.618;
     const ratioMeta12M = Number(itemPrincipal?.meta12M) || fallbackIdeal;
-
-    // Medida Ombros cm (para impressionar mais como solicitado)
-    // Cálculo reverso da meta em CM para 12 meses
-    const ombrosMeta12M = Math.round((ratioMeta12M * cinturaAtual) * 10) / 10;
-    const ombrosBasal = firstMedida?.ombros || ombrosAtual - (ombrosAtual * 0.1);
-
-    // Medida Cintura cm (Redução)
-    const pelvisAtual = athleteData.ficha?.pelve || 0;
-    // Meta de 0.86 * pélvis (conforme spec Golden Ratio)
-    const cinturaMeta12M = pelvisAtual > 0 ? Math.round((0.86 * pelvisAtual) * 10) / 10 : Math.round((cinturaAtual * 0.95) * 10) / 10;
-    const cinturaBasal = firstMedida?.cintura || cinturaAtual + (cinturaAtual * 0.1);
-
-    // Percentual de Gordura
     const bfAtual = lastAval?.gordura || 0;
     const metasComposicao = diag?.metasComposicao as Record<string, unknown> | undefined;
     const bfMeta = Number(metasComposicao?.gordura12Meses) || 12;
     const firstAval = athleteData.avaliacoes?.[athleteData.avaliacoes.length - 1] || lastAval;
     const bfBasal = firstAval?.gordura || bfAtual + 5;
-
-    // Diagnóstico tipado para o CardMetasTrimestre
     const diagTyped = diag as unknown as DiagnosticoDados | undefined;
 
-    // Medidas atuais para conversão ratio→cm no CardMetasTrimestre
     const medidasParaCard = {
         ombros: ombrosAtual || undefined,
         cintura: cinturaAtual || undefined,
-        braco: (
-            (Number(measurements?.linear?.arm_right) + Number(measurements?.linear?.arm_left)) / 2
-            || (Number(medidasDiag?.bracoD) + Number(medidasDiag?.bracoE)) / 2
-            || ((lastMedida?.braco_direito ?? 0) + (lastMedida?.braco_esquerdo ?? 0)) / 2
-        ) || undefined,
-        antebraco: (
-            (Number(measurements?.linear?.forearm_right) + Number(measurements?.linear?.forearm_left)) / 2
-            || (Number(medidasDiag?.antebracoD) + Number(medidasDiag?.antebracoE)) / 2
-            || ((lastMedida?.antebraco_direito ?? 0) + (lastMedida?.antebraco_esquerdo ?? 0)) / 2
-        ) || undefined,
-        coxa: (
-            (Number(measurements?.linear?.thigh_right) + Number(measurements?.linear?.thigh_left)) / 2
-            || (Number(medidasDiag?.coxaD) + Number(medidasDiag?.coxaE)) / 2
-            || ((lastMedida?.coxa_direita ?? 0) + (lastMedida?.coxa_esquerda ?? 0)) / 2
-        ) || undefined,
-        panturrilha: (
-            (Number(measurements?.linear?.calf_right) + Number(measurements?.linear?.calf_left)) / 2
-            || (Number(medidasDiag?.panturrilhaD) + Number(medidasDiag?.panturrilhaE)) / 2
-            || ((lastMedida?.panturrilha_direita ?? 0) + (lastMedida?.panturrilha_esquerda ?? 0)) / 2
-        ) || undefined,
+        braco: ((Number(measurements?.linear?.arm_right) + Number(measurements?.linear?.arm_left)) / 2 || (Number(medidasDiag?.bracoD) + Number(medidasDiag?.bracoE)) / 2 || ((lastMedida?.braco_direito ?? 0) + (lastMedida?.braco_esquerdo ?? 0)) / 2) || undefined,
+        antebraco: ((Number(measurements?.linear?.forearm_right) + Number(measurements?.linear?.forearm_left)) / 2 || (Number(medidasDiag?.antebracoD) + Number(medidasDiag?.antebracoE)) / 2 || ((lastMedida?.antebraco_direito ?? 0) + (lastMedida?.antebraco_esquerdo ?? 0)) / 2) || undefined,
+        coxa: ((Number(measurements?.linear?.thigh_right) + Number(measurements?.linear?.thigh_left)) / 2 || (Number(medidasDiag?.coxaD) + Number(medidasDiag?.coxaE)) / 2 || ((lastMedida?.coxa_direita ?? 0) + (lastMedida?.coxa_esquerda ?? 0)) / 2) || undefined,
+        panturrilha: ((Number(measurements?.linear?.calf_right) + Number(measurements?.linear?.calf_left)) / 2 || (Number(medidasDiag?.panturrilhaD) + Number(medidasDiag?.panturrilhaE)) / 2 || ((lastMedida?.panturrilha_direita ?? 0) + (lastMedida?.panturrilha_esquerda ?? 0)) / 2) || undefined,
         peitoral: Number(measurements?.linear?.chest) || Number(medidasDiag?.peitoral) || lastMedida?.peitoral || undefined,
         punho: athleteData.ficha?.punho ?? undefined,
         joelho: athleteData.ficha?.joelho ?? undefined,
@@ -378,23 +297,15 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
     };
 
     const prazoMeta = 12;
-
-    // Cálculo do Score: Baseado no Gap (Distância entre Primeira Avaliação e Meta)
     const scoreBasal = firstAval?.score_geral || 0;
     const gapScoreTotal = Math.max(0, scoreMeta - scoreBasal);
     const progressoScorePercorrido = Math.max(0, scoreAtual - scoreBasal);
-
     let percentualMeta = gapScoreTotal > 0 ? (progressoScorePercorrido / gapScoreTotal) * 100 : 0;
-
-    // Travar entre 0 e 100
     if (scoreAtual < scoreBasal) percentualMeta = 0;
     if (scoreAtual >= scoreMeta) percentualMeta = 100;
-
     percentualMeta = Math.max(0, Math.min(100, Math.round(percentualMeta)));
-
     const pontosRestantes = Math.max(0, scoreMeta - scoreAtual);
 
-    // Evolução: se tem 2+ avaliações, calcular
     const evolucaoMes = useMemo(() => {
         if (athleteData.avaliacoes && athleteData.avaliacoes.length >= 2) {
             return Number(((athleteData.avaliacoes[0]?.score_geral ?? 0) - (athleteData.avaliacoes[1]?.score_geral ?? 0)).toFixed(1));
@@ -402,29 +313,18 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
         return 0;
     }, [athleteData.avaliacoes]);
 
-    // ---- Footer: última medição ----
     const diasDesdeUltima = useMemo(() => {
         if (!lastMedida) return 999;
         const diff = Date.now() - new Date(lastMedida.data).getTime();
         return Math.floor(diff / (1000 * 60 * 60 * 24));
     }, [lastMedida]);
 
-    const statusMedicao = diasDesdeUltima <= 7 ? 'em_dia' as const
-        : diasDesdeUltima <= 14 ? 'atencao' as const
-            : 'atrasado' as const;
-
-    // ---- Ações Rápidas ----
-
-    // ---- Estado: Sem medidas (Primeiro acesso) ----
+    const statusMedicao = diasDesdeUltima <= 7 ? 'em_dia' as const : diasDesdeUltima <= 14 ? 'atencao' as const : 'atrasado' as const;
     const temAvaliacao = !!lastAval || !!lastMedida;
-
-    // Se onboarding completo mas sem medidas reais, mostrar CTA ou Dashboard
     const onboardingCompleto = !!athleteData.ficha?.onboarding_completo;
 
-    // ---- Estado: Renderização Principal ----
     return (
         <div className="min-h-screen bg-background-dark text-white pb-24 relative flex flex-col">
-            {/* Header / Notificações */}
             <button
                 onClick={() => onGoToPortal('notificacoes')}
                 className="fixed top-8 right-4 z-40 w-10 h-10 rounded-full bg-white/5 backdrop-blur-md border border-white/10 flex items-center justify-center transition-all active:scale-90 hover:bg-white/10"
@@ -452,44 +352,24 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
 
             <main className="flex-1">
                 {!temAvaliacao && onboardingCompleto ? (
-                    /* ESTADO: AGUARDANDO MEDIDAS (INFO) */
                     <div className="mx-4 mt-8 bg-gradient-to-br from-surface-deep to-background-dark rounded-2xl p-8 border border-white/5 text-center shadow-xl animate-fade-in">
                         <div className="text-5xl mb-4">📊</div>
-                        <h2 className="text-white font-black text-lg uppercase tracking-widest mb-3">
-                            AGUARDANDO MEDIDAS
-                        </h2>
+                        <h2 className="text-white font-black text-lg uppercase tracking-widest mb-3">AGUARDANDO MEDIDAS</h2>
                         <p className="text-gray-400 text-sm leading-relaxed max-w-xs mx-auto mb-6">
                             {athleteData.ficha?.metodo_medidas === 'PERSONAL'
                                 ? 'Seu personal entrará em contato para realizar suas medidas presencialmente.'
                                 : 'Você pode registrar suas medidas a qualquer momento usando as opções abaixo.'}
                         </p>
-
                         {athleteData.ficha?.metodo_medidas !== 'PERSONAL' && (
                             <div className="space-y-3">
-                                <button
-                                    onClick={onGoToMeasurements}
-                                    className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-4 rounded-xl font-black tracking-widest text-sm uppercase transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
-                                >
-                                    📏 COM FITA MÉTRICA
-                                </button>
-                                <div className="flex items-center gap-3 py-1">
-                                    <div className="flex-1 h-px bg-white/5" />
-                                    <span className="text-[10px] text-gray-600 font-bold uppercase">ou</span>
-                                    <div className="flex-1 h-px bg-white/5" />
-                                </div>
-                                <button
-                                    onClick={onGoToVirtualAssessment}
-                                    className="w-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-indigo-500/30 text-white py-4 rounded-xl font-black tracking-widest text-sm uppercase transition-all active:scale-95"
-                                >
-                                    📸 COM FOTOS (IA)
-                                </button>
+                                <button onClick={onGoToMeasurements} className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-4 rounded-xl font-black tracking-widest text-sm uppercase transition-all active:scale-95 shadow-lg shadow-indigo-500/20">📏 COM FITA MÉTRICA</button>
+                                <div className="flex items-center gap-3 py-1"><div className="flex-1 h-px bg-white/5" /><span className="text-[10px] text-gray-600 font-bold uppercase">ou</span><div className="flex-1 h-px bg-white/5" /></div>
+                                <button onClick={onGoToVirtualAssessment} className="w-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-indigo-500/30 text-white py-4 rounded-xl font-black tracking-widest text-sm uppercase transition-all active:scale-95">📸 COM FOTOS (IA)</button>
                             </div>
                         )}
                     </div>
                 ) : (
-                    /* ESTADO: HOME COMPLETA (DASHBOARD) */
                     <div className="animate-fade-in space-y-12">
-                        {/* 1. Score & Meta */}
                         <CardScoreMeta
                             scoreAtual={scoreAtual}
                             classificacaoAtual={classificacaoAtual}
@@ -504,59 +384,34 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
                             pontosRestantes={pontosRestantes}
                         />
 
-                        {/* 2. Metas do Trimestre */}
                         {diagTyped && (
                             <CardMetasTrimestre
                                 diagnosticoDados={diagTyped}
                                 sexo={athleteData.ficha?.sexo as 'M' | 'F' || 'M'}
-                                composicaoAtual={{
-                                    peso: peso || 0,
-                                    gorduraPct: bfAtual,
-                                }}
+                                composicaoAtual={{ peso: peso || 0, gorduraPct: bfAtual }}
                                 medidas={medidasParaCard}
                             />
                         )}
 
-                        {/* 3. Consistência */}
-                        {dadosConsistencia && (
-                            <CardConsistencia dados={dadosConsistencia} />
-                        )}
+                        {dadosConsistencia && <CardConsistencia dados={dadosConsistencia} />}
 
-                        {/* Botão Principal Treino */}
                         <div className="max-w-2xl mx-auto px-6 mb-6">
-                            <button
-                                onClick={() => onGoToPortal('hoje')}
-                                className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-4 rounded-xl font-black tracking-widest text-sm uppercase transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
-                            >
-                                <Play size={18} fill="white" />
-                                VER TREINO DE HOJE
-                            </button>
+                            <button onClick={() => onGoToPortal('hoje')} className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-4 rounded-xl font-black tracking-widest text-sm uppercase transition-all active:scale-95 shadow-lg shadow-indigo-500/20"><Play size={18} fill="white" />VER TREINO DE HOJE</button>
                         </div>
 
-                        {/* 4. Foco da Semana (IA Insights) */}
                         <div className="px-4 space-y-4">
                             <div className="flex items-center gap-2">
-                                <Shield className="text-primary" size={16} />
-                                <h3 className="text-xs font-black uppercase tracking-widest text-zinc-400">FOCO DA SEMANA</h3>
+                                <Shield className="text-primary" size={16} /><h3 className="text-xs font-black uppercase tracking-widest text-zinc-400">FOCO DA SEMANA</h3>
                             </div>
                             <div className="bg-surface-deep rounded-2xl p-5 border border-white/5 relative overflow-hidden group">
-                                <p className="text-white text-sm font-medium leading-relaxed relative z-10">
-                                    Otimize sua recuperação. Mantenha o foco em <span className="text-primary">Membros Inferiores</span> e hidratação constate.
-                                </p>
+                                <p className="text-white text-sm font-medium leading-relaxed relative z-10">Otimize sua recuperação. Mantenha o foco em <span className="text-primary">Membros Inferiores</span> e hidratação constate.</p>
                             </div>
                         </div>
 
-                        {/* Botão Contexto */}
                         <div className="max-w-2xl mx-auto px-6 mb-6">
-                            <button
-                                onClick={onGoToContexto}
-                                className="w-full flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 hover:text-white py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all"
-                            >
-                                📝 Preencher meu contexto
-                            </button>
+                            <button onClick={onGoToContexto} className="w-full flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 hover:text-white py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all">📝 Preencher meu contexto</button>
                         </div>
 
-                        {/* Footer Última Medição */}
                         <FooterUltimaMedicao
                             dataUltimaMedida={lastMedida ? new Date(lastMedida.data) : new Date()}
                             diasDesdeUltima={diasDesdeUltima}
@@ -566,24 +421,13 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
                 )}
             </main>
 
-            {/* Sair da conta (Discreto) */}
             <div className="py-8 text-center opacity-30 hover:opacity-100 transition-opacity">
-                <button
-                    onClick={onLogout}
-                    className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium"
-                >
-                    Sair da conta
-                </button>
+                <button onClick={onLogout} className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium">Sair da conta</button>
             </div>
 
-            {/* Menu Inferior */}
             <BottomNavigation
                 activeTab="home"
-                onTabChange={(tab) => {
-                    if (tab !== 'home') {
-                        onGoToPortal(tab);
-                    }
-                }}
+                onTabChange={(tab) => { if (tab !== 'home') onGoToPortal(tab); }}
                 notificacoesBadge={notificacoesBadge}
             />
         </div>

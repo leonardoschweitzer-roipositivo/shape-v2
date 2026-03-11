@@ -1036,7 +1036,7 @@ const App: React.FC = () => {
       // case 'gamification': // DISABLED - Feature para depois
       //   return <GamificationPage />;
       case 'athlete-portal':
-        return <PortalLanding atletaId={selectedAthleteId || ''} onClose={() => setCurrentView('personals')} />
+        return <PortalLanding atletaId={selectedAthleteId || ''} onClose={() => setCurrentView('students')} />
       case 'dashboard':
       default:
         return <DashboardView userProfile={userProfile} />;
