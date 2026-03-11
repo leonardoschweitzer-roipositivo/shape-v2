@@ -344,7 +344,7 @@ export function CardMetasTrimestre({
                         </p>
                         <div className="divide-y divide-white/5">
                             {/* Metas Proporções em Ordem Específica */}
-                            {['Shape-V', 'SHR', 'Costas', 'Peitoral', 'Braço', 'Proporção de Braço', 'Cintura', 'WHR', 'Coxa', 'Desenvolvimento de Coxa', 'Coxa vs Pantur.', 'Panturrilha', 'Desenvolvimento de Panturrilha']
+                            {['Shape-V', 'SHR', 'Costas', 'Peitoral', 'Braço', 'Proporção de Braço', 'Coxa', 'Desenvolvimento de Coxa', 'Panturrilha', 'Desenvolvimento de Panturrilha']
                                 .map(grupoKey => {
                                     const metaItem = metasProporcoes?.find(m => m.grupo === grupoKey);
                                     if (!metaItem) return null;
@@ -371,15 +371,15 @@ export function CardMetasTrimestre({
                 {/* Seção: Composição Corporal */}
                 {(pesoMeta3M !== null || gorduraMeta3M !== null || metasProporcoes?.some(m => m.grupo === 'Cintura' || m.grupo === 'WHR')) && (
                     <div className="mt-6 pt-5 border-t border-white/5">
-                        <div className="flex items-center gap-2.5 mb-4">
-                            <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                                <TrendingUp size={14} className="text-emerald-400" />
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                                <TrendingUp size={18} className="text-emerald-400" />
                             </div>
                             <div>
-                                <p className="text-white font-black text-[10px] uppercase tracking-widest">
+                                <p className="text-white font-black text-sm uppercase tracking-widest">
                                     Composição Corporal
                                 </p>
-                                <p className="text-zinc-500 text-[9px] uppercase font-bold">Metas do Trimestre</p>
+                                <p className="text-zinc-500 text-xs font-bold">Metas do Trimestre</p>
                             </div>
                         </div>
 
