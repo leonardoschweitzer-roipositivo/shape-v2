@@ -136,6 +136,7 @@ export function PortalLanding({ token, atletaId, onClose }: PortalLandingProps) 
                 atletaNome={athleteData.nome}
                 initialTab={portalTab}
                 onGoToHome={() => setView('home')}
+                onGoToContexto={() => setView('contexto')}
             />
         );
     }
@@ -369,7 +370,22 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
                         )}
                     </div>
                 ) : (
-                    <div className="animate-fade-in space-y-12">
+                    <div className="animate-fade-in space-y-8">
+                        {/* 1. Consistência */}
+                        {dadosConsistencia && <CardConsistencia dados={dadosConsistencia} />}
+
+                        {/* 2. Botão Treino */}
+                        <div className="max-w-2xl mx-auto px-6">
+                            <button 
+                                onClick={() => onGoToPortal('hoje')} 
+                                className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-4 rounded-xl font-black tracking-widest text-sm uppercase transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
+                            >
+                                <Play size={18} fill="white" />
+                                VER TREINO DE HOJE
+                            </button>
+                        </div>
+
+                        {/* 3. Score Geral | Meta Anual */}
                         <CardScoreMeta
                             scoreAtual={scoreAtual}
                             classificacaoAtual={classificacaoAtual}
@@ -384,6 +400,7 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
                             pontosRestantes={pontosRestantes}
                         />
 
+                        {/* 4. Metas do Trimestre */}
                         {diagTyped && (
                             <CardMetasTrimestre
                                 diagnosticoDados={diagTyped}
@@ -392,25 +409,6 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
                                 medidas={medidasParaCard}
                             />
                         )}
-
-                        {dadosConsistencia && <CardConsistencia dados={dadosConsistencia} />}
-
-                        <div className="max-w-2xl mx-auto px-6 mb-6">
-                            <button onClick={() => onGoToPortal('hoje')} className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-4 rounded-xl font-black tracking-widest text-sm uppercase transition-all active:scale-95 shadow-lg shadow-indigo-500/20"><Play size={18} fill="white" />VER TREINO DE HOJE</button>
-                        </div>
-
-                        <div className="px-4 space-y-4">
-                            <div className="flex items-center gap-2">
-                                <Shield className="text-primary" size={16} /><h3 className="text-xs font-black uppercase tracking-widest text-zinc-400">FOCO DA SEMANA</h3>
-                            </div>
-                            <div className="bg-surface-deep rounded-2xl p-5 border border-white/5 relative overflow-hidden group">
-                                <p className="text-white text-sm font-medium leading-relaxed relative z-10">Otimize sua recuperação. Mantenha o foco em <span className="text-primary">Membros Inferiores</span> e hidratação constate.</p>
-                            </div>
-                        </div>
-
-                        <div className="max-w-2xl mx-auto px-6 mb-6">
-                            <button onClick={onGoToContexto} className="w-full flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 hover:text-white py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all">📝 Preencher meu contexto</button>
-                        </div>
 
                         <FooterUltimaMedicao
                             dataUltimaMedida={lastMedida ? new Date(lastMedida.data) : new Date()}

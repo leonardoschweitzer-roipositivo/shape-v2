@@ -28,6 +28,7 @@ interface AssessmentScreenProps {
     peso?: number
     personalNome?: string
     onStartVirtualAssessment?: () => void
+    onGoToContexto?: () => void
 }
 
 function formatDate(date: Date): string {
@@ -71,6 +72,7 @@ export const AssessmentScreen = memo(function AssessmentScreen({
     peso,
     personalNome,
     onStartVirtualAssessment,
+    onGoToContexto,
 }: AssessmentScreenProps) {
     if (isLoading) {
         return (
@@ -125,6 +127,18 @@ export const AssessmentScreen = memo(function AssessmentScreen({
                     <AssimetriaSection
                         assimetria={avaliacao.assimetria}
                     />
+
+                    {/* Botão de Contexto */}
+                    {onGoToContexto && (
+                        <div className="pt-4 border-t border-white/5">
+                            <button
+                                onClick={onGoToContexto}
+                                className="w-full flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 hover:text-white py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all active:scale-[0.98]"
+                            >
+                                📝 Preencher meu contexto
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
 

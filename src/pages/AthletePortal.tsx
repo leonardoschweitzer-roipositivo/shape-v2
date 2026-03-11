@@ -40,9 +40,10 @@ interface AthletePortalProps {
     atletaNome?: string;
     initialTab?: AthletePortalTab;
     onGoToHome?: () => void;
+    onGoToContexto?: () => void;
 }
 
-export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoToHome }: AthletePortalProps) {
+export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoToHome, onGoToContexto }: AthletePortalProps) {
     const { signOut } = useAuthStore()
     const [activeTab, setActiveTab] = useState<AthletePortalTab>(initialTab)
     const [loading, setLoading] = useState(true)
@@ -487,6 +488,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                         peso={lastPeso}
                         personalNome={ctx?.personalNome}
                         onStartVirtualAssessment={() => setShowVirtualAssessment(true)}
+                        onGoToContexto={onGoToContexto}
                     />
                 )
 
