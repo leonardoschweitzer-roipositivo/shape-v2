@@ -134,7 +134,6 @@ export function OnboardingWizard({
             const fichaUpdate: Record<string, unknown> = {
                 data_nascimento: form.dataNascimento,
                 altura: parseFloat(form.altura),
-                onboarding_completo: true,
                 metodo_medidas: 'BASICO',
             };
             if (form.nivelAtividade) fichaUpdate.nivel_atividade = form.nivelAtividade;
@@ -162,6 +161,12 @@ export function OnboardingWizard({
                 .insert(medidasInsert);
 
             if (medidaErr) throw new Error(`Erro nas medidas: ${medidaErr.message}`);
+
+            // 3. Marcar onboarding como COMPLETO agora que tudo deu certo
+            await supabase
+                .from('fichas')
+                .update({ onboarding_completo: true } as Record<string, unknown>)
+                .eq('atleta_id', atletaId);
 
             setSuccessMessage('Suas medidas básicas foram registradas. Seu personal pode complementá-las depois!');
             setScreen('sucesso');

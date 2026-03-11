@@ -215,7 +215,10 @@ export function PortalLanding({ token, atletaId, onClose }: PortalLandingProps) 
 
     // ---- Onboarding: Wizard de Primeira Vez ----
     const temAvaliacaoGlobal = !!(athleteData.avaliacoes?.length) || !!(athleteData.medidas?.length);
-    const onboardingCompletoGlobal = !!athleteData.ficha?.onboarding_completo;
+
+    // Se escolheu 'BASICO' mas não tem medidas, forçar a voltar para o onboarding (ex: erro de salvamento)
+    const onboardingParcialBasico = athleteData.ficha?.metodo_medidas === 'BASICO' && !temAvaliacaoGlobal;
+    const onboardingCompletoGlobal = !!athleteData.ficha?.onboarding_completo && !onboardingParcialBasico;
 
     if (!temAvaliacaoGlobal && !onboardingCompletoGlobal) {
         return (
