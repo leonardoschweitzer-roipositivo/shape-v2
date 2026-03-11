@@ -49,8 +49,8 @@ interface CardMetasTrimestReProps {
 /** Label legível para o aluno a partir do nome técnico do grupo */
 function getLabelGrupo(grupo: string): { emoji: string; label: string } {
     const map: Record<string, { emoji: string; label: string }> = {
-        'Shape-V': { emoji: '🔺', label: 'Shape-V' },
-        'SHR': { emoji: '🔺', label: 'Shoulder-Hip Ratio' },
+        'Shape-V': { emoji: '🔺', label: 'Ombros (V-Shape)' },
+        'SHR': { emoji: '🔺', label: 'Ombros (Ratio)' },
         'Costas': { emoji: '🏋️', label: 'Costas' },
         'Peitoral': { emoji: '🏋️', label: 'Peitoral' },
         'Braço': { emoji: '💪', label: 'Braço' },
@@ -63,7 +63,7 @@ function getLabelGrupo(grupo: string): { emoji: string; label: string } {
         'Panturrilha': { emoji: '🦵', label: 'Panturrilha' },
         'Desenvolvimento de Panturrilha': { emoji: '🦵', label: 'Panturrilha' },
         'Cintura': { emoji: '🎯', label: 'Cintura' },
-        'WHR': { emoji: '🎯', label: 'Cintura / Quadril' },
+        'WHR': { emoji: '🎯', label: 'Cintura' },
         'Hip-Thigh': { emoji: '🎯', label: 'Quadril / Coxa' },
         'Tríade': { emoji: '⚖️', label: 'Harmonia Muscular' },
         'Ampulheta': { emoji: '⏳', label: 'Formato Ampulheta' },
@@ -149,142 +149,6 @@ function calcularCm(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SUB-COMPONENTE: Gráfico de Evolução em Linha (SVG)
-// ─────────────────────────────────────────────────────────────────────────────
-
-function GraficoEvolucaoLinha({
-    item,
-    medidas,
-    sexo
-}: {
-    item: MetaProporcao;
-    medidas: MedidasAtuais;
-    sexo: 'M' | 'F';
-}) {
-    const { emoji, label } = getLabelGrupo(item.grupo);
-    const isAmpulheta = item.grupo === 'Ampulheta';
-
-    // 5 Pontos: Atual, 3M, 6M, 9M, 12M
-    const pontos = [
-        item.atual,
-        item.meta3M,
-        item.meta6M,
-        item.meta9M,
-        item.meta12M
-    ];
-
-    // Configurações do SVG
-    const width = 400;
-    const height = 120;
-    const paddingX = 20;
-    const paddingY = 20;
-
-    const minVal = Math.min(...pontos) * 0.98;
-    const maxVal = Math.max(...pontos) * 1.02;
-    const range = maxVal - minVal || 1;
-
-    const getX = (i: number) => paddingX + (i * (width - 2 * paddingX)) / (pontos.length - 1);
-    const getY = (val: number) => height - paddingY - ((val - minVal) / range) * (height - 2 * paddingY);
-
-    // Gerar string do Path
-    const pathDataArr = pontos.map((p, i) => `${i === 0 ? 'M' : 'L'} ${getX(i)} ${getY(p)}`);
-    const pathData = pathDataArr.join(' ');
-    const areaData = `${pathData} L ${getX(pontos.length - 1)} ${height} L ${getX(0)} ${height} Z`;
-
-    const labelsMeses = ['Agora', '3m', '6m', '9m', '12m'];
-    const corPrincipal = sexo === 'M' ? '#6366f1' : '#ec4899'; // Indigo/Rosa
-
-    return (
-        <div className="py-5">
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                    <span className="text-xl">{emoji}</span>
-                    <div>
-                        <span className="text-white font-black text-sm uppercase tracking-widest block leading-none">{label}</span>
-                        <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-tight">Evolução Projetada (12 Meses)</span>
-                    </div>
-                </div>
-                <div className="text-right">
-                    <div className="flex items-center gap-2 justify-end">
-                        <span className="text-zinc-500 text-[10px] font-bold uppercase">Meta Final:</span>
-                        <span className="text-indigo-400 font-black text-sm">
-                            {isAmpulheta ? item.meta12M.toFixed(0) : item.meta12M.toFixed(2)}
-                            {isAmpulheta && '%'}
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            <div className="relative h-[140px] w-full bg-zinc-950/40 rounded-xl border border-white/5 overflow-hidden">
-                {/* Grid de fundo */}
-                <svg className="absolute inset-0 w-full h-full opacity-10">
-                    <defs>
-                        <pattern id="grid" width="40" height="20" patternUnits="userSpaceOnUse">
-                            <path d="M 40 0 L 0 0 0 20" fill="none" stroke="white" strokeWidth="0.5" />
-                        </pattern>
-                    </defs>
-                    <rect width="100%" height="100%" fill="url(#grid)" />
-                </svg>
-
-                <svg viewBox={`0 0 ${width} ${height}`} className="absolute inset-0 w-full h-full">
-                    <defs>
-                        <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor={corPrincipal} stopOpacity="0.3" />
-                            <stop offset="100%" stopColor={corPrincipal} stopOpacity="0" />
-                        </linearGradient>
-                    </defs>
-
-                    {/* Área preenchida com gradiente */}
-                    <path d={areaData} fill="url(#areaGradient)" />
-
-                    {/* Linha principal */}
-                    <path
-                        d={pathData}
-                        fill="none"
-                        stroke={corPrincipal}
-                        strokeWidth="3"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]"
-                    />
-
-                    {/* Pontos de dados */}
-                    {pontos.map((p, i) => (
-                        <circle
-                            key={i}
-                            cx={getX(i)}
-                            cy={getY(p)}
-                            r="4"
-                            fill="#fff"
-                            className="drop-shadow-[0_0_5px_rgba(255,255,255,0.8)]"
-                        />
-                    ))}
-                </svg>
-
-                {/* Labels de meses */}
-                <div className="absolute bottom-1 left-0 w-full flex justify-between px-4">
-                    {labelsMeses.map((m, i) => (
-                        <div key={i} className="flex flex-col items-center">
-                            <span className="text-[9px] font-black text-zinc-600 uppercase tracking-tighter">{m}</span>
-                            <span className="text-[10px] font-mono text-zinc-400 font-bold">
-                                {pontos[i].toFixed(isAmpulheta ? 0 : 2)}
-                                {isAmpulheta && '%'}
-                            </span>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            <div className="mt-3 flex items-center justify-between text-[10px] px-1">
-                <span className="text-zinc-500 font-bold uppercase tracking-widest">Trajetória Estimada</span>
-                <span className="text-emerald-400 font-black uppercase tracking-widest">
-                    +{Math.round(((item.meta12M - item.atual) / item.atual) * 100)}% de ganho estético
-                </span>
-            </div>
-        </div>
-    );
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SUB-COMPONENTE: Item de Proporção
@@ -479,31 +343,22 @@ export function CardMetasTrimestre({
                             Medidas em Foco
                         </p>
                         <div className="divide-y divide-white/5">
-                            {/* Proporção Principal (Gráfico de Linha 12m) */}
-                            {primaryItem && (
-                                <div className="bg-indigo-500/[0.03] -mx-5 px-5 border-b border-indigo-500/10">
-                                    <GraficoEvolucaoLinha
-                                        item={primaryItem}
-                                        medidas={medidas}
-                                        sexo={sexo}
-                                    />
-                                </div>
-                            )}
-
-                            {/* Outras Prioridades (3 Meses) */}
-                            {topPrioridades.map((item) => {
-                                const propAtual = analiseEstetica?.proporcoes?.find(
-                                    p => p.grupo === item.grupo
-                                );
-                                return (
-                                    <ItemProporção
-                                        key={item.grupo}
-                                        item={item}
-                                        medidas={medidas}
-                                        proporcaoAtual={propAtual}
-                                    />
-                                );
-                            })}
+                            {/* Metas Proporções em Ordem Específica */}
+                            {['Shape-V', 'SHR', 'Costas', 'Peitoral', 'Braço', 'Proporção de Braço', 'Cintura', 'WHR', 'Coxa', 'Desenvolvimento de Coxa', 'Coxa vs Pantur.', 'Panturrilha', 'Desenvolvimento de Panturrilha']
+                                .map(grupoKey => {
+                                    const metaItem = metasProporcoes?.find(m => m.grupo === grupoKey);
+                                    if (!metaItem) return null;
+                                    const propAtual = analiseEstetica?.proporcoes?.find(p => p.grupo === grupoKey);
+                                    return (
+                                        <ItemProporção
+                                            key={grupoKey}
+                                            item={metaItem}
+                                            medidas={medidas}
+                                            proporcaoAtual={propAtual}
+                                        />
+                                    );
+                                })
+                            }
                         </div>
                     </div>
                 )}

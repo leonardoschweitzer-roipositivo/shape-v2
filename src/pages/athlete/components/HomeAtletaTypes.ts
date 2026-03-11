@@ -17,6 +17,8 @@ export interface CardPersonalProps {
     exibirRanking: boolean
 }
 
+import type { DiagnosticoDados } from '@/services/calculations/diagnostico'
+
 export interface CardScoreMetaProps {
     scoreAtual: number
     classificacaoAtual: string
@@ -29,6 +31,9 @@ export interface CardScoreMetaProps {
     melhorMesHistorico: number
     percentualMeta: number
     pontosRestantes: number
+    diagnosticoDados?: DiagnosticoDados
+    sexo?: 'M' | 'F'
+    medidas?: any
 }
 
 export interface CardRankingProps {

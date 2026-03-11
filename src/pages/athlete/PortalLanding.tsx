@@ -398,6 +398,9 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
                             melhorMesHistorico={Math.abs(evolucaoMes)}
                             percentualMeta={percentualMeta}
                             pontosRestantes={pontosRestantes}
+                            diagnosticoDados={diagTyped}
+                            sexo={athleteData.ficha?.sexo as 'M' | 'F' || 'M'}
+                            medidas={medidasParaCard}
                         />
 
                         {/* 4. Metas do Trimestre */}
