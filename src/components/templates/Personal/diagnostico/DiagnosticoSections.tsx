@@ -110,6 +110,126 @@ export const ProgressBar: React.FC<{ pct: number; color?: string }> = ({ pct, co
     </div>
 );
 
+/** Gráfico de evolução/metas (estilo SHAPE-V) */
+const EvolutionChart: React.FC<{
+    labels: string[];
+    datasets: {
+        label: string;
+        data: number[];
+        color: string;
+        showArea?: boolean;
+    }[];
+    height?: number;
+    suffix?: string;
+}> = ({ labels, datasets, height = 150, suffix = '' }) => {
+    const width = 400; // SVG internal width
+    const paddingX = 35;
+    const paddingY = 25;
+
+    // Get overall min/max for scale across all datasets
+    const allVals = datasets.flatMap(d => d.data);
+    const rawMin = Math.min(...allVals);
+    const rawMax = Math.max(...allVals);
+    const range = (rawMax - rawMin) || 1;
+    
+    // Give some breathing room
+    const minVal = rawMin - range * 0.15;
+    const maxVal = rawMax + range * 0.15;
+    const newRange = maxVal - minVal;
+
+    const getX = (i: number) => paddingX + (i * (width - 2 * paddingX)) / (labels.length - 1);
+    const getY = (val: number) => height - paddingY - ((val - minVal) / newRange) * (height - 2 * paddingY);
+
+    return (
+        <div className="relative w-full bg-zinc-950/40 rounded-xl border border-white/5 overflow-hidden p-4">
+            {/* Grid Background */}
+            <svg className="absolute inset-0 w-full h-full opacity-5">
+                <defs>
+                    <pattern id="grid-evol" width="40" height="20" patternUnits="userSpaceOnUse">
+                        <path d="M 40 0 L 0 0 0 20" fill="none" stroke="white" strokeWidth="0.5" />
+                    </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#grid-evol)" />
+            </svg>
+
+            <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible relative z-10">
+                {datasets.map((ds, dsIdx) => {
+                    const points = ds.data.map((p, i) => `${i === 0 ? 'M' : 'L'} ${getX(i)} ${getY(p)}`).join(' ');
+                    const area = `${points} L ${getX(ds.data.length - 1)} ${height - paddingY} L ${getX(0)} ${height - paddingY} Z`;
+                    
+                    return (
+                        <g key={dsIdx}>
+                            {ds.showArea && (
+                                <>
+                                    <defs>
+                                        <linearGradient id={`grad-${ds.label.replace(/\s+/g, '-')}`} x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor={ds.color} stopOpacity="0.2" />
+                                            <stop offset="100%" stopColor={ds.color} stopOpacity="0" />
+                                        </linearGradient>
+                                    </defs>
+                                    <path d={area} fill={`url(#grad-${ds.label.replace(/\s+/g, '-')})`} className="transition-all duration-1000" />
+                                </>
+                            )}
+                            <path 
+                                d={points} 
+                                fill="none" 
+                                stroke={ds.color} 
+                                strokeWidth="3" 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round" 
+                                className="transition-all duration-1000"
+                            />
+                            {ds.data.map((p, i) => (
+                                <circle 
+                                    key={i} 
+                                    cx={getX(i)} 
+                                    cy={getY(p)} 
+                                    r="3.5" 
+                                    fill="#fff" 
+                                    stroke={ds.color} 
+                                    strokeWidth="2" 
+                                    className="transition-all duration-1000"
+                                />
+                            ))}
+                        </g>
+                    );
+                })}
+            </svg>
+
+            {/* Labels Meses */}
+            <div className="mt-3 flex justify-between px-1">
+                {labels.map((l, i) => (
+                    <div key={i} className="flex flex-col items-center">
+                        <span className="text-[9px] font-black text-zinc-600 uppercase tracking-tighter">{l}</span>
+                        {datasets.length === 1 && (
+                            <span className="text-[10px] font-mono text-zinc-400 font-bold">
+                                {datasets[0].data[i].toFixed(1)}{suffix}
+                            </span>
+                        )}
+                    </div>
+                ))}
+            </div>
+
+            {/* Legenda (se tiver >1 dataset) */}
+            {datasets.length > 1 && (
+                <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 px-1 border-t border-white/5 pt-3">
+                    {datasets.map((ds, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: ds.color }} />
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-tight leading-none">{ds.label}</span>
+                                <span className="text-[9px] font-mono text-zinc-500 font-bold">
+                                    {ds.data[0].toFixed(1)} → {ds.data[ds.data.length - 1].toFixed(1)}{suffix}
+                                </span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
 /** Card de seção */
 export const SectionCard: React.FC<{
     icon: React.ElementType;
@@ -219,31 +339,36 @@ export const SecaoComposicao: React.FC<{ dados: DiagnosticoDados; insightIA?: st
                 </div>
             </div>
 
-            {/* Tabela de projeção */}
-            <p className="text-base text-gray-500 mb-3 uppercase tracking-wider font-semibold">Projeção Trimestral</p>
-            <div className="overflow-x-auto">
-                <table className="w-full text-base">
-                    <thead>
-                        <tr className="border-b border-white/10">
-                            <th className="text-left py-3 text-gray-500 font-semibold">Período</th>
-                            <th className="text-right py-3 text-gray-500 font-semibold">Peso</th>
-                            <th className="text-right py-3 text-gray-500 font-semibold">BF%</th>
-                            <th className="text-right py-3 text-gray-500 font-semibold">M. Magra</th>
-                            <th className="text-right py-3 text-gray-500 font-semibold">M. Gorda</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {projecao.map((p) => (
-                            <tr key={p.mes} className="border-b border-white/5">
-                                <td className="py-3 text-gray-300 font-medium">{p.mes === 0 ? 'Atual' : `Mês ${p.mes}`}</td>
-                                <td className="py-3 text-right text-gray-400">{p.peso} kg</td>
-                                <td className="py-3 text-right text-gray-400">{Number(p.gorduraPct).toFixed(1)}%</td>
-                                <td className="py-3 text-right text-emerald-400">{p.massaMagra} kg</td>
-                                <td className="py-3 text-right text-red-400">{p.massaGorda} kg</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+            {/* Gráficos de Projeção */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <p className="text-sm text-gray-500 mb-3 uppercase tracking-wider font-semibold flex items-center gap-2">
+                        <TrendingUp size={14} className="text-primary" />
+                        Metas de Peso (12 Meses)
+                    </p>
+                    <EvolutionChart 
+                        labels={['Agora', '3m', '6m', '9m', '12m']} 
+                        datasets={[
+                            { label: 'Peso Total', data: projecao.map(p => p.peso), color: '#6366f1', showArea: true },
+                            { label: 'Massa Magra', data: projecao.map(p => p.massaMagra), color: '#10B981' },
+                            { label: 'Massa Gorda', data: projecao.map(p => p.massaGorda), color: '#F43F5E' },
+                        ]} 
+                        suffix="kg" 
+                    />
+                </div>
+                <div>
+                    <p className="text-sm text-gray-500 mb-3 uppercase tracking-wider font-semibold flex items-center gap-2">
+                        <Activity size={14} className="text-amber-500" />
+                        Evolução do BF (12 Meses)
+                    </p>
+                    <EvolutionChart 
+                        labels={['Agora', '3m', '6m', '9m', '12m']} 
+                        datasets={[
+                            { label: 'BF %', data: projecao.map(p => p.gorduraPct), color: '#F59E0B', showArea: true },
+                        ]} 
+                        suffix="%" 
+                    />
+                </div>
             </div>
 
             <InsightBox isLoading={isLoading} text={insightIA || `Atualmente com ${composicaoAtual.peso}kg — sendo ${composicaoAtual.massaMagra}kg de massa magra e ${composicaoAtual.massaGorda}kg de gordura (${Number(composicaoAtual.gorduraPct).toFixed(1)}%). ${composicaoAtual.gorduraPct > 20 ? 'A prioridade é reduzir gordura corporal via déficit calórico moderado combinado com treino de força para preservar massa magra.' : composicaoAtual.gorduraPct > 15 ? 'Faixa de transição — é possível buscar recomposição corporal simultânea (perder gordura e ganhar músculo) com alimentação estratégica.' : 'BF em faixa atlética. O foco deve ser ganho gradual de massa magra com surplus calórico controlado (+200-300 kcal).'} Meta 12M: ${metasComposicao.gordura12Meses}% de gordura, peso projetado de ${metasComposicao.peso12Meses}kg. A mudança visual será significativa mesmo que a balança não mude drasticamente.`} />
