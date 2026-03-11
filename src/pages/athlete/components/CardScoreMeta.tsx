@@ -250,7 +250,7 @@ export function CardScoreMeta({
                         {/* Score Meta */}
                         <div className="text-center w-1/4">
                             <div className="flex flex-col">
-                                <span className="text-[2.2rem] sm:text-[2.5rem] font-black leading-none text-gray-300">
+                                <span className="text-[2.2rem] sm:text-[2.5rem] font-black leading-none text-amber-50">
                                     {scoreMeta.toFixed(1)}
                                 </span>
                                 <span className="text-[10px] font-black tracking-widest uppercase mt-1" style={{ color: corMeta }}>
