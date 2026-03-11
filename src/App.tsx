@@ -1063,20 +1063,26 @@ const App: React.FC = () => {
     );
   }
 
-  // B. Dashboard Flash Guard (Mobile @ Root): Evita montar o Dashboard desktop antes do redirect
-  if (isAuthenticated && window.location.pathname === '/' && isMobile) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-black text-white">
-        <div className="text-center space-y-4">
-          <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-xs text-gray-500 font-medium uppercase tracking-widest">Acessando seu portal...</p>
+  // B. Dashboard Flash Guard (Mobile @ Root OR Atleta vinculado @ Root):
+  // Evita montar o Dashboard desktop antes do redirect
+  if (isAuthenticated && window.location.pathname === '/') {
+    const role = userProfile?.toUpperCase();
+    const isVinculado = role === 'ATLETA' && !!entity?.atleta?.personal_id;
+    if (isMobile || isVinculado) {
+      return (
+        <div className="flex h-screen w-full items-center justify-center bg-black text-white">
+          <div className="text-center space-y-4">
+            <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <p className="text-xs text-gray-500 font-medium uppercase tracking-widest">Acessando seu portal...</p>
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
   }
 
   // C. General Unauthenticated: Renderiza Login se não houver sessão ativa
-  if (!isAuthenticated && !isAtletaRoute && !personalPortalId && !academiaPortalId && !isGodRoute && !isMeuPortalRoute) {
+  if (!isAuthenticated && !personalPortalId && !academiaPortalId && !isGodRoute && !isMeuPortalRoute) {
+    // Inclui /atleta — Login vai auto-preencher credenciais da URL se presentes
     return <Login onLogin={() => { }} />;
   }
 
