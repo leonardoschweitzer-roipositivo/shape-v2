@@ -47,8 +47,8 @@ export function CardScoreMeta({
     // Helpers para o Gráfico (originais do MetasTrimestre)
     const getLabelGrupo = (grupo: string) => {
         const map: Record<string, { emoji: string; label: string }> = {
-            'Shape-V': { emoji: '🔺', label: 'Ombros (V-Shape)' },
-            'SHR': { emoji: '🔺', label: 'Ombros (Ratio)' },
+            'Shape-V': { emoji: '▽', label: 'Shape-V' },
+            'SHR': { emoji: '▽', label: 'Ombros (Ratio)' },
             'Ampulheta': { emoji: '⏳', label: 'Formato Ampulheta' },
         }
         return map[grupo] ?? { emoji: '📏', label: grupo }
@@ -66,13 +66,18 @@ export function CardScoreMeta({
             if (!primaryPropData) return null;
         }
 
+        // Se meta12M existe mas meta3M/6M/9M não, interpolar linearmente
+        const atual = primaryPropData.atual
+        const meta12M = primaryMetaFound?.meta12M ?? atual
+        const ganho = meta12M - atual
+
         const item = {
             grupo: primaryPropData.grupo,
-            atual: primaryPropData.atual,
-            meta3M: primaryMetaFound?.meta3M ?? primaryPropData.atual,
-            meta6M: primaryMetaFound?.meta6M ?? primaryPropData.atual,
-            meta9M: primaryMetaFound?.meta9M ?? primaryPropData.atual,
-            meta12M: primaryMetaFound?.meta12M ?? primaryPropData.atual,
+            atual,
+            meta3M: primaryMetaFound?.meta3M ?? Math.round((atual + ganho * 0.25) * 100) / 100,
+            meta6M: primaryMetaFound?.meta6M ?? Math.round((atual + ganho * 0.50) * 100) / 100,
+            meta9M: primaryMetaFound?.meta9M ?? Math.round((atual + ganho * 0.75) * 100) / 100,
+            meta12M,
         }
 
         const { emoji, label } = getLabelGrupo(item.grupo)
