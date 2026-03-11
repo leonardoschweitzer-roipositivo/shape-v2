@@ -418,72 +418,13 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
     // ---- Estado: Sem medidas (Primeiro acesso) ----
     const temAvaliacao = !!lastAval || !!lastMedida;
 
-    // Se onboarding completo mas sem medidas reais, mostrar CTA
+    // Se onboarding completo mas sem medidas reais, mostrar CTA ou Dashboard
     const onboardingCompleto = !!athleteData.ficha?.onboarding_completo;
-    if (!temAvaliacao && onboardingCompleto) {
-        return (
-            <div className="min-h-screen bg-background-dark text-white">
-                <HeaderIdentidade
-                    nome={athleteData.nome}
-                    sexo={sexoLabel}
-                    altura={altura}
-                    peso={peso}
-                    fotoUrl={undefined}
-                    personalNome={athleteData.personalNome}
-                />
 
-                {/* CTA: Medições pendentes */}
-                <div className="mx-4 mt-8 bg-gradient-to-br from-surface-deep to-background-dark rounded-2xl p-8 border border-white/5 text-center shadow-xl">
-                    <div className="text-5xl mb-4">📊</div>
-                    <h2 className="text-white font-black text-lg uppercase tracking-widest mb-3">
-                        AGUARDANDO MEDIDAS
-                    </h2>
-                    <p className="text-gray-400 text-sm leading-relaxed max-w-xs mx-auto mb-6">
-                        {athleteData.ficha?.metodo_medidas === 'PERSONAL'
-                            ? 'Seu personal entrará em contato para realizar suas medidas presencialmente.'
-                            : 'Você pode registrar suas medidas a qualquer momento usando as opções abaixo.'}
-                    </p>
-
-                    {athleteData.ficha?.metodo_medidas !== 'PERSONAL' && (
-                        <>
-                            <button
-                                onClick={onGoToMeasurements}
-                                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-4 rounded-xl font-black tracking-widest text-sm uppercase transition-all active:scale-95 shadow-lg shadow-indigo-500/20 mb-3"
-                            >
-                                📏 COM FITA MÉTRICA
-                            </button>
-                            <div className="flex items-center gap-3 mb-3">
-                                <div className="flex-1 h-px bg-white/5" />
-                                <span className="text-[10px] text-gray-600 font-bold uppercase">ou</span>
-                                <div className="flex-1 h-px bg-white/5" />
-                            </div>
-                            <button
-                                onClick={onGoToVirtualAssessment}
-                                className="w-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-indigo-500/30 text-white py-4 rounded-xl font-black tracking-widest text-sm uppercase transition-all active:scale-95"
-                            >
-                                📸 COM FOTOS (IA)
-                            </button>
-                        </>
-                    )}
-                </div>
-
-                {/* Sair da conta */}
-                <div className="mt-8 pb-10 text-center opacity-30 hover:opacity-100 transition-opacity">
-                    <button
-                        onClick={onLogout}
-                        className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium"
-                    >
-                        Sair da conta
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
-    // ---- Estado: Com avaliação — HOME COMPLETA v2.0 ----
+    // ---- Estado: Renderização Principal ----
     return (
-        <div className="min-h-screen bg-background-dark text-white pb-4">
-            {/* Floating notification bell — top right */}
+        <div className="min-h-screen bg-background-dark text-white pb-24 relative flex flex-col">
+            {/* Header / Notificações */}
             <button
                 onClick={() => onGoToPortal('notificacoes')}
                 className="fixed top-8 right-4 z-40 w-10 h-10 rounded-full bg-white/5 backdrop-blur-md border border-white/10 flex items-center justify-center transition-all active:scale-90 hover:bg-white/10"
@@ -499,7 +440,6 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
                 )}
             </button>
 
-            {/* 1. Header Integrado com Personal */}
             <HeaderIdentidade
                 nome={athleteData.nome}
                 sexo={sexoLabel}
@@ -510,68 +450,123 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
                 personalRanking={3}
             />
 
-            {/* Card de Consistência */}
-            {dadosConsistencia && (
-                <CardConsistencia dados={dadosConsistencia} />
-            )}
+            <main className="flex-1">
+                {!temAvaliacao && onboardingCompleto ? (
+                    /* ESTADO: AGUARDANDO MEDIDAS (INFO) */
+                    <div className="mx-4 mt-8 bg-gradient-to-br from-surface-deep to-background-dark rounded-2xl p-8 border border-white/5 text-center shadow-xl animate-fade-in">
+                        <div className="text-5xl mb-4">📊</div>
+                        <h2 className="text-white font-black text-lg uppercase tracking-widest mb-3">
+                            AGUARDANDO MEDIDAS
+                        </h2>
+                        <p className="text-gray-400 text-sm leading-relaxed max-w-xs mx-auto mb-6">
+                            {athleteData.ficha?.metodo_medidas === 'PERSONAL'
+                                ? 'Seu personal entrará em contato para realizar suas medidas presencialmente.'
+                                : 'Você pode registrar suas medidas a qualquer momento usando as opções abaixo.'}
+                        </p>
 
-            {/* Botão "VER TREINO DE HOJE" (Centralizado, estilo Primário) */}
-            <div className="max-w-2xl mx-auto px-6 mt-6 mb-6">
-                <button
-                    onClick={() => onGoToPortal('hoje')}
-                    className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-4 rounded-xl font-black tracking-widest text-sm uppercase transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
-                >
-                    <Play size={18} fill="white" />
-                    VER TREINO DE HOJE
-                </button>
-            </div>
+                        {athleteData.ficha?.metodo_medidas !== 'PERSONAL' && (
+                            <div className="space-y-3">
+                                <button
+                                    onClick={onGoToMeasurements}
+                                    className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-4 rounded-xl font-black tracking-widest text-sm uppercase transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
+                                >
+                                    📏 COM FITA MÉTRICA
+                                </button>
+                                <div className="flex items-center gap-3 py-1">
+                                    <div className="flex-1 h-px bg-white/5" />
+                                    <span className="text-[10px] text-gray-600 font-bold uppercase">ou</span>
+                                    <div className="flex-1 h-px bg-white/5" />
+                                </div>
+                                <button
+                                    onClick={onGoToVirtualAssessment}
+                                    className="w-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-indigo-500/30 text-white py-4 rounded-xl font-black tracking-widest text-sm uppercase transition-all active:scale-95"
+                                >
+                                    📸 COM FOTOS (IA)
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    /* ESTADO: HOME COMPLETA (DASHBOARD) */
+                    <div className="animate-fade-in space-y-12">
+                        {/* 1. Score & Meta */}
+                        <CardScoreMeta
+                            scoreAtual={scoreAtual}
+                            classificacaoAtual={classificacaoAtual}
+                            dataUltimaAvaliacao={dataUltimaAvaliacao}
+                            scoreMeta={scoreMeta}
+                            classificacaoMeta={classificacaoMeta}
+                            prazoMeta={prazoMeta}
+                            evolucaoMes={evolucaoMes}
+                            evolucaoMesAnterior={0}
+                            melhorMesHistorico={Math.abs(evolucaoMes)}
+                            percentualMeta={percentualMeta}
+                            pontosRestantes={pontosRestantes}
+                        />
 
-            {/* 3. Card Score + Meta */}
-            <CardScoreMeta
-                scoreAtual={scoreAtual}
-                classificacaoAtual={classificacaoAtual}
-                dataUltimaAvaliacao={dataUltimaAvaliacao}
-                scoreMeta={scoreMeta}
-                classificacaoMeta={classificacaoMeta}
-                prazoMeta={prazoMeta}
-                evolucaoMes={evolucaoMes}
-                evolucaoMesAnterior={0}
-                melhorMesHistorico={Math.abs(evolucaoMes)}
-                percentualMeta={percentualMeta}
-                pontosRestantes={pontosRestantes}
-            />
+                        {/* 2. Metas do Trimestre */}
+                        {diagTyped && (
+                            <CardMetasTrimestre
+                                diagnosticoDados={diagTyped}
+                                sexo={athleteData.ficha?.sexo as 'M' | 'F' || 'M'}
+                                composicaoAtual={{
+                                    peso: peso || 0,
+                                    gorduraPct: bfAtual,
+                                }}
+                                medidas={medidasParaCard}
+                            />
+                        )}
 
-            {/* 4. Card Metas do Trimestre (baseado no Diagnóstico IA) */}
-            {diagTyped && (
-                <CardMetasTrimestre
-                    diagnosticoDados={diagTyped}
-                    sexo={athleteData.ficha?.sexo as 'M' | 'F' || 'M'}
-                    composicaoAtual={{
-                        peso: peso || 0,
-                        gorduraPct: bfAtual,
-                    }}
-                    medidas={medidasParaCard}
-                />
-            )}
+                        {/* 3. Consistência */}
+                        {dadosConsistencia && (
+                            <CardConsistencia dados={dadosConsistencia} />
+                        )}
 
-            {/* Botão Preencher Contexto */}
-            <div className="max-w-2xl mx-auto px-6 mb-6">
-                <button
-                    onClick={onGoToContexto}
-                    className="w-full flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 hover:text-white py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all"
-                >
-                    📝 Preencher meu contexto
-                </button>
-            </div>
+                        {/* Botão Principal Treino */}
+                        <div className="max-w-2xl mx-auto px-6 mb-6">
+                            <button
+                                onClick={() => onGoToPortal('hoje')}
+                                className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-4 rounded-xl font-black tracking-widest text-sm uppercase transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
+                            >
+                                <Play size={18} fill="white" />
+                                VER TREINO DE HOJE
+                            </button>
+                        </div>
 
-            {/* 7. Footer */}
-            <FooterUltimaMedicao
-                dataUltimaMedida={lastMedida ? new Date(lastMedida.data) : new Date()}
-                diasDesdeUltima={diasDesdeUltima}
-                statusMedicao={statusMedicao}
-            />
+                        {/* 4. Foco da Semana (IA Insights) */}
+                        <div className="px-4 space-y-4">
+                            <div className="flex items-center gap-2">
+                                <Shield className="text-primary" size={16} />
+                                <h3 className="text-xs font-black uppercase tracking-widest text-zinc-400">FOCO DA SEMANA</h3>
+                            </div>
+                            <div className="bg-surface-deep rounded-2xl p-5 border border-white/5 relative overflow-hidden group">
+                                <p className="text-white text-sm font-medium leading-relaxed relative z-10">
+                                    Otimize sua recuperação. Mantenha o foco em <span className="text-primary">Membros Inferiores</span> e hidratação constate.
+                                </p>
+                            </div>
+                        </div>
 
-            {/* Discreet Logout */}
+                        {/* Botão Contexto */}
+                        <div className="max-w-2xl mx-auto px-6 mb-6">
+                            <button
+                                onClick={onGoToContexto}
+                                className="w-full flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 hover:text-white py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all"
+                            >
+                                📝 Preencher meu contexto
+                            </button>
+                        </div>
+
+                        {/* Footer Última Medição */}
+                        <FooterUltimaMedicao
+                            dataUltimaMedida={lastMedida ? new Date(lastMedida.data) : new Date()}
+                            diasDesdeUltima={diasDesdeUltima}
+                            statusMedicao={statusMedicao}
+                        />
+                    </div>
+                )}
+            </main>
+
+            {/* Sair da conta (Discreto) */}
             <div className="py-8 text-center opacity-30 hover:opacity-100 transition-opacity">
                 <button
                     onClick={onLogout}
@@ -580,9 +575,6 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
                     Sair da conta
                 </button>
             </div>
-
-            {/* Espaço para o menu não sobrepor o footer */}
-            <div className="h-20" />
 
             {/* Menu Inferior */}
             <BottomNavigation
@@ -596,4 +588,5 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
             />
         </div>
     );
+}
 }
