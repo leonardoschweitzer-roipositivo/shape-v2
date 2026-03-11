@@ -156,7 +156,7 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                         console.info('[Cadastro Rápido] ✅ Conta Auth criada e vinculada:', signUpData.user.id);
 
                         // Gerar link de login com credenciais pré-preenchidas
-                        const loginUrl = `${baseUrl}/atleta?email=${encodeURIComponent(athleteEmailTrimmed)}&p=${encodeURIComponent(DEFAULT_ATHLETE_PASSWORD)}`;
+                        const loginUrl = `${baseUrl}/atleta?email=${encodeURIComponent(athleteEmailTrimmed)}&p=${encodeURIComponent(DEFAULT_ATHLETE_PASSWORD).replace(/!/g, '%21')}`;
                         setLoginLink(loginUrl);
                         setAthleteEmail(athleteEmailTrimmed);
                     }

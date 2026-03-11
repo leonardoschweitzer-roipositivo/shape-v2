@@ -188,7 +188,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                     updateAthlete({ ...athlete, auth_user_id: signUpData.user.id } as any);
                     setDraftAthlete(prev => ({ ...prev, auth_user_id: signUpData.user.id } as any));
 
-                    finalLink = `${baseUrl}/atleta?email=${encodeURIComponent(athleteEmailTrimmed)}&p=${encodeURIComponent(DEFAULT_ATHLETE_PASSWORD)}`;
+                    finalLink = `${baseUrl}/atleta?email=${encodeURIComponent(athleteEmailTrimmed)}&p=${encodeURIComponent(DEFAULT_ATHLETE_PASSWORD).replace(/!/g, '%21')}`;
                 } else {
                     throw new Error('Falha na criação da conta.');
                 }

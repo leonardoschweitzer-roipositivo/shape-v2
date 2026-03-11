@@ -150,7 +150,7 @@ export function NovoAlunoScreen({ onVoltar, onCadastrado }: NovoAlunoScreenProps
                             .update({ auth_user_id: signUpData.user.id } as Record<string, unknown>)
                             .eq('id', atleta.id)
 
-                        setLoginLink(`${baseUrl}/atleta?email=${encodeURIComponent(emailTrimmed)}&p=${encodeURIComponent(DEFAULT_ATHLETE_PASSWORD)}`)
+                        setLoginLink(`${baseUrl}/atleta?email=${encodeURIComponent(emailTrimmed)}&p=${encodeURIComponent(DEFAULT_ATHLETE_PASSWORD).replace(/!/g, '%21')}`)
                         setEmailAluno(emailTrimmed)
                     }
                 } catch {
