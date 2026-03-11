@@ -61,15 +61,18 @@ export function CardScoreMeta({
         const primaryPropData = diagnosticoDados.analiseEstetica?.proporcoes?.find(p => p.grupo === primaryGroupName)
         const primaryMetaFound = diagnosticoDados.metasProporcoes?.find(m => m.grupo === primaryGroupName)
 
-        if (!primaryPropData || !primaryMetaFound) return null
+        if (!primaryPropData || !primaryMetaFound) {
+            // Fallback: se não encontrar no metasProporcoes, tenta achar apenas os dados de proporção atuais
+            if (!primaryPropData) return null;
+        }
 
         const item = {
             grupo: primaryPropData.grupo,
             atual: primaryPropData.atual,
-            meta3M: primaryMetaFound.meta3M,
-            meta6M: primaryMetaFound.meta6M,
-            meta9M: primaryMetaFound.meta9M,
-            meta12M: primaryMetaFound.meta12M,
+            meta3M: primaryMetaFound?.meta3M ?? primaryPropData.atual,
+            meta6M: primaryMetaFound?.meta6M ?? primaryPropData.atual,
+            meta9M: primaryMetaFound?.meta9M ?? primaryPropData.atual,
+            meta12M: primaryMetaFound?.meta12M ?? primaryPropData.atual,
         }
 
         const { emoji, label } = getLabelGrupo(item.grupo)

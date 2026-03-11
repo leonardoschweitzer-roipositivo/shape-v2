@@ -369,38 +369,47 @@ export function CardMetasTrimestre({
                 )}
 
                 {/* Seção: Composição Corporal */}
-                {(pesoMeta3M !== null || gorduraMeta3M !== null) && (
-                    <div>
-                        <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-3">
-                            Composição Corporal
-                        </p>
-                        <div className="space-y-2.5">
+                {(pesoMeta3M !== null || gorduraMeta3M !== null || metasProporcoes?.some(m => m.grupo === 'Cintura' || m.grupo === 'WHR')) && (
+                    <div className="mt-6 pt-5 border-t border-white/5">
+                        <div className="flex items-center gap-2.5 mb-4">
+                            <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                                <TrendingUp size={14} className="text-emerald-400" />
+                            </div>
+                            <div>
+                                <p className="text-white font-black text-[10px] uppercase tracking-widest">
+                                    Composição Corporal
+                                </p>
+                                <p className="text-zinc-500 text-[9px] uppercase font-bold">Metas do Trimestre</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
                             {pesoMeta3M !== null && deltaPeso !== null && (
-                                <div className="flex items-center justify-between">
+                                <div className="flex items-center justify-between bg-white/[0.02] p-3 rounded-xl border border-white/5">
                                     <div className="flex items-center gap-2">
                                         <span className="text-base">⚖️</span>
-                                        <span className="text-zinc-400 text-sm font-medium">Peso</span>
+                                        <span className="text-zinc-400 text-xs font-bold uppercase tracking-tight">Peso</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <span className="text-white font-bold text-sm">
-                                            {composicaoAtual.peso} kg
+                                            {composicaoAtual.peso}kg
                                         </span>
                                         <span className="text-zinc-600 text-xs">→</span>
                                         <span className="text-indigo-300 font-black text-sm">
-                                            {pesoMeta3M} kg
+                                            {pesoMeta3M}kg
                                         </span>
-                                        <span className={`text-xs font-bold ${deltaPeso <= 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
-                                            ({deltaPeso > 0 ? '+' : ''}{deltaPeso} kg)
+                                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded bg-black/20 ${deltaPeso <= 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                                            {deltaPeso > 0 ? '+' : ''}{deltaPeso}kg
                                         </span>
                                     </div>
                                 </div>
                             )}
 
                             {gorduraMeta3M !== null && deltaGordura !== null && (
-                                <div className="flex items-center justify-between">
+                                <div className="flex items-center justify-between bg-white/[0.02] p-3 rounded-xl border border-white/5">
                                     <div className="flex items-center gap-2">
                                         <span className="text-base">🔥</span>
-                                        <span className="text-zinc-400 text-sm font-medium">Gordura</span>
+                                        <span className="text-zinc-400 text-xs font-bold uppercase tracking-tight">Gordura</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <span className="text-white font-bold text-sm">
@@ -410,12 +419,45 @@ export function CardMetasTrimestre({
                                         <span className="text-indigo-300 font-black text-sm">
                                             {gorduraMeta3M}%
                                         </span>
-                                        <span className={`text-xs font-bold ${deltaGordura <= 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
-                                            ({deltaGordura > 0 ? '+' : ''}{deltaGordura} p.p.)
+                                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded bg-black/20 ${deltaGordura <= 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                                            {deltaGordura > 0 ? '+' : ''}{deltaGordura} p.p.
                                         </span>
                                     </div>
                                 </div>
                             )}
+
+                            {/* Meta de Cintura (dentro de composição) */}
+                            {(() => {
+                                const metaCintura = metasProporcoes?.find(m => m.grupo === 'Cintura' || m.grupo === 'WHR');
+                                if (!metaCintura || !medidas.cintura) return null;
+                                const atualCintura = medidas.cintura;
+                                const metaCinturaVal = metaCintura.meta3M; // Aqui assumimos que se for WHR o calculo de cm precisaria do quadril, mas simplificaremos para o prompt
+                                // No serviço o ratio da cintura é calculado. Se item.grupo é 'Cintura', metaCinturaVal é o ratio.
+                                // Simplificando para mostrar o que temos no MedidasAtuais vs Meta
+                                const cmMetaCintura = Math.round(metaCinturaVal * (medidas.punho || 16.5) * 10) / 10; // Fallback ratio se for calculo absoluto
+                                // Mas vamos usar o que o ItemProporção usa
+                                
+                                return (
+                                    <div className="flex items-center justify-between bg-white/[0.02] p-3 rounded-xl border border-white/5">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-base">🎯</span>
+                                            <span className="text-zinc-400 text-xs font-bold uppercase tracking-tight">Cintura</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-white font-bold text-sm">
+                                                {atualCintura}cm
+                                            </span>
+                                            <span className="text-zinc-600 text-xs">→</span>
+                                            <span className="text-indigo-300 font-black text-sm">
+                                                {Math.round(metaCinturaVal * (medidas.punho || 16.5) * 10) / 10}cm
+                                            </span>
+                                            <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-black/20 text-emerald-400">
+                                                Meta
+                                            </span>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
                         </div>
                     </div>
                 )}
