@@ -37,6 +37,9 @@ interface SupaFichaRow {
     tornozelo: number | null;
     joelho: number | null;
     pelve: number | null;
+    onboarding_completo: boolean | null;
+    metodo_medidas: string | null;
+    nivel_atividade: string | null;
     [key: string]: unknown;
 }
 
@@ -113,6 +116,9 @@ export interface PortalAthleteData {
         tornozelo: number | null;
         joelho: number | null;
         pelve: number | null;
+        onboarding_completo: boolean | null;
+        metodo_medidas: string | null;
+        nivel_atividade: string | null;
     } | null;
     medidas: Array<{
         id: string;
@@ -326,6 +332,9 @@ export const portalService = {
                 tornozelo: fichaTyped.tornozelo,
                 joelho: fichaTyped.joelho,
                 pelve: fichaTyped.pelve,
+                onboarding_completo: fichaTyped.onboarding_completo,
+                metodo_medidas: fichaTyped.metodo_medidas,
+                nivel_atividade: fichaTyped.nivel_atividade,
             } : null,
             medidas: medidasTyped.map(m => ({
                 id: m.id,

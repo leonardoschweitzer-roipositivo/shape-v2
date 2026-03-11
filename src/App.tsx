@@ -186,23 +186,30 @@ const App: React.FC = () => {
     checkSession();
   }, [checkSession]);
 
-  // 🛡️ Redirecionamento Automático Proativo para Portais (Root Mobile)
+  // 🛡️ Redirecionamento Automático Proativo para Portais
   // Garante que o usuário vá direto ao portal se cair na raiz por engano ou refresh.
+  // Atleta vinculado (com personal_id) SEMPRE vai para /atleta, qualquer dispositivo.
   useEffect(() => {
-    if (isAuthenticated && window.location.pathname === '/' && isMobile) {
+    if (isAuthenticated && window.location.pathname === '/') {
       const role = userProfile?.toUpperCase();
-      if (role === 'PERSONAL' && entity?.personal?.id) {
+      if (role === 'PERSONAL' && entity?.personal?.id && isMobile) {
         window.location.replace(`/personal/${entity.personal.id}`);
       } else if (role === 'ATLETA' && entity?.atleta) {
         const isVinculado = !!entity.atleta.personal_id;
-        window.location.replace(isVinculado ? '/atleta' : '/meu-portal');
-      } else if (role === 'ACADEMIA' && entity?.academia?.id) {
+        if (isVinculado) {
+          // Atleta vinculado → SEMPRE Portal do Aluno, qualquer dispositivo
+          window.location.replace('/atleta');
+        } else if (isMobile) {
+          // Atleta independente → portal mobile apenas
+          window.location.replace('/meu-portal');
+        }
+      } else if (role === 'ACADEMIA' && entity?.academia?.id && isMobile) {
         window.location.replace(`/academia/${entity.academia.id}`);
-      } else if (userProfile === 'god') {
+      } else if (userProfile === 'god' && isMobile) {
         window.location.replace('/god');
       }
     }
-  }, [isAuthenticated, userProfile, entity]); // Removed isMobile from dependency array as it's defined inside
+  }, [isAuthenticated, userProfile, entity]);
 
   // FORÇA limpeza de caches antigos para todos os usuários com a nova atualização
   useEffect(() => {

@@ -26,6 +26,7 @@ import { buscarDadosConsistencia, type DadosConsistencia } from '@/services/cons
 import { portalNotificacaoService } from '@/services/portal/portalNotificacaoService';
 import { type DiagnosticoDados } from '@/services/calculations/diagnostico';
 import { SelfMeasurements } from './SelfMeasurements';
+import { OnboardingWizard } from './OnboardingWizard';
 import { ContextoFormPublico } from './ContextoFormPublico';
 import { AthletePortal } from '../AthletePortal';
 import { VirtualAssessmentWizard } from '../../components/organisms/VirtualAssessmentWizard';
@@ -46,7 +47,7 @@ interface PortalLandingProps {
     onClose?: () => void;
 }
 
-type PortalView = 'home' | 'measurements' | 'virtual-assessment' | 'portal' | 'contexto';
+type PortalView = 'home' | 'measurements' | 'virtual-assessment' | 'portal' | 'contexto' | 'onboarding';
 
 // ---- Helpers de classificação ----
 const CLASSIFICACOES = [
@@ -208,6 +209,31 @@ export function PortalLanding({ token, atletaId, onClose }: PortalLandingProps) 
                     setView('contexto');
                 }}
                 onClose={() => setView('home')}
+            />
+        );
+    }
+
+    // ---- Onboarding: Wizard de Primeira Vez ----
+    const temAvaliacaoGlobal = !!(athleteData.avaliacoes?.length) || !!(athleteData.medidas?.length);
+    const onboardingCompletoGlobal = !!athleteData.ficha?.onboarding_completo;
+
+    if (!temAvaliacaoGlobal && !onboardingCompletoGlobal) {
+        return (
+            <OnboardingWizard
+                atletaId={athleteData.id}
+                atletaNome={athleteData.nome}
+                sexo={(athleteData.ficha?.sexo as 'M' | 'F') || 'M'}
+                onComplete={async () => {
+                    let updated: PortalAthleteData | null = null;
+                    if (token) {
+                        updated = await portalService.validateToken(token);
+                    } else if (atletaId) {
+                        updated = await portalService.getAthleteDataById(atletaId);
+                    }
+                    if (updated) setAthleteData(updated);
+                    setView('home');
+                }}
+                onGoToVirtualAssessment={() => setView('virtual-assessment')}
             />
         );
     }
@@ -388,7 +414,9 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
     // ---- Estado: Sem medidas (Primeiro acesso) ----
     const temAvaliacao = !!lastAval || !!lastMedida;
 
-    if (!temAvaliacao) {
+    // Se onboarding completo mas sem medidas reais, mostrar CTA
+    const onboardingCompleto = !!athleteData.ficha?.onboarding_completo;
+    if (!temAvaliacao && onboardingCompleto) {
         return (
             <div className="min-h-screen bg-background-dark text-white">
                 <HeaderIdentidade
@@ -400,47 +428,40 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
                     personalNome={athleteData.personalNome}
                 />
 
-                {/* CTA Primeiro Acesso */}
+                {/* CTA: Medições pendentes */}
                 <div className="mx-4 mt-8 bg-gradient-to-br from-surface-deep to-background-dark rounded-2xl p-8 border border-white/5 text-center shadow-xl">
-                    <div className="text-5xl mb-4">🎯</div>
+                    <div className="text-5xl mb-4">📊</div>
                     <h2 className="text-white font-black text-lg uppercase tracking-widest mb-3">
-                        COMECE SUA JORNADA
+                        AGUARDANDO MEDIDAS
                     </h2>
                     <p className="text-gray-400 text-sm leading-relaxed max-w-xs mx-auto mb-6">
-                        Escolha como registrar suas medidas para descobrir seu <strong className="text-white">Score Shape-V</strong> e
-                        receber seu plano personalizado de evolução.
+                        {athleteData.ficha?.metodo_medidas === 'PERSONAL'
+                            ? 'Seu personal entrará em contato para realizar suas medidas presencialmente.'
+                            : 'Você pode registrar suas medidas a qualquer momento usando as opções abaixo.'}
                     </p>
 
-                    {/* Opção 1: Fita Métrica (primária) */}
-                    <button
-                        onClick={onGoToMeasurements}
-                        className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-4 rounded-xl font-black tracking-widest text-sm uppercase transition-all active:scale-95 shadow-lg shadow-indigo-500/20 mb-3"
-                    >
-                        📏 COM FITA MÉTRICA
-                    </button>
-                    <p className="text-gray-600 text-[10px] font-medium mb-5">
-                        Use fita métrica e adipômetro • Máxima precisão • ~5 min
-                    </p>
-
-                    {/* Divisor */}
-                    <div className="flex items-center gap-3 mb-5">
-                        <div className="flex-1 h-px bg-white/5" />
-                        <span className="text-[10px] text-gray-600 font-bold uppercase">ou</span>
-                        <div className="flex-1 h-px bg-white/5" />
-                    </div>
-
-                    {/* Opção 2: Fotos IA (secundária) */}
-                    <button
-                        onClick={onGoToVirtualAssessment}
-                        className="w-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-indigo-500/30 text-white py-4 rounded-xl font-black tracking-widest text-sm uppercase transition-all active:scale-95"
-                    >
-                        📸 COM FOTOS (IA)
-                    </button>
-                    <p className="text-gray-600 text-[10px] font-medium mt-3">
-                        Tire 4 fotos e a IA estima suas medidas • ~2 min
-                    </p>
+                    {athleteData.ficha?.metodo_medidas !== 'PERSONAL' && (
+                        <>
+                            <button
+                                onClick={onGoToMeasurements}
+                                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-4 rounded-xl font-black tracking-widest text-sm uppercase transition-all active:scale-95 shadow-lg shadow-indigo-500/20 mb-3"
+                            >
+                                📏 COM FITA MÉTRICA
+                            </button>
+                            <div className="flex items-center gap-3 mb-3">
+                                <div className="flex-1 h-px bg-white/5" />
+                                <span className="text-[10px] text-gray-600 font-bold uppercase">ou</span>
+                                <div className="flex-1 h-px bg-white/5" />
+                            </div>
+                            <button
+                                onClick={onGoToVirtualAssessment}
+                                className="w-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-indigo-500/30 text-white py-4 rounded-xl font-black tracking-widest text-sm uppercase transition-all active:scale-95"
+                            >
+                                📸 COM FOTOS (IA)
+                            </button>
+                        </>
+                    )}
                 </div>
-
             </div>
         );
     }

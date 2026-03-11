@@ -32,8 +32,50 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [autoLoginAttempted, setAutoLoginAttempted] = useState(false);
 
     const { signIn, signUp } = useAuthStore();
+
+    // 🔗 Auto-preencher credenciais da URL (link gerado pelo Personal no cadastro do aluno)
+    // Formato: /atleta?email=xxx&p=yyy
+    React.useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const urlEmail = params.get('email');
+        const urlPassword = params.get('p');
+
+        if (urlEmail) {
+            setEmail(decodeURIComponent(urlEmail));
+        }
+        if (urlPassword) {
+            setPassword(decodeURIComponent(urlPassword));
+        }
+
+        // Auto-login se ambos estão presentes e ainda não tentamos
+        if (urlEmail && urlPassword && !autoLoginAttempted) {
+            setAutoLoginAttempted(true);
+            setIsLoading(true);
+
+            signIn(decodeURIComponent(urlEmail), decodeURIComponent(urlPassword))
+                .then(({ error: signInError }) => {
+                    if (signInError) {
+                        setError('Credenciais inválidas. Tente manualmente.');
+                        setIsLoading(false);
+                    } else {
+                        // Redirecionamento inteligente pós-login
+                        // Pequeno delay para garantir que o authStore atualizou
+                        setTimeout(() => {
+                            handleSmartRedirect();
+                            setIsLoading(false);
+                        }, 500);
+                    }
+                })
+                .catch(() => {
+                    setError('Erro ao conectar. Tente manualmente.');
+                    setIsLoading(false);
+                });
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     /**
      * Redirecionamento inteligente pós-login.
