@@ -66,17 +66,37 @@ export function CardScoreMeta({
             if (!primaryPropData) return null;
         }
 
-        // Se meta12M existe mas meta3M/6M/9M não, interpolar linearmente
+        // Calcular metas: priorizar dados do diagnóstico, com fallback inteligente
         const atual = primaryPropData.atual
-        const meta12M = primaryMetaFound?.meta12M ?? atual
-        const ganho = meta12M - atual
+        let meta12M: number
+        let meta3M: number
+        let meta6M: number
+        let meta9M: number
+
+        if (primaryMetaFound) {
+            // Dados completos do diagnóstico disponíveis
+            meta12M = primaryMetaFound.meta12M
+            meta3M = primaryMetaFound.meta3M ?? Math.round((atual + (meta12M - atual) * 0.25) * 100) / 100
+            meta6M = primaryMetaFound.meta6M ?? Math.round((atual + (meta12M - atual) * 0.50) * 100) / 100
+            meta9M = primaryMetaFound.meta9M ?? Math.round((atual + (meta12M - atual) * 0.75) * 100) / 100
+        } else {
+            // Fallback: usar ideal da análise estética como meta 12M
+            // Limitar ganho a no máximo 15% do gap ideal (realista)
+            const ideal = primaryPropData.ideal ?? atual
+            const gapTotal = ideal - atual
+            const ganhoRealista = gapTotal > 0 ? Math.min(gapTotal, gapTotal * 0.5) : 0
+            meta12M = Math.round((atual + ganhoRealista) * 100) / 100
+            meta3M = Math.round((atual + ganhoRealista * 0.25) * 100) / 100
+            meta6M = Math.round((atual + ganhoRealista * 0.50) * 100) / 100
+            meta9M = Math.round((atual + ganhoRealista * 0.75) * 100) / 100
+        }
 
         const item = {
             grupo: primaryPropData.grupo,
             atual,
-            meta3M: primaryMetaFound?.meta3M ?? Math.round((atual + ganho * 0.25) * 100) / 100,
-            meta6M: primaryMetaFound?.meta6M ?? Math.round((atual + ganho * 0.50) * 100) / 100,
-            meta9M: primaryMetaFound?.meta9M ?? Math.round((atual + ganho * 0.75) * 100) / 100,
+            meta3M,
+            meta6M,
+            meta9M,
             meta12M,
         }
 
