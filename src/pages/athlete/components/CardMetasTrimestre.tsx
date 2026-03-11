@@ -9,7 +9,7 @@
  */
 
 import React from 'react';
-import { Target, TrendingUp } from 'lucide-react';
+import { Target, TrendingUp, Scale, Flame, Ruler, Activity, Zap, Maximize2, MoveHorizontal, Dumbbell, CircleDot } from 'lucide-react';
 import type { DiagnosticoDados, MetaProporcao } from '@/services/calculations/diagnostico';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -47,29 +47,29 @@ interface CardMetasTrimestReProps {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Label legível para o aluno a partir do nome técnico do grupo */
-function getLabelGrupo(grupo: string): { emoji: string; label: string } {
-    const map: Record<string, { emoji: string; label: string }> = {
-        'Shape-V': { emoji: '🔺', label: 'Ombros (V-Shape)' },
-        'SHR': { emoji: '🔺', label: 'Ombros (Ratio)' },
-        'Costas': { emoji: '🏋️', label: 'Costas' },
-        'Peitoral': { emoji: '🏋️', label: 'Peitoral' },
-        'Braço': { emoji: '💪', label: 'Braço' },
-        'Proporção de Braço': { emoji: '💪', label: 'Braço' },
-        'Antebraço': { emoji: '💪', label: 'Antebraço' },
-        'Coxa': { emoji: '🦵', label: 'Coxa' },
-        'Desenvolvimento de Coxa': { emoji: '🦵', label: 'Coxa' },
-        'Coxa vs Pantur.': { emoji: '🦵', label: 'Coxa' },
-        'Proporção de Perna': { emoji: '🦵', label: 'Perna' },
-        'Panturrilha': { emoji: '🦵', label: 'Panturrilha' },
-        'Desenvolvimento de Panturrilha': { emoji: '🦵', label: 'Panturrilha' },
-        'Cintura': { emoji: '🎯', label: 'Cintura' },
-        'WHR': { emoji: '🎯', label: 'Cintura' },
-        'Hip-Thigh': { emoji: '🎯', label: 'Quadril / Coxa' },
-        'Tríade': { emoji: '⚖️', label: 'Harmonia Muscular' },
-        'Ampulheta': { emoji: '⏳', label: 'Formato Ampulheta' },
-        'Upper vs Lower': { emoji: '↕️', label: 'Equilíbrio Corpo' },
+function getLabelGrupo(grupo: string): { icone: React.ReactNode; label: string } {
+    const map: Record<string, { icone: React.ReactNode; label: string }> = {
+        'Shape-V': { icone: <MoveHorizontal size={16} />, label: 'Shape-V' },
+        'SHR': { icone: <MoveHorizontal size={16} />, label: 'Ombros (Ratio)' },
+        'Costas': { icone: <Dumbbell size={16} />, label: 'Costas' },
+        'Peitoral': { icone: <Activity size={16} />, label: 'Peitoral' },
+        'Braço': { icone: <Zap size={16} />, label: 'Braço' },
+        'Proporção de Braço': { icone: <Zap size={16} />, label: 'Braço' },
+        'Antebraço': { icone: <Zap size={16} />, label: 'Antebraço' },
+        'Coxa': { icone: <Activity size={16} />, label: 'Coxa' },
+        'Desenvolvimento de Coxa': { icone: <Activity size={16} />, label: 'Coxa' },
+        'Coxa vs Pantur.': { icone: <Activity size={16} />, label: 'Coxa' },
+        'Proporção de Perna': { icone: <Activity size={16} />, label: 'Perna' },
+        'Panturrilha': { icone: <TrendingUp size={16} />, label: 'Panturrilha' },
+        'Desenvolvimento de Panturrilha': { icone: <TrendingUp size={16} />, label: 'Panturrilha' },
+        'Cintura': { icone: <CircleDot size={16} />, label: 'Cintura' },
+        'WHR': { icone: <CircleDot size={16} />, label: 'Cintura' },
+        'Hip-Thigh': { icone: <CircleDot size={16} />, label: 'Quadril / Coxa' },
+        'Tríade': { icone: <Maximize2 size={16} />, label: 'Harmonia Muscular' },
+        'Ampulheta': { icone: <Maximize2 size={16} />, label: 'Formato Ampulheta' },
+        'Upper vs Lower': { icone: <Maximize2 size={16} />, label: 'Equilíbrio Corpo' },
     };
-    return map[grupo] ?? { emoji: '📏', label: grupo };
+    return map[grupo] ?? { icone: <Ruler size={16} />, label: grupo };
 }
 
 /**
@@ -165,7 +165,7 @@ function ItemProporção({
     proporcaoAtual?: { pct: number };
     useMeta12M?: boolean;
 }) {
-    const { emoji, label } = getLabelGrupo(item.grupo);
+    const { icone, label } = getLabelGrupo(item.grupo);
     const pct = proporcaoAtual?.pct ?? 0;
     const targetValue = useMeta12M ? item.meta12M : item.meta3M;
 
@@ -192,7 +192,7 @@ function ItemProporção({
     return (
         <div className="py-3">
             <div className="flex items-center gap-2 mb-2">
-                <span className="text-base">{emoji}</span>
+                <span className="text-amber-50 leading-none">{icone}</span>
                 <span className="text-white font-bold text-sm uppercase tracking-wider">{label}</span>
                 <span className={`ml-auto text-xs font-bold px-2 py-0.5 rounded-full ${pct >= 90 ? 'bg-emerald-500/20 text-emerald-400' :
                     pct >= 75 ? 'bg-blue-500/20 text-blue-400' :
@@ -386,8 +386,8 @@ export function CardMetasTrimestre({
                         <div className="space-y-3">
                             {pesoMeta3M !== null && deltaPeso !== null && (
                                 <div className="flex items-center justify-between bg-white/[0.02] p-3 rounded-xl border border-white/5">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-base">⚖️</span>
+                                    <div className="flex items-center gap-2.5">
+                                        <Scale size={16} className="text-amber-50" />
                                         <span className="text-zinc-400 text-xs font-bold uppercase tracking-tight">Peso</span>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -407,8 +407,8 @@ export function CardMetasTrimestre({
 
                             {gorduraMeta3M !== null && deltaGordura !== null && (
                                 <div className="flex items-center justify-between bg-white/[0.02] p-3 rounded-xl border border-white/5">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-base">🔥</span>
+                                    <div className="flex items-center gap-2.5">
+                                        <Flame size={16} className="text-amber-50" />
                                         <span className="text-zinc-400 text-xs font-bold uppercase tracking-tight">Gordura</span>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -431,16 +431,12 @@ export function CardMetasTrimestre({
                                 const metaCintura = metasProporcoes?.find(m => m.grupo === 'Cintura' || m.grupo === 'WHR');
                                 if (!metaCintura || !medidas.cintura) return null;
                                 const atualCintura = medidas.cintura;
-                                const metaCinturaVal = metaCintura.meta3M; // Aqui assumimos que se for WHR o calculo de cm precisaria do quadril, mas simplificaremos para o prompt
-                                // No serviço o ratio da cintura é calculado. Se item.grupo é 'Cintura', metaCinturaVal é o ratio.
-                                // Simplificando para mostrar o que temos no MedidasAtuais vs Meta
-                                const cmMetaCintura = Math.round(metaCinturaVal * (medidas.punho || 16.5) * 10) / 10; // Fallback ratio se for calculo absoluto
-                                // Mas vamos usar o que o ItemProporção usa
+                                const metaCinturaVal = metaCintura.meta3M;
                                 
                                 return (
                                     <div className="flex items-center justify-between bg-white/[0.02] p-3 rounded-xl border border-white/5">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-base">🎯</span>
+                                        <div className="flex items-center gap-2.5">
+                                            <CircleDot size={16} className="text-amber-50" />
                                             <span className="text-zinc-400 text-xs font-bold uppercase tracking-tight">Cintura</span>
                                         </div>
                                         <div className="flex items-center gap-2">
