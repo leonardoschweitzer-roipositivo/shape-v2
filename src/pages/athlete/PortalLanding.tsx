@@ -589,4 +589,3 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
         </div>
     );
 }
-}
