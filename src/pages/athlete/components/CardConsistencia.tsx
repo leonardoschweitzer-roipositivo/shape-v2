@@ -130,15 +130,8 @@ export function CardConsistencia({ dados }: CardConsistenciaProps) {
                 </div>
 
                 <div className="p-5">
-                    {/* Próximo Badge */}
-                    {proximoBadge && (
-                        <div className="mb-4 flex items-center gap-2 bg-white/[0.02] p-2 rounded-lg border border-white/5">
-                            <Hourglass size={12} className="text-zinc-500" />
-                            <span className="text-[10px] text-zinc-400 font-medium tracking-tight">
-                                {proximoBadge.diasFaltando === 1 ? 'Falta 1 dia' : `Faltam ${proximoBadge.diasFaltando} dias`} para conquitar: {proximoBadge.emoji} {proximoBadge.nome}
-                            </span>
-                        </div>
-                    )}
+
+
 
                     {/* Heatmap */}
                     <div className="mb-2 w-full">
