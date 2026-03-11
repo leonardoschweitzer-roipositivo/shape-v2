@@ -46,7 +46,7 @@ interface BasicFormData {
     cintura: string;
     quadril: string;
     nivelAtividade: 'SEDENTARIO' | 'LEVE' | 'MODERADO' | 'INTENSO' | '';
-    objetivo: 'HIPERTROFIA' | 'EMAGRECIMENTO' | 'SAUDE' | 'PERFORMANCE' | '';
+    objetivo: 'HIPERTROFIA' | 'EMAGRECIMENTO' | 'SAUDE' | 'COMPETICAO' | '';
 }
 
 const NIVEL_OPTIONS = [
@@ -60,7 +60,7 @@ const OBJETIVO_OPTIONS = [
     { value: 'HIPERTROFIA', label: '💪 Hipertrofia', desc: 'Ganhar massa muscular' },
     { value: 'EMAGRECIMENTO', label: '🔥 Emagrecimento', desc: 'Perder gordura' },
     { value: 'SAUDE', label: '❤️ Saúde', desc: 'Melhorar condição física' },
-    { value: 'PERFORMANCE', label: '⚡ Performance', desc: 'Rendimento atlético' },
+    { value: 'COMPETICAO', label: '⚡ Performance', desc: 'Rendimento atlético' },
 ] as const;
 
 const INITIAL_FORM: BasicFormData = {
