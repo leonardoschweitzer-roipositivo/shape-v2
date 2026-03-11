@@ -34,6 +34,7 @@ interface OnboardingWizardProps {
     sexo: 'M' | 'F';
     onComplete: () => void;
     onGoToVirtualAssessment: () => void;
+    onLogout?: () => void;
 }
 
 type WizardScreen = 'escolha' | 'personal-form' | 'basico-form' | 'sucesso';
@@ -82,6 +83,7 @@ export function OnboardingWizard({
     sexo,
     onComplete,
     onGoToVirtualAssessment,
+    onLogout,
 }: OnboardingWizardProps) {
     const [screen, setScreen] = useState<WizardScreen>('escolha');
     const [dataNascimentoPersonal, setDataNascimentoPersonal] = useState('');
@@ -210,6 +212,16 @@ export function OnboardingWizard({
                     >
                         Explorar Meu Portal
                     </button>
+                    {onLogout && (
+                        <div className="pt-4 opacity-30 hover:opacity-100 transition-opacity">
+                            <button
+                                onClick={onLogout}
+                                className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium"
+                            >
+                                Sair da conta
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         );
@@ -282,6 +294,17 @@ export function OnboardingWizard({
                             <><Check size={16} /> Confirmar</>
                         )}
                     </button>
+
+                    {onLogout && (
+                        <div className="pt-8 text-center opacity-30 hover:opacity-100 transition-opacity">
+                            <button
+                                onClick={onLogout}
+                                className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium"
+                            >
+                                Sair da conta
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         );
@@ -495,6 +518,17 @@ export function OnboardingWizard({
                             <><Check size={16} /> Salvar Medidas</>
                         )}
                     </button>
+
+                    {onLogout && (
+                        <div className="pt-8 text-center opacity-30 hover:opacity-100 transition-opacity">
+                            <button
+                                onClick={onLogout}
+                                className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium"
+                            >
+                                Sair da conta
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         );
@@ -612,6 +646,18 @@ export function OnboardingWizard({
                         Independente da sua escolha, seu personal pode complementar ou refazer suas medidas a qualquer momento.
                     </p>
                 </div>
+
+                {/* Optional Logout */}
+                {onLogout && (
+                    <div className="pt-8 text-center opacity-30 hover:opacity-100 transition-opacity">
+                        <button
+                            onClick={onLogout}
+                            className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium"
+                        >
+                            Sair da conta
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );

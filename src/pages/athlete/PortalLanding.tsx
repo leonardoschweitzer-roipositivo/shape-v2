@@ -234,6 +234,7 @@ export function PortalLanding({ token, atletaId, onClose }: PortalLandingProps) 
                     setView('home');
                 }}
                 onGoToVirtualAssessment={() => setView('virtual-assessment')}
+                onLogout={onClose}
             />
         );
     }
