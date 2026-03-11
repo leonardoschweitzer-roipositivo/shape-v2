@@ -179,6 +179,7 @@ export function mapAtletaToPersonalAthlete(
         birthDate: ficha?.data_nascimento || undefined,
         phone: atleta.telefone || undefined,
         contexto: (ficha?.contexto as unknown as PersonalAthlete['contexto']) || null,
+        objetivo: (ficha as Record<string, unknown>)?.objetivo as string || null,
     };
 }
 

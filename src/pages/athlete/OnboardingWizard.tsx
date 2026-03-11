@@ -162,6 +162,39 @@ export function OnboardingWizard({
 
             if (medidaErr) throw new Error(`Erro nas medidas: ${medidaErr.message}`);
 
+            // 2.5 Propagar nivel_atividade para o campo historico_treino no contexto
+            if (form.nivelAtividade) {
+                const nivelLabel = NIVEL_OPTIONS.find(o => o.value === form.nivelAtividade);
+                const nivelTexto = nivelLabel
+                    ? `Nível de atividade informado no onboarding: ${nivelLabel.label} (${nivelLabel.desc})`
+                    : `Nível de atividade: ${form.nivelAtividade}`;
+
+                // Buscar contexto existente para não sobrescrever
+                const { data: fichaAtual } = await supabase
+                    .from('fichas')
+                    .select('contexto')
+                    .eq('atleta_id', atletaId)
+                    .single();
+
+                const contextoAtual = (fichaAtual?.contexto as Record<string, string> | null) || {};
+                const historicoExistente = contextoAtual.historico_treino || '';
+                const novoHistorico = historicoExistente
+                    ? `${historicoExistente}\n${nivelTexto}`
+                    : nivelTexto;
+
+                await supabase
+                    .from('fichas')
+                    .update({
+                        contexto: {
+                            ...contextoAtual,
+                            historico_treino: novoHistorico,
+                            atualizado_em: new Date().toISOString(),
+                            atualizado_por: 'ONBOARDING',
+                        },
+                    } as Record<string, unknown>)
+                    .eq('atleta_id', atletaId);
+            }
+
             // 3. Marcar onboarding como COMPLETO agora que tudo deu certo
             await supabase
                 .from('fichas')

@@ -98,6 +98,7 @@ export interface PersonalAthlete {
     birthDate?: string; // ISO date string from ficha.data_nascimento
     phone?: string; // telefone from atletas table
     contexto?: ContextoAtleta | null; // Contexto geral do atleta (saúde, medicações, etc)
+    objetivo?: string | null; // Objetivo do aluno (preenchido no onboarding, substituído pelo plano de evolução)
 }
 
 export interface PersonalProfile {

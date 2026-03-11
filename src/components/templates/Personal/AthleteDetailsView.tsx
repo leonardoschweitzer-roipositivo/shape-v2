@@ -33,6 +33,7 @@ import {
     Share2,
     CheckCircle,
     Smartphone,
+    Target,
 } from 'lucide-react';
 import { PersonalAthlete } from '@/mocks/personal';
 import { Button } from '@/components/atoms/Button/Button';
@@ -62,6 +63,16 @@ interface AthleteDetailsViewProps {
 // EXTRACTED SUBCOMPONENTS
 // ═══════════════════════════════════════════════════════════
 import { SectionHeader, InfoCard, MeasurementItem, Accordion, StatusSelector, calculateAge } from './athlete-details/AthleteDetailsSections';
+
+/** Mapa de labels amigáveis para o enum objetivo_tipo do banco */
+const OBJETIVO_LABELS: Record<string, string> = {
+    HIPERTROFIA: '💪 Hipertrofia',
+    EMAGRECIMENTO: '🔥 Emagrecimento',
+    SAUDE: '❤️ Saúde',
+    COMPETICAO: '⚡ Performance',
+    DEFINICAO: '✂️ Definição',
+    RECOMPOSICAO: '🔄 Recomposição',
+};
 
 
 export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete, onBack, onNewAssessment, onConsultAssessment, hideStatusControl = false, onDeleteAthlete, onViewPlan }) => {
@@ -386,11 +397,12 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                 status: draftAthlete.status === 'inactive' ? 'INATIVO' : 'ATIVO',
             });
 
-            // 2. Ficha do Atleta (Gênero e medidas fixas)
+            // 2. Ficha do Atleta (Gênero, objetivo e medidas fixas)
             await atletaService.atualizarFicha(draftAthlete.id, {
                 sexo: draftAthlete.gender === 'FEMALE' ? 'F' : 'M',
                 data_nascimento: draftAthlete.birthDate || null,
                 contexto: draftAthlete.contexto as Record<string, unknown>,
+                ...(draftAthlete.objetivo ? { objetivo: draftAthlete.objetivo } : {}),
                 ...(latestAssessment ? {
                     altura: latestAssessment.measurements.height,
                     pelve: latestAssessment.measurements.pelvis,
@@ -572,7 +584,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                             />
                                         </div>
                                     </div>
-                                    {/* Linha 2: Gênero, Data de Nascimento, Vinculado desde */}
+                                    {/* Linha 2: Gênero, Data de Nascimento, Objetivo */}
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <div className="bg-background-dark p-4 rounded-xl border border-primary/30 flex flex-col gap-1">
                                             <label className="text-[10px] font-bold text-primary uppercase tracking-widest">Gênero</label>
@@ -595,6 +607,22 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                                 className="bg-transparent text-white font-semibold outline-none border-b border-white/10 focus:border-primary transition-colors py-1 [color-scheme:dark]"
                                             />
                                         </div>
+                                        <div className="bg-background-dark p-4 rounded-xl border border-primary/30 flex flex-col gap-1">
+                                            <label className="text-[10px] font-bold text-primary uppercase tracking-widest">Objetivo do Aluno</label>
+                                            <select
+                                                className="bg-transparent text-white font-semibold outline-none cursor-pointer py-1"
+                                                value={draftAthlete.objetivo || ''}
+                                                onChange={e => setDraftAthlete({ ...draftAthlete, objetivo: e.target.value || null })}
+                                            >
+                                                <option value="" className="bg-surface">Não definido</option>
+                                                {Object.entries(OBJETIVO_LABELS).map(([value, label]) => (
+                                                    <option key={value} value={value} className="bg-surface">{label}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    {/* Linha 3: Vinculado desde */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <div className="bg-background-dark p-4 rounded-xl border border-white/5 opacity-50 flex items-center gap-4">
                                             <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-gray-500">
                                                 <Calendar size={20} />
@@ -614,10 +642,14 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                         <InfoCard icon={Mail} label="Email para Contato" value={draftAthlete.email} />
                                         <InfoCard icon={Phone} label="Telefone" value={draftAthlete.phone || 'Não informado'} />
                                     </div>
-                                    {/* Linha 2: Gênero, Data de Nascimento, Vinculado desde */}
+                                    {/* Linha 2: Gênero, Data de Nascimento, Objetivo */}
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <InfoCard icon={User} label="Gênero" value={draftAthlete.gender === 'MALE' ? 'Masculino' : draftAthlete.gender === 'FEMALE' ? 'Feminino' : 'Outro'} />
                                         <InfoCard icon={Calendar} label="Data de Nascimento" value={draftAthlete.birthDate ? new Date(draftAthlete.birthDate + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) : 'Não informada'} />
+                                        <InfoCard icon={Target} label="Objetivo do Aluno" value={draftAthlete.objetivo ? (OBJETIVO_LABELS[draftAthlete.objetivo] || draftAthlete.objetivo) : 'Não definido'} />
+                                    </div>
+                                    {/* Linha 3: Vinculado desde */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <InfoCard icon={Calendar} label="Vinculado desde" value={new Date(draftAthlete.linkedSince).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })} />
                                     </div>
                                 </>
