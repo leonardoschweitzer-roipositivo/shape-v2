@@ -152,7 +152,7 @@ export function OnboardingWizard({
                 atleta_id: atletaId,
                 data: new Date().toISOString().split('T')[0],
                 peso: parseFloat(form.peso),
-                registrado_por: 'ALUNO_ONBOARDING',
+                registrado_por: 'APP',
             };
             if (form.cintura) medidasInsert.cintura = parseFloat(form.cintura);
             if (form.quadril) medidasInsert.quadril = parseFloat(form.quadril);

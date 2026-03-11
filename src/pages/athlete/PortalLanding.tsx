@@ -467,7 +467,7 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
                 {/* Sair da conta */}
                 <div className="mt-8 pb-10 text-center opacity-30 hover:opacity-100 transition-opacity">
                     <button
-                        onClick={onClose}
+                        onClick={onLogout}
                         className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium"
                     >
                         Sair da conta
