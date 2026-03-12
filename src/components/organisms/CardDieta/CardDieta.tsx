@@ -60,7 +60,7 @@ function MacroBar({ label, atual, meta, percentual, unidade, color }: MacroBarPr
     )
 }
 
-export function CardDieta({ dieta, onRegistrarRefeicao, onCapturarFoto }: CardDietaProps) {
+export function CardDieta({ dieta, onRegistrarRefeicao }: CardDietaProps) {
     return (
         <div className="bg-surface-deep rounded-2xl p-6 border border-white/5">
             <div className="flex items-center gap-3 mb-5">
@@ -68,7 +68,7 @@ export function CardDieta({ dieta, onRegistrarRefeicao, onCapturarFoto }: CardDi
                     <UtensilsCrossed size={20} className="text-indigo-400" />
                 </div>
                 <div>
-                    <h3 className="text-base font-bold text-white uppercase tracking-wide">DIETA DE HOJE</h3>
+                    <h3 className="text-base font-bold text-white uppercase tracking-wide">MACROS DO DIA</h3>
                 </div>
             </div>
 

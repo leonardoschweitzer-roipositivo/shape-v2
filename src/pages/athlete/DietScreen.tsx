@@ -497,6 +497,14 @@ export function DietScreen({
         )
     }
 
+    const proteinMissing = dieta.metaProteina - dieta.consumidoProteina
+    const displayCoachTip = {
+        ...dicaCoach,
+        mensagem: dicaCoach.tipo === 'alerta' && proteinMissing > 0
+            ? `Faltam ${proteinMissing}g de proteína hoje. Que tal um shake pós-treino com 2 scoops de whey?`
+            : dicaCoach.mensagem
+    }
+
     return (
         <div className="min-h-screen bg-background-dark pb-20">
             {/* Header */}
@@ -511,44 +519,38 @@ export function DietScreen({
             />
 
             <div className="px-4 py-4 space-y-4">
-                {/* Seção 1: Header com fase */}
+                {/* 1. Objetivo (Fase do Plano) */}
                 <FaseHeader plano={planoDieta} />
 
-                {/* Seção 2: Card de Dieta de Hoje (macros do dia) */}
+                {/* 2. Macros do Dia */}
                 <CardDieta
                     dieta={dieta}
                     onRegistrarRefeicao={onRegistrarRefeicao}
                 />
 
-                {/* Seção 3: Dica/Alerta do Coach */}
+                {/* 3. Refeições do Dia */}
+                <RefeicoesAccordion plano={planoDieta} isTreinoDay={isTreinoDay} />
+
+                {/* 4. Alerta do Coach (Mensagem Dinâmica) */}
                 <DicaCoach
-                    dica={dicaCoach}
+                    dica={displayCoachTip}
                     onFalarComCoach={onFalarComCoach}
                 />
 
                 {/* Divider sutil */}
-                <div className="flex items-center gap-3 px-1">
+                <div className="flex items-center gap-3 px-1 pt-2">
                     <div className="h-px flex-1 bg-white/5" />
                     <span className="text-[9px] font-bold text-gray-600 uppercase tracking-[0.2em]">Seu Plano</span>
                     <div className="h-px flex-1 bg-white/5" />
                 </div>
 
-                {/* Seção 4: Estratégia Calórica */}
-                <EstrategiaCard plano={planoDieta} />
-
-                {/* Seção 5: Macros Detalhados */}
-                <MacrosDetalhados plano={planoDieta} />
-
-                {/* Seção 6: Refeições do Dia */}
-                <RefeicoesAccordion plano={planoDieta} isTreinoDay={isTreinoDay} />
-
-                {/* Seção 7: Projeção Mensal */}
+                {/* 7. Projeção Mensal */}
                 <ProjecaoMensal plano={planoDieta} />
 
-                {/* Seção 8: Cardápio Sugerido */}
+                {/* 8. Cardápio Sugerido */}
                 <CardapioSugerido plano={planoDieta} />
 
-                {/* Seção 9: Regras de Ajuste */}
+                {/* 9. Regras de Ajuste */}
                 <RegrasAjusteCard plano={planoDieta} />
             </div>
         </div>
