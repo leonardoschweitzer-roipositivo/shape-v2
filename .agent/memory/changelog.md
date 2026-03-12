@@ -76,4 +76,8 @@
 
 ---
 
-<!-- Novos registros serão adicionados acima desta linha -->
+<!-- Novos registros serão adicionados acima desta linha -->### 2026-03-12 - CardTreino.tsx
+**Tipo**: Atualização
+**Mudança**: Adicionado SwipeableRow, edição de exercícios e botão de adicionar.
+**Motivo**: Facilitar a edição da sessão de treino atual localmente pelo usuário.
+

@@ -9,13 +9,14 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react'
-import { Dumbbell, Check, SkipForward, Moon, Play, ChevronDown, ChevronUp, Calendar, Clock, Pause, Timer, Video, Weight } from 'lucide-react'
-import { WorkoutOfDay } from '../../../types/athlete-portal'
+import { Dumbbell, Check, SkipForward, Moon, Play, ChevronDown, ChevronUp, Calendar, Clock, Pause, Timer, Video, Weight, Plus } from 'lucide-react'
+import { WorkoutOfDay, ExercicioTreino } from '../../../types/athlete-portal'
 import type { ExercicioTimerState } from '../../../types/athlete-portal'
 import type { ProximoTreino } from '../../../services/portalDataService'
 import { ExercicioDetalheModal } from '../../molecules/ExercicioDetalheModal'
 import { exercicioBibliotecaService } from '../../../services/exercicioBiblioteca.service'
 import type { ExercicioBiblioteca } from '../../../types/exercicio-biblioteca'
+import { SwipeableRow } from '../../molecules/SwipeableRow'
 
 interface CardTreinoProps {
     treino: WorkoutOfDay
@@ -69,6 +70,11 @@ export function CardTreino({
     const completeiMenuRef = useRef<HTMLDivElement>(null)
     const [, forceUpdate] = useState(0) // for timer ticking
     const [exercicioBiblioteca, setExercicioBiblioteca] = useState<ExercicioBiblioteca | null>(null)
+    const [localExercicios, setLocalExercicios] = useState<ExercicioTreino[]>(treino.exercicios || [])
+
+    useEffect(() => {
+        setLocalExercicios(treino.exercicios || [])
+    }, [treino.id])
 
     // Fechar menu ao clicar fora
     useEffect(() => {
@@ -399,17 +405,20 @@ export function CardTreino({
                 </div>
 
                 {/* Lista de Exercícios Simplificada */}
-                {treino.exercicios && treino.exercicios.length > 0 && (
-                    <div className="mb-6 -mx-6 border-y border-white/5 animate-in fade-in duration-300">
-                        {treino.exercicios.map((ex, idx) => {
+                {localExercicios && localExercicios.length > 0 && (
+                    <div className="mb-6 -mx-6 border-y border-white/5 animate-in fade-in duration-300 overflow-hidden">
+                        {localExercicios.map((ex, idx) => {
                             const timer = exercicioTimers[ex.id]
                             const isDone = timer?.status === 'done'
 
                             return (
-                                <div
+                                <SwipeableRow
                                     key={ex.id}
-                                    className={`flex items-center gap-3 px-6 py-4 transition-all duration-300 ${idx !== treino.exercicios!.length - 1 ? 'border-b border-white/5' : ''
-                                        } ${isDone ? 'opacity-50' : ''}`}
+                                    className={`transition-all duration-300 ${idx !== localExercicios.length - 1 ? 'border-b border-white/5' : ''} ${isDone ? 'opacity-50' : ''}`}
+                                    innerClassName="flex items-center gap-3 px-6 py-4"
+                                    onDelete={() => {
+                                        setLocalExercicios(prev => prev.filter(x => x.id !== ex.id))
+                                    }}
                                 >
                                     {/* Botão de Check (Independente do Cronômetro) */}
                                     <button
@@ -428,11 +437,19 @@ export function CardTreino({
                                     </button>
 
                                     {/* Nome do exercício */}
-                                    <div className="flex-1 min-w-0">
-                                        <p className={`text-sm font-medium transition-colors ${isDone ? 'text-gray-500 line-through' : 'text-gray-200'
-                                            }`}>
-                                            {ex.nome}
-                                        </p>
+                                    <div className="flex-1 min-w-0 flex items-center">
+                                        <input
+                                            type="text"
+                                            value={ex.nome}
+                                            onChange={(e) => {
+                                                const nov = [...localExercicios];
+                                                nov[idx].nome = e.target.value;
+                                                setLocalExercicios(nov);
+                                            }}
+                                            readOnly={isDone}
+                                            className={`w-full bg-transparent text-sm font-medium transition-colors outline-none focus:border-b focus:border-indigo-500/50 ${isDone ? 'text-gray-500 line-through' : 'text-gray-200'
+                                                }`}
+                                        />
                                     </div>
 
                                     {/* Controles e Info (Alinhados lateralmente) */}
@@ -516,7 +533,7 @@ export function CardTreino({
                                             </span>
                                         </div>
                                     </div>
-                                </div>
+                                </SwipeableRow>
                             )
                         })}
                     </div>
@@ -562,13 +579,31 @@ export function CardTreino({
                         )}
                     </div>
 
-                    <button
-                        onClick={onPular}
-                        className="py-2.5 px-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-bold text-gray-400 transition-colors flex items-center justify-center gap-2"
-                    >
-                        <SkipForward size={16} />
-                        PULAR HOJE
-                    </button>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => {
+                                const novoExId = `custom-ex-${Date.now()}`;
+                                setLocalExercicios([...localExercicios, {
+                                    id: novoExId,
+                                    nome: 'Novo Exercício',
+                                    series: 3,
+                                    repeticoes: '10-12',
+                                    bibliotecaId: undefined,
+                                }]);
+                            }}
+                            className="w-12 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-gray-400 transition-colors flex items-center justify-center flex-shrink-0"
+                            title="Adicionar Exercício"
+                        >
+                            <Plus size={18} />
+                        </button>
+                        <button
+                            onClick={onPular}
+                            className="flex-1 py-2.5 px-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-bold text-gray-400 transition-colors flex items-center justify-center gap-2"
+                        >
+                            <SkipForward size={16} />
+                            PULAR
+                        </button>
+                    </div>
                 </div>
             </div>
 
