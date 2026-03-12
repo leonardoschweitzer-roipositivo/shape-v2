@@ -48,6 +48,8 @@ import { AthleteContextSection } from './AthleteContextSection';
 import type { ContextoAtleta } from './AthleteContextSection';
 import { DEFAULT_ATHLETE_PASSWORD } from '@/components/templates/StudentRegistration/StudentRegistration';
 
+import { getObjetivoLabel } from '@/services/calculations/objetivos';
+
 interface AthleteDetailsViewProps {
     athlete: PersonalAthlete;
     onBack: () => void;
@@ -646,7 +648,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <InfoCard icon={User} label="Gênero" value={draftAthlete.gender === 'MALE' ? 'Masculino' : draftAthlete.gender === 'FEMALE' ? 'Feminino' : 'Outro'} />
                                         <InfoCard icon={Calendar} label="Data de Nascimento" value={draftAthlete.birthDate ? new Date(draftAthlete.birthDate + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) : 'Não informada'} />
-                                        <InfoCard icon={Target} label="Objetivo do Aluno" value={draftAthlete.objetivo ? (OBJETIVO_LABELS[draftAthlete.objetivo] || draftAthlete.objetivo) : 'Não definido'} />
+                                        <InfoCard icon={Target} label="Objetivo do Aluno" value={getObjetivoLabel(draftAthlete.objetivo)} />
                                     </div>
                                     {/* Linha 3: Vinculado desde */}
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

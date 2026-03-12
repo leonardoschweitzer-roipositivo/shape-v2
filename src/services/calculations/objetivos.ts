@@ -203,19 +203,60 @@ export function recomendarObjetivo(input: InputRecomendacao): RecomendacaoObjeti
 }
 
 // ═══════════════════════════════════════════════════════════
-// HELPERS UI
+// HELPERS UI & MAPPING
 // ═══════════════════════════════════════════════════════════
 
-export function getObjetivoMeta(objetivo: ObjetivoVitruvio): ObjetivoMeta {
-    return OBJETIVOS_META[objetivo];
+/**
+ * Mapeia objetivos legados (da ficha do atleta) para os novos objetivos Vitrúvio.
+ * Garante compatibilidade com dados antigos salvos no banco.
+ */
+export function mapLegacyToVitruvio(legacy: string | undefined | null): ObjetivoVitruvio {
+    if (!legacy) return 'RECOMP';
+
+    const normalized = legacy.toUpperCase();
+    const map: Record<string, ObjetivoVitruvio> = {
+        // Uppercase (DB / Personal Portal)
+        'HIPERTROFIA': 'BULK',
+        'EMAGRECIMENTO': 'CUT',
+        'DEFINICAO': 'CUT',
+        'SAUDE': 'MAINTAIN',
+        'PERFORMANCE': 'GOLDEN_RATIO',
+        'COMPETICAO': 'GOLDEN_RATIO',
+        'RECOMPOSICAO': 'RECOMP',
+
+        // Lowercase (Onboarding / Athlete Portal)
+        'HIPERTROFIA': 'BULK',
+        'DEFINICAO': 'CUT',
+        'RECOMPOSICAO': 'RECOMP',
+        'COMPETICAO': 'GOLDEN_RATIO',
+    };
+
+    return map[normalized] || 'RECOMP';
 }
 
-export function getObjetivoLabel(objetivo: ObjetivoVitruvio): string {
-    return OBJETIVOS_META[objetivo]?.label ?? objetivo;
+/**
+ * Retorna os metadados completos de um objetivo.
+ * Agora aceita string genérica para tratar casos legados.
+ */
+export function getObjetivoMeta(objetivo: ObjetivoVitruvio | string | undefined | null): ObjetivoMeta {
+    if (!objetivo) return OBJETIVOS_META.RECOMP;
+
+    // Se já for uma chave válida, usa direto
+    if (OBJETIVOS_META[objetivo as ObjetivoVitruvio]) {
+        return OBJETIVOS_META[objetivo as ObjetivoVitruvio];
+    }
+
+    // Caso contrário, tenta mapear do legado
+    const mapeado = mapLegacyToVitruvio(objetivo);
+    return OBJETIVOS_META[mapeado] || OBJETIVOS_META.RECOMP;
 }
 
-export function getObjetivoEmoji(objetivo: ObjetivoVitruvio): string {
-    return OBJETIVOS_META[objetivo]?.emoji ?? '🎯';
+export function getObjetivoLabel(objetivo: ObjetivoVitruvio | string | undefined | null): string {
+    return getObjetivoMeta(objetivo).label;
+}
+
+export function getObjetivoEmoji(objetivo: ObjetivoVitruvio | string | undefined | null): string {
+    return getObjetivoMeta(objetivo).emoji;
 }
 
 /** Lista todos os objetivos disponíveis para seleção manual */

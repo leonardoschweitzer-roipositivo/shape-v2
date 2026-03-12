@@ -47,6 +47,7 @@ import { calcularPotencialAtleta, inferirNivelAtividade } from '@/services/calcu
 import {
     recomendarObjetivo,
     getObjetivoMeta,
+    mapLegacyToVitruvio,
     TODOS_OBJETIVOS,
     type RecomendacaoObjetivo,
     type ObjetivoVitruvio,
@@ -187,8 +188,9 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                 adonis: (adonisProp?.atual ?? ratioEfetivo) || undefined,
             });
             setRecomendacao(rec);
-            // Em modo leitura, o objetivo selecionado é o objetivo atual do atleta (ou o recomendado como fallback)
-            setObjetivoSelecionado(((atleta as unknown as Record<string, string>).objetivo || rec.objetivo) as ObjetivoVitruvio);
+            // Em modo leitura, o objetivo selecionado é o objetivo atual do atleta (mapeado se necessário) ou o recomendado
+            const objAtleta = (atleta as any).objetivo;
+            setObjetivoSelecionado(objAtleta ? mapLegacyToVitruvio(objAtleta) : rec.objetivo);
         }
     }, [isReadOnly, diagnostico, atleta, ultimaAvaliacao, ratioEfetivo, recomendacao]);
 
