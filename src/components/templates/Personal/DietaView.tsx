@@ -86,6 +86,7 @@ type DietaState = 'idle' | 'generating' | 'ready' | 'saving' | 'saved';
 // ═══════════════════════════════════════════════════════════
 import { EvolutionStepper, SectionCard, InsightBox } from './PlanoEvolucaoShared';
 import { MacroCard, MacroBar, TabelaRefeicoes } from './dieta/DietaSections';
+import { EstrategiaCaloricaSection } from './dieta/EstrategiaCaloricaSection';
 import { getClassificacao, buildPerfilIA, buildDiagnosticoInput } from './PlanoEvolucaoHelpers';
 
 
@@ -426,103 +427,14 @@ export const DietaView: React.FC<DietaViewProps> = ({
                                     readOnly={isReadOnly}
                                 />
                             </div>
-                            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-bold uppercase tracking-widest mb-6 ${faseColor(activePlano!.fase)}`}>
-                                <Target size={14} /> {activePlano!.faseLabel}
-                            </div>
 
-                            <div className="bg-white/[0.03] rounded-xl border border-white/5 p-5 mb-4">
-                                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-4 font-bold">Cálculo do Balanço</p>
-                                <div className="space-y-3">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-sm text-gray-400">TDEE (Gasto Total Diário)</span>
-                                        <span className="text-white font-bold">{plano.tdee.toLocaleString('pt-BR')} kcal/dia</span>
-                                    </div>
-                                    <div className="border-t border-white/5 pt-3 flex justify-between items-center">
-                                        <span className="text-sm text-gray-400">
-                                            {plano.deficit > 0 ? 'Déficit planejado' : 'Superávit planejado'}
-                                            <span className="ml-2 text-xs text-gray-600">({plano.deficitPct}% do TDEE)</span>
-                                        </span>
-                                        <span className={`font-bold ${plano.deficit > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
-                                            {plano.deficit > 0 ? '-' : '+'}{Math.abs(plano.deficit)} kcal/dia
-                                        </span>
-                                    </div>
-                                    <div className="border-t-2 border-primary/30 pt-3 flex justify-between items-center">
-                                        <span className="text-sm font-bold text-white uppercase tracking-wider">Meta calórica diária (média)</span>
-                                        <span className="text-2xl font-black text-primary">{plano.calMediaSemanal.toLocaleString('pt-BR')} kcal</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3 mb-4">
-                                <div className="bg-white/[0.03] rounded-xl border border-white/5 p-4">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <Dumbbell size={14} className="text-primary" />
-                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Dias de Treino</p>
-                                    </div>
-                                    {isEditingDieta ? (
-                                        <EditableField
-                                            type="number"
-                                            isEditing
-                                            value={editPlano?.calDiasTreino ?? 0}
-                                            onChange={(v) => updateDietField('calDiasTreino', v)}
-                                            min={800}
-                                            max={6000}
-                                            step={50}
-                                            suffix=" kcal"
-                                            inputClassName="text-2xl font-black"
-                                        />
-                                    ) : (
-                                        <p className="text-2xl font-black text-white">{activePlano!.calDiasTreino.toLocaleString('pt-BR')}</p>
-                                    )}
-                                    <p className="text-xs text-gray-600">kcal · {activePlano!.frequenciaSemanal ?? 4}x/semana · +carbs</p>
-                                </div>
-                                <div className="bg-white/[0.03] rounded-xl border border-white/5 p-4">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <Scale size={14} className="text-gray-500" />
-                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Dias de Descanso</p>
-                                    </div>
-                                    {isEditingDieta ? (
-                                        <EditableField
-                                            type="number"
-                                            isEditing
-                                            value={editPlano?.calDiasDescanso ?? 0}
-                                            onChange={(v) => updateDietField('calDiasDescanso', v)}
-                                            min={800}
-                                            max={6000}
-                                            step={50}
-                                            suffix=" kcal"
-                                            inputClassName="text-2xl font-black"
-                                        />
-                                    ) : (
-                                        <p className="text-2xl font-black text-white">{activePlano!.calDiasDescanso.toLocaleString('pt-BR')}</p>
-                                    )}
-                                    <p className="text-xs text-gray-600">kcal · {7 - (activePlano!.frequenciaSemanal ?? 4)}x/semana · -carbs</p>
-                                </div>
-                            </div>
-
-                            <div className="bg-white/[0.02] rounded-xl border border-white/5 p-4 mb-4">
-                                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-3 font-bold">Projeção Mensal</p>
-                                <div className="grid grid-cols-2 gap-4 text-sm">
-                                    <div>
-                                        <p className="text-gray-600 text-xs mb-1">Déficit semanal</p>
-                                        <p className="font-bold text-white">~{plano?.deficitSemanal?.toLocaleString('pt-BR')} kcal</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-gray-600 text-xs mb-1">Perda de gordura estimada</p>
-                                        <p className="font-bold text-rose-400">~{plano?.projecaoMensal?.perdaGorduraKg} kg/mês</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-gray-600 text-xs mb-1">Peso no mês 1</p>
-                                        <p className="font-bold text-white">{plano?.projecaoMensal?.pesoInicial} kg → {plano?.projecaoMensal?.pesoFinal} kg</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-gray-600 text-xs mb-1">BF estimado</p>
-                                        <p className="font-bold text-white">{plano?.projecaoMensal?.bfInicial}% → {plano?.projecaoMensal?.bfFinal}%</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <InsightBox isLoading={iaEnriching} text={plano.insightsPorSecao?.estrategia || plano.estrategiaPrincipal} />
+                            <EstrategiaCaloricaSection 
+                                plano={plano}
+                                isEditing={isEditingDieta}
+                                editPlano={editPlano}
+                                updateDietField={updateDietField}
+                                iaEnriching={iaEnriching}
+                            />
                         </SectionCard>
 
                         {/* SEÇÃO 2: Macros */}
