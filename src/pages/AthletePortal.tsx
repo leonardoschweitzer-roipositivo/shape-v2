@@ -18,7 +18,7 @@ import { RegistrarRefeicaoModal } from '../components/organisms/RegistrarRefeica
 import { RegistrarTrackerModal } from '../components/organisms/RegistrarTrackerModal/RegistrarTrackerModal'
 import { VirtualAssessmentWizard } from '../components/organisms/VirtualAssessmentWizard'
 import { TrackerRapidoType } from '../types/athlete-portal'
-import { enviarMensagemIA, type AtletaContextoIA } from '../services/vitruviusAI'
+import { enviarMensagemIA, limparSessaoChat, type AtletaContextoIA } from '../services/vitruviusAI'
 import {
     carregarContextoPortal,
     montarDadosHoje,
@@ -177,12 +177,16 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                 if (dados.grafico.dados.length > 0) {
                     setLastPeso(dados.grafico.dados[dados.grafico.dados.length - 1].valor)
                 }
+
+                // Limpar sessão de chat para reconstruir com Plano de Evolução completo
+                limparSessaoChat(atletaId)
             } catch (err) {
                 console.error('[AthletePortal] Erro ao carregar dados secundários:', err)
             }
         }
         loadSecondary()
     }, [ctx, atletaId])
+
 
     // Handlers para a tela HOJE
     const handleVerTreino = () => {
@@ -382,12 +386,12 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
         setActiveTab('coach')
     }
 
-    // Handler para chat — agora com IA real (Gemini)
+    // Handler para chat — agora com IA real (Gemini) + Plano de Evolução completo
     const handleSendMessage = async (message: string): Promise<string> => {
         // Save user message
         await salvarMensagemChat(atletaId, 'user', message)
 
-        // Montar contexto do atleta para a IA
+        // Montar contexto do atleta para a IA — inclui Plano de Evolução completo
         const contextoIA: AtletaContextoIA = {
             nome: ctx?.atletaNome || atletaNome || 'Atleta',
             sexo: ctx?.ficha?.sexo,
@@ -407,6 +411,10 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
             aguaLitros: todayData?.trackers?.find(t => t.id === 'agua')?.valor ? Number(todayData.trackers.find(t => t.id === 'agua')?.valor) : undefined,
             sonoHoras: todayData?.trackers?.find(t => t.id === 'sono')?.valor ? Number(todayData.trackers.find(t => t.id === 'sono')?.valor) : undefined,
             dorLocal: todayData?.trackers?.find(t => t.id === 'dor')?.valor as string | undefined,
+            // Plano de Evolução completo (diagnóstico + treino + dieta)
+            diagnostico: ctx?.diagnostico ?? null,
+            planoTreino: ctx?.planoTreino ?? null,
+            planoDieta: ctx?.planoDieta ?? null,
         }
 
         // Montar histórico de mensagens para contexto

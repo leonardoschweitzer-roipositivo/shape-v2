@@ -6,6 +6,10 @@
  */
 
 import { GoogleGenerativeAI, type GenerativeModel, type ChatSession, HarmCategory, HarmBlockThreshold } from '@google/generative-ai'
+import type { DiagnosticoDados } from './calculations/diagnostico'
+import type { PlanoTreino } from './calculations/treino'
+import type { PlanoDieta } from './calculations/dieta'
+import { diagnosticoParaTexto, treinoParaTexto, dietaParaTexto, getFontesCientificas } from './vitruviusContext'
 
 // ==========================================
 // CONFIGURAÇÃO
@@ -205,9 +209,52 @@ export interface AtletaContextoIA {
     dorLocal?: string
     // Personal
     personalNome?: string
+    // Plano de Evolução completo
+    diagnostico?: DiagnosticoDados | null
+    planoTreino?: PlanoTreino | null
+    planoDieta?: PlanoDieta | null
 }
 
 function buildSystemPrompt(ctx: AtletaContextoIA): string {
+    // === Bloco: Plano de Evolução ===
+    let planoEvolucaoTexto = ''
+
+    if (ctx.diagnostico) {
+        planoEvolucaoTexto += `\n\n## 📋 DIAGNÓSTICO DO ATLETA (Plano de Evolução — Etapa 1)\n${diagnosticoParaTexto(ctx.diagnostico)}`
+    }
+
+    if (ctx.planoTreino) {
+        planoEvolucaoTexto += `\n\n## 🏋️ PLANO DE TREINO (Plano de Evolução — Etapa 2)\n`
+        planoEvolucaoTexto += `Objetivo: ${ctx.planoTreino.objetivo}\n`
+        planoEvolucaoTexto += treinoParaTexto(ctx.planoTreino)
+        if (ctx.planoTreino.observacoes) {
+            planoEvolucaoTexto += `\n\n### Observações do Plano\n${ctx.planoTreino.observacoes.resumo}`
+            if (ctx.planoTreino.observacoes.pontosAtencao?.length) {
+                planoEvolucaoTexto += `\n\n### Pontos de Atenção\n${ctx.planoTreino.observacoes.pontosAtencao.map(p => `- ${p}`).join('\n')}`
+            }
+        }
+    }
+
+    if (ctx.planoDieta) {
+        planoEvolucaoTexto += `\n\n## 🥗 PLANO DE DIETA (Plano de Evolução — Etapa 3)\n`
+        planoEvolucaoTexto += dietaParaTexto(ctx.planoDieta)
+        if (ctx.planoDieta.estrategiaPrincipal) {
+            planoEvolucaoTexto += `\n\n### Estratégia Principal\n${ctx.planoDieta.estrategiaPrincipal}`
+        }
+        if (ctx.planoDieta.contextoConsiderado?.length) {
+            planoEvolucaoTexto += `\n\n### Contexto Considerado\n${ctx.planoDieta.contextoConsiderado.map(c => `- ${c}`).join('\n')}`
+        }
+    }
+
+    // === Bloco: Fontes Científicas ===
+    const fontesCientificas = [
+        getFontesCientificas('diagnostico'),
+        getFontesCientificas('treino'),
+        getFontesCientificas('dieta'),
+    ].filter(Boolean).join('\n\n')
+
+    const temPlanoEvolucao = !!(ctx.diagnostico || ctx.planoTreino || ctx.planoDieta)
+
     return `Você é o **Vitrúvio**, coach de IA do aplicativo VITRU IA — uma plataforma de avaliação física baseada nas Proporções Áureas de Vitrúvio.
 
 ## Sua Personalidade
@@ -217,6 +264,8 @@ function buildSystemPrompt(ctx: AtletaContextoIA): string {
 - Responda em português brasileiro
 - Seja conciso (máximo 3-4 parágrafos)
 - Nunca invente dados que não tem — diga "não tenho essa informação" se necessário
+- ${temPlanoEvolucao ? 'SEMPRE se baseie nos dados reais do Plano de Evolução do atleta (diagnóstico, treino e dieta) fornecidos abaixo.' : 'O atleta ainda não tem um Plano de Evolução gerado. Responda de forma geral e incentive a criação do plano.'}
+- Quando citar dados científicos, baseie-se EXCLUSIVAMENTE na biblioteca científica fornecida abaixo.
 
 ## Sobre o Atleta
 - Nome: ${ctx.nome}
@@ -236,16 +285,24 @@ ${ctx.proteinaMeta ? `- Proteína: ${ctx.proteinaConsumida || 0}g / ${ctx.protei
 ${ctx.aguaLitros !== undefined ? `- Água: ${ctx.aguaLitros}L` : ''}
 ${ctx.sonoHoras ? `- Sono: ${ctx.sonoHoras}h` : ''}
 ${ctx.dorLocal ? `- ⚠️ Reportou dor: ${ctx.dorLocal}` : ''}
+${planoEvolucaoTexto}
+
+## 📚 BIBLIOTECA CIENTÍFICA (Use como base para fundamentar suas respostas)
+${fontesCientificas}
 
 ## Regras Importantes
-1. Você NÃO substitui o Personal Trainer. Se o atleta perguntar algo que dependede do Personal, diga "Converse com seu Personal ${ctx.personalNome || ''} sobre isso".
+1. Você NÃO substitui o Personal Trainer. Se o atleta perguntar algo que depende do Personal, diga "Converse com seu Personal ${ctx.personalNome || ''} sobre isso".
 2. Para dores SEVERAS, sempre recomende procurar um profissional de saúde.
 3. Não prescreva medicamentos ou suplementos com dosagens específicas.
 4. Sempre incentive consistência acima de intensidade.
-5. Use os dados do atleta para contextualizar suas respostas.
-6. Quando o atleta reportar uma refeição (ex: "comi 200g de frango"), reconheça e dê feedback sobre os macros.
-7. Quando perguntar sobre treino, use os dados reais do plano dele.`
+5. Use os dados do atleta para contextualizar suas respostas — especialmente o Plano de Evolução.
+6. Quando o atleta reportar uma refeição (ex: "comi 200g de frango"), reconheça e dê feedback sobre os macros baseado no plano de dieta dele.
+7. Quando perguntar sobre treino, use os dados reais do plano dele (exercícios, séries, divisão, prioridades).
+8. Quando perguntar sobre proporções, metas ou prioridades, use os dados do diagnóstico.
+9. Fundamente recomendações na biblioteca científica quando possível (cite autores/estudos).
+10. Se o atleta perguntar algo fora do escopo do plano, responda com base no conhecimento geral mas mantenha alinhamento com o objetivo dele.`
 }
+
 
 // ==========================================
 // CHAT SESSION MANAGEMENT
