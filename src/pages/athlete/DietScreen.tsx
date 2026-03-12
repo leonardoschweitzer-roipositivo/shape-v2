@@ -40,7 +40,6 @@ interface DietScreenProps {
     peso?: number
     personalNome?: string
     onRegistrarRefeicao: () => void
-    onCapturarFoto?: () => void
     onFalarComCoach: () => void
 }
 
@@ -479,7 +478,6 @@ export function DietScreen({
     peso,
     personalNome,
     onRegistrarRefeicao,
-    onCapturarFoto,
     onFalarComCoach,
 }: DietScreenProps) {
     // Se não tem plano de dieta, mostrar estado vazio
@@ -520,7 +518,6 @@ export function DietScreen({
                 <CardDieta
                     dieta={dieta}
                     onRegistrarRefeicao={onRegistrarRefeicao}
-                    onCapturarFoto={onCapturarFoto}
                 />
 
                 {/* Seção 3: Dica/Alerta do Coach */}

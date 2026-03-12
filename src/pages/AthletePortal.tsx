@@ -240,11 +240,6 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
         setShowRefeicaoModal(true)
     }
 
-    const handleCapturarFoto = () => {
-        setRefeicaoMode('foto')
-        setShowRefeicaoModal(true)
-    }
-
     const handleSalvarRefeicao = async (macros: { calorias: number; proteina: number; carboidrato: number; gordura: number; descricao: string; fotoBase64?: string; fonte?: 'manual' | 'foto_ia'; confianca?: number }) => {
         // Salvar no Supabase
         await registrarTracker(atletaId, 'refeicao', {
@@ -512,7 +507,6 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                         peso={lastPeso}
                         personalNome={ctx?.personalNome}
                         onRegistrarRefeicao={handleRegistrarRefeicao}
-                        onCapturarFoto={handleCapturarFoto}
                         onFalarComCoach={handleFalarComCoach}
                     />
                 ) : null

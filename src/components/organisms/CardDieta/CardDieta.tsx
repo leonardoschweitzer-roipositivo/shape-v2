@@ -12,7 +12,6 @@ import { DietOfDay } from '../../../types/athlete-portal'
 interface CardDietaProps {
     dieta: DietOfDay
     onRegistrarRefeicao: () => void
-    onCapturarFoto?: () => void
 }
 
 interface MacroBarProps {
@@ -111,25 +110,14 @@ export function CardDieta({ dieta, onRegistrarRefeicao, onCapturarFoto }: CardDi
                 />
             </div>
 
-            {/* Botões split: Texto + Foto */}
-            <div className="flex gap-2.5">
-                <button
-                    onClick={onRegistrarRefeicao}
-                    className="flex-1 py-3 px-4 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 rounded-xl text-sm font-bold text-indigo-400 transition-colors flex items-center justify-center gap-2"
-                >
-                    <Plus size={16} />
-                    REGISTRAR
-                </button>
-                {onCapturarFoto && (
-                    <button
-                        onClick={onCapturarFoto}
-                        className="py-3 px-5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-xl text-sm font-bold text-emerald-400 transition-colors flex items-center justify-center gap-2"
-                    >
-                        <Camera size={16} />
-                        FOTO
-                    </button>
-                )}
-            </div>
+            {/* Botão de Registro */}
+            <button
+                onClick={onRegistrarRefeicao}
+                className="w-full py-3 px-4 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 rounded-xl text-sm font-bold text-indigo-400 transition-colors flex items-center justify-center gap-2"
+            >
+                <Plus size={18} />
+                REGISTRAR REFEIÇÃO
+            </button>
         </div>
     )
 }
