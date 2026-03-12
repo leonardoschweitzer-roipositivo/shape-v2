@@ -261,13 +261,13 @@ export function CardTreino({
     // Estado: COMPLETO (mesmo código anterior)
     if (treino.status === 'completo') {
         return (
-            <div className="bg-emerald-500/10 rounded-2xl p-6 border border-emerald-500/20">
+            <div className="bg-amber-500/10 rounded-2xl p-6 border border-amber-500/20">
                 <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                        <Check size={20} className="text-emerald-500" />
+                    <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
+                        <Check size={20} className="text-amber-500" />
                     </div>
                     <div>
-                        <h3 className="text-base font-bold text-emerald-400 uppercase tracking-wide">TREINO COMPLETO!</h3>
+                        <h3 className="text-base font-bold text-amber-500 uppercase tracking-wide">TREINO COMPLETO!</h3>
                     </div>
                 </div>
 
@@ -290,7 +290,7 @@ export function CardTreino({
                         setAccordionOpen(!accordionOpen)
                         onVerTreino()
                     }}
-                    className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors font-bold flex items-center gap-1"
+                    className="text-sm text-amber-500 hover:text-amber-400 transition-colors font-bold flex items-center gap-1"
                 >
                     {accordionOpen ? 'OCULTAR DETALHES' : 'VER DETALHES'}
                     {accordionOpen ? <ChevronUp size={14} /> : <span>→</span>}
@@ -298,23 +298,23 @@ export function CardTreino({
 
                 {accordionOpen && treino.exercicios && treino.exercicios.length > 0 && (
                     <div className="mt-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                        <div className="bg-emerald-500/5 rounded-xl p-4 border border-emerald-500/10">
+                        <div className="bg-amber-500/5 rounded-xl p-4 border border-amber-500/10">
                             <div className="space-y-3">
                                 {treino.exercicios.map((ex, i) => (
                                     <div
                                         key={ex.id}
-                                        className="flex items-center gap-3 py-1 border-b border-emerald-500/5 last:border-0 pb-2 last:pb-0"
+                                        className="flex items-center gap-3 py-1 border-b border-amber-500/5 last:border-0 pb-2 last:pb-0"
                                     >
-                                        <span className="text-xs text-emerald-500/40 font-mono w-5">
+                                        <span className="text-xs text-amber-500/40 font-mono w-5">
                                             {(i + 1).toString().padStart(2, '0')}
                                         </span>
                                         <div className="flex-1">
-                                            <p className="text-sm text-emerald-100 font-medium line-through decoration-emerald-500/50">
+                                            <p className="text-sm text-amber-100/70 font-medium line-through decoration-amber-500/50">
                                                 {ex.nome}
                                             </p>
                                         </div>
-                                        <div className="bg-emerald-500/10 px-2 py-1 rounded-md">
-                                            <span className="text-[11px] text-emerald-400 font-mono">
+                                        <div className="bg-amber-500/10 px-2 py-1 rounded-md">
+                                            <span className="text-[11px] text-amber-500 font-mono">
                                                 {ex.series}×{ex.repeticoes}
                                             </span>
                                         </div>
