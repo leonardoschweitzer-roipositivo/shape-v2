@@ -2,15 +2,17 @@
  * CardDieta Component
  * 
  * Card de dieta do dia com barras de progresso para macros
+ * Botões split: Registrar via texto OU via foto
  */
 
 import React from 'react'
-import { UtensilsCrossed, Plus } from 'lucide-react'
+import { UtensilsCrossed, Plus, Camera } from 'lucide-react'
 import { DietOfDay } from '../../../types/athlete-portal'
 
 interface CardDietaProps {
     dieta: DietOfDay
     onRegistrarRefeicao: () => void
+    onCapturarFoto?: () => void
 }
 
 interface MacroBarProps {
@@ -59,7 +61,7 @@ function MacroBar({ label, atual, meta, percentual, unidade, color }: MacroBarPr
     )
 }
 
-export function CardDieta({ dieta, onRegistrarRefeicao }: CardDietaProps) {
+export function CardDieta({ dieta, onRegistrarRefeicao, onCapturarFoto }: CardDietaProps) {
     return (
         <div className="bg-surface-deep rounded-2xl p-6 border border-white/5">
             <div className="flex items-center gap-3 mb-5">
@@ -109,13 +111,25 @@ export function CardDieta({ dieta, onRegistrarRefeicao }: CardDietaProps) {
                 />
             </div>
 
-            <button
-                onClick={onRegistrarRefeicao}
-                className="w-full py-3 px-4 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 rounded-xl text-sm font-bold text-indigo-400 transition-colors flex items-center justify-center gap-2"
-            >
-                <Plus size={18} />
-                REGISTRAR REFEIÇÃO
-            </button>
+            {/* Botões split: Texto + Foto */}
+            <div className="flex gap-2.5">
+                <button
+                    onClick={onRegistrarRefeicao}
+                    className="flex-1 py-3 px-4 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 rounded-xl text-sm font-bold text-indigo-400 transition-colors flex items-center justify-center gap-2"
+                >
+                    <Plus size={16} />
+                    REGISTRAR
+                </button>
+                {onCapturarFoto && (
+                    <button
+                        onClick={onCapturarFoto}
+                        className="py-3 px-5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-xl text-sm font-bold text-emerald-400 transition-colors flex items-center justify-center gap-2"
+                    >
+                        <Camera size={16} />
+                        FOTO
+                    </button>
+                )}
+            </div>
         </div>
     )
 }

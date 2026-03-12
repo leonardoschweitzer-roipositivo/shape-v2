@@ -62,6 +62,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
     const [proximosTreinos, setProximosTreinos] = useState<ProximoTreino[]>([])
     const [lastPeso, setLastPeso] = useState<number | undefined>(undefined)
     const [showRefeicaoModal, setShowRefeicaoModal] = useState(false)
+    const [refeicaoMode, setRefeicaoMode] = useState<'texto' | 'foto'>('texto')
     const [avaliacaoDados, setAvaliacaoDados] = useState<any | null>(null)
     const [avaliacaoLoading, setAvaliacaoLoading] = useState(false)
     const [trackerModal, setTrackerModal] = useState<{ isOpen: boolean; tipo: TrackerRapidoType | null }>({
@@ -235,10 +236,16 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
     }
 
     const handleRegistrarRefeicao = () => {
+        setRefeicaoMode('texto')
         setShowRefeicaoModal(true)
     }
 
-    const handleSalvarRefeicao = async (macros: { calorias: number; proteina: number; carboidrato: number; gordura: number; descricao: string }) => {
+    const handleCapturarFoto = () => {
+        setRefeicaoMode('foto')
+        setShowRefeicaoModal(true)
+    }
+
+    const handleSalvarRefeicao = async (macros: { calorias: number; proteina: number; carboidrato: number; gordura: number; descricao: string; fotoBase64?: string; fonte?: 'manual' | 'foto_ia'; confianca?: number }) => {
         // Salvar no Supabase
         await registrarTracker(atletaId, 'refeicao', {
             descricao: macros.descricao,
@@ -505,6 +512,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                         peso={lastPeso}
                         personalNome={ctx?.personalNome}
                         onRegistrarRefeicao={handleRegistrarRefeicao}
+                        onCapturarFoto={handleCapturarFoto}
                         onFalarComCoach={handleFalarComCoach}
                     />
                 ) : null
@@ -573,6 +581,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
             />
             <RegistrarRefeicaoModal
                 isOpen={showRefeicaoModal}
+                initialMode={refeicaoMode}
                 onClose={() => setShowRefeicaoModal(false)}
                 onSave={handleSalvarRefeicao}
             />
