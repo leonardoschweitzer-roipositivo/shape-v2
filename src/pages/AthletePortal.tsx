@@ -5,7 +5,7 @@
  * Agora conectado a dados reais via portalDataService
  */
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { BottomNavigation } from '../components/organisms/BottomNavigation'
 import { useAuthStore } from '@/stores/authStore'
 import { TodayScreen, CoachScreen, ProgressScreen, ProfileScreen, AssessmentScreen, DietScreen } from './athlete'
@@ -46,6 +46,14 @@ interface AthletePortalProps {
 export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoToHome, onGoToContexto }: AthletePortalProps) {
     const { signOut } = useAuthStore()
     const [activeTab, setActiveTab] = useState<AthletePortalTab>(initialTab)
+    const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+    // Reset scroll to top when tab changes
+    useEffect(() => {
+        if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTo(0, 0)
+        }
+    }, [activeTab])
     const [loading, setLoading] = useState(true)
     const [ctx, setCtx] = useState<PortalContext | null>(null)
 
@@ -528,7 +536,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
 
     return (
         <div className="relative min-h-screen flex flex-col">
-            <div className="flex-1 overflow-y-auto">
+            <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
                 {/* Floating notification bell — top right */}
                 {showFloatingBell && (
                     <button
@@ -549,18 +557,20 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
 
                 {renderActiveScreen()}
 
-                {/* Discreet Logout */}
-                <div className="py-8 pb-32 text-center opacity-30 hover:opacity-100 transition-opacity">
-                    <button
-                        onClick={async () => {
-                            await signOut();
-                            window.location.replace('/');
-                        }}
-                        className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium"
-                    >
-                        Sair da conta
-                    </button>
-                </div>
+                {/* Discreet Logout - Hidden in Coach tab to avoid layout issues */}
+                {activeTab !== 'coach' && (
+                    <div className="py-8 pb-32 text-center opacity-30 hover:opacity-100 transition-opacity">
+                        <button
+                            onClick={async () => {
+                                await signOut();
+                                window.location.replace('/');
+                            }}
+                            className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium"
+                        >
+                            Sair da conta
+                        </button>
+                    </div>
+                )}
             </div>
             <BottomNavigation
                 activeTab={activeTab}
