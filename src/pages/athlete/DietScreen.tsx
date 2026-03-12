@@ -497,10 +497,10 @@ export function DietScreen({
         )
     }
 
-    const proteinMissing = dieta.metaProteina - dieta.consumidoProteina
+    const proteinMissing = (dieta.metaProteina - dieta.consumidoProteina).toFixed(1).replace('.', ',')
     const displayCoachTip = {
         ...dicaCoach,
-        mensagem: dicaCoach.tipo === 'alerta' && proteinMissing > 0
+        mensagem: dicaCoach.tipo === 'alerta' && parseFloat(proteinMissing.replace(',', '.')) > 0
             ? `Faltam ${proteinMissing}g de proteína hoje. Que tal um shake pós-treino com 2 scoops de whey?`
             : dicaCoach.mensagem
     }
