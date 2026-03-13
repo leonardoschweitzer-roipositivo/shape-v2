@@ -31,6 +31,8 @@ export function useSupabaseSync() {
                     loadedPersonalId.current = entity.personal.id;
                 } else if (profile?.role === 'ACADEMIA' && entity.academia) {
                     console.info('[Sync] Academia logada:', entity.academia.nome);
+                    const { loadAcademyFromSupabase } = useDataStore.getState();
+                    await loadAcademyFromSupabase(entity.academia.id);
                 } else if (profile?.role === 'ATLETA' && entity.atleta) {
                     console.info('[Sync] Atleta logado:', entity.atleta.nome);
                 } else {

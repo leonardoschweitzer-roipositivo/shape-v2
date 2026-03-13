@@ -4,6 +4,7 @@ import { PersonalStatsCard } from '../Personal/PersonalStatsCard';
 import { HeroCard } from '@/components/organisms/HeroCard';
 import { HeroContent } from '@/features/dashboard/types';
 import { useDataStore } from '@/stores/dataStore';
+import { useAuthStore } from '@/stores/authStore';
 
 interface AcademyDashboardProps {
     onNavigateToPersonals: () => void;
@@ -15,6 +16,9 @@ export const AcademyDashboard: React.FC<AcademyDashboardProps> = ({
     onNavigateToAthletes,
 }) => {
     const { personals, academyStats: stats } = useDataStore();
+    const { entity } = useAuthStore();
+    const academyName = entity?.academia?.nome || 'Minha Academia';
+
     // Atividade recente: futuramente virá do Supabase
     const activities: { id: string; type: string; message: string; timestamp: string }[] = [];
 
@@ -62,7 +66,7 @@ export const AcademyDashboard: React.FC<AcademyDashboardProps> = ({
                         🏢 DASHBOARD ACADEMIA
                     </h1>
                     <p className="text-gray-400 mt-2 font-light">
-                        Bem-vindo, <span className="text-primary font-semibold">Iron Paradise Gym</span>. Gestão ativa de {stats.totalPersonals} personais e {stats.totalAthletes} alunos.
+                        Bem-vindo, <span className="text-primary font-semibold">{academyName}</span>. Gestão ativa de {stats.totalPersonals} personais e {stats.totalAthletes} alunos.
                     </p>
                 </div>
 

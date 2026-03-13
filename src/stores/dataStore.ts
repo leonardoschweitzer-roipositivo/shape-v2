@@ -9,6 +9,7 @@ import { supabase } from '@/services/supabase';
 import { useAthleteStore } from '@/stores/athleteStore';
 import { calculateAge } from '@/utils/dateUtils';
 import type { Atleta, Ficha, Medida } from '@/lib/database.types';
+import type { AlunoResumo } from '@/types/academy';
 import { extractProportionRatios } from '@/components/templates/AssessmentResults/config/proportionItems';
 import { extractFemaleProportionRatios } from '@/components/templates/AssessmentResults/config/femaleProportionItems';
 import type { Measurements } from '@/components/templates/AssessmentResults/types';
@@ -18,6 +19,8 @@ type DataSource = 'MOCK' | 'SUPABASE';
 interface DataState {
     personalAthletes: PersonalAthlete[];
     personals: PersonalSummary[];
+    academyAthletes: AlunoResumo[];
+    personaisDisponiveis: { id: string; nome: string }[];
     academyStats: AcademyStats;
     dataSource: DataSource;
     isLoadingFromDB: boolean;
@@ -39,6 +42,7 @@ interface DataState {
 
     // Supabase integration
     loadFromSupabase: (personalId: string) => Promise<void>;
+    loadAcademyFromSupabase: (academyId: string) => Promise<void>;
 
     resetToMocks: () => void;
 }
@@ -48,6 +52,8 @@ export const useDataStore = create<DataState>()(
         (set, get) => ({
             personalAthletes: [],
             personals: [],
+            academyAthletes: [],
+            personaisDisponiveis: [],
             academyStats: { totalAthletes: 0, totalPersonals: 0, averageScore: 0, measuredThisWeek: 0 } as AcademyStats,
             dataSource: 'SUPABASE' as DataSource,
             isLoadingFromDB: false,
@@ -129,6 +135,95 @@ export const useDataStore = create<DataState>()(
                     set({ isLoadingFromDB: false, dataSource: 'SUPABASE', personalAthletes: [] });
                 }
             },
+
+            loadAcademyFromSupabase: async (academyId: string) => {
+                set({ isLoadingFromDB: true });
+
+                try {
+                    // 1. Buscar personais da academia
+                    const { data: personalsDB, error: personalsError } = await supabase
+                        .from('personais')
+                        .select('*')
+                        .eq('academia_id', academyId);
+
+                    if (personalsError) {
+                        console.error('[DataStore] Erro ao buscar personais da academia:', personalsError.message);
+                        set({ isLoadingFromDB: false });
+                        return;
+                    }
+
+                    // 2. Buscar atletas da academia via View (mais eficiente e já traz dados de avaliação)
+                    const { data: atletasView, error: atletasError } = await supabase
+                        .from('v_atletas_com_avaliacao')
+                        .select('*')
+                        .eq('academia_id', academyId);
+
+                    if (atletasError) {
+                        console.error('[DataStore] Erro ao buscar atletas da academia via view:', atletasError.message);
+                        set({ isLoadingFromDB: false });
+                        return;
+                    }
+
+                    // 3. Mapear personais para o formato do dashboard
+                    const mappedPersonals: PersonalSummary[] = (personalsDB || []).map(p => {
+                        const athleteCount = (atletasView || []).filter(a => a.personal_id === p.id).length;
+                        return {
+                            id: p.id,
+                            name: p.nome,
+                            avatar: p.foto_url || undefined,
+                            status: p.status === 'ATIVO' ? 'active' : 'inactive',
+                            athleteCount,
+                            averageStudentScore: 0 // Futuramente buscar médias da view v_kpis_personal
+                        };
+                    });
+
+                    // 4. Mapear atletas para o formato AlunoResumo
+                    const mappedAthletes: AlunoResumo[] = (atletasView || []).map(a => ({
+                        id: a.id,
+                        nome: a.nome,
+                        fotoUrl: a.foto_url || undefined,
+                        personalId: a.personal_id,
+                        personalNome: a.personal_nome,
+                        status: a.status as 'ATIVO' | 'INATIVO',
+                        diasDesdeUltimaAvaliacao: a.dias_desde_avaliacao || 0,
+                        ultimaAvaliacao: a.ultima_avaliacao_data ? {
+                            data: new Date(a.ultima_avaliacao_data),
+                            score: a.score_geral || 0,
+                            classificacao: a.classificacao_geral || 'N/A'
+                        } : undefined
+                    }));
+
+                    // 5. Buscar stats básicos da academia
+                    const { data: academyData } = await supabase
+                        .from('academias')
+                        .select('*')
+                        .eq('id', academyId)
+                        .single();
+
+                    const stats: AcademyStats = {
+                        totalPersonals: mappedPersonals.length,
+                        maxPersonals: academyData?.limite_personais || 10,
+                        totalAthletes: mappedAthletes.length,
+                        measuredThisWeek: 0, // TODO: Implementar lógica de medições na semana
+                        averageScore: 0,
+                        scoreVariation: 0
+                    };
+
+                    set({
+                        personals: mappedPersonals,
+                        academyAthletes: mappedAthletes,
+                        personaisDisponiveis: mappedPersonals.map(p => ({ id: p.id, nome: p.name })),
+                        academyStats: stats,
+                        dataSource: 'SUPABASE',
+                        isLoadingFromDB: false
+                    });
+
+                } catch (err) {
+                    console.error('[DataStore] Erro ao carregar academia do Supabase:', err);
+                    set({ isLoadingFromDB: false });
+                }
+            },
+
 
             addAssessment: ({ athleteId, measurements, skinfolds, gender }) => {
                 const athlete = get().personalAthletes.find(a => a.id === athleteId);

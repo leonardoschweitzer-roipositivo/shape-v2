@@ -3,8 +3,8 @@ import { Users } from 'lucide-react';
 import { SearchBar } from '@/components/molecules/SearchBar';
 import { FilterPanel } from '@/components/organisms/FilterPanel';
 import { CardAlunoLista } from '@/components/molecules/CardAlunoLista';
-import { mockAcademyAthletesList } from '@/mocks/academyAthletes';
-import type { FiltrosListaAlunos, AlunoResumo } from '@/types/academy';
+import type { FiltrosListaAlunos } from '@/types/academy';
+import { useDataStore } from '@/stores/dataStore';
 
 export interface AcademyAthletesListProps {
     onSelectAthlete: (id: string) => void;
@@ -15,6 +15,7 @@ export const AcademyAthletesList: React.FC<AcademyAthletesListProps> = ({
     onSelectAthlete,
     onViewEvolution
 }) => {
+    const { academyAthletes, personaisDisponiveis, academyStats } = useDataStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [filtros, setFiltros] = useState<FiltrosListaAlunos>({
         personal: 'todos',
@@ -28,7 +29,8 @@ export const AcademyAthletesList: React.FC<AcademyAthletesListProps> = ({
 
     // Aplicar filtros e ordenação
     const alunosFiltrados = useMemo(() => {
-        let resultados = [...mockAcademyAthletesList.alunos];
+        let resultados = [...academyAthletes];
+
 
         // Filtro por busca de nome
         if (searchTerm) {
@@ -124,8 +126,8 @@ export const AcademyAthletesList: React.FC<AcademyAthletesListProps> = ({
     );
 
     // Totais
-    const totalAtivos = mockAcademyAthletesList.alunos.filter(a => a.status === 'ATIVO').length;
-    const totalInativos = mockAcademyAthletesList.alunos.filter(a => a.status === 'INATIVO').length;
+    const totalAtivos = academyAthletes.filter(a => a.status === 'ATIVO').length;
+    const totalInativos = academyAthletes.filter(a => a.status === 'INATIVO').length;
 
     return (
         <div className="flex-1 p-4 md:p-8 flex flex-col w-full">
@@ -140,7 +142,7 @@ export const AcademyAthletesList: React.FC<AcademyAthletesListProps> = ({
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="bg-card-dark border border-card-border rounded-xl p-5 hover:border-primary/30 transition-all">
                             <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">Total de Alunos</div>
-                            <div className="text-3xl font-bold text-white tracking-tighter">{mockAcademyAthletesList.totalAlunos}</div>
+                            <div className="text-3xl font-bold text-white tracking-tighter">{academyStats.totalAthletes}</div>
                         </div>
                         <div className="bg-card-dark border border-card-border rounded-xl p-5 hover:border-primary/30 transition-all">
                             <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">Ativos</div>
@@ -166,7 +168,7 @@ export const AcademyAthletesList: React.FC<AcademyAthletesListProps> = ({
                     <FilterPanel
                         filtros={filtros}
                         onChange={setFiltros}
-                        personaisDisponiveis={mockAcademyAthletesList.personaisDisponiveis}
+                        personaisDisponiveis={personaisDisponiveis}
                     />
                 </div>
 
