@@ -528,10 +528,13 @@ export function DietScreen({
                     onRegistrarRefeicao={onRegistrarRefeicao}
                 />
 
-                {/* 3. Refeições do Dia */}
+                {/* 3. Cardápio Sugerido */}
+                <CardapioSugerido plano={planoDieta} />
+
+                {/* 4. Refeições do Dia */}
                 <RefeicoesAccordion plano={planoDieta} isTreinoDay={isTreinoDay} />
 
-                {/* 4. Alerta do Coach (Mensagem Dinâmica) */}
+                {/* 5. Alerta do Coach (Mensagem Dinâmica) */}
                 <DicaCoach
                     dica={displayCoachTip}
                     onFalarComCoach={onFalarComCoach}
@@ -544,13 +547,10 @@ export function DietScreen({
                     <div className="h-px flex-1 bg-white/5" />
                 </div>
 
-                {/* 7. Projeção Mensal */}
+                {/* 6. Projeção Mensal */}
                 <ProjecaoMensal plano={planoDieta} />
 
-                {/* 8. Cardápio Sugerido */}
-                <CardapioSugerido plano={planoDieta} />
-
-                {/* 9. Regras de Ajuste */}
+                {/* 7. Regras de Ajuste */}
                 <RegrasAjusteCard plano={planoDieta} />
             </div>
         </div>
