@@ -1,0 +1,13 @@
+{
+    "imports": {
+        "@shared/": "./_shared/",
+        "@supabase/supabase-js": "npm:@supabase/supabase-js@2"
+    },
+    "compilerOptions": {
+        "strict": true,
+        "lib": [
+            "deno.window",
+            "deno.ns"
+        ]
+    }
+}

@@ -10,6 +10,7 @@ import type { DiagnosticoDados } from './calculations/diagnostico'
 import type { PlanoTreino } from './calculations/treino'
 import type { PlanoDieta } from './calculations/dieta'
 import { diagnosticoParaTexto, treinoParaTexto, dietaParaTexto, getFontesCientificas } from './vitruviusContext'
+import { supabase } from './supabase'
 
 // ==========================================
 // CONFIGURAÇÃO
@@ -313,68 +314,34 @@ const chatSessions = new Map<string, ChatSession>()
 
 /**
  * Envia mensagem para o Vitrúvio e recebe resposta
+ * Agora via Supabase Edge Function para integração com Google Cloud Agent
  */
 export async function enviarMensagemIA(
     atletaId: string,
     mensagem: string,
-    contexto: AtletaContextoIA,
+    contexto: AtletaContextoIA, // Mantido por compatibilidade de assinatura, mas a função busca novos dados
     historicoMensagens?: Array<{ role: 'user' | 'model'; content: string }>
 ): Promise<string> {
-    const aiModel = getModel()
-
-    if (!aiModel) {
-        return gerarRespostaFallback(mensagem, contexto)
-    }
-
     try {
-        // Criar ou reutilizar chat session
-        let chat = chatSessions.get(atletaId)
-
-        if (!chat) {
-            const systemPrompt = buildSystemPrompt(contexto)
-
-            // Montar histórico para a sessão
-            const history: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = []
-
-            // Adicionar mensagem de sistema como primeiro turno
-            history.push({
-                role: 'user',
-                parts: [{ text: `[SISTEMA] ${systemPrompt}` }],
-            })
-            history.push({
-                role: 'model',
-                parts: [{ text: `Entendido! Sou o Vitrúvio, coach de IA do ${contexto.nome}. Estou pronto para ajudar! 💪` }],
-            })
-
-            // Adicionar histórico de mensagens anteriores (se houver)
-            if (historicoMensagens && historicoMensagens.length > 0) {
-                // Pegar últimas 20 mensagens para contexto
-                const ultimas = historicoMensagens.slice(-20)
-                for (const msg of ultimas) {
-                    history.push({
-                        role: msg.role === 'user' ? 'user' : 'model',
-                        parts: [{ text: msg.content }],
-                    })
-                }
+        console.info(`[VitruviusAI] 🚀 Enviando mensagem para o agente via Edge Function...`);
+        
+        const { data, error } = await supabase.functions.invoke('vitruvius-agent', {
+            body: {
+                atletaId,
+                mensagem,
+                historico: historicoMensagens?.slice(-10) // Otimizar payload
             }
+        });
 
-            chat = aiModel.startChat({ history })
-            chatSessions.set(atletaId, chat)
-        }
-
-        // Enviar mensagem
-        const result = await chat.sendMessage(mensagem)
-        const response = result.response.text()
-
-        return response || 'Desculpe, não consegui processar sua mensagem. Tente novamente!'
+        if (error) throw error;
+        
+        return data.response || 'Desculpe, tive um problema ao processar sua mensagem.';
 
     } catch (error) {
-        console.error('[VitruviusAI] Erro na chamada:', error)
-
-        // Limpar sessão com erro para recriar na próxima
-        chatSessions.delete(atletaId)
-
-        return gerarRespostaFallback(mensagem, contexto)
+        console.error('[VitruviusAI] Erro na chamada via Edge Function:', error);
+        
+        // Se a Edge Function falhar, ainda tentamos o fallback local para não deixar o usuário no vácuo
+        return gerarRespostaFallback(mensagem, contexto);
     }
 }
 
@@ -426,7 +393,7 @@ ${fontesCientificas}
 
 /**
  * Envia mensagem para o Vitrúvio no contexto de revisão de plano (Personal ↔ IA)
- * Usa session key separada para não conflitar com o chat do atleta.
+ * Também migrado para a Edge Function
  */
 export async function enviarMensagemPlanoReview(
     atletaId: string,
@@ -438,53 +405,27 @@ export async function enviarMensagemPlanoReview(
     fontesCientificas: string,
     historicoMensagens?: Array<{ role: 'user' | 'model'; content: string }>
 ): Promise<string> {
-    const aiModel = getModel()
-    const sessionKey = `plano-${tipo}-${atletaId}`
-
-    if (!aiModel) {
-        return `No momento estou offline, mas posso ajudar quando a conexão for restabelecida. Enquanto isso, analise o plano e anote suas dúvidas! 📝`
-    }
-
     try {
-        let chat = chatSessions.get(sessionKey)
-
-        if (!chat) {
-            const systemPrompt = buildPlanoReviewPrompt(tipo, nomeAtleta, planoTexto, perfilTexto, fontesCientificas)
-
-            const history: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = []
-
-            history.push({
-                role: 'user',
-                parts: [{ text: `[SISTEMA] ${systemPrompt}` }],
-            })
-            history.push({
-                role: 'model',
-                parts: [{ text: `Entendido! Estou pronto para debater o ${tipo === 'diagnostico' ? 'diagnóstico' : 'plano de ' + (tipo === 'treino' ? 'treino' : 'dieta')} do(a) ${nomeAtleta} com você. Pode questionar qualquer aspecto! 💪` }],
-            })
-
-            if (historicoMensagens && historicoMensagens.length > 0) {
-                const ultimas = historicoMensagens.slice(-20)
-                for (const msg of ultimas) {
-                    history.push({
-                        role: msg.role === 'user' ? 'user' : 'model',
-                        parts: [{ text: msg.content }],
-                    })
+        const { data, error } = await supabase.functions.invoke('vitruvius-agent', {
+            body: {
+                atletaId,
+                mensagem: `[REVISÃO DE ${tipo.toUpperCase()}] ${mensagem}`,
+                historico: historicoMensagens,
+                metadata: {
+                    tipo_revisao: tipo,
+                    plano_texto: planoTexto,
+                    perfil_texto: perfilTexto
                 }
             }
+        });
 
-            chat = aiModel.startChat({ history })
-            chatSessions.set(sessionKey, chat)
-        }
-
-        const result = await chat.sendMessage(mensagem)
-        const response = result.response.text()
-
-        return response || 'Desculpe, não consegui processar sua mensagem. Tente novamente!'
+        if (error) throw error;
+        
+        return data.response || 'Ocorreu um erro na comunicação com a IA.';
 
     } catch (error) {
-        console.error('[VitruviusAI] Erro no chat de revisão:', error)
-        chatSessions.delete(sessionKey)
-        return 'Ocorreu um erro na comunicação com a IA. Tente novamente em instantes.'
+        console.error('[VitruviusAI] Erro no chat de revisão via Edge Function:', error);
+        return 'Ocorreu um erro na comunicação com a IA. Tente novamente em instantes.';
     }
 }
 
