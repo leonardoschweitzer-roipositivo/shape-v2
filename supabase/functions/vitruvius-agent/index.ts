@@ -8,55 +8,46 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
-    // 1. Handling CORS
     if (req.method === "OPTIONS") {
         return new Response("ok", { headers: corsHeaders });
     }
 
-    console.log(`[vitruvius-agent] 📥 Recebendo requisição ${req.method}...`);
+    console.log("!!! [COACH-IA] REQUISIÇÃO RECEBIDA !!!");
 
     try {
-        const GOOGLE_SERVICE_ACCOUNT_JSON = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_JSON");
-        const AGENT_ID = Deno.env.get("GOOGLE_CLOUD_AGENT_ID");
-        const PROJECT_ID_ENV = Deno.env.get("GOOGLE_CLOUD_PROJECT_ID");
-
-        if (!GOOGLE_SERVICE_ACCOUNT_JSON || !AGENT_ID) {
-            throw new Error("Faltam variáveis de ambiente (SERVICE_ACCOUNT ou AGENT_ID)");
+        const saJson = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_JSON");
+        const agentId = Deno.env.get("GOOGLE_CLOUD_AGENT_ID");
+        
+        if (!saJson || !agentId) {
+            throw new Error("Configurações do Google Cloud faltando (JSON ou AgentID)");
         }
 
-        const body = await req.json();
-        const { atletaId, mensagem } = body;
-
-        console.log(`[vitruvius-agent] Atleta: ${atletaId} | Mensagem: ${mensagem}`);
-
-        if (!atletaId || !mensagem) {
-            throw new Error("atletaId e mensagem são obrigatórios no body");
-        }
-
+        const { atletaId, mensagem } = await req.json();
+        
         const supabase = createClient(
             Deno.env.get("SUPABASE_URL")!,
             Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
         );
 
-        // Buscar contexto básico
-        const { data: atleta, error: athleteError } = await supabase
+        // Busca contexto do atleta
+        const { data: atleta } = await supabase
             .from("atletas")
-            .select(`nome`)
+            .select("nome")
             .eq("id", atletaId)
             .single();
 
-        if (athleteError || !atleta) throw new Error("Atleta não encontrado no banco.");
+        const sa = JSON.parse(saJson);
+        const projectId = Deno.env.get("GOOGLE_CLOUD_PROJECT_ID") || sa.project_id;
+        const location = Deno.env.get("GOOGLE_CLOUD_LOCATION") || "us-central1";
 
         // Auth Google
-        const serviceAccount = JSON.parse(GOOGLE_SERVICE_ACCOUNT_JSON);
-        const PROJECT_ID = PROJECT_ID_ENV || serviceAccount.project_id;
-        const LOCATION = Deno.env.get("GOOGLE_CLOUD_LOCATION") || "us-central1";
-
-        const jwt = await generateGoogleJwt(serviceAccount);
+        const jwt = await generateGoogleJwt(sa);
         const accessToken = await getGoogleAccessToken(jwt);
 
-        // Agente Dialogflow CX
-        const endpoint = `https://${LOCATION}-dialogflow.googleapis.com/v3/projects/${PROJECT_ID}/locations/${LOCATION}/agents/${AGENT_ID}/sessions/${atletaId}:detectIntent`;
+        // Dialogflow CX Detect Intent
+        const endpoint = `https://${location}-dialogflow.googleapis.com/v3/projects/${projectId}/locations/${location}/agents/${agentId}/sessions/${atletaId}:detectIntent`;
+
+        console.log(`[Coach] Chamando Dialogflow para ${atleta?.nome || 'Atleta'}`);
 
         const response = await fetch(endpoint, {
             method: "POST",
@@ -70,35 +61,26 @@ Deno.serve(async (req) => {
                     languageCode: "pt-BR"
                 },
                 queryParams: {
-                    // Passamos o ID do atleta no payload para que as ferramentas do agente saibam quem ele é
                     payload: {
                         atleta_id: atletaId,
-                        atleta_nome: atleta.nome
+                        atleta_nome: atleta?.nome
                     }
                 }
             }),
         });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error("[vitruvius-agent] Erro Dialogflow API:", errorText);
-            throw new Error(`Google API falou: ${response.status}`);
-        }
-
         const result = await response.json();
-        const answerText = result.queryResult?.responseMessages
+        const answer = result.queryResult?.responseMessages
             ?.filter((m: any) => m.text)
             .map((m: any) => m.text.text[0])
-            .join("\n") || "Desculpe, tive um problema ao processar sua resposta.";
+            .join("\n") || "O Vitrúvio está pensando... tente novamente em instantes.";
 
-        console.log("[vitruvius-agent] ✅ Resposta enviada com sucesso!");
-
-        return new Response(JSON.stringify({ response: answerText }), {
+        return new Response(JSON.stringify({ response: answer }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
 
     } catch (error: any) {
-        console.error("[vitruvius-agent] 🛑 ERRO:", error.message);
+        console.error("[Coach] ERRO:", error.message);
         return new Response(JSON.stringify({ error: error.message }), {
             status: 400,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -106,7 +88,6 @@ Deno.serve(async (req) => {
     }
 });
 
-// Auxiliares de Segurança (JWT)
 async function generateGoogleJwt(sa: any) {
     const header = { alg: "RS256", typ: "JWT" };
     const now = Math.floor(Date.now() / 1000);
