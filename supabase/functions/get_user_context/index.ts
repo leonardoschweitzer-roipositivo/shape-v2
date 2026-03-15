@@ -10,78 +10,83 @@ Deno.serve(async (req) => {
     if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
     try {
-        console.log("--- [DEBUG] NOVA CHAMADA TOOL ---");
+        console.log("--- [WEBHOOK SCANNER] ---");
         
-        // Logar todos os headers para encontrar pistas do Google
-        const headers: Record<string, string> = {};
-        req.headers.forEach((v, k) => headers[k] = v);
-        console.log("[get_user_context] 🔑 Headers:", JSON.stringify(headers));
-
+        // 1. Capturar Headers
+        const hs: Record<string, string> = {};
+        req.headers.forEach((v, k) => hs[k] = v);
+        
+        // 2. Capturar Body
         const body = await req.json().catch(() => ({}));
-        console.log("[get_user_context] 📥 Body:", JSON.stringify(body));
+        
+        console.log("[Scanner] Body:", JSON.stringify(body));
+        console.log("[Scanner] Headers:", JSON.stringify(hs));
 
-        const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
-            global: { headers: { Authorization: req.headers.get('Authorization') || '' } }
-        })
+        const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!)
 
-        let auth_user_id: string | undefined;
+        let target_atleta_id: string | undefined;
 
-        // 1. Tenta via JWT
-        const { data: { user } } = await supabase.auth.getUser()
-        auth_user_id = user?.id
+        // ESTRATÉGIA A: Buscar nos parâmetros do Dialogflow (vários locais possíveis)
+        target_atleta_id = 
+            body.atleta_id || 
+            body.atletaId || 
+            body.sessionInfo?.parameters?.atleta_id || 
+            body.sessionInfo?.parameters?.atletaId ||
+            body.toolCall?.parameters?.atleta_id;
 
-        // 2. Tenta caçar o ID no body (várias nomenclaturas)
-        if (!auth_user_id) {
-            auth_user_id = 
-                body.atleta_id || 
-                body.atletaId || 
-                body.sessionInfo?.parameters?.atleta_id ||
-                body.sessionInfo?.parameters?.atletaId ||
-                body.toolCall?.parameters?.atleta_id ||
-                // No Dialogflow CX Playbooks, o ID da sessão muitas vezes está no sessionInfo.session
-                body.sessionInfo?.session?.split('/').pop(); 
-            
-            // Se acharmos um ID (que não seja o JWT), precisamos converter para auth_user_id
-            if (auth_user_id && auth_user_id.length > 20) { // Checagem básica se é um ID
-                console.log(`[get_user_context] 🎯 ID Detectado: ${auth_user_id}. Buscando auth_user_id...`);
-                const { data: atleta } = await supabase
-                    .from('atletas')
-                    .select('auth_user_id')
-                    .eq('id', auth_user_id)
-                    .maybeSingle();
-                auth_user_id = atleta?.auth_user_id;
+        // ESTRATÉGIA B: Buscar no nome da sessão (No Dialogflow CX, a sessão contém o nosso AtletaID)
+        if (!target_atleta_id && body.sessionInfo?.session) {
+            // O formato é projects/.../agents/.../sessions/ID_DO_ATLETA
+            const sessionParts = body.sessionInfo.session.split('/');
+            target_atleta_id = sessionParts[sessionParts.length - 1];
+            console.log(`[Scanner] ID extraído da sessão: ${target_atleta_id}`);
+        }
+
+        // ESTRATÉGIA C: Se ainda não achou e tem um token do Supabase no Header
+        if (!target_atleta_id && hs['authorization']?.includes('ey')) {
+            const { data: { user } } = await supabase.auth.getUser(hs['authorization'].split(' ')[1]);
+            if (user) {
+                const { data: a } = await supabase.from('atletas').select('id').eq('auth_user_id', user.id).maybeSingle();
+                target_atleta_id = a?.id;
             }
         }
 
-        if (!auth_user_id) {
-            console.error("[get_user_context] 🛑 Identificação ausente.");
-            return new Response(JSON.stringify({ success: false, error: "Identificação ausente" }), {
-                status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-            });
+        if (!target_atleta_id) {
+            console.error("[Scanner] 🛑 Nenhuma pista de ID encontrada.");
+            return new Response(JSON.stringify({ 
+                fulfillmentResponse: { messages: [{ text: { text: ["Identificação ausente."] } }] } 
+            }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
+        // Busca o perfil real
         const { data: atleta } = await supabase
             .from('atletas')
-            .select('id, nome, status')
-            .eq('auth_user_id', auth_user_id)
-            .single();
+            .select('id, nome, auth_user_id, status')
+            .eq('id', target_atleta_id)
+            .maybeSingle();
 
-        console.log(`[get_user_context] ✅ Sucesso: ${atleta?.nome}`);
+        if (!atleta) throw new Error("Atleta não encontrado no banco.");
 
+        console.log(`[Scanner] ✅ Atleta identificado: ${atleta.nome}`);
+
+        // RESPOSTA NO FORMATO DIALOGFLOW CX
         return new Response(JSON.stringify({
             success: true,
-            data: {
-                role: 'ATLETA',
-                nome: atleta?.nome,
-                entity_id: atleta?.id,
-                extras: { status: atleta?.status }
+            atleta_nome: atleta.nome,
+            atleta_id: atleta.id,
+            status: atleta.status,
+            // Adicional para o Playbook entender como Tool output
+            outputParameters: {
+                nome: atleta.nome,
+                id: atleta.id,
+                role: 'ATLETA'
             }
         }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
     } catch (error: any) {
-        console.error('[get_user_context] 🧨 Erro:', error.message);
-        return new Response(JSON.stringify({ success: false, error: error.message }), {
-            status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        console.error('[Scanner] 🧨 Erro:', error.message);
+        return new Response(JSON.stringify({ error: error.message }), { 
+            status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         });
     }
 })
