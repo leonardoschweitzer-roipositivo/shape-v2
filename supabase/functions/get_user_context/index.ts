@@ -2,7 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-atleta-id',
     'Access-Control-Allow-Methods': 'POST, GET, OPTIONS'
 }
 
@@ -13,29 +13,39 @@ Deno.serve(async (req) => {
         const url = new URL(req.url);
         const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!);
 
-        // Captura o ID da URL ou do Body
-        let target_atleta_id = url.searchParams.get('atleta_id') || url.searchParams.get('atletaId');
+        // Tenta capturar o ID de todas as formas possíveis
+        let target_atleta_id = 
+            req.headers.get('x-atleta-id') || 
+            url.searchParams.get('atleta_id') || 
+            url.searchParams.get('atletaId');
 
         if (!target_atleta_id) {
             const body = await req.json().catch(() => ({}));
             target_atleta_id = body.atleta_id || body.atletaId;
+            
+            // Backup: Se estiver dentro do sessionInfo do Dialogflow
+            if (!target_atleta_id && body.sessionInfo?.parameters) {
+                target_atleta_id = body.sessionInfo.parameters.atleta_id || body.sessionInfo.parameters.atletaId;
+            }
         }
 
         if (!target_atleta_id) {
-            // Se não achou, responde para a IA o que ela deve fazer
+            console.error("[get_user_context] 🛑 ID não encontrado em Headers ou Body.");
             return new Response(JSON.stringify({
-                error: "Falta o parâmetro 'atleta_id'. Por favor, use o AtletaID fornecido no seu contexto de sistema para chamar esta ferramenta.",
-                hint: "Sempre inclua 'atleta_id' no corpo da requisição JSON."
+                error: "atleta_id requerido.",
+                hint: "Passe via Header 'x-atleta-id' ou no Body JSON."
             }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
+        console.log(`[get_user_context] 🎯 ID Localizado: ${target_atleta_id}`);
+
         const { data: atleta } = await supabase
             .from('atletas')
-            .select('id, nome, auth_user_id, status')
+            .select('id, nome, status, auth_user_id')
             .eq('id', target_atleta_id)
             .maybeSingle();
 
-        if (!atleta) throw new Error("Atleta não encontrado.");
+        if (!atleta) throw new Error("Atleta inexistente.");
 
         return new Response(JSON.stringify({
             success: true,
@@ -46,6 +56,7 @@ Deno.serve(async (req) => {
         }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
     } catch (error: any) {
+        console.error('[get_user_context] 🧨 Erro:', error.message);
         return new Response(JSON.stringify({ error: error.message }), { 
             status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         });

@@ -58,6 +58,7 @@ Deno.serve(async (req) => {
             headers: {
                 "Authorization": `Bearer ${accessToken}`,
                 "Content-Type": "application/json",
+                "x-atleta-id": atletaId
             },
             body: JSON.stringify({
                 queryInput: {
