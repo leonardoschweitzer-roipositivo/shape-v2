@@ -13,28 +13,30 @@ Deno.serve(async (req) => {
         const url = new URL(req.url);
         let target_atleta_id = url.searchParams.get('atleta_id') || url.searchParams.get('atletaId');
 
-        // Se não achou na URL, tenta ler do corpo JSON (sugestão do Claude)
+        // Tenta ler do corpo JSON se não estiver na URL
         if (!target_atleta_id) {
             try {
                 const body = await req.json();
                 target_atleta_id = body.atleta_id || body.atletaId;
-            } catch {
-                // Corpo não é JSON ou está vazio
-            }
+            } catch { /* vazio */ }
         }
 
         if (!target_atleta_id) {
-            return new Response(JSON.stringify({ 
-                error: "atleta_id não encontrado.",
-                hint: "Envie via Query Parameter (?atleta_id=...) ou JSON Body ({ 'atleta_id': '...' })."
-            }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            return new Response(JSON.stringify({ error: "atleta_id ausente" }), { 
+                status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            });
         }
 
         const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!);
         const { data: atleta } = await supabase.from('atletas').select('id, nome, status').eq('id', target_atleta_id).maybeSingle();
 
-        if (!atleta) throw new Error("Atleta não encontrado.");
+        if (!atleta) {
+            return new Response(JSON.stringify({ success: false, error: "Não encontrado" }), { 
+                status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            });
+        }
 
+        // Retorno limpo e direto conforme o Schema acima
         return new Response(JSON.stringify({
             success: true,
             atleta_id: atleta.id,
@@ -44,7 +46,7 @@ Deno.serve(async (req) => {
         }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
     } catch (error: any) {
-        return new Response(JSON.stringify({ error: error.message }), { 
+        return new Response(JSON.stringify({ success: false, error: error.message }), { 
             status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         });
     }
