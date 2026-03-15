@@ -1,12 +1,10 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { create, getNumericDate } from "https://deno.land/x/djwt@v2.8/mod.ts";
+import { create } from "https://deno.land/x/djwt@v2.8/mod.ts";
 
 /**
  * Edge Function: vitruvius-agent
  * 
  * Bridge segura entre o app e o Google Cloud Agent (Vertex AI).
- * Autentica via Service Account JSON e enriquece a mensagem com contexto do atleta.
  */
 
 const corsHeaders = {
@@ -20,7 +18,7 @@ interface AgentRequest {
     historico?: Array<{ role: 'user' | 'model'; content: string }>;
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
     // CORS preflight
     if (req.method === "OPTIONS") {
         return new Response("ok", { headers: corsHeaders });
@@ -30,23 +28,22 @@ serve(async (req) => {
         const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
         const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
         const GOOGLE_SERVICE_ACCOUNT_JSON = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_JSON");
-
+        
         if (!GOOGLE_SERVICE_ACCOUNT_JSON) {
             throw new Error("GOOGLE_SERVICE_ACCOUNT_JSON não configurada nas Secrets do Supabase.");
         }
 
         const serviceAccount = JSON.parse(GOOGLE_SERVICE_ACCOUNT_JSON);
-
-        // Prioridade: Env Var > Dados do JSON
+        
         const PROJECT_ID = Deno.env.get("GOOGLE_CLOUD_PROJECT_ID") || serviceAccount.project_id;
         const LOCATION = Deno.env.get("GOOGLE_CLOUD_LOCATION") || "global";
         const AGENT_ID = Deno.env.get("GOOGLE_CLOUD_AGENT_ID");
 
         if (!PROJECT_ID || !AGENT_ID) {
-            throw new Error("Configurações faltantes: PROJECT_ID ou AGENT_ID não mapeados.");
+            throw new Error("Configurações faltantes: PROJECT_ID ou AGENT_ID não mapeados (verifique as Secrets).");
         }
 
-        const { atletaId, mensagem, historico } = await req.json() as AgentRequest;
+        const { atletaId, mensagem } = await req.json() as AgentRequest;
 
         if (!atletaId || !mensagem) {
             throw new Error("atletaId e mensagem são obrigatórios.");
@@ -74,13 +71,10 @@ serve(async (req) => {
         }
 
         // 2. Autenticação com Google Cloud via JWT
-        const serviceAccount = JSON.parse(GOOGLE_SERVICE_ACCOUNT_JSON);
         const jwt = await generateGoogleJwt(serviceAccount);
         const accessToken = await getGoogleAccessToken(jwt);
 
-        // 3. Chamar Google Cloud Agent API (Vertex AI Search and Conversation)
-        // Nota: A URL exata depende se é Dialogflow CX ou Vertex AI Conversation
-        // Assumindo Vertex AI Conversation Engine conforme "novo agente" sugere
+        // 3. Chamar Google Cloud Agent API
         const endpoint = `https://${LOCATION}-discoveryengine.googleapis.com/v1alpha/projects/${PROJECT_ID}/locations/${LOCATION}/collections/default_collection/engines/${AGENT_ID}/servingConfigs/default_serving_config:answer`;
 
         const response = await fetch(endpoint, {
@@ -92,11 +86,9 @@ serve(async (req) => {
             body: JSON.stringify({
                 query: { text: mensagem },
                 session: `projects/${PROJECT_ID}/locations/${LOCATION}/collections/default_collection/engines/${AGENT_ID}/sessions/${atletaId}`,
-                // Passamos o contexto rico como metadados ou parte do prompt se o agente suportar
-                // Caso contrário, o agente no Google Cloud deve estar configurado para buscar/receber esses dados
                 userLabels: {
-                    atleta_nome: atleta.nome,
-                    objetivo: atleta.ficha?.objetivo || "geral"
+                    atleta_nome: atleta.nome?.substring(0, 63),
+                    objetivo: (atleta.ficha?.objetivo || "geral").substring(0, 63)
                 },
                 queryParameters: {
                     payload: {
@@ -124,7 +116,7 @@ serve(async (req) => {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error in vitruvius-agent:", error);
         return new Response(JSON.stringify({ error: error.message }), {
             status: 400,
@@ -145,9 +137,27 @@ async function generateGoogleJwt(serviceAccount: any) {
         scope: "https://www.googleapis.com/auth/cloud-platform",
     };
 
-    const privateKey = serviceAccount.private_key;
-    // DJWT precisa da chave formatada ou importada. simplificando aqui para o fluxo
-    return await create(header, payload, privateKey);
+    const key = await importPrivateKey(serviceAccount.private_key);
+    return await create(header, payload, key);
+}
+
+async function importPrivateKey(pem: string) {
+    const pemContents = pem
+        .replace("-----BEGIN PRIVATE KEY-----", "")
+        .replace("-----END PRIVATE KEY-----", "")
+        .replace(/\s+/g, "");
+    const binary = atob(pemContents);
+    const buffer = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+        buffer[i] = binary.charCodeAt(i);
+    }
+    return await crypto.subtle.importKey(
+        "pkcs8",
+        buffer,
+        { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+        false,
+        ["sign"]
+    );
 }
 
 async function getGoogleAccessToken(jwt: string) {
