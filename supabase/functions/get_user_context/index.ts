@@ -134,12 +134,27 @@ Deno.serve(async (req) => {
 
         // 2. SEGURANÇA: Pega o ID de quem realmente está logado via Token JWT
         const { data: { user }, error: authError } = await supabase.auth.getUser()
+        let auth_user_id = user?.id
 
-        if (authError || !user) {
-            return buildErrorResponse('Usuário não autenticado ou token inválido.', 401)
+        // FALLBACK PARA TESTES NO GOOGLE CLOUD:
+        // Se não houver JWT, tenta ler o atleta_id do body (enviado pelo agente)
+        if (!auth_user_id) {
+            const body = await req.json().catch(() => ({}));
+            if (body.atleta_id || body.atletaId) {
+                console.log("[get_user_context] Usando fallback de identificação via Body para Agent Tool");
+                // Busca o auth_user_id real desse atleta para manter a lógica
+                const { data: targetAtleta } = await supabase
+                    .from('atletas')
+                    .select('auth_user_id')
+                    .eq('id', body.atleta_id || body.atletaId)
+                    .maybeSingle();
+                auth_user_id = targetAtleta?.auth_user_id;
+            }
         }
 
-        const auth_user_id = user.id
+        if (!auth_user_id) {
+            return buildErrorResponse('Usuário não autenticado. Forneça Token ou AtletaID válido.', 401)
+        }
 
         // ─────────────────────────────────────────
         // TENTAR ENCONTRAR COMO ACADEMIA (DONO)

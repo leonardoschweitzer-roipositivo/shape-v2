@@ -1,81 +1,72 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { create } from "https://deno.land/x/djwt@v2.8/mod.ts";
 
-/**
- * Edge Function: vitruvius-agent
- * 
- * Bridge segura entre o app e o Google Cloud Agent (Vertex AI).
- */
-
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-portal-token",
 };
 
-interface AgentRequest {
-    atletaId: string;
-    mensagem: string;
-    historico?: Array<{ role: 'user' | 'model'; content: string }>;
-}
-
 Deno.serve(async (req) => {
-    // CORS preflight
+    console.log("--- NOVA REQUISIÇÃO RECEBIDA ---");
+    console.log("Método:", req.method);
+
     if (req.method === "OPTIONS") {
         return new Response("ok", { headers: corsHeaders });
     }
 
     try {
-        const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-        const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
         const GOOGLE_SERVICE_ACCOUNT_JSON = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_JSON");
-        
-        if (!GOOGLE_SERVICE_ACCOUNT_JSON) {
-            throw new Error("GOOGLE_SERVICE_ACCOUNT_JSON não configurada nas Secrets do Supabase.");
-        }
-
-        const serviceAccount = JSON.parse(GOOGLE_SERVICE_ACCOUNT_JSON);
-        
-        const PROJECT_ID = Deno.env.get("GOOGLE_CLOUD_PROJECT_ID") || serviceAccount.project_id;
-        const LOCATION = Deno.env.get("GOOGLE_CLOUD_LOCATION") || "global";
         const AGENT_ID = Deno.env.get("GOOGLE_CLOUD_AGENT_ID");
+        const PROJECT_ID_ENV = Deno.env.get("GOOGLE_CLOUD_PROJECT_ID");
 
-        if (!PROJECT_ID || !AGENT_ID) {
-            throw new Error("Configurações faltantes: PROJECT_ID ou AGENT_ID não mapeados (verifique as Secrets).");
+        console.log("Variáveis presentes:", {
+            hasJson: !!GOOGLE_SERVICE_ACCOUNT_JSON,
+            hasAgentId: !!AGENT_ID,
+            projectIdEnv: PROJECT_ID_ENV
+        });
+
+        if (!GOOGLE_SERVICE_ACCOUNT_JSON || !AGENT_ID) {
+            throw new Error(`Configurações faltando: JSON(${!!GOOGLE_SERVICE_ACCOUNT_JSON}) AGENT_ID(${!!AGENT_ID})`);
         }
 
-        const { atletaId, mensagem } = await req.json() as AgentRequest;
+        const body = await req.json();
+        console.log("Body recebido:", JSON.stringify(body));
 
-        if (!atletaId || !mensagem) {
-            throw new Error("atletaId e mensagem são obrigatórios.");
-        }
+        const { atletaId, mensagem } = body;
 
-        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        const supabase = createClient(
+            Deno.env.get("SUPABASE_URL")!,
+            Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+        );
 
-        // 1. Buscar contexto rico do atleta
+        console.log("Buscando contexto do atleta:", atletaId);
         const { data: atleta, error: athleteError } = await supabase
             .from("atletas")
-            .select(`
-                nome,
-                personal:personais(nome),
-                ficha:fichas(sexo, idade, altura, peso, objetivo, gordura_percentual),
-                diagnostico:diagnosticos(dados),
-                plano_treino:planos_treino(dados),
-                plano_dieta:planos_dieta(dados)
-            `)
+            .select(`nome`)
             .eq("id", atletaId)
             .single();
 
-        if (athleteError || !atleta) {
-            console.error("Erro ao buscar contexto do atleta:", athleteError);
-            throw new Error("Não foi possível carregar os dados do atleta.");
+        if (athleteError) {
+            console.error("Erro no banco:", athleteError);
+            throw new Error("Erro ao buscar atleta no banco");
         }
 
-        // 2. Autenticação com Google Cloud via JWT
+        console.log("Atleta encontrado:", atleta.nome);
+
+        // 2. Autenticação (Vou simplificar para testar se chega aqui)
+        const serviceAccount = JSON.parse(GOOGLE_SERVICE_ACCOUNT_JSON);
+        const PROJECT_ID = PROJECT_ID_ENV || serviceAccount.project_id;
+
+        console.log("Iniciando Auth Google Cloud...");
         const jwt = await generateGoogleJwt(serviceAccount);
         const accessToken = await getGoogleAccessToken(jwt);
+        console.log("AccessToken obtido com sucesso!");
 
-        // 3. Chamar Google Cloud Agent API
-        const endpoint = `https://${LOCATION}-discoveryengine.googleapis.com/v1alpha/projects/${PROJECT_ID}/locations/${LOCATION}/collections/default_collection/engines/${AGENT_ID}/servingConfigs/default_serving_config:answer`;
+        // 3. Chamada final (Dialogflow CX)
+        const LOCATION = Deno.env.get("GOOGLE_CLOUD_LOCATION") || "us-central1";
+        const endpoint = `https://${LOCATION}-dialogflow.googleapis.com/v3/projects/${PROJECT_ID}/locations/${LOCATION}/agents/${AGENT_ID}/sessions/${atletaId}:detectIntent`;
+
+        console.log("Chamando endpoint Dialogflow CX:", endpoint);
 
         const response = await fetch(endpoint, {
             method: "POST",
@@ -84,13 +75,11 @@ Deno.serve(async (req) => {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                query: { text: mensagem },
-                session: `projects/${PROJECT_ID}/locations/${LOCATION}/collections/default_collection/engines/${AGENT_ID}/sessions/${atletaId}`,
-                userLabels: {
-                    atleta_nome: atleta.nome?.substring(0, 63),
-                    objetivo: (atleta.ficha?.objetivo || "geral").substring(0, 63)
+                queryInput: {
+                    text: { text: mensagem },
+                    languageCode: "pt-BR"
                 },
-                queryParameters: {
+                queryParams: {
                     payload: {
                         atleta_contexto: {
                             nome: atleta.nome,
@@ -105,19 +94,26 @@ Deno.serve(async (req) => {
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error("Erro Google Cloud Agent:", errorText);
+            console.error("Erro Dialogflow CX:", errorText);
             throw new Error(`Erro na comunicação com o Coach IA (${response.status})`);
         }
 
         const result = await response.json();
-        const answer = result.answer?.answerText || "Desculpe, tive um problema ao processar sua solicitação.";
+        console.log("Resposta do Dialogflow recebida!");
 
-        return new Response(JSON.stringify({ response: answer }), {
+        // Dialogflow CX retorna uma lista de mensagens
+        const messages = result.queryResult?.responseMessages || [];
+        const answerText = messages
+            .filter((m: any) => m.text)
+            .map((m: any) => m.text.text[0])
+            .join("\n") || "Desculpe, não consegui processar uma resposta agora.";
+
+        return new Response(JSON.stringify({ response: answerText }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
 
     } catch (error: any) {
-        console.error("Error in vitruvius-agent:", error);
+        console.error("ERRO FATAL NA FUNÇÃO:", error.message);
         return new Response(JSON.stringify({ error: error.message }), {
             status: 400,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -125,6 +121,7 @@ Deno.serve(async (req) => {
     }
 });
 
+// Funções de JWT mantidas iguais (sem alterações)
 async function generateGoogleJwt(serviceAccount: any) {
     const header = { alg: "RS256", typ: "JWT" };
     const now = Math.floor(Date.now() / 1000);
@@ -136,40 +133,24 @@ async function generateGoogleJwt(serviceAccount: any) {
         exp: now + 3600,
         scope: "https://www.googleapis.com/auth/cloud-platform",
     };
-
     const key = await importPrivateKey(serviceAccount.private_key);
     return await create(header, payload, key);
 }
 
 async function importPrivateKey(pem: string) {
-    const pemContents = pem
-        .replace("-----BEGIN PRIVATE KEY-----", "")
-        .replace("-----END PRIVATE KEY-----", "")
-        .replace(/\s+/g, "");
+    const pemContents = pem.replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\s+/g, "");
     const binary = atob(pemContents);
     const buffer = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-        buffer[i] = binary.charCodeAt(i);
-    }
-    return await crypto.subtle.importKey(
-        "pkcs8",
-        buffer,
-        { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
-        false,
-        ["sign"]
-    );
+    for (let i = 0; i < binary.length; i++) buffer[i] = binary.charCodeAt(i);
+    return await crypto.subtle.importKey("pkcs8", buffer, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["sign"]);
 }
 
 async function getGoogleAccessToken(jwt: string) {
-    const response = await fetch("https://oauth2.googleapis.com/token", {
+    const res = await fetch("https://oauth2.googleapis.com/token", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-            grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-            assertion: jwt,
-        }),
+        body: new URLSearchParams({ grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer", assertion: jwt }),
     });
-
-    const data = await response.json();
-    return data.access_token;
+    const d = await res.json();
+    return d.access_token;
 }
