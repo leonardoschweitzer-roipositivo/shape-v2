@@ -61,9 +61,9 @@ Deno.serve(async (req) => {
                     languageCode: "pt-BR"
                 },
                 queryParams: {
-                    payload: {
+                    parameters: {
                         atleta_id: atletaId,
-                        atleta_nome: atleta?.nome
+                        atleta_nome: atleta?.nome || "Atleta"
                     }
                 }
             }),
