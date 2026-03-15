@@ -44,8 +44,8 @@ Deno.serve(async (req) => {
         const jwt = await generateGoogleJwt(sa);
         const accessToken = await getGoogleAccessToken(jwt);
 
-        // Dialogflow CX Detect Intent
-        const endpoint = `https://${location}-dialogflow.googleapis.com/v3/projects/${projectId}/locations/${location}/agents/${agentId}/sessions/${atletaId}:detectIntent`;
+        // Dialogflow CX Detect Intent (Injetamos atleta_id na URL para que o Agente o tenha disponível)
+        const endpoint = `https://${location}-dialogflow.googleapis.com/v3/projects/${projectId}/locations/${location}/agents/${agentId}/sessions/${atletaId}:detectIntent?atleta_id=${atletaId}`;
 
         console.log(`[Coach] Chamando Dialogflow para ${atleta?.nome || 'Atleta'}`);
 
