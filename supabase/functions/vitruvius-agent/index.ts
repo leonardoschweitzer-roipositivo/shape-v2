@@ -49,6 +49,10 @@ Deno.serve(async (req) => {
 
         console.log(`[Coach] Chamando Dialogflow para ${atleta?.nome || 'Atleta'}`);
 
+        // Preparamos a mensagem com um prefixo de contexto que o Playbook consegue ler, 
+        // mas que o Agente sabe que é apenas para uso interno de ferramentas.
+        const mensagemComContexto = `[SISTEMA: AtletaID=${atletaId}] ${mensagem}`;
+
         const response = await fetch(endpoint, {
             method: "POST",
             headers: {
@@ -57,13 +61,14 @@ Deno.serve(async (req) => {
             },
             body: JSON.stringify({
                 queryInput: {
-                    text: { text: mensagem },
+                    text: { text: mensagemComContexto },
                     languageCode: "pt-BR"
                 },
                 queryParams: {
                     parameters: {
                         atleta_id: atletaId,
-                        atleta_nome: atleta?.nome || "Atleta"
+                        atletaId: atletaId,
+                        nome_atleta: atleta?.nome || "Atleta"
                     }
                 }
             }),
