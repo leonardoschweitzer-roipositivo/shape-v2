@@ -30,13 +30,13 @@ serve(async (req) => {
         const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
         const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
         const GOOGLE_SERVICE_ACCOUNT_JSON = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_JSON");
-        
+
         if (!GOOGLE_SERVICE_ACCOUNT_JSON) {
             throw new Error("GOOGLE_SERVICE_ACCOUNT_JSON não configurada nas Secrets do Supabase.");
         }
 
         const serviceAccount = JSON.parse(GOOGLE_SERVICE_ACCOUNT_JSON);
-        
+
         // Prioridade: Env Var > Dados do JSON
         const PROJECT_ID = Deno.env.get("GOOGLE_CLOUD_PROJECT_ID") || serviceAccount.project_id;
         const LOCATION = Deno.env.get("GOOGLE_CLOUD_LOCATION") || "global";
