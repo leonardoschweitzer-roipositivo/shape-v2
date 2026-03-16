@@ -22,7 +22,19 @@ Deno.serve(async (req) => {
             throw new Error("Configurações do Google Cloud faltando (JSON ou AgentID)");
         }
 
-        const { atletaId, mensagem, auth_user_id, role } = await req.json();
+        const body = await req.json();
+        console.log(`[Coach] Payload Recebido:`, JSON.stringify(body, null, 2));
+
+        const { atletaId, mensagem, auth_user_id, role } = body;
+
+        if (!mensagem || !atletaId) {
+            console.error(`[Coach] Erro 400: Campos obrigatórios faltando. AtletaId: ${atletaId}, Mensagem: ${mensagem}`);
+            return new Response(JSON.stringify({ 
+                error: "atletaId e mensagem são obrigatórios",
+                received: { atletaId, mensagem }
+            }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+
         console.log(`[Coach] Usuário: ${atletaId} | Mensagem: ${mensagem} | Role: ${role}`);
         
         // --- BUSCA DE DADOS DO ATLETA ---

@@ -326,17 +326,24 @@ export async function enviarMensagemIA(
         console.info(`[VitruviusAI] 🚀 Enviando mensagem para o agente via Edge Function...`);
         
         const authStore = useAuthStore.getState();
+        const payload = {
+            atletaId,
+            mensagem,
+            auth_user_id: authStore.user?.id,
+            role: authStore.profile?.role?.toUpperCase() || 'ATLETA',
+            historico: historicoMensagens?.slice(-10) // Otimizar payload
+        };
+
+        console.info('[VitruviusAI] Payload enviado para Edge Function:', JSON.stringify(payload, null, 2));
+        
         const { data, error } = await supabase.functions.invoke('vitruvius-agent', {
-            body: {
-                atletaId,
-                mensagem,
-                auth_user_id: authStore.user?.id,
-                role: authStore.profile?.role?.toUpperCase() || 'ATLETA',
-                historico: historicoMensagens?.slice(-10) // Otimizar payload
-            }
+            body: payload
         });
 
-        if (error) throw error;
+        if (error) {
+            console.error('[VitruviusAI] Erro retornado pela Edge Function:', error);
+            throw error;
+        }
         
         return data.response || 'Desculpe, tive um problema ao processar sua mensagem.';
 
