@@ -322,19 +322,21 @@ export async function enviarMensagemIA(
     mensagem: string,
     contexto: AtletaContextoIA, // Mantido por compatibilidade de assinatura, mas a função busca novos dados
     historicoMensagens?: Array<{ role: 'user' | 'model'; content: string }>,
-    sessionId?: string
+    sessionId?: string,
+    authUserId?: string
 ): Promise<string> {
     try {
         console.info(`[VitruviusAI] 🚀 Enviando mensagem para o agente via Edge Function...`);
         
-        const authStore = useAuthStore.getState();
-        const auth_user_id = authStore.user?.id;
+        // Prioridade para o ID passado explicitamente (blindagem contra mixing)
+        const finalAuthId = authUserId || useAuthStore.getState().user?.id;
+        const role = useAuthStore.getState().profile?.role?.toUpperCase() || 'ATLETA';
         
         const payload = {
             atletaId,
             mensagem,
-            auth_user_id, // UUID real do Supabase Auth
-            role: authStore.profile?.role?.toUpperCase() || 'ATLETA',
+            auth_user_id: finalAuthId, // UUID real do Supabase Auth
+            role: role,
             historico: historicoMensagens?.slice(-10),
             sessionId // ID da conversa (lixeira)
         };

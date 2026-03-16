@@ -10,7 +10,7 @@ const corsHeaders = {
 Deno.serve(async (req) => {
     // 1. Tratamento de preflight CORS (Início imediato)
     if (req.method === "OPTIONS") {
-        return new Response(null, { status: 204, headers: corsHeaders });
+        return new Response("ok", { headers: corsHeaders });
     }
 
     try {

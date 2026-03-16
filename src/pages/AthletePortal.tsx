@@ -404,6 +404,8 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
 
     // Handler para chat — agora com IA real (Gemini) + Plano de Evolução completo
     const handleSendMessage = async (message: string): Promise<string> => {
+        const { user } = useAuthStore.getState()
+        
         // Save user message
         await salvarMensagemChat(atletaId, 'user', message)
 
@@ -439,8 +441,15 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
             content: m.content,
         }))
 
-        // Enviar para IA (Gemini ou fallback) passando o sessionId
-        const response = await enviarMensagemIA(atletaId, message, contextoIA, historico, chatSessionId)
+        // Enviar para IA (Gemini ou fallback) passando o sessionId e o ID real do usuário
+        const response = await enviarMensagemIA(
+            atletaId, 
+            message, 
+            contextoIA, 
+            historico, 
+            chatSessionId,
+            user?.id // Injeção direta e blindada
+        )
 
         // Save assistant message
         await salvarMensagemChat(atletaId, 'assistant', response)
