@@ -13,13 +13,22 @@ Deno.serve(async (req) => {
         const url = new URL(req.url);
         let target_atleta_id = url.searchParams.get('atleta_id') || url.searchParams.get('atletaId');
 
-        // Tenta ler do corpo JSON se não estiver na URL
-        if (!target_atleta_id) {
+        const rawBody = await req.text();
+        console.log(`[get_user_context] 📝 Body Recebido: ${rawBody || 'vazio'}`);
+
+        if (!target_atleta_id && rawBody) {
             try {
-                const body = await req.json();
+                const body = JSON.parse(rawBody);
                 target_atleta_id = body.atleta_id || body.atletaId;
-            } catch { /* vazio */ }
+            } catch { /* não é JSON */ }
         }
+
+        // Limpeza de possíveis aspas extras vindo do LLM
+        if (target_atleta_id) {
+            target_atleta_id = target_atleta_id.replace(/['"]+/g, '').trim();
+        }
+
+        console.log(`[get_user_context] 🎯 ID Final para busca: "${target_atleta_id}"`);
 
         if (!target_atleta_id) {
             return new Response(JSON.stringify({ error: "atleta_id ausente" }), { 
@@ -28,15 +37,29 @@ Deno.serve(async (req) => {
         }
 
         const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!);
-        const { data: atleta } = await supabase.from('atletas').select('id, nome, status').eq('id', target_atleta_id).maybeSingle();
+        
+        // Buscamos o atleta. Nota: usamos o ID UUID da tabela atletas.
+        const { data: atleta, error: dbError } = await supabase
+            .from('atletas')
+            .select('id, nome, status')
+            .eq('id', target_atleta_id)
+            .maybeSingle();
 
-        if (!atleta) {
-            return new Response(JSON.stringify({ success: false, error: "Não encontrado" }), { 
-                status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-            });
+        if (dbError) {
+            console.error(`[get_user_context] ❌ Erro no Banco: ${dbError.message}`);
+            throw dbError;
         }
 
-        // Retorno limpo e direto conforme o Schema acima
+        if (!atleta) {
+            console.warn(`[get_user_context] ⚠️ Atleta com ID ${target_atleta_id} não existe no banco.`);
+            return new Response(JSON.stringify({ 
+                success: false, 
+                error: `Atleta não localizado. Verifique se o ID ${target_atleta_id} é um UUID válido da tabela atletas.` 
+            }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        console.log(`[get_user_context] ✅ Sucesso! Retornando contexto de ${atleta.nome}`);
+
         return new Response(JSON.stringify({
             success: true,
             atleta_id: atleta.id,
@@ -46,6 +69,7 @@ Deno.serve(async (req) => {
         }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
     } catch (error: any) {
+        console.error('[get_user_context] 🧨 Erro fatal:', error.message);
         return new Response(JSON.stringify({ success: false, error: error.message }), { 
             status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         });
