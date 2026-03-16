@@ -44,7 +44,7 @@ interface AthletePortalProps {
 }
 
 export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoToHome, onGoToContexto }: AthletePortalProps) {
-    const { signOut } = useAuthStore()
+    const { signOut, user } = useAuthStore()
     const [activeTab, setActiveTab] = useState<AthletePortalTab>(initialTab)
     const scrollContainerRef = useRef<HTMLDivElement>(null)
 
@@ -79,7 +79,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
     })
     const [showVirtualAssessment, setShowVirtualAssessment] = useState(false)
     const [notificacoesBadge, setNotificacoesBadge] = useState(0)
-    const [chatSessionId] = useState<string>(() => user?.id || crypto.randomUUID())
+    const chatSessionId = user?.id || atletaId
 
     const timerStorageKey = `exercicioTimers_${atletaId}`
     const [exercicioTimers, setExercicioTimersRaw] = useState<Record<string, ExercicioTimerState>>(() => {
@@ -387,18 +387,11 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
         setActiveTab('coach')
     }
 
-    const handleNewConversation = async () => {
-        if (!window.confirm('Deseja realmente iniciar uma nova conversa? O histórico atual será limpo.')) return;
-        
-        // Limpar mensagens do banco de dados (opcional, mas aqui queremos zerar o visual e a sessão)
-        // Se quisermos manter no DB mas zerar na tela, basta setar o estado
+    const handleNewConversation = () => {
         setChatMessages([])
+        // Mantemos o mesmo sessionId (user.id) para o vínculo do Dialogflow persistir
         
-        // Gerar nova sessão
-        const newSessionId = crypto.randomUUID()
-        setChatSessionId(newSessionId)
-        
-        // Opcional: Notificar serviço
+        // Opcional: Notificar serviço de limpeza de cache de sessão se necessário
         limparSessaoChat(atletaId)
     }
 
