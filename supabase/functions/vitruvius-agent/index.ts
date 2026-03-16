@@ -23,6 +23,7 @@ Deno.serve(async (req) => {
         }
 
         const { atletaId, mensagem } = await req.json();
+        console.log(`[Coach] Usuário: ${atletaId} | Mensagem: ${mensagem}`);
         
         const supabase = createClient(
             Deno.env.get("SUPABASE_URL")!,
@@ -34,7 +35,7 @@ Deno.serve(async (req) => {
             .from("atletas")
             .select("nome")
             .eq("id", atletaId)
-            .single();
+            .maybeSingle();
 
         const sa = JSON.parse(saJson);
         const projectId = Deno.env.get("GOOGLE_CLOUD_PROJECT_ID") || sa.project_id;
@@ -44,31 +45,25 @@ Deno.serve(async (req) => {
         const jwt = await generateGoogleJwt(sa);
         const accessToken = await getGoogleAccessToken(jwt);
 
-        // Dialogflow CX Detect Intent (Injetamos atleta_id na URL para que o Agente o tenha disponível)
-        const endpoint = `https://${location}-dialogflow.googleapis.com/v3/projects/${projectId}/locations/${location}/agents/${agentId}/sessions/${atletaId}:detectIntent?atleta_id=${atletaId}`;
+        // Dialogflow CX Detect Intent
+        const endpoint = `https://${location}-dialogflow.googleapis.com/v3/projects/${projectId}/locations/${location}/agents/${agentId}/sessions/${atletaId}:detectIntent`;
 
         console.log(`[Coach] Chamando Dialogflow para ${atleta?.nome || 'Atleta'}`);
-
-        // Preparamos a mensagem com um prefixo de contexto que o Playbook consegue ler, 
-        // mas que o Agente sabe que é apenas para uso interno de ferramentas.
-        const mensagemComContexto = `[SISTEMA: AtletaID=${atletaId}] ${mensagem}`;
 
         const response = await fetch(endpoint, {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${accessToken}`,
-                "Content-Type": "application/json",
-                "x-atleta-id": atletaId
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({
                 queryInput: {
-                    text: { text: mensagemComContexto },
+                    text: { text: mensagem },
                     languageCode: "pt-BR"
                 },
                 queryParams: {
                     parameters: {
                         atleta_id: atletaId,
-                        atletaId: atletaId,
                         nome_atleta: atleta?.nome || "Atleta"
                     }
                 }
@@ -76,7 +71,11 @@ Deno.serve(async (req) => {
         });
 
         const result = await response.json();
-        const answer = result.queryResult?.responseMessages
+        console.log("[Coach] Resposta Crua do Dialogflow:", JSON.stringify(result, null, 2));
+
+        const responseMessages = result.queryResult?.responseMessages || [];
+        
+        const answer = responseMessages
             ?.filter((m: any) => m.text)
             .map((m: any) => m.text.text[0])
             .join("\n") || "O Vitrúvio está pensando... tente novamente em instantes.";
