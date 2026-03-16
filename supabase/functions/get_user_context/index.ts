@@ -10,6 +10,7 @@ Deno.serve(async (req) => {
     if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
     try {
+        const url = new URL(req.url);
         const body = await req.json().catch(() => ({}));
         console.log("[get_user_context] Body recebido:", JSON.stringify(body, null, 2));
 
