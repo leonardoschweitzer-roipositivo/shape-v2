@@ -71,7 +71,16 @@ Deno.serve(async (req) => {
         });
 
         const result = await response.json();
-        console.log("[Coach] Resposta Crua do Dialogflow:", JSON.stringify(result, null, 2));
+
+        if (result.error) {
+            console.error("[Coach] ERRO DO GOOGLE:", result.error);
+            if (result.error.message?.includes("Token limit exceeded")) {
+                return new Response(JSON.stringify({ 
+                    response: "Ops! Nossa conversa ficou muito longa e esgotou minha memória temporária. Pode começar um novo chat para continuarmos?" 
+                }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            }
+            throw new Error(result.error.message);
+        }
 
         const responseMessages = result.queryResult?.responseMessages || [];
         
@@ -86,10 +95,9 @@ Deno.serve(async (req) => {
 
     } catch (error: any) {
         console.error("[Coach] ERRO:", error.message);
-        return new Response(JSON.stringify({ error: error.message }), {
-            status: 400,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return new Response(JSON.stringify({ 
+            response: "Tive um pequeno problema técnico aqui. Pode repetir a pergunta?" 
+        }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 });
 
