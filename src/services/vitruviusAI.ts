@@ -11,6 +11,7 @@ import type { PlanoTreino } from './calculations/treino'
 import type { PlanoDieta } from './calculations/dieta'
 import { diagnosticoParaTexto, treinoParaTexto, dietaParaTexto, getFontesCientificas } from './vitruviusContext'
 import { supabase } from './supabase'
+import { useAuthStore } from '@/stores/authStore'
 
 // ==========================================
 // CONFIGURAÇÃO
