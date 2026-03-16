@@ -28,11 +28,12 @@ Deno.serve(async (req) => {
             });
         }
 
-        const { atletaId, mensagem, auth_user_id, vitru_auth_user_id, role, sessionId } = body;
+        const { atletaId, mensagem, auth_user_id, role, sessionId } = body;
 
-        const finalAuthId = vitru_auth_user_id || auth_user_id;
+        // O sessionId agora PRECISA ser o UUID do usuário para o Dialogflow CX injetar corretamente
+        const finalAuthId = auth_user_id || sessionId;
 
-        console.info(`[Coach] 🔍 Auditoria de IDs: AtletaId: ${atletaId}, VitruAuthId: ${vitru_auth_user_id}, AuthUserId (fallback): ${auth_user_id}, SessionId: ${sessionId}, Role: ${role}`);
+        console.info(`[Coach] 🔍 Auditoria de IDs: AtletaId: ${atletaId}, AuthId: ${finalAuthId}, SessionId: ${sessionId}, Role: ${role}`);
 
         if (!mensagem || !atletaId) {
             return new Response(JSON.stringify({ error: "atletaId e mensagem são obrigatórios" }), { 
@@ -69,7 +70,8 @@ Deno.serve(async (req) => {
         const jwt = await generateGoogleJwt(sa);
         const accessToken = await getGoogleAccessToken(jwt);
 
-        const finalSessionId = sessionId || atletaId;
+        // ESSENCIAL: O finalSessionId DEVE ser o UUID real para o webhook receber o auth_user_id correto
+        const finalSessionId = sessionId || finalAuthId; 
         const endpoint = `https://${location}-dialogflow.googleapis.com/v3/projects/${projectId}/locations/${location}/agents/${agentId}/sessions/${finalSessionId}:detectIntent`;
 
         console.log(`[Coach] Enviando para Dialogflow: ${endpoint}`);
@@ -92,9 +94,8 @@ Deno.serve(async (req) => {
                     parameters: {
                         atleta_id: atletaId,
                         nome_atleta: atleta?.nome || "Atleta",
-                        vitru_auth_user_id: finalAuthId || null, // Blindagem para o webhook
-                        auth_user_id: finalAuthId || null,      // Satisfação do formulário Dialogflow
-                        role: role || 'ATLETA'                 // Garantia do papel do usuário
+                        auth_user_id: finalAuthId || null,
+                        role: role || 'ATLETA'
                     }
                 }
             }),

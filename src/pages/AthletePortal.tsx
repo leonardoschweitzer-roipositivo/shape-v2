@@ -79,7 +79,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
     })
     const [showVirtualAssessment, setShowVirtualAssessment] = useState(false)
     const [notificacoesBadge, setNotificacoesBadge] = useState(0)
-    const [chatSessionId, setChatSessionId] = useState<string>(() => crypto.randomUUID())
+    const [chatSessionId] = useState<string>(() => user?.id || crypto.randomUUID())
 
     const timerStorageKey = `exercicioTimers_${atletaId}`
     const [exercicioTimers, setExercicioTimersRaw] = useState<Record<string, ExercicioTimerState>>(() => {

@@ -335,10 +335,10 @@ export async function enviarMensagemIA(
         const payload = {
             atletaId,
             mensagem,
-            vitru_auth_user_id: finalAuthId, // UUID blindado contra colisões
+            auth_user_id: finalAuthId, 
             role: role,
             historico: historicoMensagens?.slice(-10),
-            sessionId // ID da conversa (lixeira)
+            sessionId // Agora é o UUID real do usuário
         };
 
         console.info('[VitruviusAI] 🟢 PAYLOAD FINAL PARA EDGE FUNCTION:', {
