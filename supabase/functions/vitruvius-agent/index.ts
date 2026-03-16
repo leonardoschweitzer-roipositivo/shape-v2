@@ -2,15 +2,15 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { create } from "https://deno.land/x/djwt@v2.8/mod.ts";
 
 const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-portal-token",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-portal-token',
+    'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
 };
 
 Deno.serve(async (req) => {
     // 1. Tratamento de preflight CORS (Início imediato)
     if (req.method === "OPTIONS") {
-        return new Response("ok", { headers: corsHeaders });
+        return new Response(null, { status: 204, headers: corsHeaders });
     }
 
     try {
@@ -114,7 +114,7 @@ Deno.serve(async (req) => {
         });
 
     } catch (error: any) {
-        console.error("[Coach] 🧨 CRASH CRÍTICO:", error.stack || error.message);
+        console.error("[Coach] 🧨 CRASH CRÍTICO:", error?.stack || error?.message || error);
         return new Response(JSON.stringify({ 
             response: "Erro interno no servidor (500). Por favor, tente novamente.",
             debug: error.message
