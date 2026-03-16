@@ -13,22 +13,16 @@ Deno.serve(async (req) => {
         const url = new URL(req.url);
         let target_atleta_id = url.searchParams.get('atleta_id') || url.searchParams.get('atletaId');
 
-        const rawBody = await req.text();
-        console.log(`[get_user_context] 📝 Body Recebido: ${rawBody || 'vazio'}`);
-
-        if (!target_atleta_id && rawBody) {
+        if (!target_atleta_id) {
             try {
-                const body = JSON.parse(rawBody);
+                const body = await req.json();
                 target_atleta_id = body.atleta_id || body.atletaId;
-            } catch { /* não é JSON */ }
+            } catch { /* vazio */ }
         }
 
-        // Limpeza de possíveis aspas extras vindo do LLM
         if (target_atleta_id) {
             target_atleta_id = target_atleta_id.replace(/['"]+/g, '').trim();
         }
-
-        console.log(`[get_user_context] 🎯 ID Final para busca: "${target_atleta_id}"`);
 
         if (!target_atleta_id) {
             return new Response(JSON.stringify({ error: "atleta_id ausente" }), { 
@@ -36,29 +30,25 @@ Deno.serve(async (req) => {
             });
         }
 
-        const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!);
-        
-        // Buscamos o atleta. Nota: usamos o ID UUID da tabela atletas.
+        // --- MUDANÇA CRÍTICA: USAR SERVICE_ROLE_KEY PARA EVITAR RECURSÃO DE RLS ---
+        const supabase = createClient(
+            Deno.env.get('SUPABASE_URL')!, 
+            Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')! // Permissão de Admin do Sistema
+        );
+
         const { data: atleta, error: dbError } = await supabase
             .from('atletas')
             .select('id, nome, status')
             .eq('id', target_atleta_id)
             .maybeSingle();
 
-        if (dbError) {
-            console.error(`[get_user_context] ❌ Erro no Banco: ${dbError.message}`);
-            throw dbError;
-        }
+        if (dbError) throw dbError;
 
         if (!atleta) {
-            console.warn(`[get_user_context] ⚠️ Atleta com ID ${target_atleta_id} não existe no banco.`);
-            return new Response(JSON.stringify({ 
-                success: false, 
-                error: `Atleta não localizado. Verifique se o ID ${target_atleta_id} é um UUID válido da tabela atletas.` 
-            }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            return new Response(JSON.stringify({ success: false, error: "Atleta não encontrado" }), { 
+                status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            });
         }
-
-        console.log(`[get_user_context] ✅ Sucesso! Retornando contexto de ${atleta.nome}`);
 
         return new Response(JSON.stringify({
             success: true,
@@ -69,7 +59,7 @@ Deno.serve(async (req) => {
         }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
     } catch (error: any) {
-        console.error('[get_user_context] 🧨 Erro fatal:', error.message);
+        console.error('[get_user_context] 🧨 Erro:', error.message);
         return new Response(JSON.stringify({ success: false, error: error.message }), { 
             status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         });
