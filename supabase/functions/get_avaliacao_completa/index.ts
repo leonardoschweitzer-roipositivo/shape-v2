@@ -85,8 +85,13 @@ Deno.serve(async (req) => {
         const body = await req.json().catch(() => ({}));
         console.log("[get_avaliacao_completa] Body recebido:", JSON.stringify(body, null, 2));
 
-        // Suporte a chamada direta ou via Dialogflow CX Webhook
-        const auth_user_id = body.auth_user_id || body.sessionInfo?.parameters?.auth_user_id;
+        // Suporte a chamada direta ou via Dialogflow CX Webhook (Prioridade para vitru_auth_user_id blindado)
+        const auth_user_id = 
+            body.vitru_auth_user_id || // Body direto
+            body.sessionInfo?.parameters?.vitru_auth_user_id || // Dialogflow parameter customizado
+            body.auth_user_id || // Legacy
+            body.sessionInfo?.parameters?.auth_user_id; // Legacy Dialogflow
+        
         const role = body.role || body.sessionInfo?.parameters?.role;
         const atleta_id = url.searchParams.get('atleta_id') ||
                            url.searchParams.get('atletaId') ||

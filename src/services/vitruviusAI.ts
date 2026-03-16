@@ -335,7 +335,7 @@ export async function enviarMensagemIA(
         const payload = {
             atletaId,
             mensagem,
-            auth_user_id: finalAuthId, // UUID real do Supabase Auth
+            vitru_auth_user_id: finalAuthId, // UUID blindado contra colisões
             role: role,
             historico: historicoMensagens?.slice(-10),
             sessionId // ID da conversa (lixeira)

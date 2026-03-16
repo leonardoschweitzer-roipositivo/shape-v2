@@ -28,9 +28,11 @@ Deno.serve(async (req) => {
             });
         }
 
-        const { atletaId, mensagem, auth_user_id, role, sessionId } = body;
+        const { atletaId, mensagem, auth_user_id, vitru_auth_user_id, role, sessionId } = body;
 
-        console.info(`[Coach] 🔍 Auditoria de IDs: AtletaId: ${atletaId}, AuthUserId: ${auth_user_id}, SessionId: ${sessionId}, Role: ${role}`);
+        const finalAuthId = vitru_auth_user_id || auth_user_id;
+
+        console.info(`[Coach] 🔍 Auditoria de IDs: AtletaId: ${atletaId}, VitruAuthId: ${vitru_auth_user_id}, AuthUserId (fallback): ${auth_user_id}, SessionId: ${sessionId}, Role: ${role}`);
 
         if (!mensagem || !atletaId) {
             return new Response(JSON.stringify({ error: "atletaId e mensagem são obrigatórios" }), { 
@@ -90,7 +92,8 @@ Deno.serve(async (req) => {
                     parameters: {
                         atleta_id: atletaId,
                         nome_atleta: atleta?.nome || "Atleta",
-                        auth_user_id: auth_user_id || null,
+                        vitru_auth_user_id: finalAuthId || null,
+                        auth_user_id: finalAuthId || null, // Mantemos por legacy mas o novo é o principal
                         role: role || 'ATLETA'
                     }
                 }
