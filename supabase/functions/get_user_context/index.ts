@@ -12,6 +12,8 @@ Deno.serve(async (req) => {
     try {
         const url = new URL(req.url);
         let target_atleta_id = url.searchParams.get('atleta_id') || url.searchParams.get('atletaId');
+        
+        console.log("[get_user_context] ID Bruto recebido via URL:", target_atleta_id);
 
         if (!target_atleta_id) {
             try {

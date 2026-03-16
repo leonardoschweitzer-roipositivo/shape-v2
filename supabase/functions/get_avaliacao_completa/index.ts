@@ -74,6 +74,7 @@ Deno.serve(async (req) => {
 
     try {
         const body = await req.json()
+        console.log("[get_avaliacao_completa] Body recebido:", JSON.stringify(body, null, 2))
         const { auth_user_id, role, atleta_id } = body
 
         if (!auth_user_id || !role) {
@@ -105,7 +106,7 @@ Deno.serve(async (req) => {
             .from('atletas')
             .select(`
         id, altura, peso_atual, sexo,
-        medidas (peso, gordura_percentual, ombros, cintura, braco_dir, braco_esq, coxa_dir, coxa_esq)
+        medidas (peso, gordura_corporal, ombros, peitoral, cintura, quadril, abdomen, braco_direito, braco_esquerdo, coxa_direita, coxa_esquerda)
       `)
             .eq('id', id_busca)
             .order('created_at', { referencedTable: 'medidas', ascending: false })
@@ -134,8 +135,8 @@ Deno.serve(async (req) => {
             v_shape_pct = proporcao_ombro_cintura >= 1.618 ? 100 : (proporcao_ombro_cintura / 1.618) * 100;
         }
 
-        const diff_bracos = Math.abs((ultimaMedida.braco_dir || 0) - (ultimaMedida.braco_esq || 0))
-        const diff_coxas = Math.abs((ultimaMedida.coxa_dir || 0) - (ultimaMedida.coxa_esq || 0))
+        const diff_bracos = Math.abs((ultimaMedida.braco_direito || 0) - (ultimaMedida.braco_esquerdo || 0))
+        const diff_coxas = Math.abs((ultimaMedida.coxa_direita || 0) - (ultimaMedida.coxa_esquerda || 0))
 
         let score_simetria = 100 - (diff_bracos * 2.5) - (diff_coxas * 2.0)
         score_simetria = Math.max(0, Math.min(100, score_simetria))
