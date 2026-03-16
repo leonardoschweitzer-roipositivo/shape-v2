@@ -6,9 +6,8 @@
 
 import React, { useState } from 'react'
 import { ChatMessages } from '../../components/organisms/ChatMessages'
-import { AcoesRapidasChat, ACOES_RAPIDAS } from '../../components/molecules/AcoesRapidasChat'
 import { ChatInput } from '../../components/molecules/ChatInput'
-import { ChatMessage, AcaoRapidaChatItem } from '../../types/athlete-portal'
+import { ChatMessage } from '../../types/athlete-portal'
 import { Trash2 } from 'lucide-react'
 
 interface CoachScreenProps {
@@ -59,12 +58,6 @@ export function CoachScreen({ initialMessages = [], onSendMessage, onClearChat }
         }
     }
 
-    const handleQuickAction = (actionId: AcaoRapidaChatItem['id']) => {
-        const action = ACOES_RAPIDAS.find(a => a.id === actionId)
-        if (action?.mensagemPadrao) {
-            handleSendMessage(action.mensagemPadrao)
-        }
-    }
 
     return (
         <div className="h-screen bg-background-dark flex flex-col pb-16">
@@ -90,9 +83,6 @@ export function CoachScreen({ initialMessages = [], onSendMessage, onClearChat }
 
             {/* Messages */}
             <ChatMessages messages={messages} isTyping={isTyping} />
-
-            {/* Quick Actions */}
-            <AcoesRapidasChat onActionClick={handleQuickAction} />
 
             {/* Input */}
             <ChatInput
