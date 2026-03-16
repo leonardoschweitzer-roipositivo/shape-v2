@@ -22,9 +22,10 @@ Deno.serve(async (req) => {
             throw new Error("Configurações do Google Cloud faltando (JSON ou AgentID)");
         }
 
-        const { atletaId, mensagem } = await req.json();
-        console.log(`[Coach] Usuário: ${atletaId} | Mensagem: ${mensagem}`);
+        const { atletaId, mensagem, auth_user_id, role } = await req.json();
+        console.log(`[Coach] Usuário: ${atletaId} | Mensagem: ${mensagem} | Role: ${role}`);
         
+        // --- BUSCA DE DADOS DO ATLETA ---
         const supabase = createClient(
             Deno.env.get("SUPABASE_URL")!,
             Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -68,7 +69,10 @@ Deno.serve(async (req) => {
                 queryParams: {
                     parameters: {
                         atleta_id: atletaId,
-                        nome_atleta: atleta?.nome || "Atleta"
+                        nome_atleta: atleta?.nome || "Atleta",
+                        // --- NOVOS PARÂMETROS DE SESSÃO PARA AS TOOLS ---
+                        auth_user_id: auth_user_id || null,
+                        role: role || 'ATLETA'
                     }
                 }
             }),

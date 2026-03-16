@@ -325,10 +325,13 @@ export async function enviarMensagemIA(
     try {
         console.info(`[VitruviusAI] 🚀 Enviando mensagem para o agente via Edge Function...`);
         
+        const authStore = useAuthStore.getState();
         const { data, error } = await supabase.functions.invoke('vitruvius-agent', {
             body: {
                 atletaId,
                 mensagem,
+                auth_user_id: authStore.user?.id,
+                role: authStore.profile?.role?.toUpperCase() || 'ATLETA',
                 historico: historicoMensagens?.slice(-10) // Otimizar payload
             }
         });
@@ -406,10 +409,13 @@ export async function enviarMensagemPlanoReview(
     historicoMensagens?: Array<{ role: 'user' | 'model'; content: string }>
 ): Promise<string> {
     try {
+        const authStore = useAuthStore.getState();
         const { data, error } = await supabase.functions.invoke('vitruvius-agent', {
             body: {
                 atletaId,
                 mensagem: `[REVISÃO DE ${tipo.toUpperCase()}] ${mensagem}`,
+                auth_user_id: authStore.user?.id,
+                role: authStore.profile?.role?.toUpperCase() || 'ATLETA',
                 historico: historicoMensagens,
                 metadata: {
                     tipo_revisao: tipo,
