@@ -79,6 +79,7 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
     })
     const [showVirtualAssessment, setShowVirtualAssessment] = useState(false)
     const [notificacoesBadge, setNotificacoesBadge] = useState(0)
+    const [chatSessionId, setChatSessionId] = useState<string>(() => crypto.randomUUID())
 
     const timerStorageKey = `exercicioTimers_${atletaId}`
     const [exercicioTimers, setExercicioTimersRaw] = useState<Record<string, ExercicioTimerState>>(() => {
@@ -386,6 +387,21 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
         setActiveTab('coach')
     }
 
+    const handleNewConversation = async () => {
+        if (!window.confirm('Deseja realmente iniciar uma nova conversa? O histórico atual será limpo.')) return;
+        
+        // Limpar mensagens do banco de dados (opcional, mas aqui queremos zerar o visual e a sessão)
+        // Se quisermos manter no DB mas zerar na tela, basta setar o estado
+        setChatMessages([])
+        
+        // Gerar nova sessão
+        const newSessionId = crypto.randomUUID()
+        setChatSessionId(newSessionId)
+        
+        // Opcional: Notificar serviço
+        limparSessaoChat(atletaId)
+    }
+
     // Handler para chat — agora com IA real (Gemini) + Plano de Evolução completo
     const handleSendMessage = async (message: string): Promise<string> => {
         // Save user message
@@ -423,8 +439,8 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
             content: m.content,
         }))
 
-        // Enviar para IA (Gemini ou fallback)
-        const response = await enviarMensagemIA(atletaId, message, contextoIA, historico)
+        // Enviar para IA (Gemini ou fallback) passando o sessionId
+        const response = await enviarMensagemIA(atletaId, message, contextoIA, historico, chatSessionId)
 
         // Save assistant message
         await salvarMensagemChat(atletaId, 'assistant', response)
@@ -473,8 +489,10 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
             case 'coach':
                 return (
                     <CoachScreen
+                        key={chatSessionId}
                         initialMessages={chatMessages}
                         onSendMessage={handleSendMessage}
+                        onClearChat={handleNewConversation}
                     />
                 )
 

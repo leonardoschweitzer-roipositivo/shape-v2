@@ -9,13 +9,15 @@ import { ChatMessages } from '../../components/organisms/ChatMessages'
 import { AcoesRapidasChat, ACOES_RAPIDAS } from '../../components/molecules/AcoesRapidasChat'
 import { ChatInput } from '../../components/molecules/ChatInput'
 import { ChatMessage, AcaoRapidaChatItem } from '../../types/athlete-portal'
+import { Trash2 } from 'lucide-react'
 
 interface CoachScreenProps {
     initialMessages?: ChatMessage[]
     onSendMessage?: (message: string) => Promise<string>
+    onClearChat?: () => void
 }
 
-export function CoachScreen({ initialMessages = [], onSendMessage }: CoachScreenProps) {
+export function CoachScreen({ initialMessages = [], onSendMessage, onClearChat }: CoachScreenProps) {
     const [messages, setMessages] = useState<ChatMessage[]>(initialMessages)
     const [isTyping, setIsTyping] = useState(false)
 
@@ -71,10 +73,19 @@ export function CoachScreen({ initialMessages = [], onSendMessage }: CoachScreen
                 <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center">
                     <span className="text-xl">🤖</span>
                 </div>
-                <div>
+                <div className="flex-1">
                     <h2 className="text-base font-semibold text-white">Vitrúvio</h2>
                     <p className="text-xs text-gray-400">Coach IA • Sempre online</p>
                 </div>
+
+                {/* Nova Conversa / Limpar Chat */}
+                <button
+                    onClick={onClearChat}
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                    title="Nova Conversa"
+                >
+                    <Trash2 size={18} />
+                </button>
             </div>
 
             {/* Messages */}

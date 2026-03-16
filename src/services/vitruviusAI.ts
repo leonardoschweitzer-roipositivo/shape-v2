@@ -321,7 +321,8 @@ export async function enviarMensagemIA(
     atletaId: string,
     mensagem: string,
     contexto: AtletaContextoIA, // Mantido por compatibilidade de assinatura, mas a função busca novos dados
-    historicoMensagens?: Array<{ role: 'user' | 'model'; content: string }>
+    historicoMensagens?: Array<{ role: 'user' | 'model'; content: string }>,
+    sessionId?: string
 ): Promise<string> {
     try {
         console.info(`[VitruviusAI] 🚀 Enviando mensagem para o agente via Edge Function...`);
@@ -332,7 +333,8 @@ export async function enviarMensagemIA(
             mensagem,
             auth_user_id: authStore.user?.id,
             role: authStore.profile?.role?.toUpperCase() || 'ATLETA',
-            historico: historicoMensagens?.slice(-10) // Otimizar payload
+            historico: historicoMensagens?.slice(-10), // Otimizar payload
+            sessionId
         };
 
         console.info('[VitruviusAI] Payload enviado para Edge Function:', JSON.stringify(payload, null, 2));
