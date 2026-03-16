@@ -8,70 +8,70 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
+    // 1. Tratamento de preflight CORS (Início imediato)
     if (req.method === "OPTIONS") {
         return new Response("ok", { headers: corsHeaders });
     }
 
-    console.log("!!! [COACH-IA] REQUISIÇÃO RECEBIDA !!!");
-
     try {
-        const saJson = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_JSON");
-        const agentId = Deno.env.get("GOOGLE_CLOUD_AGENT_ID");
-        
-        if (!saJson || !agentId) {
-            throw new Error("Configurações do Google Cloud faltando (JSON ou AgentID)");
-        }
+        console.log("!!! [COACH-IA] NOVA REQUISIÇÃO !!!");
 
-        const body = await req.json();
-        console.log(`[Coach] Payload Recebido:`, JSON.stringify(body, null, 2));
+        // 2. Extração segura do body
+        let body;
+        try {
+            body = await req.json();
+            console.log(`[Coach] Payload bruto:`, JSON.stringify(body, null, 2));
+        } catch (e) {
+            console.error("[Coach] Erro ao parsear JSON:", e.message);
+            return new Response(JSON.stringify({ error: "JSON inválido" }), { 
+                status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } 
+            });
+        }
 
         const { atletaId, mensagem, auth_user_id, role, sessionId } = body;
 
-        console.info(`[Coach] 🔍 Auditoria de IDs:
-            - AtletaId: ${atletaId}
-            - AuthUserId (UUID): ${auth_user_id}
-            - SessionId (Chat): ${sessionId || 'Usa atletaId'}
-            - Role: ${role}
-        `);
+        console.info(`[Coach] 🔍 Auditoria de IDs: AtletaId: ${atletaId}, AuthUserId: ${auth_user_id}, SessionId: ${sessionId}, Role: ${role}`);
 
         if (!mensagem || !atletaId) {
-            console.error(`[Coach] Erro 400: Campos obrigatórios faltando. AtletaId: ${atletaId}, Mensagem: ${mensagem}`);
-            return new Response(JSON.stringify({ 
-                error: "atletaId e mensagem são obrigatórios",
-                received: { atletaId, mensagem }
-            }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            return new Response(JSON.stringify({ error: "atletaId e mensagem são obrigatórios" }), { 
+                status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } 
+            });
         }
 
-        console.log(`[Coach] Usuário: ${atletaId} | Mensagem: ${mensagem} | Role: ${role}`);
-        
         // --- BUSCA DE DADOS DO ATLETA ---
         const supabase = createClient(
             Deno.env.get("SUPABASE_URL")!,
             Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
         );
 
-        // Busca contexto do atleta
-        const { data: atleta } = await supabase
+        const { data: atleta, error: dbError } = await supabase
             .from("atletas")
             .select("nome")
             .eq("id", atletaId)
             .maybeSingle();
 
+        if (dbError) console.warn("[Coach] Erro ao buscar nome do atleta:", dbError.message);
+
+        const saJson = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_JSON");
+        const agentId = Deno.env.get("GOOGLE_CLOUD_AGENT_ID");
+        
+        if (!saJson || !agentId) {
+            throw new Error("Configurações do Google Cloud faltando");
+        }
+
         const sa = JSON.parse(saJson);
-        const projectId = Deno.env.get("GOOGLE_CLOUD_PROJECT_ID") || sa.project_id;
+        const projectId = sa.project_id;
         const location = Deno.env.get("GOOGLE_CLOUD_LOCATION") || "us-central1";
 
-        // Auth Google
+        console.log("[Coach] Gerando token Google...");
         const jwt = await generateGoogleJwt(sa);
         const accessToken = await getGoogleAccessToken(jwt);
 
-        // Dialogflow CX Detect Intent (Usamos sessionId se enviado, senão fallback para atletaId)
         const finalSessionId = sessionId || atletaId;
         const endpoint = `https://${location}-dialogflow.googleapis.com/v3/projects/${projectId}/locations/${location}/agents/${agentId}/sessions/${finalSessionId}:detectIntent`;
 
-        console.log(`[Coach] Chamando Dialogflow para ${atleta?.nome || 'Atleta'}`);
+        console.log(`[Coach] Enviando para Dialogflow: ${endpoint}`);
 
-        // Restauramos o prefixo de contexto para o Playbook
         const mensagemComContexto = `[SISTEMA: AtletaID=${atletaId}] ${mensagem}`;
 
         const response = await fetch(endpoint, {
@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
             headers: {
                 "Authorization": `Bearer ${accessToken}`,
                 "Content-Type": "application/json",
-                "x-atleta-id": atletaId // Header para uso das Tools
+                "x-atleta-id": atletaId
             },
             body: JSON.stringify({
                 queryInput: {
@@ -90,7 +90,6 @@ Deno.serve(async (req) => {
                     parameters: {
                         atleta_id: atletaId,
                         nome_atleta: atleta?.nome || "Atleta",
-                        // --- NOVOS PARÂMETROS DE SESSÃO PARA AS TOOLS ---
                         auth_user_id: auth_user_id || null,
                         role: role || 'ATLETA'
                     }
@@ -98,34 +97,31 @@ Deno.serve(async (req) => {
             }),
         });
 
-        const result = await response.json();
-
-        if (result.error) {
-            console.error("[Coach] ERRO DO GOOGLE:", result.error);
-            if (result.error.message?.includes("Token limit exceeded")) {
-                return new Response(JSON.stringify({ 
-                    response: "Ops! Nossa conversa ficou muito longa e esgotou minha memória temporária. Pode começar um novo chat para continuarmos?" 
-                }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-            }
-            throw new Error(result.error.message);
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("[Coach] Erro na resposta do Dialogflow:", errorText);
+            throw new Error(`Dialogflow error: ${response.status}`);
         }
 
-        const responseMessages = result.queryResult?.responseMessages || [];
-        
-        const answer = responseMessages
+        const result = await response.json();
+        const answer = result.queryResult?.responseMessages
             ?.filter((m: any) => m.text)
             .map((m: any) => m.text.text[0])
-            .join("\n") || "O Vitrúvio está pensando... tente novamente em instantes.";
+            .join("\n") || "Sem resposta do assistente.";
 
         return new Response(JSON.stringify({ response: answer }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
 
     } catch (error: any) {
-        console.error("[Coach] ERRO:", error.message);
+        console.error("[Coach] 🧨 CRASH CRÍTICO:", error.stack || error.message);
         return new Response(JSON.stringify({ 
-            response: "Tive um pequeno problema técnico aqui. Pode repetir a pergunta?" 
-        }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            response: "Erro interno no servidor (500). Por favor, tente novamente.",
+            debug: error.message
+        }), { 
+            status: 500, 
+            headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        });
     }
 });
 
