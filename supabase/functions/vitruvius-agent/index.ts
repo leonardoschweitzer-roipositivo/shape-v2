@@ -27,6 +27,13 @@ Deno.serve(async (req) => {
 
         const { atletaId, mensagem, auth_user_id, role, sessionId } = body;
 
+        console.info(`[Coach] 🔍 Auditoria de IDs:
+            - AtletaId: ${atletaId}
+            - AuthUserId (UUID): ${auth_user_id}
+            - SessionId (Chat): ${sessionId || 'Usa atletaId'}
+            - Role: ${role}
+        `);
+
         if (!mensagem || !atletaId) {
             console.error(`[Coach] Erro 400: Campos obrigatórios faltando. AtletaId: ${atletaId}, Mensagem: ${mensagem}`);
             return new Response(JSON.stringify({ 
@@ -60,7 +67,7 @@ Deno.serve(async (req) => {
 
         // Dialogflow CX Detect Intent (Usamos sessionId se enviado, senão fallback para atletaId)
         const finalSessionId = sessionId || atletaId;
-        const endpoint = `https://${location}-dialogflow.googleapis.com/v3/projects/${projectId}/locations/${location}/agents/${agentId}/sessions/${finalSessionId}:detectIntent?atleta_id=${atletaId}`;
+        const endpoint = `https://${location}-dialogflow.googleapis.com/v3/projects/${projectId}/locations/${location}/agents/${agentId}/sessions/${finalSessionId}:detectIntent`;
 
         console.log(`[Coach] Chamando Dialogflow para ${atleta?.nome || 'Atleta'}`);
 

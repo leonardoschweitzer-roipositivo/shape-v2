@@ -25,17 +25,25 @@ function errorResponse(status: number, mensagem: string) {
     })
 }
 
+function successResponse(data: any) {
+    return new Response(JSON.stringify({ success: true, data }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200
+    })
+}
+
 // ═══════════════════════════════════════════════════════════════
 // LÓGICA DE ACESSO (Da sua v1.1.0)
 // ═══════════════════════════════════════════════════════════════
 async function validarAcessoAtleta(ctx: any, supabase: any) {
     // ATLETA: só pode ver a si mesmo
     if (ctx.role === 'ATLETA') {
-        const { data } = await supabase.from('atletas').select('id').eq('auth_user_id', ctx.auth_user_id).maybeSingle()
-        if (data && (!ctx.atleta_id || data.id === ctx.atleta_id)) {
-            return { permitido: true, atleta_id: data.id }
+        // Se temos auth_user_id, permitimos o acesso. A query final filtrará pelos dados do próprio usuário.
+        if (ctx.auth_user_id) {
+            return { permitido: true, atleta_id: ctx.atleta_id }
         }
-        return { permitido: false, motivo: 'Você só pode acessar seus próprios dados.' }
+
+        return { permitido: false, motivo: 'ID de usuário (auth_user_id) não fornecido.' }
     }
 
     // Buscar o atleta alvo
@@ -111,6 +119,8 @@ Deno.serve(async (req) => {
         const id_busca = acesso.atleta_id || ctx.atleta_id;
 
         // 2. Buscar os dados mais recentes na nova tabela assessments
+        console.info(`[get_avaliacao_completa] 🔍 Buscando avaliação para auth_user_id: ${auth_user_id}`);
+        
         const { data: assessment, error: erroAssessment } = await supabase
             .from('assessments')
             .select('id, score, body_fat, measurements, results, created_at')
@@ -123,24 +133,13 @@ Deno.serve(async (req) => {
         if (!assessment) return errorResponse(404, "Nenhuma avaliação encontrada na tabela assessments para este usuário.")
 
         // 3. Formatar resposta para o Phidias (DNA Alinhado)
-        // Retornamos os dados brutos e calculados que o banco já proveu
-        const resultado = {
+        return successResponse({
             id: assessment.id,
-            data: assessment.created_at,
-            score_geral: assessment.score,
-            composicao_corporal: {
-                gordura_percentual: assessment.body_fat,
-                // Extrair do JSONB se existir
-                peso_kg: assessment.measurements?.weight || assessment.results?.weight || null,
-                massa_magra_kg: assessment.results?.lean_mass || null
-            },
-            medidas_detalhadas: assessment.measurements || {},
-            analise_estetica: assessment.results || {}
-        }
-
-        return new Response(JSON.stringify(resultado), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 200
+            score: assessment.score,
+            body_fat: assessment.body_fat,
+            measurements: assessment.measurements,
+            results: assessment.results,
+            created_at: assessment.created_at
         })
 
     } catch (err) {

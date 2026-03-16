@@ -328,16 +328,23 @@ export async function enviarMensagemIA(
         console.info(`[VitruviusAI] 🚀 Enviando mensagem para o agente via Edge Function...`);
         
         const authStore = useAuthStore.getState();
+        const auth_user_id = authStore.user?.id;
+        
         const payload = {
             atletaId,
             mensagem,
-            auth_user_id: authStore.user?.id,
+            auth_user_id, // UUID real do Supabase Auth
             role: authStore.profile?.role?.toUpperCase() || 'ATLETA',
-            historico: historicoMensagens?.slice(-10), // Otimizar payload
-            sessionId
+            historico: historicoMensagens?.slice(-10),
+            sessionId // ID da conversa (lixeira)
         };
 
-        console.info('[VitruviusAI] Payload enviado para Edge Function:', JSON.stringify(payload, null, 2));
+        console.info('[VitruviusAI] 🟢 PAYLOAD FINAL PARA EDGE FUNCTION:', {
+            atletaId: payload.atletaId,
+            auth_user_id: payload.auth_user_id,
+            sessionId: payload.sessionId,
+            role: payload.role
+        });
         
         const { data, error } = await supabase.functions.invoke('vitruvius-agent', {
             body: payload
