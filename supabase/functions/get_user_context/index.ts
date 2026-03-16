@@ -10,17 +10,18 @@ Deno.serve(async (req) => {
     if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
     try {
-        const url = new URL(req.url);
-        let target_atleta_id = url.searchParams.get('atleta_id') || url.searchParams.get('atletaId');
-        
-        console.log("[get_user_context] ID Bruto recebido via URL:", target_atleta_id);
+        const body = await req.json().catch(() => ({}));
+        console.log("[get_user_context] Body recebido:", JSON.stringify(body, null, 2));
 
-        if (!target_atleta_id) {
-            try {
-                const body = await req.json();
-                target_atleta_id = body.atleta_id || body.atletaId;
-            } catch { /* vazio */ }
-        }
+        // Tentar buscar parâmetros de várias fontes (Direct call ou Dialogflow CX Webhook)
+        let target_atleta_id = url.searchParams.get('atleta_id') || 
+                               url.searchParams.get('atletaId') || 
+                               body.atleta_id || 
+                               body.atletaId || 
+                               body.sessionInfo?.parameters?.atleta_id;
+
+        const auth_user_id = body.auth_user_id || body.sessionInfo?.parameters?.auth_user_id;
+        const role = body.role || body.sessionInfo?.parameters?.role;
 
         if (target_atleta_id) {
             target_atleta_id = target_atleta_id.replace(/['"]+/g, '').trim();
@@ -49,7 +50,7 @@ Deno.serve(async (req) => {
 
         const { data: atleta, error: dbError } = await supabase
             .from('atletas')
-            .select('id, nome, status')
+            .select('id, nome, status, auth_user_id')
             .eq('id', target_atleta_id)
             .maybeSingle();
 
@@ -64,6 +65,7 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({
             success: true,
             atleta_id: atleta.id,
+            auth_user_id: atleta.auth_user_id,
             nome: atleta.nome,
             status: atleta.status,
             role: 'ATLETA'

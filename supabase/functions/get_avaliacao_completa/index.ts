@@ -73,9 +73,18 @@ Deno.serve(async (req) => {
     }
 
     try {
-        const body = await req.json()
-        console.log("[get_avaliacao_completa] Body recebido:", JSON.stringify(body, null, 2))
-        const { auth_user_id, role, atleta_id } = body
+        const url = new URL(req.url);
+        const body = await req.json().catch(() => ({}));
+        console.log("[get_avaliacao_completa] Body recebido:", JSON.stringify(body, null, 2));
+
+        // Suporte a chamada direta ou via Dialogflow CX Webhook
+        const auth_user_id = body.auth_user_id || body.sessionInfo?.parameters?.auth_user_id;
+        const role = body.role || body.sessionInfo?.parameters?.role;
+        const atleta_id = url.searchParams.get('atleta_id') ||
+                           url.searchParams.get('atletaId') ||
+                           body.atleta_id ||
+                           body.atletaId ||
+                           body.sessionInfo?.parameters?.atleta_id;
 
         if (!auth_user_id || !role) {
             return badRequestResponse("Parâmetros 'auth_user_id' e 'role' são obrigatórios.")
@@ -101,66 +110,32 @@ Deno.serve(async (req) => {
 
         const id_busca = acesso.atleta_id || ctx.atleta_id;
 
-        // 2. Buscar os dados mais recentes do atleta
-        const { data: atleta, error: erroAtleta } = await supabase
-            .from('atletas')
-            .select(`
-        id, altura, peso_atual, sexo,
-        medidas (peso, gordura_corporal, ombros, peitoral, cintura, quadril, abdomen, braco_direito, braco_esquerdo, coxa_direita, coxa_esquerda)
-      `)
-            .eq('id', id_busca)
-            .order('created_at', { referencedTable: 'medidas', ascending: false })
-            .limit(1, { referencedTable: 'medidas' })
+        // 2. Buscar os dados mais recentes na nova tabela assessments
+        const { data: assessment, error: erroAssessment } = await supabase
+            .from('assessments')
+            .select('id, score, body_fat, measurements, results, created_at')
+            .eq('auth_user_id', auth_user_id)
+            .order('created_at', { ascending: false })
+            .limit(1)
             .maybeSingle()
 
-        if (erroAtleta || !atleta) return errorResponse(404, "Atleta não encontrado.")
+        if (erroAssessment) return errorResponse(500, `Erro ao buscar avaliação: ${erroAssessment.message}`)
+        if (!assessment) return errorResponse(404, "Nenhuma avaliação encontrada na tabela assessments para este usuário.")
 
-        const ultimaMedida = atleta.medidas?.[0]
-        if (!ultimaMedida) return errorResponse(404, "Não existem medidas registadas.")
-
-        // 3. O CÉREBRO MATEMÁTICO (Phidias)
-        const alturaM = atleta.altura / 100
-        const peso = ultimaMedida.peso || atleta.peso_atual || 0
-        const gordura = ultimaMedida.gordura_percentual || 15
-
-        const massaMagra = peso * (1 - (gordura / 100))
-        const ffmi = alturaM > 0 ? (massaMagra / (alturaM * alturaM)) : 0
-
-        const ombros = ultimaMedida.ombros || 0
-        const cintura = ultimaMedida.cintura || 0
-        const proporcao_ombro_cintura = cintura > 0 ? ombros / cintura : 0
-
-        let v_shape_pct = 0;
-        if (proporcao_ombro_cintura > 0) {
-            v_shape_pct = proporcao_ombro_cintura >= 1.618 ? 100 : (proporcao_ombro_cintura / 1.618) * 100;
-        }
-
-        const diff_bracos = Math.abs((ultimaMedida.braco_direito || 0) - (ultimaMedida.braco_esquerdo || 0))
-        const diff_coxas = Math.abs((ultimaMedida.coxa_direita || 0) - (ultimaMedida.coxa_esquerda || 0))
-
-        let score_simetria = 100 - (diff_bracos * 2.5) - (diff_coxas * 2.0)
-        score_simetria = Math.max(0, Math.min(100, score_simetria))
-
-        const score_geral = (v_shape_pct * 0.5) + (score_simetria * 0.3) + (ffmi > 20 ? 20 : 10)
-
-        // 4. Retornar os dados (Sem o wrapper 'data' para respeitar o YAML do Phidias)
+        // 3. Formatar resposta para o Phidias (DNA Alinhado)
+        // Retornamos os dados brutos e calculados que o banco já proveu
         const resultado = {
+            id: assessment.id,
+            data: assessment.created_at,
+            score_geral: assessment.score,
             composicao_corporal: {
-                peso_kg: Number(peso.toFixed(1)),
-                gordura_percentual: Number(gordura.toFixed(1)),
-                ffmi: Number(ffmi.toFixed(2))
+                gordura_percentual: assessment.body_fat,
+                // Extrair do JSONB se existir
+                peso_kg: assessment.measurements?.weight || assessment.results?.weight || null,
+                massa_magra_kg: assessment.results?.lean_mass || null
             },
-            proporcoes_aureas: {
-                ombros_cintura: Number(proporcao_ombro_cintura.toFixed(3)),
-                score_proporcoes: Number(v_shape_pct.toFixed(1)),
-                v_shape_percentual: Number(v_shape_pct.toFixed(1))
-            },
-            simetria: {
-                bracos_diff_cm: Number(diff_bracos.toFixed(1)),
-                coxas_diff_cm: Number(diff_coxas.toFixed(1)),
-                score_simetria: Number(score_simetria.toFixed(1))
-            },
-            score_geral: Number(Math.min(100, score_geral).toFixed(1))
+            medidas_detalhadas: assessment.measurements || {},
+            analise_estetica: assessment.results || {}
         }
 
         return new Response(JSON.stringify(resultado), {
