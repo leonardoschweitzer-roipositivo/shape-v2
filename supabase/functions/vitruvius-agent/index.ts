@@ -45,20 +45,24 @@ Deno.serve(async (req) => {
         const jwt = await generateGoogleJwt(sa);
         const accessToken = await getGoogleAccessToken(jwt);
 
-        // Dialogflow CX Detect Intent
-        const endpoint = `https://${location}-dialogflow.googleapis.com/v3/projects/${projectId}/locations/${location}/agents/${agentId}/sessions/${atletaId}:detectIntent`;
+        // Dialogflow CX Detect Intent (Injetamos atleta_id na URL para redundância)
+        const endpoint = `https://${location}-dialogflow.googleapis.com/v3/projects/${projectId}/locations/${location}/agents/${agentId}/sessions/${atletaId}:detectIntent?atleta_id=${atletaId}`;
 
         console.log(`[Coach] Chamando Dialogflow para ${atleta?.nome || 'Atleta'}`);
+
+        // Restauramos o prefixo de contexto para o Playbook
+        const mensagemComContexto = `[SISTEMA: AtletaID=${atletaId}] ${mensagem}`;
 
         const response = await fetch(endpoint, {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${accessToken}`,
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "x-atleta-id": atletaId // Header para uso das Tools
             },
             body: JSON.stringify({
                 queryInput: {
-                    text: { text: mensagem },
+                    text: { text: mensagemComContexto },
                     languageCode: "pt-BR"
                 },
                 queryParams: {

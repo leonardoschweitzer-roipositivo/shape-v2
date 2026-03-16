@@ -24,8 +24,17 @@ Deno.serve(async (req) => {
             target_atleta_id = target_atleta_id.replace(/['"]+/g, '').trim();
         }
 
-        if (!target_atleta_id) {
-            return new Response(JSON.stringify({ error: "atleta_id ausente" }), { 
+        // --- VALIDAÇÃO DE UUID PARA EVITAR ERRO DE BANCO ---
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        const isValidUUID = target_atleta_id && uuidRegex.test(target_atleta_id);
+
+        if (!target_atleta_id || !isValidUUID) {
+            console.warn(`[get_user_context] ID inválido ou ausente: "${target_atleta_id}"`);
+            return new Response(JSON.stringify({ 
+                success: false, 
+                error: "atleta_id inválido ou ausente. O Agente precisa identificar o usuário para prosseguir.",
+                debug_received_id: target_atleta_id 
+            }), { 
                 status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
             });
         }
