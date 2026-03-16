@@ -92,9 +92,9 @@ Deno.serve(async (req) => {
                     parameters: {
                         atleta_id: atletaId,
                         nome_atleta: atleta?.nome || "Atleta",
-                        vitru_auth_user_id: finalAuthId || null,
-                        auth_user_id: finalAuthId || null, // Mantemos por legacy mas o novo é o principal
-                        role: role || 'ATLETA'
+                        vitru_auth_user_id: finalAuthId || null, // Blindagem para o webhook
+                        auth_user_id: finalAuthId || null,      // Satisfação do formulário Dialogflow
+                        role: role || 'ATLETA'                 // Garantia do papel do usuário
                     }
                 }
             }),
