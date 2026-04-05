@@ -163,11 +163,12 @@ export function CardTreino({
             if (cargas.length > 0) parts.push(`${Math.max(...cargas)}kg`)
             if (repsPrimeira != null) parts.push(`${ultima.sets.length}×${repsPrimeira}`)
             return {
-                texto: parts.length > 0 ? `última: ${parts.join(' · ')}` : `${ex.series}×${ex.repeticoes}`,
+                texto: parts.length > 0 ? `última: ${parts.join(' · ')}` : 'REGISTRAR',
                 origem: parts.length > 0 ? 'ultima' : 'plano',
             }
         }
-        return { texto: `${ex.series}×${ex.repeticoes}`, origem: 'plano' }
+        // Primeira vez sem histórico — chama o aluno para ação em vez de repetir o prescrito
+        return { texto: 'REGISTRAR', origem: 'plano' }
     }
 
     // Fechar menu ao clicar fora
