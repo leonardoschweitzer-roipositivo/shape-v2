@@ -68,10 +68,30 @@ export interface ExercicioTreino {
     bibliotecaId?: string
 }
 
+/**
+ * Tipo de série (classificação do esforço).
+ * - valida: série principal de esforço (working set) — DEFAULT
+ * - aquecimento: carga leve para preparar a musculatura
+ * - reconhecimento: carga progressiva para encontrar a ideal (ramp-up)
+ * - top: a série mais pesada do dia
+ * - backoff: série de volume após top set, com carga reduzida
+ * - drop: drop set — redução imediata de carga sem descanso
+ * - falha: levada até a falha muscular
+ */
+export type TipoSet =
+    | 'valida'
+    | 'aquecimento'
+    | 'reconhecimento'
+    | 'top'
+    | 'backoff'
+    | 'drop'
+    | 'falha'
+
 /** Um set efetivamente realizado pelo aluno em um exercício. */
 export interface SetExecutado {
     carga?: number    // peso em kg nesta série
     reps?: number     // repetições realizadas nesta série
+    tipo?: TipoSet    // classificação da série (undefined = 'valida')
 }
 
 export interface ExercicioTimerState {

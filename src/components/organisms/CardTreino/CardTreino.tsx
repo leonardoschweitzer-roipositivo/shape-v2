@@ -11,7 +11,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Dumbbell, Check, SkipForward, Moon, Play, ChevronDown, ChevronUp, Calendar, Clock, Pause, Timer, Video, Plus } from 'lucide-react'
 import { WorkoutOfDay, ExercicioTreino } from '../../../types/athlete-portal'
-import type { ExercicioTimerState, SetExecutado, UltimaExecucao } from '../../../types/athlete-portal'
+import type { ExercicioTimerState, SetExecutado, UltimaExecucao, TipoSet } from '../../../types/athlete-portal'
 import type { ProximoTreino } from '../../../services/portalDataService'
 import { ExercicioDetalheModal } from '../../molecules/ExercicioDetalheModal'
 import { exercicioBibliotecaService } from '../../../services/exercicioBiblioteca.service'
@@ -64,6 +64,25 @@ function extrairRepPlaceholder(repeticoes?: string): string {
     if (!nums || nums.length === 0) return ''
     return String(Math.max(...nums.map(Number)))
 }
+
+/**
+ * Tipos de série (classificação do esforço).
+ * Ordem aqui = ordem no dropdown. Cor é usada como indicador visual sutil.
+ */
+const TIPOS_SET: Array<{ id: TipoSet; label: string; abrev: string; cor: string }> = [
+    { id: 'valida', label: 'Válida', abrev: 'Válida', cor: 'text-indigo-300' },
+    { id: 'aquecimento', label: 'Aquecimento', abrev: 'Aquec.', cor: 'text-sky-300' },
+    { id: 'reconhecimento', label: 'Reconhecimento', abrev: 'Recon.', cor: 'text-cyan-300' },
+    { id: 'top', label: 'Top Set', abrev: 'Top', cor: 'text-amber-300' },
+    { id: 'backoff', label: 'Back-off', abrev: 'Back-off', cor: 'text-violet-300' },
+    { id: 'drop', label: 'Drop Set', abrev: 'Drop', cor: 'text-orange-300' },
+    { id: 'falha', label: 'Até a Falha', abrev: 'Falha', cor: 'text-rose-300' },
+]
+
+const TIPO_SET_MAP: Record<TipoSet, typeof TIPOS_SET[number]> = TIPOS_SET.reduce(
+    (acc, t) => ({ ...acc, [t.id]: t }),
+    {} as Record<TipoSet, typeof TIPOS_SET[number]>,
+)
 
 export function CardTreino({
     treino,
@@ -250,6 +269,18 @@ export function CardTreino({
         })
     }
 
+    /** Atualiza o tipo (classificação) de uma série. 'valida' vira undefined p/ limpar. */
+    const handleSetTipoChange = (exId: string, setIdx: number, tipo: TipoSet) => {
+        const current = exercicioTimers[exId] ?? { status: 'idle' as const, tempoAcumuladoMs: 0, sets: [] }
+        const sets = [...(current.sets ?? [])]
+        while (sets.length <= setIdx) sets.push({})
+        sets[setIdx] = { ...sets[setIdx], tipo: tipo === 'valida' ? undefined : tipo }
+        onExercicioTimersChange({
+            ...exercicioTimers,
+            [exId]: { ...current, sets },
+        })
+    }
+
     /** Copia os valores da última execução para o set atual (quando disponível). */
     const repetirUltimoSet = (ex: ExercicioTreino, setIdx: number) => {
         const ultima = getUltimaExecucao(ex)
@@ -258,7 +289,8 @@ export function CardTreino({
         const current = exercicioTimers[ex.id] ?? { status: 'idle' as const, tempoAcumuladoMs: 0, sets: [] }
         const sets = [...(current.sets ?? [])]
         while (sets.length <= setIdx) sets.push({})
-        sets[setIdx] = { carga: ultimaSet.carga, reps: ultimaSet.reps }
+        // Copia carga, reps E tipo — assim o aluno mantém a classificação do ciclo anterior
+        sets[setIdx] = { carga: ultimaSet.carga, reps: ultimaSet.reps, tipo: ultimaSet.tipo }
         onExercicioTimersChange({
             ...exercicioTimers,
             [ex.id]: { ...current, sets },
@@ -645,15 +677,15 @@ export function CardTreino({
                                     {/* Linha 2: inputs set-by-set (expandido, modo pendente) */}
                                     {isExpanded && !isDone && treino.status === 'pendente' && (
                                         <div className="px-6 pb-4 pt-1 animate-in fade-in slide-in-from-top-1 duration-200">
-                                            <div className="ml-11 divide-y divide-white/5">
+                                            <div className="divide-y divide-white/5 border-t border-white/5">
                                             {sets.map((set, sIdx) => {
                                                 const ultimaSet = ultima?.sets[sIdx]
                                                 const temUltima = ultimaSet && (ultimaSet.carga != null || ultimaSet.reps != null)
                                                 const vazioAtual = set.carga == null && set.reps == null
                                                 return (
                                                     <div key={sIdx} className="flex items-center gap-2 py-1.5">
-                                                        <span className="w-7 text-[10px] font-mono text-gray-500 uppercase tracking-wider">
-                                                            #{sIdx + 1}
+                                                        <span className="w-[58px] text-[10px] font-mono text-gray-500 uppercase tracking-wider">
+                                                            #{sIdx + 1} Série
                                                         </span>
 
                                                         <input
@@ -665,9 +697,9 @@ export function CardTreino({
                                                             value={set.carga ?? ''}
                                                             onChange={e => handleSetChange(ex.id, sIdx, 'carga', parseNumOrUndef(e.target.value))}
                                                             onClick={e => e.stopPropagation()}
-                                                            className="w-14 h-7 bg-white/[0.03] border border-white/10 rounded-lg text-[9px] text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors"
+                                                            className="w-14 h-7 bg-white/[0.03] border border-white/10 rounded-lg text-[8px] text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors"
                                                         />
-                                                        <span className="text-[9px] text-gray-600">kg</span>
+                                                        <span className="text-[10px] text-gray-500">kg</span>
 
                                                         <span className="text-gray-700 mx-0.5">×</span>
 
@@ -679,52 +711,86 @@ export function CardTreino({
                                                             value={set.reps ?? ''}
                                                             onChange={e => handleSetChange(ex.id, sIdx, 'reps', parseNumOrUndef(e.target.value))}
                                                             onClick={e => e.stopPropagation()}
-                                                            className="w-12 h-7 bg-white/[0.03] border border-white/10 rounded-lg text-[9px] text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors"
+                                                            className="w-12 h-7 bg-white/[0.03] border border-white/10 rounded-lg text-[8px] text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors"
                                                         />
-                                                        <span className="text-[9px] text-gray-600">reps</span>
+                                                        <span className="text-[10px] text-gray-500">reps</span>
 
+                                                        {/* Botão "usar última" (só se vazio e houver histórico) */}
                                                         {temUltima && vazioAtual && (
                                                             <button
                                                                 onClick={() => repetirUltimoSet(ex, sIdx)}
-                                                                className="ml-auto text-[9px] text-indigo-400/60 hover:text-indigo-300 transition-colors uppercase tracking-wider"
+                                                                className="ml-auto text-[9px] text-indigo-400/60 hover:text-indigo-300 transition-colors uppercase tracking-wider whitespace-nowrap"
                                                                 title="Usar valores da última execução"
                                                             >
                                                                 usar última
                                                             </button>
                                                         )}
+
+                                                        {/* Dropdown: tipo da série. Botão visual + select nativo invisível
+                                                            por cima. O usuário clica no "botão" mas o browser abre o picker
+                                                            nativo (dropdown no desktop, wheel picker no mobile). */}
+                                                        <div className={`relative ${!(temUltima && vazioAtual) ? 'ml-auto' : ''}`}>
+                                                            <div className={`pointer-events-none h-7 px-2 flex items-center gap-1.5 rounded-lg bg-white/5 ${TIPO_SET_MAP[set.tipo ?? 'valida'].cor}`}>
+                                                                <span className="text-[10px] font-mono whitespace-nowrap uppercase tracking-wider">
+                                                                    {TIPO_SET_MAP[set.tipo ?? 'valida'].abrev}
+                                                                </span>
+                                                                <ChevronDown size={12} className="opacity-60" />
+                                                            </div>
+                                                            <select
+                                                                value={set.tipo ?? 'valida'}
+                                                                onChange={e => handleSetTipoChange(ex.id, sIdx, e.target.value as TipoSet)}
+                                                                onClick={e => e.stopPropagation()}
+                                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                                title="Tipo de série"
+                                                            >
+                                                                {TIPOS_SET.map(t => (
+                                                                    <option
+                                                                        key={t.id}
+                                                                        value={t.id}
+                                                                        className="bg-surface-deep text-gray-200"
+                                                                    >
+                                                                        {t.label}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
                                                     </div>
                                                 )
                                             })}
                                             </div>
 
-                                            {/* Stepper único para ajustar quantidade de séries */}
-                                            <div className="flex items-center gap-2 ml-11 pt-3">
-                                                <span className="text-[10px] text-gray-500 uppercase tracking-wider">Séries</span>
-                                                <div className="flex items-center gap-1 bg-white/[0.03] border border-white/10 rounded-lg p-0.5">
-                                                    <button
-                                                        onClick={() => removeSet(ex.id)}
-                                                        disabled={sets.length <= 1}
-                                                        className="w-6 h-6 rounded-md text-gray-400 hover:text-rose-400 hover:bg-white/5 disabled:opacity-30 disabled:hover:text-gray-400 disabled:hover:bg-transparent transition-colors flex items-center justify-center"
-                                                        title="Remover última série"
-                                                    >
-                                                        <span className="text-sm font-bold leading-none">−</span>
-                                                    </button>
-                                                    <span className="text-[11px] font-mono text-white tabular-nums w-5 text-center">
-                                                        {sets.length}
-                                                    </span>
-                                                    <button
-                                                        onClick={() => addSet(ex.id)}
-                                                        className="w-6 h-6 rounded-md text-gray-400 hover:text-indigo-400 hover:bg-white/5 transition-colors flex items-center justify-center"
-                                                        title="Adicionar nova série"
-                                                    >
-                                                        <Plus size={12} strokeWidth={3} />
-                                                    </button>
+                                            {/* Stepper: quantidade de séries (label esq · stepper dir), com linha divisória acima */}
+                                            <div className="flex items-center justify-between gap-2 pt-3 mt-1 border-t border-white/5">
+                                                <span className="text-[10px] text-gray-500 uppercase tracking-wider">
+                                                    Quantidade de séries
+                                                </span>
+                                                <div className="flex items-center gap-2">
+                                                    {ex.series && sets.length !== ex.series && (
+                                                        <span className="text-[9px] text-gray-600 uppercase tracking-wider">
+                                                            plano: {ex.series}
+                                                        </span>
+                                                    )}
+                                                    <div className="flex items-center gap-1 bg-white/[0.03] border border-white/10 rounded-lg p-0.5">
+                                                        <button
+                                                            onClick={() => removeSet(ex.id)}
+                                                            disabled={sets.length <= 1}
+                                                            className="w-6 h-6 rounded-md text-gray-400 hover:text-rose-400 hover:bg-white/5 disabled:opacity-30 disabled:hover:text-gray-400 disabled:hover:bg-transparent transition-colors flex items-center justify-center"
+                                                            title="Remover última série"
+                                                        >
+                                                            <span className="text-sm font-bold leading-none">−</span>
+                                                        </button>
+                                                        <span className="text-[11px] font-mono text-white tabular-nums w-5 text-center">
+                                                            {sets.length}
+                                                        </span>
+                                                        <button
+                                                            onClick={() => addSet(ex.id)}
+                                                            className="w-6 h-6 rounded-md text-gray-400 hover:text-indigo-400 hover:bg-white/5 transition-colors flex items-center justify-center"
+                                                            title="Adicionar nova série"
+                                                        >
+                                                            <Plus size={12} strokeWidth={3} />
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                                {ex.series && sets.length !== ex.series && (
-                                                    <span className="text-[9px] text-gray-600 uppercase tracking-wider ml-1">
-                                                        plano: {ex.series}
-                                                    </span>
-                                                )}
                                             </div>
                                         </div>
                                     )}
@@ -732,14 +798,19 @@ export function CardTreino({
                                     {/* Linha 2: modo DONE — revisão read-only dos sets feitos */}
                                     {isExpanded && isDone && sets.some(s => s.carga != null || s.reps != null) && (
                                         <div className="px-6 pb-3 pt-1 animate-in fade-in slide-in-from-top-1 duration-200">
-                                            <div className="ml-11 divide-y divide-white/5">
+                                            <div className="divide-y divide-white/5 border-t border-white/5">
                                                 {sets.map((set, sIdx) => (
                                                     (set.carga != null || set.reps != null) && (
                                                         <div key={sIdx} className="flex items-center gap-2 py-1.5 text-[10px] font-mono text-emerald-400/60">
-                                                            <span className="w-7 text-gray-600 uppercase tracking-wider">#{sIdx + 1}</span>
+                                                            <span className="w-[58px] text-gray-600 uppercase tracking-wider">#{sIdx + 1} Série</span>
                                                             <span>{set.carga != null ? `${set.carga}kg` : '—'}</span>
                                                             <span className="text-gray-700">×</span>
                                                             <span>{set.reps != null ? `${set.reps} reps` : '—'}</span>
+                                                            {set.tipo && set.tipo !== 'valida' && (
+                                                                <span className={`ml-auto text-[9px] uppercase tracking-wider ${TIPO_SET_MAP[set.tipo].cor}`}>
+                                                                    {TIPO_SET_MAP[set.tipo].abrev}
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     )
                                                 ))}
