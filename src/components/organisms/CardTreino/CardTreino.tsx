@@ -698,7 +698,7 @@ export function CardTreino({
                                                             value={set.carga ?? ''}
                                                             onChange={e => handleSetChange(ex.id, sIdx, 'carga', parseNumOrUndef(e.target.value))}
                                                             onClick={e => e.stopPropagation()}
-                                                            className="w-14 h-7 bg-white/[0.03] border border-white/10 rounded-lg text-[8px] text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors"
+                                                            className="w-14 h-7 bg-white/[0.03] border border-white/10 rounded-lg text-[7px] text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors"
                                                         />
                                                         <span className="text-[10px] text-gray-500">kg</span>
 
@@ -712,7 +712,7 @@ export function CardTreino({
                                                             value={set.reps ?? ''}
                                                             onChange={e => handleSetChange(ex.id, sIdx, 'reps', parseNumOrUndef(e.target.value))}
                                                             onClick={e => e.stopPropagation()}
-                                                            className="w-12 h-7 bg-white/[0.03] border border-white/10 rounded-lg text-[8px] text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors"
+                                                            className="w-12 h-7 bg-white/[0.03] border border-white/10 rounded-lg text-[7px] text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors"
                                                         />
                                                         <span className="text-[10px] text-gray-500">reps</span>
 
