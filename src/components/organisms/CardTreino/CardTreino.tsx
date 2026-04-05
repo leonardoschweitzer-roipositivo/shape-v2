@@ -644,13 +644,14 @@ export function CardTreino({
 
                                     {/* Linha 2: inputs set-by-set (expandido, modo pendente) */}
                                     {isExpanded && !isDone && treino.status === 'pendente' && (
-                                        <div className="px-6 pb-4 pt-1 space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                                        <div className="px-6 pb-4 pt-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                                            <div className="ml-11 divide-y divide-white/5">
                                             {sets.map((set, sIdx) => {
                                                 const ultimaSet = ultima?.sets[sIdx]
                                                 const temUltima = ultimaSet && (ultimaSet.carga != null || ultimaSet.reps != null)
                                                 const vazioAtual = set.carga == null && set.reps == null
                                                 return (
-                                                    <div key={sIdx} className="flex items-center gap-2 ml-11">
+                                                    <div key={sIdx} className="flex items-center gap-2 py-1.5">
                                                         <span className="w-7 text-[10px] font-mono text-gray-500 uppercase tracking-wider">
                                                             #{sIdx + 1}
                                                         </span>
@@ -664,7 +665,7 @@ export function CardTreino({
                                                             value={set.carga ?? ''}
                                                             onChange={e => handleSetChange(ex.id, sIdx, 'carga', parseNumOrUndef(e.target.value))}
                                                             onClick={e => e.stopPropagation()}
-                                                            className="w-14 h-7 bg-white/[0.03] border border-white/10 rounded-lg text-[10px] text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors"
+                                                            className="w-14 h-7 bg-white/[0.03] border border-white/10 rounded-lg text-[9px] text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors"
                                                         />
                                                         <span className="text-[9px] text-gray-600">kg</span>
 
@@ -678,7 +679,7 @@ export function CardTreino({
                                                             value={set.reps ?? ''}
                                                             onChange={e => handleSetChange(ex.id, sIdx, 'reps', parseNumOrUndef(e.target.value))}
                                                             onClick={e => e.stopPropagation()}
-                                                            className="w-12 h-7 bg-white/[0.03] border border-white/10 rounded-lg text-[10px] text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors"
+                                                            className="w-12 h-7 bg-white/[0.03] border border-white/10 rounded-lg text-[9px] text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors"
                                                         />
                                                         <span className="text-[9px] text-gray-600">reps</span>
 
@@ -694,9 +695,10 @@ export function CardTreino({
                                                     </div>
                                                 )
                                             })}
+                                            </div>
 
                                             {/* Stepper único para ajustar quantidade de séries */}
-                                            <div className="flex items-center gap-2 ml-11 pt-1.5">
+                                            <div className="flex items-center gap-2 ml-11 pt-3">
                                                 <span className="text-[10px] text-gray-500 uppercase tracking-wider">Séries</span>
                                                 <div className="flex items-center gap-1 bg-white/[0.03] border border-white/10 rounded-lg p-0.5">
                                                     <button
@@ -729,17 +731,19 @@ export function CardTreino({
 
                                     {/* Linha 2: modo DONE — revisão read-only dos sets feitos */}
                                     {isExpanded && isDone && sets.some(s => s.carga != null || s.reps != null) && (
-                                        <div className="px-6 pb-3 pt-1 space-y-1 animate-in fade-in slide-in-from-top-1 duration-200">
-                                            {sets.map((set, sIdx) => (
-                                                (set.carga != null || set.reps != null) && (
-                                                    <div key={sIdx} className="flex items-center gap-2 ml-11 text-[10px] font-mono text-emerald-400/60">
-                                                        <span className="w-7 text-gray-600 uppercase tracking-wider">#{sIdx + 1}</span>
-                                                        <span>{set.carga != null ? `${set.carga}kg` : '—'}</span>
-                                                        <span className="text-gray-700">×</span>
-                                                        <span>{set.reps != null ? `${set.reps} reps` : '—'}</span>
-                                                    </div>
-                                                )
-                                            ))}
+                                        <div className="px-6 pb-3 pt-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                                            <div className="ml-11 divide-y divide-white/5">
+                                                {sets.map((set, sIdx) => (
+                                                    (set.carga != null || set.reps != null) && (
+                                                        <div key={sIdx} className="flex items-center gap-2 py-1.5 text-[10px] font-mono text-emerald-400/60">
+                                                            <span className="w-7 text-gray-600 uppercase tracking-wider">#{sIdx + 1}</span>
+                                                            <span>{set.carga != null ? `${set.carga}kg` : '—'}</span>
+                                                            <span className="text-gray-700">×</span>
+                                                            <span>{set.reps != null ? `${set.reps} reps` : '—'}</span>
+                                                        </div>
+                                                    )
+                                                ))}
+                                            </div>
                                         </div>
                                     )}
                                 </SwipeableRow>
