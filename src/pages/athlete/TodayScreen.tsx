@@ -12,7 +12,7 @@ import { TrackersRapidos } from '../../components/organisms/TrackersRapidos'
 import { FeedbackTextual } from '../../components/organisms/FeedbackTextual'
 import { AccordionProximoTreino } from './components'
 import { TodayScreenData, TrackerRapido } from '../../types/athlete-portal'
-import type { ExercicioTimerState } from '../../types/athlete-portal'
+import type { ExercicioTimerState, ExercicioTreino } from '../../types/athlete-portal'
 import type { ProximoTreino } from '../../services/portalDataService'
 
 interface TodayScreenProps {
@@ -31,7 +31,7 @@ interface TodayScreenProps {
     onExercicioTimersChange: (timers: Record<string, ExercicioTimerState>) => void
     onSessionTimerChange: (timer: ExercicioTimerState) => void
     onVerTreino: () => void
-    onCompletarTreino: (dataOverride?: string) => void
+    onCompletarTreino: (dataOverride?: string, exerciciosModificados?: ExercicioTreino[]) => void
     onPularTreino: (continuarHoje?: boolean) => void
     onTrackerClick: (tipo: TrackerRapido['id']) => void
 }

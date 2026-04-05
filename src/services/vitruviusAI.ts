@@ -328,8 +328,14 @@ export async function enviarMensagemIA(
     try {
         console.info(`[VitruviusAI] 🚀 Enviando mensagem para o agente via Edge Function...`);
         
-        // Prioridade para o ID passado explicitamente (blindagem contra mixing)
-        const finalAuthId = authUserId || useAuthStore.getState().user?.id;
+        const currentAuthUser = useAuthStore.getState().user;
+        const finalAuthId = currentAuthUser?.id;
+        
+        if (!finalAuthId) {
+            console.error('[VitruviusAI] ❌ Erro Crítico: Tentativa de envio de mensagem sem usuário autenticado.');
+            throw new Error('Usuário não autenticado');
+        }
+
         const role = useAuthStore.getState().profile?.role?.toUpperCase() || 'ATLETA';
         
         const payload = {
@@ -338,9 +344,10 @@ export async function enviarMensagemIA(
             auth_user_id: finalAuthId, 
             role: role,
             historico: historicoMensagens?.slice(-10),
-            sessionId // Agora é o UUID real do usuário
+            sessionId: finalAuthId // O UUID REAL é a própria sessão. Sem mutações.
         };
 
+        console.info('[VitruviusAI] 🔴 SOURCE OF TRUTH (UUID IMUTÁVEL):', finalAuthId);
         console.info('[VitruviusAI] 🟢 PAYLOAD FINAL PARA EDGE FUNCTION:', {
             atletaId: payload.atletaId,
             auth_user_id: payload.auth_user_id,

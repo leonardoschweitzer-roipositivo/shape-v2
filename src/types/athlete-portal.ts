@@ -41,6 +41,20 @@ export interface WorkoutOfDay {
 
     // Histórico de sequência
     indiceTreino?: number       // Índice deste treino no plano
+
+    // Sets realizados na última execução do mesmo treinoIndex (para pré-popular inputs)
+    ultimasExecucoes?: UltimasExecucoesMap
+}
+
+/** Sets realizados em uma execução passada (usado p/ pré-popular inputs). */
+export interface UltimaExecucao {
+    sets: SetExecutado[]
+}
+
+/** Mapa de lookup dual: primário por id posicional, fallback por nome normalizado. */
+export interface UltimasExecucoesMap {
+    porId: Record<string, UltimaExecucao>
+    porNome: Record<string, UltimaExecucao>
 }
 
 export interface ExercicioTreino {
@@ -54,11 +68,23 @@ export interface ExercicioTreino {
     bibliotecaId?: string
 }
 
+/** Um set efetivamente realizado pelo aluno em um exercício. */
+export interface SetExecutado {
+    carga?: number    // peso em kg nesta série
+    reps?: number     // repetições realizadas nesta série
+}
+
 export interface ExercicioTimerState {
     status: 'idle' | 'running' | 'paused' | 'done'
     tempoAcumuladoMs: number        // tempo total acumulado em milissegundos
     inicioUltimoPlay?: number       // timestamp (Date.now()) do último PLAY
-    carga?: number                  // peso em kg registrado pelo aluno
+    /** Sets realizados no exercício (fonte de verdade para carga/reps). */
+    sets?: SetExecutado[]
+    /**
+     * @deprecated Mantido para compatibilidade com sessionStorage legado.
+     * Na hidratação, é migrado para `sets[0].carga`.
+     */
+    carga?: number
 }
 
 export interface DietOfDay {

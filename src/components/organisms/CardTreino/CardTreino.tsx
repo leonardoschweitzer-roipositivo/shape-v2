@@ -9,9 +9,9 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react'
-import { Dumbbell, Check, SkipForward, Moon, Play, ChevronDown, ChevronUp, Calendar, Clock, Pause, Timer, Video, Weight, Plus } from 'lucide-react'
+import { Dumbbell, Check, SkipForward, Moon, Play, ChevronDown, ChevronUp, Calendar, Clock, Pause, Timer, Video, Plus } from 'lucide-react'
 import { WorkoutOfDay, ExercicioTreino } from '../../../types/athlete-portal'
-import type { ExercicioTimerState } from '../../../types/athlete-portal'
+import type { ExercicioTimerState, SetExecutado, UltimaExecucao } from '../../../types/athlete-portal'
 import type { ProximoTreino } from '../../../services/portalDataService'
 import { ExercicioDetalheModal } from '../../molecules/ExercicioDetalheModal'
 import { exercicioBibliotecaService } from '../../../services/exercicioBiblioteca.service'
@@ -27,7 +27,7 @@ interface CardTreinoProps {
     onExercicioTimersChange: (timers: Record<string, ExercicioTimerState>) => void
     onSessionTimerChange: (timer: ExercicioTimerState) => void
     onVerTreino: () => void
-    onCompletei: (dataOverride?: string) => void
+    onCompletei: (dataOverride?: string, exerciciosModificados?: ExercicioTreino[]) => void
     onPular: () => void
 }
 
@@ -53,6 +53,18 @@ function formatTime(ms: number): string {
     return `${min}:${sec.toString().padStart(2, '0')}`
 }
 
+/**
+ * Extrai um único número representativo de uma string de repetições.
+ * Ex: "10-12" → "12", "8-10" → "10", "15" → "15", "até a falha" → "".
+ * Usa o maior número do range (meta ambiciosa do prescrito).
+ */
+function extrairRepPlaceholder(repeticoes?: string): string {
+    if (!repeticoes) return ''
+    const nums = repeticoes.match(/\d+/g)
+    if (!nums || nums.length === 0) return ''
+    return String(Math.max(...nums.map(Number)))
+}
+
 export function CardTreino({
     treino,
     proximoTreino,
@@ -71,10 +83,73 @@ export function CardTreino({
     const [, forceUpdate] = useState(0) // for timer ticking
     const [exercicioBiblioteca, setExercicioBiblioteca] = useState<ExercicioBiblioteca | null>(null)
     const [localExercicios, setLocalExercicios] = useState<ExercicioTreino[]>(treino.exercicios || [])
+    // Exercícios começam colapsados — aluno expande o que está executando no momento.
+    const [expandedExIds, setExpandedExIds] = useState<Set<string>>(new Set())
 
     useEffect(() => {
         setLocalExercicios(treino.exercicios || [])
+        setExpandedExIds(new Set())
     }, [treino.id])
+
+    const toggleExpand = (id: string) => {
+        setExpandedExIds(prev => {
+            const next = new Set(prev)
+            if (next.has(id)) next.delete(id)
+            else next.add(id)
+            return next
+        })
+    }
+
+    /** Busca a última execução registrada para um exercício (id → fallback nome). */
+    const getUltimaExecucao = (ex: ExercicioTreino): UltimaExecucao | null => {
+        const map = treino.ultimasExecucoes
+        if (!map) return null
+        const porId = map.porId[ex.id]
+        if (porId) return porId
+        const chaveNome = ex.nome.toLowerCase().trim().replace(/\s+/g, ' ')
+        return map.porNome[chaveNome] ?? null
+    }
+
+    /**
+     * Retorna os sets do exercício.
+     * - Se o timer já tem sets (hidratado ou modificado pelo aluno), respeita exatamente.
+     * - Senão (fallback antes da hidratação rodar), usa ex.series como ponto de partida.
+     */
+    const getSets = (ex: ExercicioTreino): SetExecutado[] => {
+        const timer = exercicioTimers[ex.id]
+        if (timer?.sets && timer.sets.length > 0) return timer.sets
+        return Array.from({ length: Math.max(1, ex.series || 1) }, () => ({}))
+    }
+
+    /** Resumo compacto exibido na linha colapsada. */
+    const resumoExercicio = (ex: ExercicioTreino): { texto: string; origem: 'atual' | 'ultima' | 'plano' } => {
+        const timer = exercicioTimers[ex.id]
+        const sets = timer?.sets ?? []
+        const setsPreenchidos = sets.filter(s => s.carga != null || s.reps != null)
+        if (setsPreenchidos.length > 0) {
+            // Denominador = total REAL de séries do exercício (pode ter sido ajustado pelo aluno)
+            const totalSets = sets.length || ex.series || setsPreenchidos.length
+            const cargas = setsPreenchidos.map(s => s.carga).filter((c): c is number => c != null)
+            const cargaLabel = cargas.length > 0 ? `${Math.max(...cargas)}kg` : ''
+            return {
+                texto: `${setsPreenchidos.length}/${totalSets}${cargaLabel ? ` · ${cargaLabel}` : ''}`,
+                origem: 'atual',
+            }
+        }
+        const ultima = getUltimaExecucao(ex)
+        if (ultima && ultima.sets.length > 0) {
+            const cargas = ultima.sets.map(s => s.carga).filter((c): c is number => c != null)
+            const repsPrimeira = ultima.sets[0]?.reps
+            const parts: string[] = []
+            if (cargas.length > 0) parts.push(`${Math.max(...cargas)}kg`)
+            if (repsPrimeira != null) parts.push(`${ultima.sets.length}×${repsPrimeira}`)
+            return {
+                texto: parts.length > 0 ? `última: ${parts.join(' · ')}` : `${ex.series}×${ex.repeticoes}`,
+                origem: parts.length > 0 ? 'ultima' : 'plano',
+            }
+        }
+        return { texto: `${ex.series}×${ex.repeticoes}`, origem: 'plano' }
+    }
 
     // Fechar menu ao clicar fora
     useEffect(() => {
@@ -158,13 +233,64 @@ export function CardTreino({
         })
     }
 
-    // Handler para registrar carga (kg) do exercício
-    const handleCargaChange = (id: string, carga: number | undefined) => {
-        const current = exercicioTimers[id] || { status: 'idle', tempoAcumuladoMs: 0 }
+    /** Atualiza um campo (carga ou reps) de uma série específica de um exercício. */
+    const handleSetChange = (
+        exId: string,
+        setIdx: number,
+        campo: 'carga' | 'reps',
+        val: number | undefined,
+    ) => {
+        const current = exercicioTimers[exId] ?? { status: 'idle' as const, tempoAcumuladoMs: 0, sets: [] }
+        const sets = [...(current.sets ?? [])]
+        while (sets.length <= setIdx) sets.push({})
+        sets[setIdx] = { ...sets[setIdx], [campo]: val }
         onExercicioTimersChange({
             ...exercicioTimers,
-            [id]: { ...current, carga },
+            [exId]: { ...current, sets },
         })
+    }
+
+    /** Copia os valores da última execução para o set atual (quando disponível). */
+    const repetirUltimoSet = (ex: ExercicioTreino, setIdx: number) => {
+        const ultima = getUltimaExecucao(ex)
+        const ultimaSet = ultima?.sets[setIdx]
+        if (!ultimaSet) return
+        const current = exercicioTimers[ex.id] ?? { status: 'idle' as const, tempoAcumuladoMs: 0, sets: [] }
+        const sets = [...(current.sets ?? [])]
+        while (sets.length <= setIdx) sets.push({})
+        sets[setIdx] = { carga: ultimaSet.carga, reps: ultimaSet.reps }
+        onExercicioTimersChange({
+            ...exercicioTimers,
+            [ex.id]: { ...current, sets },
+        })
+    }
+
+    /** Adiciona uma nova série vazia ao final. */
+    const addSet = (exId: string) => {
+        const current = exercicioTimers[exId] ?? { status: 'idle' as const, tempoAcumuladoMs: 0, sets: [] }
+        const sets = [...(current.sets ?? []), {}]
+        onExercicioTimersChange({
+            ...exercicioTimers,
+            [exId]: { ...current, sets },
+        })
+    }
+
+    /** Remove a última série (mínimo 1). */
+    const removeSet = (exId: string) => {
+        const current = exercicioTimers[exId]
+        if (!current?.sets || current.sets.length <= 1) return
+        const sets = current.sets.slice(0, -1)
+        onExercicioTimersChange({
+            ...exercicioTimers,
+            [exId]: { ...current, sets },
+        })
+    }
+
+    /** Parse de string para número (ou undefined se vazio/inválido). */
+    const parseNumOrUndef = (raw: string): number | undefined => {
+        if (raw === '' || raw == null) return undefined
+        const n = Number(raw)
+        return Number.isFinite(n) ? n : undefined
     }
 
     // Estado: DESCANSO (mesmo código anterior)
@@ -404,95 +530,69 @@ export function CardTreino({
                     </div>
                 </div>
 
-                {/* Lista de Exercícios Simplificada */}
+                {/* Lista de Exercícios — colapsável com inputs set-by-set */}
                 {localExercicios && localExercicios.length > 0 && (
                     <div className="mb-6 -mx-6 border-y border-white/5 animate-in fade-in duration-300 overflow-hidden">
                         {localExercicios.map((ex, idx) => {
                             const timer = exercicioTimers[ex.id]
                             const isDone = timer?.status === 'done'
+                            const isExpanded = expandedExIds.has(ex.id)
+                            const sets = getSets(ex)
+                            const ultima = getUltimaExecucao(ex)
+                            const resumo = resumoExercicio(ex)
 
                             return (
                                 <SwipeableRow
                                     key={ex.id}
-                                    className={`transition-all duration-300 ${idx !== localExercicios.length - 1 ? 'border-b border-white/5' : ''} ${isDone ? 'opacity-50' : ''}`}
-                                    innerClassName="flex items-center gap-3 px-6 py-4"
+                                    className={`transition-all duration-300 ${idx !== localExercicios.length - 1 ? 'border-b border-white/5' : ''} ${isDone ? 'opacity-60' : ''}`}
+                                    innerClassName=""
                                     onDelete={() => {
                                         setLocalExercicios(prev => prev.filter(x => x.id !== ex.id))
                                     }}
                                 >
-                                    {/* Botão de Check (Independente do Cronômetro) */}
-                                    <button
-                                        onClick={() => isDone ? handleUndoExercicio(ex.id) : handleDoneExercicio(ex.id)}
-                                        className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${isDone
-                                            ? 'bg-emerald-500/20 hover:bg-emerald-500/30'
-                                            : 'bg-white/5 hover:bg-white/10 border border-white/10'
-                                            }`}
-                                        title={isDone ? "Desmarcar" : "Marcar como feito"}
-                                    >
-                                        <Check
-                                            size={16}
-                                            className={`transition-all ${isDone ? 'text-emerald-400 scale-110' : 'text-gray-600'}`}
-                                            strokeWidth={3}
-                                        />
-                                    </button>
-
-                                    {/* Nome do exercício */}
-                                    <div className="flex-1 min-w-0 flex items-center">
-                                        <input
-                                            type="text"
-                                            value={ex.nome}
-                                            onChange={(e) => {
-                                                const nov = [...localExercicios];
-                                                nov[idx].nome = e.target.value;
-                                                setLocalExercicios(nov);
-                                            }}
-                                            readOnly={isDone}
-                                            className={`w-full bg-transparent text-sm font-medium transition-colors outline-none focus:border-b focus:border-indigo-500/50 ${isDone ? 'text-gray-500 line-through' : 'text-gray-200'
+                                    {/* Linha 1: checkbox + nome + vídeo + resumo/toggle */}
+                                    <div className="flex items-center gap-3 px-6 py-3">
+                                        <button
+                                            onClick={() => isDone ? handleUndoExercicio(ex.id) : handleDoneExercicio(ex.id)}
+                                            className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${isDone
+                                                ? 'bg-emerald-500/20 hover:bg-emerald-500/30'
+                                                : 'bg-white/5 hover:bg-white/10 border border-white/10'
                                                 }`}
-                                        />
-                                    </div>
-
-                                    {/* Controles e Info (Alinhados lateralmente) */}
-                                    <div className="flex items-center gap-2">
-                                        {/* Input de Carga (kg) - Próximo ao Vídeo */}
-                                        {!isDone && treino.status === 'pendente' && (
-                                            <input
-                                                type="number"
-                                                inputMode="decimal"
-                                                step="0.5"
-                                                min="0"
-                                                placeholder="kg"
-                                                value={timer?.carga ?? ''}
-                                                onChange={e => {
-                                                    const val = e.target.value
-                                                    handleCargaChange(ex.id, val === '' ? undefined : Number(val))
-                                                }}
-                                                onClick={e => e.stopPropagation()}
-                                                className="w-12 h-7 bg-white/[0.03] border border-white/10 rounded-lg text-[11px] text-indigo-300 font-mono placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors text-center"
+                                            title={isDone ? 'Desmarcar' : 'Marcar como feito'}
+                                        >
+                                            <Check
+                                                size={16}
+                                                className={`transition-all ${isDone ? 'text-emerald-400 scale-110' : 'text-gray-600'}`}
+                                                strokeWidth={3}
                                             />
-                                        )}
-                                        {isDone && timer?.carga !== undefined && timer.carga > 0 && (
-                                            <span className="text-[10px] text-emerald-400/60 font-mono mr-1">
-                                                {timer.carga}kg
-                                            </span>
-                                        )}
+                                        </button>
 
-                                        {/* Botão de Vídeo 🎬 */}
+                                        {/* Nome do exercício */}
+                                        <div className="flex-1 min-w-0 flex items-center">
+                                            <input
+                                                type="text"
+                                                value={ex.nome}
+                                                onChange={(e) => {
+                                                    const nov = [...localExercicios]
+                                                    nov[idx] = { ...nov[idx], nome: e.target.value }
+                                                    setLocalExercicios(nov)
+                                                }}
+                                                readOnly={isDone}
+                                                className={`w-full bg-transparent text-sm font-medium transition-colors outline-none focus:border-b focus:border-indigo-500/50 ${isDone ? 'text-gray-500 line-through' : 'text-gray-200'}`}
+                                            />
+                                        </div>
+
+                                        {/* Botão de Vídeo */}
                                         <button
                                             onClick={async (e) => {
                                                 e.stopPropagation()
-                                                // Busca na biblioteca por nome similar para garantir dados completos (vídeo, instruções, etc)
-                                                // Se o exercício já tem bibliotecaId, usamos buscarPorId, senão buscarPorNomeSimilar
-                                                let found: ExercicioBiblioteca | null = null;
-
+                                                let found: ExercicioBiblioteca | null = null
                                                 if (ex.bibliotecaId) {
-                                                    found = await exercicioBibliotecaService.buscarPorId(ex.bibliotecaId);
+                                                    found = await exercicioBibliotecaService.buscarPorId(ex.bibliotecaId)
                                                 }
-
                                                 if (!found) {
-                                                    found = await exercicioBibliotecaService.buscarPorNomeSimilar(ex.nome);
+                                                    found = await exercicioBibliotecaService.buscarPorNomeSimilar(ex.nome)
                                                 }
-
                                                 setExercicioBiblioteca(found ?? {
                                                     id: ex.id,
                                                     nome: ex.nome,
@@ -526,13 +626,122 @@ export function CardTreino({
                                             <Video size={13} className="text-indigo-400" />
                                         </button>
 
-                                        {/* Timer ou Séries (Apenas Séries Agora) */}
-                                        <div className="h-7 px-2 flex items-center rounded-lg bg-white/5">
-                                            <span className="text-[11px] font-mono text-gray-400 whitespace-nowrap">
-                                                {ex.series}×{ex.repeticoes}
+                                        {/* Resumo + botão de expandir */}
+                                        <button
+                                            onClick={() => toggleExpand(ex.id)}
+                                            className="h-7 px-2 flex items-center gap-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+                                            title={isExpanded ? 'Recolher' : 'Expandir'}
+                                        >
+                                            <span className={`text-[11px] font-mono whitespace-nowrap ${resumo.origem === 'atual' ? 'text-indigo-300' : resumo.origem === 'ultima' ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                {resumo.texto}
                                             </span>
-                                        </div>
+                                            <ChevronDown
+                                                size={12}
+                                                className={`text-gray-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                            />
+                                        </button>
                                     </div>
+
+                                    {/* Linha 2: inputs set-by-set (expandido, modo pendente) */}
+                                    {isExpanded && !isDone && treino.status === 'pendente' && (
+                                        <div className="px-6 pb-4 pt-1 space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                                            {sets.map((set, sIdx) => {
+                                                const ultimaSet = ultima?.sets[sIdx]
+                                                const temUltima = ultimaSet && (ultimaSet.carga != null || ultimaSet.reps != null)
+                                                const vazioAtual = set.carga == null && set.reps == null
+                                                return (
+                                                    <div key={sIdx} className="flex items-center gap-2 ml-11">
+                                                        <span className="w-7 text-[10px] font-mono text-gray-500 uppercase tracking-wider">
+                                                            #{sIdx + 1}
+                                                        </span>
+
+                                                        <input
+                                                            type="number"
+                                                            inputMode="decimal"
+                                                            step="0.5"
+                                                            min="0"
+                                                            placeholder={ultimaSet?.carga != null ? String(ultimaSet.carga) : 'kg'}
+                                                            value={set.carga ?? ''}
+                                                            onChange={e => handleSetChange(ex.id, sIdx, 'carga', parseNumOrUndef(e.target.value))}
+                                                            onClick={e => e.stopPropagation()}
+                                                            className="w-14 h-7 bg-white/[0.03] border border-white/10 rounded-lg text-[10px] text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors"
+                                                        />
+                                                        <span className="text-[9px] text-gray-600">kg</span>
+
+                                                        <span className="text-gray-700 mx-0.5">×</span>
+
+                                                        <input
+                                                            type="number"
+                                                            inputMode="numeric"
+                                                            min="0"
+                                                            placeholder={ultimaSet?.reps != null ? String(ultimaSet.reps) : extrairRepPlaceholder(ex.repeticoes)}
+                                                            value={set.reps ?? ''}
+                                                            onChange={e => handleSetChange(ex.id, sIdx, 'reps', parseNumOrUndef(e.target.value))}
+                                                            onClick={e => e.stopPropagation()}
+                                                            className="w-12 h-7 bg-white/[0.03] border border-white/10 rounded-lg text-[10px] text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors"
+                                                        />
+                                                        <span className="text-[9px] text-gray-600">reps</span>
+
+                                                        {temUltima && vazioAtual && (
+                                                            <button
+                                                                onClick={() => repetirUltimoSet(ex, sIdx)}
+                                                                className="ml-auto text-[9px] text-indigo-400/60 hover:text-indigo-300 transition-colors uppercase tracking-wider"
+                                                                title="Usar valores da última execução"
+                                                            >
+                                                                usar última
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                )
+                                            })}
+
+                                            {/* Stepper único para ajustar quantidade de séries */}
+                                            <div className="flex items-center gap-2 ml-11 pt-1.5">
+                                                <span className="text-[10px] text-gray-500 uppercase tracking-wider">Séries</span>
+                                                <div className="flex items-center gap-1 bg-white/[0.03] border border-white/10 rounded-lg p-0.5">
+                                                    <button
+                                                        onClick={() => removeSet(ex.id)}
+                                                        disabled={sets.length <= 1}
+                                                        className="w-6 h-6 rounded-md text-gray-400 hover:text-rose-400 hover:bg-white/5 disabled:opacity-30 disabled:hover:text-gray-400 disabled:hover:bg-transparent transition-colors flex items-center justify-center"
+                                                        title="Remover última série"
+                                                    >
+                                                        <span className="text-sm font-bold leading-none">−</span>
+                                                    </button>
+                                                    <span className="text-[11px] font-mono text-white tabular-nums w-5 text-center">
+                                                        {sets.length}
+                                                    </span>
+                                                    <button
+                                                        onClick={() => addSet(ex.id)}
+                                                        className="w-6 h-6 rounded-md text-gray-400 hover:text-indigo-400 hover:bg-white/5 transition-colors flex items-center justify-center"
+                                                        title="Adicionar nova série"
+                                                    >
+                                                        <Plus size={12} strokeWidth={3} />
+                                                    </button>
+                                                </div>
+                                                {ex.series && sets.length !== ex.series && (
+                                                    <span className="text-[9px] text-gray-600 uppercase tracking-wider ml-1">
+                                                        plano: {ex.series}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Linha 2: modo DONE — revisão read-only dos sets feitos */}
+                                    {isExpanded && isDone && sets.some(s => s.carga != null || s.reps != null) && (
+                                        <div className="px-6 pb-3 pt-1 space-y-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                                            {sets.map((set, sIdx) => (
+                                                (set.carga != null || set.reps != null) && (
+                                                    <div key={sIdx} className="flex items-center gap-2 ml-11 text-[10px] font-mono text-emerald-400/60">
+                                                        <span className="w-7 text-gray-600 uppercase tracking-wider">#{sIdx + 1}</span>
+                                                        <span>{set.carga != null ? `${set.carga}kg` : '—'}</span>
+                                                        <span className="text-gray-700">×</span>
+                                                        <span>{set.reps != null ? `${set.reps} reps` : '—'}</span>
+                                                    </div>
+                                                )
+                                            ))}
+                                        </div>
+                                    )}
                                 </SwipeableRow>
                             )
                         })}
@@ -557,7 +766,7 @@ export function CardTreino({
                                 <button
                                     onClick={() => {
                                         setShowCompleteiMenu(false)
-                                        onCompletei()
+                                        onCompletei(undefined, localExercicios)
                                     }}
                                     className="w-full px-4 py-3 flex items-center gap-3 hover:bg-amber-500/10 transition-colors border-b border-white/5"
                                 >
@@ -567,7 +776,7 @@ export function CardTreino({
                                 <button
                                     onClick={() => {
                                         setShowCompleteiMenu(false)
-                                        onCompletei(getOntemISO())
+                                        onCompletei(getOntemISO(), localExercicios)
                                     }}
                                     className="w-full px-4 py-3 flex items-center gap-3 hover:bg-amber-500/10 transition-colors"
                                 >

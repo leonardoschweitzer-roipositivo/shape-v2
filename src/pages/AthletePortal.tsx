@@ -12,7 +12,7 @@ import { TodayScreen, CoachScreen, ProgressScreen, ProfileScreen, AssessmentScre
 import { NotificacoesAtletaScreen } from './athlete/NotificacoesAtletaScreen'
 import { portalNotificacaoService } from '@/services/portal/portalNotificacaoService'
 import { AthletePortalTab } from '../types/athlete-portal'
-import type { TodayScreenData, ScoreGeral, GraficoEvolucaoData, ProporcaoResumo, ChatMessage, MeuPersonal, DadosBasicos, ExercicioTimerState } from '../types/athlete-portal'
+import type { TodayScreenData, ScoreGeral, GraficoEvolucaoData, ProporcaoResumo, ChatMessage, MeuPersonal, DadosBasicos, ExercicioTimerState, ExercicioTreino, SetExecutado, UltimasExecucoesMap } from '../types/athlete-portal'
 import { Loader2, Bell } from 'lucide-react'
 import { RegistrarRefeicaoModal } from '../components/organisms/RegistrarRefeicaoModal'
 import { RegistrarTrackerModal } from '../components/organisms/RegistrarTrackerModal/RegistrarTrackerModal'
@@ -79,7 +79,6 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
     })
     const [showVirtualAssessment, setShowVirtualAssessment] = useState(false)
     const [notificacoesBadge, setNotificacoesBadge] = useState(0)
-    const chatSessionId = user?.id || atletaId
 
     const timerStorageKey = `exercicioTimers_${atletaId}`
     const [exercicioTimers, setExercicioTimersRaw] = useState<Record<string, ExercicioTimerState>>(() => {
@@ -105,19 +104,104 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
         try { sessionStorage.setItem(sessionTimerStorageKey, JSON.stringify(timer)) } catch { }
     }
 
+    const treinoHashStorageKey = `exercicioTimersTreinoHash_${atletaId}`
+    const hidratacaoRef = useRef<string | null>(null)
+
     const clearAllTimers = () => {
         setExercicioTimersRaw({})
         setSessionTimerRaw({ status: 'idle', tempoAcumuladoMs: 0 })
         try {
             sessionStorage.removeItem(timerStorageKey)
             sessionStorage.removeItem(sessionTimerStorageKey)
+            sessionStorage.removeItem(treinoHashStorageKey)
         } catch { }
+        hidratacaoRef.current = null
     }
 
     // exerciciosFeitos derivado dos timers (compatibilidade)
     const exerciciosFeitos: Record<string, boolean> = Object.fromEntries(
         Object.entries(exercicioTimers).filter(([, t]) => (t as ExercicioTimerState).status === 'done').map(([id]) => [id, true])
     )
+
+    /**
+     * Hidratação dos inputs set-by-set:
+     *  - Se sessionStorage tem timers do mesmo treino → respeita (aluno pausou e voltou).
+     *  - Se é um treino novo (hash de ids mudou) ou não hidratado → inicializa `sets`
+     *    com a última execução do mesmo treinoIndex, ou sets vazios de length=ex.series.
+     *  - Migra registros legados (apenas `carga` escalar) para `sets[0].carga`.
+     */
+    useEffect(() => {
+        const treino = todayData?.treino
+        if (!treino || !treino.exercicios || treino.exercicios.length === 0) return
+
+        // Só hidrata quando o treino está pendente (aluno vai executar agora)
+        if (treino.status !== 'pendente') return
+
+        const exercicios = treino.exercicios
+        const hashAtual = exercicios.map(e => e.id).join('|')
+
+        // Evita rerun no mesmo render cycle
+        if (hidratacaoRef.current === hashAtual) return
+
+        let hashSalvo: string | null = null
+        try { hashSalvo = sessionStorage.getItem(treinoHashStorageKey) } catch { }
+
+        const mesmoTreino = hashSalvo === hashAtual
+        const ultimas: UltimasExecucoesMap = treino.ultimasExecucoes ?? { porId: {}, porNome: {} }
+        const normalizar = (n: string) => n.toLowerCase().trim().replace(/\s+/g, ' ')
+
+        const proximoState: Record<string, ExercicioTimerState> = {}
+
+        for (const ex of exercicios) {
+            const existente = exercicioTimers[ex.id]
+            const temSetsValidos = existente?.sets && existente.sets.length > 0
+
+            if (mesmoTreino && existente && temSetsValidos) {
+                // Respeita o estado atual (aluno já interagiu)
+                proximoState[ex.id] = existente
+                continue
+            }
+
+            // Migração legado: só tinha `carga` escalar
+            if (mesmoTreino && existente && typeof existente.carga === 'number' && !temSetsValidos) {
+                const setsMigrados: SetExecutado[] = Array.from(
+                    { length: Math.max(1, ex.series || 1) },
+                    (_, i) => (i === 0 ? { carga: existente.carga } : {}),
+                )
+                proximoState[ex.id] = { ...existente, sets: setsMigrados }
+                continue
+            }
+
+            // Hidrata com última execução ou sets vazios
+            const ultima =
+                ultimas.porId[ex.id] ??
+                ultimas.porNome[normalizar(ex.nome)] ??
+                null
+
+            let sets: SetExecutado[]
+            if (ultima && ultima.sets.length > 0) {
+                // Respeita EXATAMENTE a quantidade de séries que o aluno usou na
+                // última execução — não trunca nem completa com base em ex.series.
+                // Assim, se ele ajustou de 7 para 10 séries no último treino,
+                // o próximo já começa com 10.
+                sets = ultima.sets.map(s => ({ ...s }))
+            } else {
+                // Primeira vez: usa a quantidade do plano como ponto de partida.
+                sets = Array.from({ length: Math.max(1, ex.series || 1) }, () => ({}))
+            }
+
+            proximoState[ex.id] = {
+                status: 'idle',
+                tempoAcumuladoMs: 0,
+                sets,
+            }
+        }
+
+        setExercicioTimers(proximoState)
+        try { sessionStorage.setItem(treinoHashStorageKey, hashAtual) } catch { }
+        hidratacaoRef.current = hashAtual
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [todayData?.treino?.id, todayData?.treino?.status])
 
     // Phase 1: Load critical data (context + today) — show screen ASAP
     useEffect(() => {
@@ -194,7 +278,10 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
         // Noop: detalhes já são mostrados via accordion no CardTreino
     }
 
-    const handleCompletarTreino = async (dataOverride?: string) => {
+    const handleCompletarTreino = async (
+        dataOverride?: string,
+        exerciciosModificados?: ExercicioTreino[]
+    ) => {
         // Calcular duração real a partir do timer de SESSÃO (Global)
         let totalMs = sessionTimer.tempoAcumuladoMs
         if (sessionTimer.status === 'running' && sessionTimer.inicioUltimoPlay) {
@@ -203,29 +290,31 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
 
         const duracaoMinutos = totalMs > 0 ? Math.max(1, Math.round(totalMs / 60000)) : 60
 
-        const exerciciosDetalhes: Array<{ id: string; nome: string; tempoSegundos: number; carga?: number }> = []
+        // Lista final = edições feitas no card (renome/add/delete). Fallback p/ original.
+        const listaFinal: ExercicioTreino[] =
+            exerciciosModificados ?? todayData?.treino?.exercicios ?? []
 
-        if (todayData?.treino?.exercicios) {
-            for (const ex of todayData.treino.exercicios) {
-                const timer = exercicioTimers[ex.id]
-                if (timer) {
-                    exerciciosDetalhes.push({
-                        id: ex.id,
-                        nome: ex.nome,
-                        tempoSegundos: 0, // Ignorar tempo por exercício
-                        carga: timer.carga,
-                    })
-                }
+        // Monta snapshot set-by-set + status de conclusão de CADA exercício
+        // — inclusive os que o aluno não tocou, para preservar o treino real executado.
+        const exerciciosDetalhes = listaFinal.map(ex => {
+            const timer = exercicioTimers[ex.id]
+            return {
+                id: ex.id,
+                nome: ex.nome,
+                series: ex.series,           // prescrito
+                repeticoes: ex.repeticoes,   // prescrito
+                sets: timer?.sets ?? [],     // realizados por série (carga + reps)
+                concluido: timer?.status === 'done',
             }
-        }
+        })
 
         await completarTreino(atletaId, {
             intensidade: 3,
             duracao: duracaoMinutos,
             reportouDor: false,
             treinoIndex: todayData?.treino?.indiceTreino,
-            ...(exerciciosDetalhes.length > 0 ? { exercicios: exerciciosDetalhes } : {}),
-        } as never, dataOverride, ctx?.personalId)
+            exercicios: exerciciosDetalhes,
+        }, dataOverride, ctx?.personalId)
 
         clearAllTimers() // Reset todos os timers após completar
         // Refresh today data
@@ -434,14 +523,11 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
             content: m.content,
         }))
 
-        // Enviar para IA (Gemini ou fallback) passando o sessionId e o ID real do usuário
         const response = await enviarMensagemIA(
             atletaId, 
             message, 
             contextoIA, 
-            historico, 
-            chatSessionId,
-            user?.id // Injeção direta e blindada
+            historico
         )
 
         // Save assistant message
@@ -491,7 +577,6 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
             case 'coach':
                 return (
                     <CoachScreen
-                        key={chatSessionId}
                         initialMessages={chatMessages}
                         onSendMessage={handleSendMessage}
                         onClearChat={handleNewConversation}

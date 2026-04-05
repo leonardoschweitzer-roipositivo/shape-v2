@@ -5,13 +5,76 @@ import { supabase } from '@/services/supabase';
 import type { WorkoutStatus } from '@/types/athlete-portal';
 import type {
     TodayScreenData, WorkoutOfDay, DietOfDay,
-    TrackerRapido, DicaCoach,
+    TrackerRapido, DicaCoach, SetExecutado,
+    UltimaExecucao, UltimasExecucoesMap,
 } from '@/types/athlete-portal';
 import type { PlanoTreino } from '@/services/calculations/treino';
 import type { PlanoDieta } from '@/services/calculations/dieta';
 import type { SupaRegistroDiario, PortalContext } from './portalTypes';
 import { getUltimoTreinoIndex } from './portalContext';
 import { getHojeLocal } from './dateUtils';
+
+/**
+ * Normaliza nome de exercício para uso como chave de lookup
+ * (lowercase + trim + colapso de múltiplos espaços).
+ */
+function normalizarNomeExercicio(nome: string): string {
+    return nome.toLowerCase().trim().replace(/\s+/g, ' ');
+}
+
+/**
+ * Dado um histórico de registros de treino (ordenado DESC por data),
+ * retorna um mapa de lookup com os sets (carga + reps) da ÚLTIMA execução
+ * completa do mesmo `treinoIndex`.
+ *
+ * Retorna dois mapas:
+ *  - porId: match primário por id posicional (ex: "ex-0-1")
+ *  - porNome: fallback por nome normalizado, para cobrir renomes e exercícios custom
+ *
+ * Não faz query nova — consome o array já fetchado por `montarDadosHoje`.
+ */
+export function derivarUltimasExecucoes(
+    histRegs: SupaRegistroDiario[],
+    treinoIndex: number | undefined,
+): UltimasExecucoesMap {
+    const vazio: UltimasExecucoesMap = { porId: {}, porNome: {} };
+    if (typeof treinoIndex !== 'number') return vazio;
+
+    // Primeiro registro (mais recente) com status completo e mesmo treinoIndex
+    const alvo = histRegs.find(r => {
+        const d = r.dados;
+        return d && d.status === 'completo' && d.treinoIndex === treinoIndex;
+    });
+
+    if (!alvo) return vazio;
+
+    const exerciciosRealizados = (alvo.dados?.exercicios ?? []) as Array<{
+        id?: string;
+        nome?: string;
+        sets?: SetExecutado[];
+        carga?: number; // legado escalar — fallback
+    }>;
+
+    const porId: Record<string, UltimaExecucao> = {};
+    const porNome: Record<string, UltimaExecucao> = {};
+
+    for (const ex of exerciciosRealizados) {
+        let sets: SetExecutado[] = [];
+        if (Array.isArray(ex.sets) && ex.sets.length > 0) {
+            sets = ex.sets;
+        } else if (typeof ex.carga === 'number') {
+            // Registros legados gravaram só carga escalar — tratamos como 1 set
+            sets = [{ carga: ex.carga }];
+        }
+        if (sets.length === 0) continue;
+
+        const ultima: UltimaExecucao = { sets };
+        if (ex.id) porId[ex.id] = ultima;
+        if (ex.nome) porNome[normalizarNomeExercicio(ex.nome)] = ultima;
+    }
+
+    return { porId, porNome };
+}
 
 /**
  * Deriva o treino do dia (o próximo treino pendente na sequência) a partir do PlanoTreino.
@@ -474,6 +537,9 @@ export async function montarDadosHoje(ctx: PortalContext): Promise<TodayScreenDa
         if (dHoje.duracao) treino.duracao = dHoje.duracao as number;
         if (dHoje.intensidade) treino.intensidade = dHoje.intensidade as 1 | 2 | 3 | 4;
     }
+
+    // Pré-popular: última execução completa do mesmo treinoIndex (zero queries extras)
+    treino.ultimasExecucoes = derivarUltimasExecucoes(histRegs, treino.indiceTreino);
 
     const isTreinoDay = treino.status !== 'descanso';
     const dieta = derivarDietaDoDia(ctx.planoDieta, isTreinoDay);
