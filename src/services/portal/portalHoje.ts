@@ -6,7 +6,7 @@ import type { WorkoutStatus } from '@/types/athlete-portal';
 import type {
     TodayScreenData, WorkoutOfDay, DietOfDay,
     TrackerRapido, DicaCoach, SetExecutado,
-    UltimaExecucao, UltimasExecucoesMap,
+    UltimaExecucao, UltimasExecucoesMap, PontoHistoricoCarga,
 } from '@/types/athlete-portal';
 import type { PlanoTreino } from '@/services/calculations/treino';
 import type { PlanoDieta } from '@/services/calculations/dieta';
@@ -71,6 +71,69 @@ export function derivarUltimasExecucoes(
         const ultima: UltimaExecucao = { sets };
         if (ex.id) porId[ex.id] = ultima;
         if (ex.nome) porNome[normalizarNomeExercicio(ex.nome)] = ultima;
+    }
+
+    return { porId, porNome };
+}
+
+/**
+ * Dado um histórico de registros de treino, retorna TODOS os pontos de carga máxima
+ * por exercício para o mesmo `treinoIndex` — usado para o gráfico de progressão de carga.
+ *
+ * Considera apenas séries 'valida' e 'top' (as séries de esforço real). Se não houver,
+ * usa qualquer série com carga registrada.
+ * Retorna os pontos em ordem cronológica crescente.
+ */
+export function derivarHistoricoCargas(
+    histRegs: SupaRegistroDiario[],
+    treinoIndex: number | undefined,
+): { porId: Record<string, PontoHistoricoCarga[]>; porNome: Record<string, PontoHistoricoCarga[]> } {
+    const vazio = { porId: {} as Record<string, PontoHistoricoCarga[]>, porNome: {} as Record<string, PontoHistoricoCarga[]> };
+    if (typeof treinoIndex !== 'number') return vazio;
+
+    // Filtrar registros completos do mesmo treino, ordenar ASC (mais antigo primeiro)
+    const registrosDoTreino = histRegs
+        .filter(r => r.dados?.status === 'completo' && r.dados?.treinoIndex === treinoIndex)
+        .sort((a, b) => a.data.localeCompare(b.data));
+
+    const porId: Record<string, PontoHistoricoCarga[]> = {};
+    const porNome: Record<string, PontoHistoricoCarga[]> = {};
+
+    for (const reg of registrosDoTreino) {
+        const exercicios = (reg.dados?.exercicios ?? []) as Array<{
+            id?: string;
+            nome?: string;
+            sets?: SetExecutado[];
+            carga?: number;
+        }>;
+
+        for (const ex of exercicios) {
+            const sets: SetExecutado[] = Array.isArray(ex.sets) ? ex.sets : [];
+
+            // Preferir séries válidas/top; fallback para qualquer série com carga
+            const seriesEsforco = sets.filter(s => !s.tipo || s.tipo === 'valida' || s.tipo === 'top');
+            const seriesBase = seriesEsforco.length > 0 ? seriesEsforco : sets;
+            const cargas = seriesBase.map(s => s.carga).filter((c): c is number => c != null);
+
+            // Legado: carga escalar
+            if (cargas.length === 0 && typeof ex.carga === 'number') cargas.push(ex.carga);
+            if (cargas.length === 0) continue;
+
+            const ponto: PontoHistoricoCarga = {
+                data: reg.data,
+                cargaMax: Math.max(...cargas),
+            };
+
+            if (ex.id) {
+                if (!porId[ex.id]) porId[ex.id] = [];
+                porId[ex.id].push(ponto);
+            }
+            if (ex.nome) {
+                const key = normalizarNomeExercicio(ex.nome);
+                if (!porNome[key]) porNome[key] = [];
+                porNome[key].push(ponto);
+            }
+        }
     }
 
     return { porId, porNome };
@@ -540,6 +603,9 @@ export async function montarDadosHoje(ctx: PortalContext): Promise<TodayScreenDa
 
     // Pré-popular: última execução completa do mesmo treinoIndex (zero queries extras)
     treino.ultimasExecucoes = derivarUltimasExecucoes(histRegs, treino.indiceTreino);
+
+    // Histórico completo de carga por exercício (para gráfico de progressão)
+    treino.historicoCargas = derivarHistoricoCargas(histRegs, treino.indiceTreino);
 
     const isTreinoDay = treino.status !== 'descanso';
     const dieta = derivarDietaDoDia(ctx.planoDieta, isTreinoDay);

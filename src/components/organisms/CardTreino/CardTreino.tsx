@@ -10,9 +10,10 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { GoogleGenerativeAI } from '@google/generative-ai'
-import { Dumbbell, Check, SkipForward, Moon, Play, ChevronDown, ChevronUp, Calendar, Clock, Pause, Timer, Video, Plus } from 'lucide-react'
+import { Dumbbell, Check, SkipForward, Moon, Play, ChevronDown, ChevronUp, Calendar, Clock, Pause, Timer, Video, Plus, TrendingUp } from 'lucide-react'
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { WorkoutOfDay, ExercicioTreino } from '../../../types/athlete-portal'
-import type { ExercicioTimerState, SetExecutado, UltimaExecucao, TipoSet } from '../../../types/athlete-portal'
+import type { ExercicioTimerState, SetExecutado, UltimaExecucao, TipoSet, PontoHistoricoCarga } from '../../../types/athlete-portal'
 import type { ProximoTreino } from '../../../services/portalDataService'
 import { ExercicioDetalheModal } from '../../molecules/ExercicioDetalheModal'
 import { exercicioBibliotecaService } from '../../../services/exercicioBiblioteca.service'
@@ -84,6 +85,160 @@ const TIPO_SET_MAP: Record<TipoSet, typeof TIPOS_SET[number]> = TIPOS_SET.reduce
     (acc, t) => ({ ...acc, [t.id]: t }),
     {} as Record<TipoSet, typeof TIPOS_SET[number]>,
 )
+
+// ─── Gráfico de Progressão de Carga ────────────────────────────────────────
+
+type ChartPonto = { label: string; real?: number; proj?: number }
+
+/**
+ * Gera os pontos de projeção a partir do histórico real.
+ * Taxa derivada por regressão linear (≥3 pts) ou 2%/semana (padrão intermediário).
+ */
+function calcularProjecao(
+    historico: PontoHistoricoCarga[],
+    semanas = 12,
+): { label: string; proj: number }[] {
+    if (historico.length === 0) return []
+
+    const n = historico.length
+    const lastCarga = historico[n - 1].cargaMax
+    const lastDate = new Date(historico[n - 1].data + 'T12:00:00')
+
+    let taxaSemanal: number
+
+    if (n >= 3) {
+        const firstDate = new Date(historico[0].data + 'T12:00:00')
+        const firstCarga = historico[0].cargaMax
+        const totalWeeks = Math.max(1, (lastDate.getTime() - firstDate.getTime()) / (7 * 24 * 3600 * 1000))
+        const rawRate = (lastCarga - firstCarga) / totalWeeks
+        // Limitar entre 0.5% e 5% por semana (carga do ponto inicial como base)
+        taxaSemanal = Math.max(firstCarga * 0.005, Math.min(firstCarga * 0.05, rawRate))
+    } else {
+        taxaSemanal = lastCarga * 0.02 // 2% por semana — padrão intermediário
+    }
+
+    return Array.from({ length: semanas }, (_, i) => {
+        const sem = i + 1
+        const d = new Date(lastDate)
+        d.setDate(d.getDate() + sem * 7)
+        return {
+            label: `+${sem}sem`,
+            proj: Math.round((lastCarga + taxaSemanal * sem) * 10) / 10,
+        }
+    })
+}
+
+function formatarDataCurta(iso: string): string {
+    const [, m, d] = iso.split('-')
+    return `${d}/${m}`
+}
+
+function GraficoProgressaoCarga({ historico }: { historico: PontoHistoricoCarga[] }) {
+    if (historico.length === 0) {
+        return (
+            <div className="flex items-center gap-2 py-3 text-[10px] text-gray-600 italic">
+                <TrendingUp size={12} className="text-gray-700 shrink-0" />
+                Registre sua primeira carga para ver a progressão
+            </div>
+        )
+    }
+
+    const projecao = calcularProjecao(historico)
+
+    // Monta array unificado: real first, depois projeção
+    const dados: ChartPonto[] = [
+        ...historico.map((p, i) => ({
+            label: formatarDataCurta(p.data),
+            real: p.cargaMax,
+            // Último ponto real também inicia a linha de projeção (conexão visual)
+            proj: i === historico.length - 1 ? p.cargaMax : undefined,
+        })),
+        ...projecao.map(p => ({ label: p.label, proj: p.proj })),
+    ]
+
+    const allValues = dados.flatMap(d => [d.real, d.proj].filter((v): v is number => v != null))
+    const minY = Math.floor(Math.min(...allValues) * 0.92)
+    const maxY = Math.ceil(Math.max(...allValues) * 1.05)
+
+    const ultimaCarga = historico[historico.length - 1].cargaMax
+    const projFinal = projecao[projecao.length - 1]?.proj ?? ultimaCarga
+    const ganho = projFinal - ultimaCarga
+    const pct = ((ganho / ultimaCarga) * 100).toFixed(0)
+
+    return (
+        <div className="pt-3 pb-1">
+            <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[9px] font-mono text-gray-600 uppercase tracking-wider flex items-center gap-1">
+                    <TrendingUp size={10} className="text-indigo-500/60" />
+                    Progressão de Carga
+                </span>
+                <span className="text-[9px] font-mono text-indigo-400/60">
+                    proj. +{ganho.toFixed(1)}kg (+{pct}%) em 3 meses
+                </span>
+            </div>
+
+            <ResponsiveContainer width="100%" height={80}>
+                <LineChart data={dados} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+                    <XAxis
+                        dataKey="label"
+                        tick={{ fontSize: 8, fill: '#4b5563' }}
+                        tickLine={false}
+                        axisLine={false}
+                        interval="preserveStartEnd"
+                    />
+                    <YAxis
+                        domain={[minY, maxY]}
+                        tick={{ fontSize: 8, fill: '#4b5563' }}
+                        tickLine={false}
+                        axisLine={false}
+                        width={28}
+                        tickFormatter={v => `${v}`}
+                    />
+                    <Tooltip
+                        contentStyle={{
+                            background: '#0f1117',
+                            border: '1px solid rgba(255,255,255,0.08)',
+                            borderRadius: '8px',
+                            fontSize: '10px',
+                            color: '#e5e7eb',
+                            padding: '4px 8px',
+                        }}
+                        formatter={(value: unknown, name: unknown) => [
+                            `${value} kg`,
+                            name === 'real' ? 'Registrado' : 'Projeção',
+                        ]}
+                        labelStyle={{ color: '#6b7280', fontSize: '9px' }}
+                    />
+                    {/* Linha real — sólida indigo */}
+                    <Line
+                        type="monotone"
+                        dataKey="real"
+                        stroke="#6366f1"
+                        strokeWidth={2}
+                        dot={{ r: 3, fill: '#6366f1', strokeWidth: 0 }}
+                        activeDot={{ r: 4 }}
+                        connectNulls={false}
+                        isAnimationActive={false}
+                    />
+                    {/* Linha projeção — tracejada cinza */}
+                    <Line
+                        type="monotone"
+                        dataKey="proj"
+                        stroke="#4b5563"
+                        strokeWidth={1.5}
+                        strokeDasharray="4 3"
+                        dot={false}
+                        activeDot={{ r: 3 }}
+                        connectNulls={false}
+                        isAnimationActive={false}
+                    />
+                </LineChart>
+            </ResponsiveContainer>
+        </div>
+    )
+}
+
+// ─── helpers ────────────────────────────────────────────────────────────────
 
 export function CardTreino({
     treino,
@@ -161,6 +316,16 @@ export function CardTreino({
         if (porId) return porId
         const chaveNome = ex.nome.toLowerCase().trim().replace(/\s+/g, ' ')
         return map.porNome[chaveNome] ?? null
+    }
+
+    /** Busca o histórico completo de cargas para o gráfico de progressão. */
+    const getHistoricoCargas = (ex: ExercicioTreino): PontoHistoricoCarga[] => {
+        const map = treino.historicoCargas
+        if (!map) return []
+        const porId = map.porId[ex.id]
+        if (porId && porId.length > 0) return porId
+        const chaveNome = ex.nome.toLowerCase().trim().replace(/\s+/g, ' ')
+        return map.porNome[chaveNome] ?? []
     }
 
     /**
@@ -732,7 +897,7 @@ export function CardTreino({
                                                 return (
                                                     <div key={sIdx} className="flex items-center gap-2 py-1.5">
                                                         <span className="w-[58px] text-[10px] font-mono text-gray-500 uppercase tracking-wider">
-                                                            #{sIdx + 1} Série
+                                                            Série #{sIdx + 1}
                                                         </span>
 
                                                         <input
@@ -744,7 +909,7 @@ export function CardTreino({
                                                             value={set.carga ?? ''}
                                                             onChange={e => handleSetChange(ex.id, sIdx, 'carga', parseNumOrUndef(e.target.value))}
                                                             onClick={e => e.stopPropagation()}
-                                                            className="w-14 h-7 bg-white/[0.03] border border-white/10 rounded-lg text-[7px] text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors"
+                                                            className="w-11 h-7 bg-white/[0.03] border border-white/10 rounded-lg text-[7px] text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors"
                                                         />
                                                         <span className="text-[10px] text-gray-500">kg</span>
 
@@ -839,6 +1004,11 @@ export function CardTreino({
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            {/* Gráfico de progressão de carga */}
+                                            <div className="border-t border-white/5 mt-2">
+                                                <GraficoProgressaoCarga historico={getHistoricoCargas(ex)} />
+                                            </div>
                                         </div>
                                     )}
 
@@ -849,7 +1019,7 @@ export function CardTreino({
                                                 {sets.map((set, sIdx) => (
                                                     (set.carga != null || set.reps != null) && (
                                                         <div key={sIdx} className="flex items-center gap-2 py-1.5 text-[10px] font-mono text-emerald-400/60">
-                                                            <span className="w-[58px] text-gray-600 uppercase tracking-wider">#{sIdx + 1} Série</span>
+                                                            <span className="w-[58px] text-gray-600 uppercase tracking-wider">Série #{sIdx + 1}</span>
                                                             <span>{set.carga != null ? `${set.carga}kg` : '—'}</span>
                                                             <span className="text-gray-700">×</span>
                                                             <span>{set.reps != null ? `${set.reps} reps` : '—'}</span>
@@ -861,6 +1031,10 @@ export function CardTreino({
                                                         </div>
                                                     )
                                                 ))}
+                                            </div>
+                                            {/* Gráfico de progressão no modo DONE */}
+                                            <div className="border-t border-white/5 mt-1">
+                                                <GraficoProgressaoCarga historico={getHistoricoCargas(ex)} />
                                             </div>
                                         </div>
                                     )}

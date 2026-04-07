@@ -44,6 +44,18 @@ export interface WorkoutOfDay {
 
     // Sets realizados na última execução do mesmo treinoIndex (para pré-popular inputs)
     ultimasExecucoes?: UltimasExecucoesMap
+
+    // Histórico de carga máxima por exercício (todas as execuções completas do mesmo treinoIndex)
+    historicoCargas?: {
+        porId: Record<string, PontoHistoricoCarga[]>
+        porNome: Record<string, PontoHistoricoCarga[]>
+    }
+}
+
+/** Um ponto de histórico de carga para o gráfico de progressão. */
+export interface PontoHistoricoCarga {
+    data: string       // 'YYYY-MM-DD'
+    cargaMax: number   // kg máximo nas séries válidas/top desta sessão
 }
 
 /** Sets realizados em uma execução passada (usado p/ pré-popular inputs). */
