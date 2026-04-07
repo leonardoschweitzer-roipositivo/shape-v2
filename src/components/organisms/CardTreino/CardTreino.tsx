@@ -583,8 +583,8 @@ export function CardTreino({
                                         setLocalExercicios(prev => prev.filter(x => x.id !== ex.id))
                                     }}
                                 >
-                                    {/* Linha 1: checkbox + nome + vídeo + resumo/toggle */}
-                                    <div className="flex items-center gap-3 px-6 py-3">
+                                    {/* Linha 1: checkbox + nome + vídeo */}
+                                    <div className="flex items-center gap-3 px-6 pt-3 pb-1">
                                         <button
                                             onClick={() => isDone ? handleUndoExercicio(ex.id) : handleDoneExercicio(ex.id)}
                                             className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${isDone
@@ -658,8 +658,13 @@ export function CardTreino({
                                         >
                                             <Video size={13} className="text-indigo-400" />
                                         </button>
+                                    </div>
 
-                                        {/* Resumo + botão de expandir */}
+                                    {/* Linha 2: hint + resumo/toggle */}
+                                    <div className="flex items-center justify-between px-6 pb-3 pl-[68px]">
+                                        <span className="text-xs text-gray-500 tracking-wide">
+                                            Registre séries, reps e carga
+                                        </span>
                                         <button
                                             onClick={() => toggleExpand(ex.id)}
                                             className="h-7 px-2 flex items-center gap-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
