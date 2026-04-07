@@ -716,7 +716,7 @@ export function CardTreino({
     return (
         <>
             <div className="bg-surface-deep rounded-2xl p-6 border border-white/5">
-                <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-2 mb-2">
                     <div className="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center">
                         <Dumbbell size={12} className="text-indigo-400" />
                     </div>
