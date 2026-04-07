@@ -728,15 +728,10 @@ export function CardTreino({
                     </span>
                 </div>
 
-                <div className="flex items-start justify-between mb-6">
-                    <div>
-                        <p className="text-lg font-semibold text-white mb-1">
-                            {treino.subtitulo?.includes(' — ') ? treino.subtitulo.split(' — ')[1] : treino.subtitulo}
-                        </p>
-                        <p className="text-sm text-gray-400">
-                            {treino.titulo}
-                        </p>
-                    </div>
+                <div className="flex items-center justify-between mb-6">
+                    <p className="text-lg font-semibold text-white">
+                        {treino.subtitulo?.includes(' — ') ? treino.subtitulo.split(' — ')[1] : treino.subtitulo}
+                    </p>
 
                     {/* Botão Global de Play/Pause e Timer */}
                     <div className="flex items-center gap-3">
@@ -751,13 +746,13 @@ export function CardTreino({
 
                         <button
                             onClick={handleToggleGlobalTimer}
-                            className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all active:scale-95 shadow-lg border ${sessionTimer.status === 'running'
+                            className={`h-9 px-7 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg border ${sessionTimer.status === 'running'
                                 ? 'bg-amber-500/10 border-amber-500/30 text-amber-500 shadow-amber-500/10'
                                 : 'bg-indigo-600 border-indigo-500 text-white shadow-indigo-600/20 hover:bg-indigo-500'
                                 }`}
                             title={sessionTimer.status === 'running' ? "Pausar Treino" : "Iniciar Treino"}
                         >
-                            {sessionTimer.status === 'running' ? <Pause size={22} fill="currentColor" /> : <Play size={20} fill="currentColor" className="ml-1" />}
+                            {sessionTimer.status === 'running' ? <Pause size={18} fill="currentColor" /> : <Play size={16} fill="currentColor" className="ml-0.5" />}
                         </button>
                     </div>
                 </div>
