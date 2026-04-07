@@ -8,7 +8,8 @@
  * - descanso: Dia de descanso (com accordion do próximo treino)
  */
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import { Dumbbell, Check, SkipForward, Moon, Play, ChevronDown, ChevronUp, Calendar, Clock, Pause, Timer, Video, Plus } from 'lucide-react'
 import { WorkoutOfDay, ExercicioTreino } from '../../../types/athlete-portal'
 import type { ExercicioTimerState, SetExecutado, UltimaExecucao, TipoSet } from '../../../types/athlete-portal'
@@ -96,6 +97,39 @@ export function CardTreino({
     onCompletei,
     onPular
 }: CardTreinoProps) {
+    const [descricoes, setDescricoes] = useState<Record<string, string>>({})
+    const descricoesCarregando = useRef<Set<string>>(new Set())
+    const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
+
+    const gerarDescricao = useCallback(async (exId: string, nome: string) => {
+        const nomeTrimmed = nome.trim()
+        if (!nomeTrimmed || descricoesCarregando.current.has(exId)) return
+        descricoesCarregando.current.add(exId)
+        try {
+            const apiKey = import.meta.env.VITE_GEMINI_API_KEY
+            if (!apiKey) return
+            const ai = new GoogleGenerativeAI(apiKey)
+            const model = ai.getGenerativeModel({ model: 'gemini-2.0-flash', generationConfig: { maxOutputTokens: 40, temperature: 0.7 } })
+            const result = await model.generateContent(
+                `Descreva o exercício "${nomeTrimmed}" em uma frase curta (máximo 8 palavras), focando no músculo trabalhado. Responda só a frase, sem pontuação final.`
+            )
+            const texto = result.response.text().trim().replace(/\.$/, '')
+            if (texto) setDescricoes(prev => ({ ...prev, [exId]: texto }))
+        } catch {
+            // silently fail — fallback to static text
+        } finally {
+            descricoesCarregando.current.delete(exId)
+        }
+    }, [])
+
+    // Gera descrições ao carregar o treino
+    useEffect(() => {
+        localExercicios.forEach(ex => {
+            if (!descricoes[ex.id]) gerarDescricao(ex.id, ex.nome)
+        })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [treino.id])
+
     const [accordionOpen, setAccordionOpen] = useState(treino.status === 'pendente')
     const [showCompleteiMenu, setShowCompleteiMenu] = useState(false)
     const completeiMenuRef = useRef<HTMLDivElement>(null)
@@ -606,9 +640,16 @@ export function CardTreino({
                                                 type="text"
                                                 value={ex.nome}
                                                 onChange={(e) => {
+                                                    const novoNome = e.target.value
                                                     const nov = [...localExercicios]
-                                                    nov[idx] = { ...nov[idx], nome: e.target.value }
+                                                    nov[idx] = { ...nov[idx], nome: novoNome }
                                                     setLocalExercicios(nov)
+                                                    // debounce: atualiza descrição 1s após parar de digitar
+                                                    clearTimeout(debounceTimers.current[ex.id])
+                                                    debounceTimers.current[ex.id] = setTimeout(() => {
+                                                        setDescricoes(prev => { const next = { ...prev }; delete next[ex.id]; return next })
+                                                        gerarDescricao(ex.id, novoNome)
+                                                    }, 1000)
                                                 }}
                                                 readOnly={isDone}
                                                 className={`w-full bg-transparent text-sm font-medium transition-colors outline-none focus:border-b focus:border-indigo-500/50 ${isDone ? 'text-gray-500 line-through' : 'text-gray-200'}`}
@@ -663,7 +704,7 @@ export function CardTreino({
                                     {/* Linha 2: hint + resumo/toggle */}
                                     <div className="flex items-center justify-between px-6 pb-3 pl-[68px]">
                                         <span className="text-xs text-gray-500 tracking-wide">
-                                            Registre séries, reps e carga
+                                            {descricoes[ex.id] ?? 'Registre séries, reps e carga'}
                                         </span>
                                         <button
                                             onClick={() => toggleExpand(ex.id)}
