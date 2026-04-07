@@ -172,7 +172,7 @@ function GraficoProgressaoCarga({ historico }: { historico: PontoHistoricoCarga[
                     <TrendingUp size={10} className="text-indigo-500/60" />
                     Progressão de Carga
                 </span>
-                <span className="text-[9px] font-mono text-indigo-400/60">
+                <span className="text-[9px] font-mono text-amber-500/80">
                     proj. +{ganho.toFixed(1)}kg (+{pct}%) em 3 meses
                 </span>
             </div>
@@ -220,11 +220,11 @@ function GraficoProgressaoCarga({ historico }: { historico: PontoHistoricoCarga[
                         connectNulls={false}
                         isAnimationActive={false}
                     />
-                    {/* Linha projeção — tracejada cinza */}
+                    {/* Linha projeção — tracejada âmbar */}
                     <Line
                         type="monotone"
                         dataKey="proj"
-                        stroke="#4b5563"
+                        stroke="#f59e0b"
                         strokeWidth={1.5}
                         strokeDasharray="4 3"
                         dot={false}
