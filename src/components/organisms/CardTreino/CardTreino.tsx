@@ -716,12 +716,12 @@ export function CardTreino({
     return (
         <>
             <div className="bg-surface-deep rounded-2xl p-6 border border-white/5">
-                <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center">
-                        <Dumbbell size={20} className="text-indigo-400" />
+                <div className="flex items-center gap-2 mb-4">
+                    <div className="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                        <Dumbbell size={12} className="text-indigo-400" />
                     </div>
                     <div className="flex-1">
-                        <h3 className="text-base font-bold text-white uppercase tracking-wide">TREINO DE HOJE</h3>
+                        <h3 className="text-xs text-gray-400 uppercase tracking-wide">TREINO DE HOJE</h3>
                     </div>
                     <span className="text-xs text-gray-400">
                         Dia {treino.diaAtual}/{treino.diasTotal}
@@ -729,7 +729,7 @@ export function CardTreino({
                 </div>
 
                 <div className="flex items-center justify-between mb-6">
-                    <p className="text-lg font-semibold text-white">
+                    <p className="text-lg font-semibold text-white uppercase">
                         {treino.subtitulo?.includes(' — ') ? treino.subtitulo.split(' — ')[1] : treino.subtitulo}
                     </p>
 
@@ -746,7 +746,7 @@ export function CardTreino({
 
                         <button
                             onClick={handleToggleGlobalTimer}
-                            className={`h-9 px-7 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg border ${sessionTimer.status === 'running'
+                            className={`h-9 px-5 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg border ${sessionTimer.status === 'running'
                                 ? 'bg-amber-500/10 border-amber-500/30 text-amber-500 shadow-amber-500/10'
                                 : 'bg-indigo-600 border-indigo-500 text-white shadow-indigo-600/20 hover:bg-indigo-500'
                                 }`}
