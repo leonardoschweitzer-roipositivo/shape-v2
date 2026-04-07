@@ -704,7 +704,7 @@ export function CardTreino({
                                     {/* Linha 2: hint + resumo/toggle */}
                                     <div className="flex items-center justify-between px-6 pb-3 pl-[68px]">
                                         <span className="text-xs text-gray-500 tracking-wide">
-                                            {descricoes[ex.id] ?? 'Registre séries, reps e carga'}
+                                            {descricoes[ex.id] ?? 'IA descrevendo exercício...'}
                                         </span>
                                         <button
                                             onClick={() => toggleExpand(ex.id)}
