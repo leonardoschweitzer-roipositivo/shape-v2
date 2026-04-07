@@ -36,7 +36,7 @@ export type { AvaliacaoDadosResult, DadosSecundarios } from './portal/portalProg
 export { buscarMensagensChat, salvarMensagemChat } from './portal/portalCoach';
 
 // Trackers
-export { registrarTracker, completarTreino, pularTreino } from './portal/portalTrackers';
+export { registrarTracker, completarTreino, pularTreino, atualizarExerciciosNoPlano } from './portal/portalTrackers';
 
 // Perfil
 export { extrairDadosBasicos, buscarDadosPersonal } from './portal/portalPerfil';

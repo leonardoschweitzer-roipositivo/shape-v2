@@ -29,6 +29,7 @@ import {
     registrarTracker,
     completarTreino,
     pularTreino,
+    atualizarExerciciosNoPlano,
     extrairDadosBasicos,
     type PortalContext,
     type ProximoTreino,
@@ -316,9 +317,24 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
             exercicios: exerciciosDetalhes,
         }, dataOverride, ctx?.personalId)
 
+        // Persiste modificações de exercícios de volta ao plano de treino
+        // para que o aluno veja os mesmos exercícios nos próximos treinos.
+        const treinoIndex = todayData?.treino?.indiceTreino
+        if (exerciciosModificados && typeof treinoIndex === 'number') {
+            await atualizarExerciciosNoPlano(atletaId, treinoIndex, exerciciosModificados)
+        }
+
         clearAllTimers() // Reset todos os timers após completar
-        // Refresh today data
-        if (ctx) {
+
+        // Reload contexto completo para refletir o plano atualizado
+        const ctxAtualizado = await carregarContextoPortal(atletaId)
+        if (ctxAtualizado) {
+            setCtx(ctxAtualizado)
+            const today = await montarDadosHoje(ctxAtualizado)
+            setTodayData(today)
+            setProximoTreino(derivarProximoTreino(ctxAtualizado.planoTreino, today?.treino?.indiceTreino))
+            setProximosTreinos(derivarProximosTreinos(ctxAtualizado.planoTreino, today?.treino?.indiceTreino))
+        } else if (ctx) {
             const today = await montarDadosHoje(ctx)
             setTodayData(today)
             setProximoTreino(derivarProximoTreino(ctx.planoTreino, today?.treino?.indiceTreino))
