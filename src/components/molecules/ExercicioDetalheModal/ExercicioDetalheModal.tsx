@@ -7,9 +7,41 @@
 
 import React, { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { X, Play, Video, AlertCircle, CheckCircle, Lightbulb, ChevronDown, ChevronUp } from 'lucide-react'
+import { X, Play, Video, AlertCircle, CheckCircle, Lightbulb, ChevronDown, ChevronUp, Loader2 } from 'lucide-react'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import type { ExercicioBiblioteca } from '@/types/exercicio-biblioteca'
 import { GRUPO_MUSCULAR_CONFIG, NIVEL_CONFIG, EQUIPAMENTO_CONFIG } from '@/types/exercicio-biblioteca'
+
+interface InstrucoesGeradas {
+    instrucoes: string[]
+    dicas: string[]
+    erros_comuns: string[]
+}
+
+async function gerarInstrucoesIA(nome: string, grupoMuscular: string): Promise<InstrucoesGeradas | null> {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY
+    if (!apiKey) return null
+    const ai = new GoogleGenerativeAI(apiKey)
+    const model = ai.getGenerativeModel({
+        model: 'gemini-2.0-flash',
+        generationConfig: { maxOutputTokens: 512, temperature: 0.5, responseMimeType: 'application/json' },
+    })
+    const prompt = `Você é um personal trainer expert. Para o exercício "${nome}" (grupo muscular: ${grupoMuscular}), retorne um JSON com exatamente este formato:
+{
+  "instrucoes": ["passo 1", "passo 2", "passo 3", "passo 4", "passo 5"],
+  "dicas": ["dica 1", "dica 2", "dica 3"],
+  "erros_comuns": ["erro 1", "erro 2", "erro 3"]
+}
+Seja direto e técnico. Máximo 1 frase por item. Responda apenas o JSON.`
+    try {
+        const result = await model.generateContent(prompt)
+        const text = result.response.text().trim()
+        const json = JSON.parse(text.replace(/```json\n?|```/g, ''))
+        return json as InstrucoesGeradas
+    } catch {
+        return null
+    }
+}
 
 interface ExercicioDetalheModalProps {
     exercicio: ExercicioBiblioteca
@@ -19,6 +51,28 @@ interface ExercicioDetalheModalProps {
 export function ExercicioDetalheModal({ exercicio, onFechar }: ExercicioDetalheModalProps) {
     const [videoAberto, setVideoAberto] = useState(false)
     const [secaoAberta, setSecaoAberta] = useState<'instrucoes' | 'dicas' | 'erros' | null>('instrucoes')
+    const [instrucoesIA, setInstrucoesIA] = useState<InstrucoesGeradas | null>(null)
+    const [gerandoInstrucoes, setGerandoInstrucoes] = useState(false)
+
+    const temInstrucoesOriginais =
+        (exercicio.instrucoes && exercicio.instrucoes.length > 0) ||
+        (exercicio.dicas && exercicio.dicas.length > 0) ||
+        (exercicio.erros_comuns && exercicio.erros_comuns.length > 0)
+
+    // Gera instruções via IA quando o modal abre e o exercício não tem dados técnicos
+    useEffect(() => {
+        if (temInstrucoesOriginais) return
+        setGerandoInstrucoes(true)
+        const grupoConfig = GRUPO_MUSCULAR_CONFIG[exercicio.grupo_muscular]
+        gerarInstrucoesIA(exercicio.nome, grupoConfig?.label ?? exercicio.grupo_muscular).then(resultado => {
+            if (resultado) setInstrucoesIA(resultado)
+        }).finally(() => setGerandoInstrucoes(false))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [exercicio.nome])
+
+    const instrucoes = exercicio.instrucoes?.length ? exercicio.instrucoes : (instrucoesIA?.instrucoes ?? [])
+    const dicas = exercicio.dicas?.length ? exercicio.dicas : (instrucoesIA?.dicas ?? [])
+    const erros = exercicio.erros_comuns?.length ? exercicio.erros_comuns : (instrucoesIA?.erros_comuns ?? [])
 
     const grupoConfig = GRUPO_MUSCULAR_CONFIG[exercicio.grupo_muscular]
     const nivelConfig = NIVEL_CONFIG[exercicio.nivel]
@@ -200,23 +254,16 @@ export function ExercicioDetalheModal({ exercicio, onFechar }: ExercicioDetalheM
                 {/* Seções expansíveis */}
                 <div className="px-5 pb-24 sm:pb-5 space-y-2">
 
-                    {/* Empty state: sem dados técnicos */}
-                    {(!exercicio.instrucoes || exercicio.instrucoes.length === 0) &&
-                        (!exercicio.dicas || exercicio.dicas.length === 0) &&
-                        (!exercicio.erros_comuns || exercicio.erros_comuns.length === 0) && (
-                            <div className="bg-white/[0.02] rounded-xl border border-white/5 p-5 text-center space-y-2">
-                                <div className="w-10 h-10 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mx-auto">
-                                    <Lightbulb size={18} className="text-indigo-400" />
-                                </div>
-                                <p className="text-sm font-bold text-white">Instruções técnicas em breve</p>
-                                <p className="text-xs text-gray-500 leading-relaxed">
-                                    Estamos preparando o passo a passo, dicas de execução e erros comuns para este exercício. 📝
-                                </p>
-                            </div>
-                        )}
+                    {/* Loading state */}
+                    {gerandoInstrucoes && (
+                        <div className="bg-white/[0.02] rounded-xl border border-white/5 p-5 flex flex-col items-center gap-3">
+                            <Loader2 size={22} className="text-indigo-400 animate-spin" />
+                            <p className="text-xs text-gray-500">Gerando instruções com IA...</p>
+                        </div>
+                    )}
 
                     {/* Instruções */}
-                    {exercicio.instrucoes && exercicio.instrucoes.length > 0 && (
+                    {instrucoes.length > 0 && (
                         <div className="bg-white/[0.03] rounded-xl border border-white/5 overflow-hidden">
                             <button
                                 onClick={() => setSecaoAberta(secaoAberta === 'instrucoes' ? null : 'instrucoes')}
@@ -225,7 +272,7 @@ export function ExercicioDetalheModal({ exercicio, onFechar }: ExercicioDetalheM
                                 <div className="flex items-center gap-2">
                                     <CheckCircle size={15} className="text-emerald-400 flex-shrink-0" />
                                     <span className="text-sm font-bold text-white">Passo a Passo</span>
-                                    <span className="text-xs text-gray-600">({exercicio.instrucoes.length} passos)</span>
+                                    <span className="text-xs text-gray-600">({instrucoes.length} passos)</span>
                                 </div>
                                 {secaoAberta === 'instrucoes'
                                     ? <ChevronUp size={16} className="text-gray-500" />
@@ -234,7 +281,7 @@ export function ExercicioDetalheModal({ exercicio, onFechar }: ExercicioDetalheM
                             </button>
                             {secaoAberta === 'instrucoes' && (
                                 <div className="px-4 pb-4 space-y-2 border-t border-white/5 pt-3">
-                                    {exercicio.instrucoes.map((instrucao, i) => (
+                                    {instrucoes.map((instrucao, i) => (
                                         <div key={i} className="flex gap-3">
                                             <span className="w-5 h-5 rounded-full bg-emerald-500/10 text-emerald-400 text-[11px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
                                                 {i + 1}
@@ -248,7 +295,7 @@ export function ExercicioDetalheModal({ exercicio, onFechar }: ExercicioDetalheM
                     )}
 
                     {/* Dicas */}
-                    {exercicio.dicas && exercicio.dicas.length > 0 && (
+                    {dicas.length > 0 && (
                         <div className="bg-white/[0.03] rounded-xl border border-white/5 overflow-hidden">
                             <button
                                 onClick={() => setSecaoAberta(secaoAberta === 'dicas' ? null : 'dicas')}
@@ -265,7 +312,7 @@ export function ExercicioDetalheModal({ exercicio, onFechar }: ExercicioDetalheM
                             </button>
                             {secaoAberta === 'dicas' && (
                                 <div className="px-4 pb-4 space-y-2 border-t border-white/5 pt-3">
-                                    {exercicio.dicas.map((dica, i) => (
+                                    {dicas.map((dica, i) => (
                                         <div key={i} className="flex gap-3">
                                             <span className="text-amber-400 mt-0.5 flex-shrink-0">💡</span>
                                             <p className="text-sm text-gray-300 leading-relaxed">{dica}</p>
@@ -277,7 +324,7 @@ export function ExercicioDetalheModal({ exercicio, onFechar }: ExercicioDetalheM
                     )}
 
                     {/* Erros comuns */}
-                    {exercicio.erros_comuns && exercicio.erros_comuns.length > 0 && (
+                    {erros.length > 0 && (
                         <div className="bg-white/[0.03] rounded-xl border border-white/5 overflow-hidden">
                             <button
                                 onClick={() => setSecaoAberta(secaoAberta === 'erros' ? null : 'erros')}
@@ -295,7 +342,7 @@ export function ExercicioDetalheModal({ exercicio, onFechar }: ExercicioDetalheM
                             </button>
                             {secaoAberta === 'erros' && (
                                 <div className="px-4 pb-4 space-y-2 border-t border-white/5 pt-3">
-                                    {exercicio.erros_comuns.map((erro, i) => (
+                                    {erros.map((erro, i) => (
                                         <div key={i} className="flex gap-3">
                                             <span className="text-red-400 mt-0.5 flex-shrink-0">⚠️</span>
                                             <p className="text-sm text-gray-300 leading-relaxed">{erro}</p>
