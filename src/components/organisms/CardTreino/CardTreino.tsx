@@ -702,8 +702,8 @@ export function CardTreino({
                                     </div>
 
                                     {/* Linha 2: hint + resumo/toggle */}
-                                    <div className="flex items-center justify-between px-6 pb-3 pl-[68px]">
-                                        <span className="text-xs text-gray-500 tracking-wide">
+                                    <div className="flex items-center justify-between px-6 pb-3 pl-[68px] gap-4">
+                                        <span className="text-xs text-gray-500 tracking-wide flex-1 min-w-0">
                                             {descricoes[ex.id] ?? 'IA descrevendo exercício...'}
                                         </span>
                                         <button
