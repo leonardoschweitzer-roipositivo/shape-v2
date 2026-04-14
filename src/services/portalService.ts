@@ -487,7 +487,10 @@ export const portalService = {
 
         const { data, error } = await supabase
             .from('fichas')
-            .update({ contexto: contextoComMeta } as Record<string, unknown>)
+            .update({
+                contexto: contextoComMeta,
+                onboarding_completo: true,
+            } as Record<string, unknown>)
             .eq('atleta_id', atletaId)
             .select('id');
 

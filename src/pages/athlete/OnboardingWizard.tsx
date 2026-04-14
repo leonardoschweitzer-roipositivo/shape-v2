@@ -136,21 +136,29 @@ export function OnboardingWizard({
         setError(null);
 
         try {
-            // 1. Atualizar ficha com dados básicos
+            // 1. Atualizar ficha com dados básicos + marcar onboarding como concluído.
+            //    A flag é setada aqui (e não apenas no plano-autor) porque o aluno já
+            //    cumpriu o que o onboarding exige. A tela seguinte só escolhe quem
+            //    monta o plano — se esse passo falhar, o aluno não deve ficar preso.
             const fichaUpdate: Record<string, unknown> = {
                 data_nascimento: form.dataNascimento,
                 altura: parseFloat(form.altura),
                 metodo_medidas: 'BASICO',
+                onboarding_completo: true,
             };
             if (form.nivelAtividade) fichaUpdate.nivel_atividade = form.nivelAtividade;
             if (form.objetivo) fichaUpdate.objetivo = form.objetivo;
 
-            const { error: fichaErr } = await supabase
+            const { data: fichaData, error: fichaErr } = await supabase
                 .from('fichas')
                 .update(fichaUpdate)
-                .eq('atleta_id', atletaId);
+                .eq('atleta_id', atletaId)
+                .select('id');
 
             if (fichaErr) throw new Error(`Erro na ficha: ${fichaErr.message}`);
+            if (!fichaData || fichaData.length === 0) {
+                throw new Error('Não foi possível salvar seus dados (verifique seu link de acesso).');
+            }
 
             // 2. Inserir medidas
             const medidasInsert: Record<string, unknown> = {
@@ -201,8 +209,8 @@ export function OnboardingWizard({
                     .eq('atleta_id', atletaId);
             }
 
-            // 3. Medidas registradas. O onboarding_completo só será marcado
-            //    após o aluno escolher quem gera o plano (VITRU IA ou Personal).
+            // 3. Onboarding já concluído acima. Na tela seguinte o aluno apenas
+            //    escolhe quem monta o plano (VITRU IA ou Personal).
             setScreen('plano-autor');
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Erro ao salvar.');
@@ -235,8 +243,8 @@ export function OnboardingWizard({
                 objetivo,
             });
 
-            // Marcar ficha: onboarding concluído via VITRU IA
-            await supabase
+            // Reforçar flag + gravar método/objetivo gerados pela IA.
+            const { error: updateErr } = await supabase
                 .from('fichas')
                 .update({
                     onboarding_completo: true,
@@ -244,6 +252,10 @@ export function OnboardingWizard({
                     objetivo_vitruvio: resultado.objetivoVitruvio,
                 } as Record<string, unknown>)
                 .eq('atleta_id', atletaId);
+
+            if (updateErr) {
+                console.warn('[OnboardingWizard] Não foi possível atualizar ficha pós-IA:', updateErr.message);
+            }
 
             setSuccessMessage('Seu plano de evolução foi gerado pelo VITRU IA! Treino e dieta já estão prontos no seu portal.');
             setScreen('sucesso');
@@ -260,10 +272,14 @@ export function OnboardingWizard({
         setError(null);
 
         try {
-            await supabase
+            const { error: updateErr } = await supabase
                 .from('fichas')
                 .update({ onboarding_completo: true } as Record<string, unknown>)
                 .eq('atleta_id', atletaId);
+
+            if (updateErr) {
+                console.warn('[OnboardingWizard] Falha ao reforçar onboarding_completo:', updateErr.message);
+            }
 
             setSuccessMessage('Suas medidas básicas foram registradas. Seu personal montará seu plano em breve.');
             setScreen('sucesso');
