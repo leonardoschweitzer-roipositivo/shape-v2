@@ -292,34 +292,31 @@ export function CardTreino({
     const descricoesCarregando = useRef<Set<string>>(new Set())
     const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
 
-    const gerarDescricao = useCallback(async (exId: string, nome: string) => {
+    const gerarDescricao = useCallback(async (exId: string, nome: string, foco?: string) => {
         const nomeTrimmed = nome.trim()
         if (!nomeTrimmed || descricoesCarregando.current.has(exId)) return
         descricoesCarregando.current.add(exId)
+        const fallback = foco?.trim() || 'Exercício de musculação'
         try {
             const apiKey = import.meta.env.VITE_GEMINI_API_KEY
-            if (!apiKey) return
+            if (!apiKey) {
+                setDescricoes(prev => ({ ...prev, [exId]: fallback }))
+                return
+            }
             const ai = new GoogleGenerativeAI(apiKey)
             const model = ai.getGenerativeModel({ model: 'gemini-2.0-flash', generationConfig: { maxOutputTokens: 40, temperature: 0.7 } })
             const result = await model.generateContent(
                 `Descreva o exercício "${nomeTrimmed}" em uma frase curta (máximo 8 palavras), focando no músculo trabalhado. Responda só a frase, sem pontuação final.`
             )
             const texto = result.response.text().trim().replace(/\.$/, '')
-            if (texto) setDescricoes(prev => ({ ...prev, [exId]: texto }))
-        } catch {
-            // silently fail — fallback to static text
+            setDescricoes(prev => ({ ...prev, [exId]: texto || fallback }))
+        } catch (err) {
+            console.error('[CardTreino] gerarDescricao falhou para', nomeTrimmed, err)
+            setDescricoes(prev => ({ ...prev, [exId]: fallback }))
         } finally {
             descricoesCarregando.current.delete(exId)
         }
     }, [])
-
-    // Gera descrições ao carregar o treino
-    useEffect(() => {
-        localExercicios.forEach(ex => {
-            if (!descricoes[ex.id]) gerarDescricao(ex.id, ex.nome)
-        })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [treino.id])
 
     const [accordionOpen, setAccordionOpen] = useState(treino.status === 'pendente')
     const [showCompleteiMenu, setShowCompleteiMenu] = useState(false)
@@ -335,6 +332,15 @@ export function CardTreino({
         setLocalExercicios(treino.exercicios || [])
         setExpandedExIds(new Set())
     }, [treino.id])
+
+    // Gera descrições IA conforme exercícios carregam (reage a id/nome/foco).
+    useEffect(() => {
+        localExercicios.forEach(ex => {
+            if (!descricoes[ex.id] && !descricoesCarregando.current.has(ex.id)) {
+                gerarDescricao(ex.id, ex.nome, ex.foco)
+            }
+        })
+    }, [localExercicios, descricoes, gerarDescricao])
 
     const toggleExpand = (id: string) => {
         setExpandedExIds(prev => {
@@ -1074,7 +1080,7 @@ export function CardTreino({
                                                     clearTimeout(debounceTimers.current[ex.id])
                                                     debounceTimers.current[ex.id] = setTimeout(() => {
                                                         setDescricoes(prev => { const next = { ...prev }; delete next[ex.id]; return next })
-                                                        gerarDescricao(ex.id, novoNome)
+                                                        gerarDescricao(ex.id, novoNome, ex.foco)
                                                     }, 1000)
                                                 }}
                                                 readOnly={isDone}
@@ -1130,7 +1136,7 @@ export function CardTreino({
                                     {/* Linha 2: hint + resumo/toggle */}
                                     <div className="flex items-center justify-between px-6 pb-3 pl-[68px] gap-4">
                                         <span className="text-xs text-gray-500 tracking-wide flex-1 min-w-0">
-                                            {descricoes[ex.id] ?? 'IA descrevendo exercício...'}
+                                            {descricoes[ex.id] ?? (ex.foco || 'Carregando descrição...')}
                                         </span>
                                         <button
                                             onClick={() => toggleExpand(ex.id)}
@@ -1253,27 +1259,6 @@ export function CardTreino({
                                                             </select>
                                                         </div>
                                                     </div>
-
-                                                    {/* Label compacto da prescrição — aparece quando há prescrição detalhada */}
-                                                    {prescrita && (prescrita.cargaKg > 0 || prescrita.rirAlvo != null || prescrita.descansoSegundos) && (
-                                                        <div className="pl-8 pt-0.5 text-[9px] font-mono text-gray-600 uppercase tracking-wider whitespace-nowrap overflow-hidden text-ellipsis">
-                                                            {prescrita.cargaKg > 0 && <span className="text-indigo-400/70">{prescrita.cargaKg}kg</span>}
-                                                            {prescrita.cargaKg > 0 && <span className="text-gray-700 mx-1">·</span>}
-                                                            <span>{prescrita.reps} reps</span>
-                                                            {prescrita.rirAlvo != null && (
-                                                                <>
-                                                                    <span className="text-gray-700 mx-1">·</span>
-                                                                    <span className="text-amber-400/60" title="Reps In Reserve — reps sobrando antes da falha">RIR {prescrita.rirAlvo}</span>
-                                                                </>
-                                                            )}
-                                                            {prescrita.descansoSegundos > 0 && (
-                                                                <>
-                                                                    <span className="text-gray-700 mx-1">·</span>
-                                                                    <span>{prescrita.descansoSegundos}s</span>
-                                                                </>
-                                                            )}
-                                                        </div>
-                                                    )}
 
                                                     {/* Cronômetro de descanso — aparece ao checar a série */}
                                                     {set.concluido && (() => {
