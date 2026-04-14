@@ -202,10 +202,11 @@ export function PortalLanding({ token, atletaId, onClose }: PortalLandingProps) 
     // Onboarding: fonte única de verdade é a flag `onboarding_completo` na ficha.
     // Assim, mesmo que o Personal já tenha criado uma avaliação/medida antes do aluno logar,
     // o aluno ainda passa pelo onboarding obrigatório para preencher seus dados e contexto.
-    // Fallback para alunos antigos (sem a flag): considera completo se já tinha avaliação/medida.
+    // Fallback para alunos antigos: a coluna foi criada com DEFAULT false, então qualquer
+    // valor falsy (null OU false) combinado com dados pré-existentes = aluno legado.
     const temAvaliacaoGlobal = !!(athleteData.avaliacoes?.length) || !!(athleteData.medidas?.length);
     const flagOnboardingCompleto = !!athleteData.ficha?.onboarding_completo;
-    const legadoSemFlag = athleteData.ficha?.onboarding_completo === null && temAvaliacaoGlobal;
+    const legadoSemFlag = !flagOnboardingCompleto && temAvaliacaoGlobal;
     const onboardingCompletoGlobal = flagOnboardingCompleto || legadoSemFlag;
 
     if (!onboardingCompletoGlobal) {
