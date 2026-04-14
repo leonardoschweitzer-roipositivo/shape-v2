@@ -399,6 +399,62 @@ export function CardTreino({
         return () => clearInterval(interval)
     }, [hasRestTimerRunning])
 
+    // Beep audível a cada 30s no cronômetro de descanso (Web Audio API)
+    const audioCtxRef = useRef<AudioContext | null>(null)
+    const lastBeepMarkRef = useRef<Record<string, number>>({})
+
+    const ensureAudioCtx = (): AudioContext | null => {
+        if (!audioCtxRef.current) {
+            const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+            if (Ctx) audioCtxRef.current = new Ctx()
+        }
+        if (audioCtxRef.current?.state === 'suspended') {
+            audioCtxRef.current.resume().catch(() => { /* ignore */ })
+        }
+        return audioCtxRef.current
+    }
+
+    const playBeep = () => {
+        const ctx = audioCtxRef.current
+        if (!ctx) return
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        osc.type = 'sine'
+        osc.frequency.value = 880
+        const t0 = ctx.currentTime
+        gain.gain.setValueAtTime(0.0001, t0)
+        gain.gain.exponentialRampToValueAtTime(0.3, t0 + 0.01)
+        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.22)
+        osc.start(t0)
+        osc.stop(t0 + 0.24)
+    }
+
+    useEffect(() => {
+        Object.entries(exercicioTimers).forEach(([exId, timer]) => {
+            timer.sets?.forEach((set, sIdx) => {
+                const key = `${exId}:${sIdx}`
+                if (!set.concluido) {
+                    delete lastBeepMarkRef.current[key]
+                    return
+                }
+                if (set.descansoStatus !== 'running') return
+                const acc = set.descansoAcumuladoMs ?? 0
+                const totalMs = set.descansoInicio
+                    ? acc + (Date.now() - set.descansoInicio)
+                    : acc
+                const seconds = Math.floor(totalMs / 1000)
+                const mark = Math.floor(seconds / 30)
+                const last = lastBeepMarkRef.current[key] ?? 0
+                if (mark > last && mark > 0) {
+                    lastBeepMarkRef.current[key] = mark
+                    playBeep()
+                }
+            })
+        })
+    })
+
     // Data de ontem em 'YYYY-MM-DD'
     const getOntemISO = (): string => {
         const d = new Date()
@@ -530,6 +586,7 @@ export function CardTreino({
 
     /** Alterna o check da série. Ao marcar, inicia cronômetro de descanso; ao desmarcar, reseta. */
     const handleToggleSerieConcluida = (exId: string, setIdx: number) => {
+        ensureAudioCtx()
         const current = exercicioTimers[exId] ?? { status: 'idle' as const, tempoAcumuladoMs: 0, sets: [] }
         const sets = [...(current.sets ?? [])]
         while (sets.length <= setIdx) sets.push({})
