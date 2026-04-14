@@ -195,6 +195,7 @@ export function derivarTreinoDoDia(plano: PlanoTreino | null, lastCompletedIndex
                 prescricaoSeries: ex.prescricaoSeries,
                 topSetKg: ex.topSetKg,
                 topSetReps: ex.topSetReps,
+                descansoSegundos: ex.descansoSegundos,
             };
         })
     );
@@ -602,6 +603,40 @@ export async function montarDadosHoje(ctx: PortalContext): Promise<TodayScreenDa
         treino.status = dHoje.status as WorkoutStatus;
         if (dHoje.duracao) treino.duracao = dHoje.duracao as number;
         if (dHoje.intensidade) treino.intensidade = dHoje.intensidade as 1 | 2 | 3 | 4;
+
+        // Substituir a lista de exercícios pelo snapshot do que foi REALMENTE executado
+        // (inclui sets com carga/reps/tipo, exercícios removidos pelo aluno, custom-ex-*, etc).
+        // Mescla com o plano original para preservar metadados (descansoSegundos, videoUrl, foco).
+        if (dHoje.status === 'completo' && Array.isArray(dHoje.exercicios) && dHoje.exercicios.length > 0) {
+            const planoPorId = new Map((treino.exercicios ?? []).map(ex => [ex.id, ex]));
+            type ExRealizado = {
+                id?: string;
+                nome?: string;
+                series?: number;
+                repeticoes?: string;
+                sets?: SetExecutado[];
+                concluido?: boolean;
+            };
+            treino.exercicios = (dHoje.exercicios as ExRealizado[]).map((ex) => {
+                const plano = ex.id ? planoPorId.get(ex.id) : undefined;
+                return {
+                    id: ex.id ?? plano?.id ?? `realizado-${Math.random().toString(36).slice(2, 9)}`,
+                    nome: ex.nome ?? plano?.nome ?? 'Exercício',
+                    series: ex.series ?? plano?.series ?? (Array.isArray(ex.sets) ? ex.sets.length : 0),
+                    repeticoes: ex.repeticoes ?? plano?.repeticoes ?? '',
+                    dica: plano?.dica,
+                    videoUrl: plano?.videoUrl,
+                    foco: plano?.foco,
+                    bibliotecaId: plano?.bibliotecaId,
+                    prescricaoSeries: plano?.prescricaoSeries,
+                    topSetKg: plano?.topSetKg,
+                    topSetReps: plano?.topSetReps,
+                    descansoSegundos: plano?.descansoSegundos,
+                    sets: Array.isArray(ex.sets) ? ex.sets : [],
+                    concluido: ex.concluido,
+                };
+            });
+        }
     }
 
     // Pré-popular: última execução completa do mesmo treinoIndex (zero queries extras)

@@ -84,6 +84,12 @@ export interface ExercicioTreino {
     topSetKg?: number
     /** Reps-alvo do top set. */
     topSetReps?: number
+    /** Sets efetivamente realizados — populados quando o treino foi concluído. */
+    sets?: SetExecutado[]
+    /** Se o aluno marcou o exercício como concluído. */
+    concluido?: boolean
+    /** Descanso prescrito entre séries (segundos) — quando disponível do plano. */
+    descansoSegundos?: number
 }
 
 /**
