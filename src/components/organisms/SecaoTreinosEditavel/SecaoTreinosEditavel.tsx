@@ -25,6 +25,7 @@ import type { TreinoDetalhado, BlocoTreino, Exercicio } from '@/services/calcula
 import { EditableField } from '@/components/atoms/EditableField/EditableField';
 import { BlocoPrescricaoSeries } from './BlocoPrescricaoSeries';
 import { sugerirPrescricaoIA } from '@/services/prescricao/gerarViaIA';
+import { gerarPrescricaoPadrao } from '@/services/prescricao/templates';
 
 // ═══════════════════════════════════════════════════════════
 // TYPES
@@ -109,41 +110,28 @@ const ExercicioRow: React.FC<{
     onMoveDown: (() => void) | null;
 }> = ({ ex, isEditing, onUpdate, onRemove, onMoveUp, onMoveDown }) => {
     if (!isEditing) {
-        // Modo display — quando há prescrição detalhada, mostra tabela série-a-série read-only
-        if (ex.prescricaoSeries && ex.prescricaoSeries.length > 0) {
-            return (
-                <tr className="border-b border-white/[0.04]">
-                    <td colSpan={6} className="p-0">
-                        <div className="px-6 py-4">
-                            <p className="font-bold text-gray-200 text-base leading-tight mb-2">
-                                <span className="text-gray-600 font-mono text-sm mr-2">{ex.ordem}.</span>
-                                {ex.nome}
-                            </p>
-                            <BlocoPrescricaoSeries ex={ex} onUpdate={onUpdate} readOnly />
-                        </div>
-                    </td>
-                </tr>
-            );
-        }
-        // Fallback — plano antigo sem prescrição detalhada
+        // Modo display — SEMPRE mostra a tabela detalhada série-a-série read-only.
+        // Se o exercício não tem prescricaoSeries persistida, gera default determinístico on-the-fly.
+        const exParaExibir: Exercicio = (ex.prescricaoSeries && ex.prescricaoSeries.length > 0)
+            ? ex
+            : {
+                ...ex,
+                prescricaoSeries: gerarPrescricaoPadrao({
+                    series: ex.series,
+                    repeticoes: ex.repeticoes,
+                    descansoSegundos: ex.descansoSegundos,
+                }),
+            };
         return (
-            <tr className="border-b border-white/[0.04] hover:bg-white/[0.01] transition-colors">
-                <td className="px-6 py-5 text-gray-600 font-mono text-lg">{ex.ordem}</td>
-                <td className="py-5">
-                    <p className="font-bold text-gray-200 text-lg leading-tight">{ex.nome}</p>
-                    {ex.observacao && <p className="text-xs text-primary mt-1 italic opacity-80">{ex.observacao}</p>}
-                </td>
-                <td className="py-5 text-center font-bold text-white text-xl">{ex.series}</td>
-                <td className="py-5 text-center text-gray-400 font-semibold">{ex.repeticoes}</td>
-                <td className="py-5 text-center text-gray-500 text-sm">{ex.descansoSegundos}s</td>
-                <td className="px-6 py-5 text-right">
-                    {ex.tecnica ? (
-                        <span className="text-[10px] font-black bg-primary/10 text-primary border border-primary/20 px-2 py-1 rounded uppercase tracking-wider shadow-[0_0_10px_rgba(79,70,229,0.05)]">
-                            {ex.tecnica}
-                        </span>
-                    ) : (
-                        <span className="text-gray-700">—</span>
-                    )}
+            <tr className="border-b border-white/[0.04]">
+                <td colSpan={6} className="p-0">
+                    <div className="px-6 py-4">
+                        <p className="font-bold text-gray-200 text-base leading-tight mb-2">
+                            <span className="text-gray-600 font-mono text-sm mr-2">{ex.ordem}.</span>
+                            {ex.nome}
+                        </p>
+                        <BlocoPrescricaoSeries ex={exParaExibir} onUpdate={onUpdate} readOnly />
+                    </div>
                 </td>
             </tr>
         );
@@ -197,80 +185,15 @@ const ExercicioRow: React.FC<{
                         </button>
                     </div>
 
-                    {/* Toggle "Prescrição detalhada" */}
-                    <div className="flex items-center gap-2 pl-5 pb-1">
-                        <label className="flex items-center gap-2 text-xs text-zinc-400 font-bold uppercase tracking-wider cursor-pointer select-none">
-                            <input
-                                type="checkbox"
-                                checked={!!ex.prescricaoSeries && ex.prescricaoSeries.length > 0}
-                                onChange={e => {
-                                    if (e.target.checked) {
-                                        onUpdate({ ...ex, prescricaoSeries: [], topSetKg: ex.topSetKg, topSetReps: ex.topSetReps })
-                                    } else {
-                                        onUpdate({ ...ex, prescricaoSeries: undefined })
-                                    }
-                                }}
-                                className="w-4 h-4 accent-indigo-500"
-                            />
-                            Prescrição detalhada
-                        </label>
+                    {/* Prescrição detalhada SEMPRE visível (default = gerado on-the-fly se ausente) */}
+                    <div className="pl-5">
+                        <BlocoPrescricaoSeries
+                            ex={ex.prescricaoSeries && ex.prescricaoSeries.length > 0
+                                ? ex
+                                : { ...ex, prescricaoSeries: gerarPrescricaoPadrao({ series: ex.series, repeticoes: ex.repeticoes, descansoSegundos: ex.descansoSegundos }) }}
+                            onUpdate={onUpdate}
+                        />
                     </div>
-
-                    {ex.prescricaoSeries !== undefined ? (
-                        /* Modo prescrição detalhada */
-                        <div className="pl-5">
-                            <BlocoPrescricaoSeries ex={ex} onUpdate={onUpdate} />
-                        </div>
-                    ) : (
-                        /* Modo legado: Séries, Reps, Descanso, Técnica */
-                        <div className="grid grid-cols-4 gap-1 pl-5">
-                            <div>
-                                <label className="text-[7px] text-zinc-600 font-bold uppercase tracking-wider block mb-0.5">Séries</label>
-                                <EditableField
-                                    type="number"
-                                    isEditing
-                                    value={ex.series}
-                                    onChange={(v) => onUpdate({ ...ex, series: v })}
-                                    min={1}
-                                    max={10}
-                                    inputClassName="!text-[10px] !py-1.5 !px-1.5 text-center"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-[7px] text-zinc-600 font-bold uppercase tracking-wider block mb-0.5">Reps</label>
-                                <EditableField
-                                    type="text"
-                                    isEditing
-                                    value={ex.repeticoes}
-                                    onChange={(v) => onUpdate({ ...ex, repeticoes: v })}
-                                    placeholder="8-12"
-                                    inputClassName="!text-[10px] !py-1.5 !px-1.5 text-center"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-[7px] text-zinc-600 font-bold uppercase tracking-wider block mb-0.5">Descanso</label>
-                                <EditableField
-                                    type="select"
-                                    isEditing
-                                    value={String(ex.descansoSegundos)}
-                                    onChange={(v) => onUpdate({ ...ex, descansoSegundos: Number(v) })}
-                                    options={DESCANSO_OPCOES}
-                                    inputClassName="!text-[10px] !py-1.5 !px-1"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-[7px] text-zinc-600 font-bold uppercase tracking-wider block mb-0.5">Técnica</label>
-                                <EditableField
-                                    type="select"
-                                    isEditing
-                                    value={ex.tecnica || ''}
-                                    onChange={(v) => onUpdate({ ...ex, tecnica: v || undefined })}
-                                    options={TECNICAS_OPCOES}
-                                    inputClassName="!text-[10px] !py-0.5 !px-1"
-                                />
-                            </div>
-                        </div>
-                    )}
                 </div>
             </td>
         </tr>
@@ -582,18 +505,6 @@ export const SecaoTreinosEditavel: React.FC<SecaoTreinosEditavelProps> = ({
                                 </div>
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-base">
-                                        {!isEditing && (
-                                            <thead>
-                                                <tr className="border-b border-white/[0.04] text-[10px] text-gray-600 uppercase tracking-[0.2em]">
-                                                    <th className="text-left px-6 py-3 w-16">#</th>
-                                                    <th className="text-left py-3">Exercício</th>
-                                                    <th className="text-center py-3">Séries</th>
-                                                    <th className="text-center py-3">Reps</th>
-                                                    <th className="text-center py-3">Descanso</th>
-                                                    <th className="text-right px-6 py-3">Técnica</th>
-                                                </tr>
-                                            </thead>
-                                        )}
                                         <tbody>
                                             {bloco.exercicios.map((ex, exIdx) => (
                                                 <ExercicioRow
