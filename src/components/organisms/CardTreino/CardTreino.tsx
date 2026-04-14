@@ -306,7 +306,7 @@ export function CardTreino({
             const ai = new GoogleGenerativeAI(apiKey)
             const model = ai.getGenerativeModel({ model: 'gemini-2.0-flash', generationConfig: { maxOutputTokens: 120, temperature: 0.7 } })
             const result = await model.generateContent(
-                `Descreva o exercício "${nomeTrimmed}" em até duas frases curtas (máximo 25 palavras no total), explicando o músculo trabalhado e a execução principal. Responda só o texto corrido, sem listas nem aspas.`
+                `Descreva o exercício "${nomeTrimmed}" em uma única frase de até 18 palavras, citando o músculo trabalhado e um detalhe da execução. Responda apenas a frase, sem listas, aspas nem ponto final.`
             )
             const texto = result.response.text().trim().replace(/\s+/g, ' ')
             setDescricoes(prev => ({ ...prev, [exId]: texto || fallback }))
