@@ -850,6 +850,8 @@ export function CardTreino({
                                     className={`transition-all duration-300 ${idx !== localExercicios.length - 1 ? 'border-b border-white/5' : ''} ${isDone ? 'opacity-60' : ''}`}
                                     innerClassName=""
                                     onDelete={() => {
+                                        const nome = ex.nome?.trim() || 'este exercício'
+                                        if (!confirm(`Tem certeza que deseja excluir "${nome}" do treino de hoje?`)) return
                                         setLocalExercicios(prev => prev.filter(x => x.id !== ex.id))
                                     }}
                                 >
