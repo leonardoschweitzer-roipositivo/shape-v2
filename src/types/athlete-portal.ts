@@ -78,6 +78,12 @@ export interface ExercicioTreino {
     videoUrl?: string
     foco?: string              // "Peitoral superior"
     bibliotecaId?: string
+    /** Prescrição detalhada série-a-série (opcional; ver src/types/prescricao.ts). */
+    prescricaoSeries?: import('./prescricao').SeriePrescrita[]
+    /** Top set alvo da sessão em kg (usado p/ resolver pctTopSet). */
+    topSetKg?: number
+    /** Reps-alvo do top set. */
+    topSetReps?: number
 }
 
 /**
@@ -108,6 +114,7 @@ export interface SetExecutado {
     descansoStatus?: 'running' | 'paused'   // estado do cronômetro de descanso
     descansoInicio?: number                  // timestamp (Date.now()) do último play do cronômetro
     descansoAcumuladoMs?: number             // tempo acumulado de descanso (soma entre pausas)
+    rirReportado?: number                    // RIR que o aluno reportou pós-série (0-5)
 }
 
 export interface ExercicioTimerState {

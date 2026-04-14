@@ -14,6 +14,8 @@ import { Dumbbell, Check, SkipForward, Moon, Play, ChevronDown, ChevronUp, Calen
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { WorkoutOfDay, ExercicioTreino } from '../../../types/athlete-portal'
 import type { ExercicioTimerState, SetExecutado, UltimaExecucao, TipoSet, PontoHistoricoCarga } from '../../../types/athlete-portal'
+import type { SeriePrescrita } from '../../../types/prescricao'
+import { expandirPrescricao } from '../../../services/prescricao/expandir'
 import type { ProximoTreino } from '../../../services/portalDataService'
 import { ExercicioDetalheModal } from '../../molecules/ExercicioDetalheModal'
 import { exercicioBibliotecaService } from '../../../services/exercicioBiblioteca.service'
@@ -363,15 +365,20 @@ export function CardTreino({
         return map.porNome[chaveNome] ?? []
     }
 
+    /** Resolve a prescrição série-a-série (com cargas em kg concretas). */
+    const getPrescricao = (ex: ExercicioTreino): SeriePrescrita[] =>
+        expandirPrescricao(ex, { topSetKg: ex.topSetKg })
+
     /**
      * Retorna os sets do exercício.
      * - Se o timer já tem sets (hidratado ou modificado pelo aluno), respeita exatamente.
-     * - Senão (fallback antes da hidratação rodar), usa ex.series como ponto de partida.
+     * - Senão, semeia a partir da prescrição (tipo preenchido; carga/reps ficam vazios p/ placeholder).
      */
     const getSets = (ex: ExercicioTreino): SetExecutado[] => {
         const timer = exercicioTimers[ex.id]
         if (timer?.sets && timer.sets.length > 0) return timer.sets
-        return Array.from({ length: Math.max(1, ex.series || 1) }, () => ({}))
+        const prescricao = getPrescricao(ex)
+        return prescricao.map(p => ({ tipo: p.tipo }))
     }
 
     /** Resumo compacto exibido na linha colapsada. */
@@ -439,6 +446,7 @@ export function CardTreino({
     const audioElRef = useRef<HTMLAudioElement | null>(null)
     const beepUrlRef = useRef<string>('')
     const lastBeepMarkRef = useRef<Record<string, number>>({})
+    const metaBeepPlayedRef = useRef<Record<string, boolean>>({})
 
     const ensureAudioCtx = (): void => {
         // 1) HTMLAudioElement — melhor compatibilidade em mobile (Android/iOS)
@@ -504,15 +512,53 @@ export function CardTreino({
         try { navigator.vibrate?.([120, 60, 120]) } catch { /* ignore */ }
     }
 
-    // Intervalo dedicado só para verificar marcas de 30s — independente do ciclo de render
+    /** Beep reforçado ao atingir a meta de descanso prescrita — triplo ascendente. */
+    const playMetaBeep = () => {
+        const a = audioElRef.current
+        if (a) {
+            try {
+                a.currentTime = 0
+                const p = a.play()
+                if (p && typeof p.catch === 'function') p.catch(() => { /* ignore */ })
+            } catch { /* ignore */ }
+        }
+        const ctx = audioCtxRef.current
+        if (ctx) {
+            if (ctx.state === 'suspended') ctx.resume().catch(() => { /* ignore */ })
+            try {
+                const t0 = ctx.currentTime
+                const notes = [880, 1175, 1568] // A5, D6, G6 — ascendente
+                notes.forEach((freq, i) => {
+                    const osc = ctx.createOscillator()
+                    const gain = ctx.createGain()
+                    osc.connect(gain)
+                    gain.connect(ctx.destination)
+                    osc.type = 'sine'
+                    osc.frequency.value = freq
+                    const start = t0 + i * 0.16
+                    gain.gain.setValueAtTime(0.0001, start)
+                    gain.gain.exponentialRampToValueAtTime(0.6, start + 0.01)
+                    gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.14)
+                    osc.start(start)
+                    osc.stop(start + 0.16)
+                })
+            } catch { /* ignore */ }
+        }
+        try { navigator.vibrate?.([200, 80, 200, 80, 300]) } catch { /* ignore */ }
+    }
+
+    // Intervalo dedicado para verificar marcas de 30s + meta de descanso — independente do render
     useEffect(() => {
         if (!hasRestTimerRunning) return undefined
         const check = () => {
             Object.entries(exercicioTimers).forEach(([exId, timer]) => {
+                const ex = localExercicios.find(e => e.id === exId)
+                const prescricaoEx = ex ? expandirPrescricao(ex, { topSetKg: ex.topSetKg }) : []
                 timer.sets?.forEach((set, sIdx) => {
                     const key = `${exId}:${sIdx}`
                     if (!set.concluido) {
                         delete lastBeepMarkRef.current[key]
+                        delete metaBeepPlayedRef.current[key]
                         return
                     }
                     if (set.descansoStatus !== 'running') return
@@ -521,18 +567,27 @@ export function CardTreino({
                         ? acc + (Date.now() - set.descansoInicio)
                         : acc
                     const seconds = Math.floor(totalMs / 1000)
+
+                    // Beep a cada 30s
                     const mark = Math.floor(seconds / 30)
                     const last = lastBeepMarkRef.current[key] ?? 0
                     if (mark > last && mark > 0) {
                         lastBeepMarkRef.current[key] = mark
                         playBeep()
                     }
+
+                    // Beep reforçado ao atingir a meta prescrita (uma vez)
+                    const meta = prescricaoEx[sIdx]?.descansoSegundos ?? 0
+                    if (meta > 0 && seconds >= meta && !metaBeepPlayedRef.current[key]) {
+                        metaBeepPlayedRef.current[key] = true
+                        playMetaBeep()
+                    }
                 })
             })
         }
         const id = setInterval(check, 250)
         return () => clearInterval(id)
-    }, [hasRestTimerRunning, exercicioTimers])
+    }, [hasRestTimerRunning, exercicioTimers, localExercicios])
 
     // Data de ontem em 'YYYY-MM-DD'
     const getOntemISO = (): string => {
@@ -977,6 +1032,7 @@ export function CardTreino({
                             const isDone = timer?.status === 'done'
                             const isExpanded = expandedExIds.has(ex.id)
                             const sets = getSets(ex)
+                            const prescricao = getPrescricao(ex)
                             const ultima = getUltimaExecucao(ex)
                             const resumo = resumoExercicio(ex)
 
@@ -1102,6 +1158,13 @@ export function CardTreino({
                                                 const temUltima = ultimaSet && (ultimaSet.carga != null || ultimaSet.reps != null)
                                                 const vazioAtual = set.carga == null && set.reps == null
                                                 const isProxima = sIdx === proximaIdx
+                                                const prescrita = prescricao[sIdx]
+                                                const placeholderCarga = prescrita?.cargaKg != null
+                                                    ? String(prescrita.cargaKg)
+                                                    : (ultimaSet?.carga != null ? String(ultimaSet.carga) : 'kg')
+                                                const placeholderReps = prescrita?.repsAlvoMax != null
+                                                    ? String(prescrita.repsAlvoMax)
+                                                    : (ultimaSet?.reps != null ? String(ultimaSet.reps) : extrairRepPlaceholder(ex.repeticoes))
                                                 return (
                                                     <div key={sIdx} className={`py-1.5 transition-colors duration-300 ${isProxima ? 'bg-amber-500/10 -mx-2 px-2 rounded-lg' : ''}`}>
                                                     <div className={`flex items-center gap-2 transition-all duration-300 ${set.concluido ? 'opacity-50' : ''}`}>
@@ -1128,7 +1191,7 @@ export function CardTreino({
                                                             inputMode="decimal"
                                                             step="0.5"
                                                             min="0"
-                                                            placeholder={ultimaSet?.carga != null ? String(ultimaSet.carga) : 'kg'}
+                                                            placeholder={placeholderCarga}
                                                             value={set.carga ?? ''}
                                                             onChange={e => handleSetChange(ex.id, sIdx, 'carga', parseNumOrUndef(e.target.value))}
                                                             onClick={e => e.stopPropagation()}
@@ -1142,7 +1205,7 @@ export function CardTreino({
                                                             type="number"
                                                             inputMode="numeric"
                                                             min="0"
-                                                            placeholder={ultimaSet?.reps != null ? String(ultimaSet.reps) : extrairRepPlaceholder(ex.repeticoes)}
+                                                            placeholder={placeholderReps}
                                                             value={set.reps ?? ''}
                                                             onChange={e => handleSetChange(ex.id, sIdx, 'reps', parseNumOrUndef(e.target.value))}
                                                             onClick={e => e.stopPropagation()}
@@ -1191,27 +1254,56 @@ export function CardTreino({
                                                         </div>
                                                     </div>
 
-                                                    {/* Cronômetro de descanso — aparece ao checar a série */}
-                                                    {set.concluido && (
-                                                        <div className="flex items-center gap-2 pt-1.5 pl-8 animate-in fade-in slide-in-from-top-1 duration-200">
-                                                            <span className="text-[10px] font-mono text-gray-500 uppercase tracking-wider">
-                                                                Tempo entre a série:
-                                                            </span>
-                                                            <span className={`ml-auto text-[11px] font-mono tabular-nums ${set.descansoStatus === 'running' ? 'text-indigo-300' : 'text-gray-400'}`}>
-                                                                {formatTime(getTempoDescanso(set))}
-                                                            </span>
-                                                            <button
-                                                                onClick={e => { e.stopPropagation(); handleToggleDescansoPause(ex.id, sIdx) }}
-                                                                className="w-6 h-6 rounded-md flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 transition-colors flex-shrink-0"
-                                                                title={set.descansoStatus === 'running' ? 'Pausar descanso' : 'Retomar descanso'}
-                                                            >
-                                                                {set.descansoStatus === 'running'
-                                                                    ? <Pause size={10} className="text-amber-400" fill="currentColor" />
-                                                                    : <Play size={10} className="text-emerald-400 ml-0.5" fill="currentColor" />
-                                                                }
-                                                            </button>
+                                                    {/* Label compacto da prescrição — aparece quando há prescrição detalhada */}
+                                                    {prescrita && (prescrita.cargaKg != null || prescrita.rirAlvo != null || prescrita.descansoSegundos) && (
+                                                        <div className="pl-8 pt-0.5 text-[9px] font-mono text-gray-600 uppercase tracking-wider whitespace-nowrap overflow-hidden text-ellipsis">
+                                                            {prescrita.cargaKg != null && <span className="text-indigo-400/70">{prescrita.cargaKg}kg</span>}
+                                                            {prescrita.cargaKg != null && <span className="text-gray-700 mx-1">·</span>}
+                                                            <span>{prescrita.repsAlvoMin === prescrita.repsAlvoMax ? prescrita.repsAlvoMax : `${prescrita.repsAlvoMin}-${prescrita.repsAlvoMax}`} reps</span>
+                                                            {prescrita.rirAlvo != null && (
+                                                                <>
+                                                                    <span className="text-gray-700 mx-1">·</span>
+                                                                    <span className="text-amber-400/60">RIR {prescrita.rirAlvo}</span>
+                                                                </>
+                                                            )}
+                                                            {prescrita.descansoSegundos > 0 && (
+                                                                <>
+                                                                    <span className="text-gray-700 mx-1">·</span>
+                                                                    <span>{prescrita.descansoSegundos}s</span>
+                                                                </>
+                                                            )}
                                                         </div>
                                                     )}
+
+                                                    {/* Cronômetro de descanso — aparece ao checar a série */}
+                                                    {set.concluido && (() => {
+                                                        const meta = prescrita?.descansoSegundos ?? 0
+                                                        const atual = Math.floor(getTempoDescanso(set) / 1000)
+                                                        const atingiuMeta = meta > 0 && atual >= meta
+                                                        return (
+                                                            <div className="flex items-center gap-2 pt-1.5 pl-8 animate-in fade-in slide-in-from-top-1 duration-200">
+                                                                <span className="text-[10px] font-mono text-gray-500 uppercase tracking-wider">
+                                                                    Tempo entre a série:
+                                                                </span>
+                                                                <span className={`ml-auto text-[11px] font-mono tabular-nums ${atingiuMeta ? 'text-emerald-400 font-bold' : set.descansoStatus === 'running' ? 'text-indigo-300' : 'text-gray-400'}`}>
+                                                                    {formatTime(getTempoDescanso(set))}
+                                                                    {meta > 0 && (
+                                                                        <span className="text-gray-600 ml-1">/ {formatTime(meta * 1000)}</span>
+                                                                    )}
+                                                                </span>
+                                                                <button
+                                                                    onClick={e => { e.stopPropagation(); handleToggleDescansoPause(ex.id, sIdx) }}
+                                                                    className="w-6 h-6 rounded-md flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 transition-colors flex-shrink-0"
+                                                                    title={set.descansoStatus === 'running' ? 'Pausar descanso' : 'Retomar descanso'}
+                                                                >
+                                                                    {set.descansoStatus === 'running'
+                                                                        ? <Pause size={10} className="text-amber-400" fill="currentColor" />
+                                                                        : <Play size={10} className="text-emerald-400 ml-0.5" fill="currentColor" />
+                                                                    }
+                                                                </button>
+                                                            </div>
+                                                        )
+                                                    })()}
                                                     </div>
                                                 )
                                             })

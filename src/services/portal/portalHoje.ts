@@ -192,6 +192,9 @@ export function derivarTreinoDoDia(plano: PlanoTreino | null, lastCompletedIndex
                 videoUrl: ex.urlVideo || (raw.urlVideo as string) || undefined,
                 bibliotecaId: ex.bibliotecaId || (raw.bibliotecaId as string) || undefined,
                 foco: bloco.nomeGrupo || '',
+                prescricaoSeries: ex.prescricaoSeries,
+                topSetKg: ex.topSetKg,
+                topSetReps: ex.topSetReps,
             };
         })
     );

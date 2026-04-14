@@ -186,6 +186,9 @@ export async function atualizarExerciciosNoPlano(
                 nome: ex.nome,
                 series: ex.series,
                 repeticoes: ex.repeticoes,
+                prescricaoSeries: ex.prescricaoSeries ?? original.prescricaoSeries,
+                topSetKg: ex.topSetKg ?? original.topSetKg,
+                topSetReps: ex.topSetReps ?? original.topSetReps,
             } as Exercicio;
         });
 

@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import type { TreinoDetalhado, BlocoTreino, Exercicio } from '@/services/calculations/treino';
 import { EditableField } from '@/components/atoms/EditableField/EditableField';
+import { BlocoPrescricaoSeries } from './BlocoPrescricaoSeries';
 
 // ═══════════════════════════════════════════════════════════
 // TYPES
@@ -185,54 +186,82 @@ const ExercicioRow: React.FC<{
                         </button>
                     </div>
 
-                    {/* Linha 2: Séries, Reps, Descanso, Técnica */}
-                    <div className="grid grid-cols-4 gap-1 pl-5">
-                        <div>
-                            <label className="text-[7px] text-zinc-600 font-bold uppercase tracking-wider block mb-0.5">Séries</label>
-                            <EditableField
-                                type="number"
-                                isEditing
-                                value={ex.series}
-                                onChange={(v) => onUpdate({ ...ex, series: v })}
-                                min={1}
-                                max={10}
-                                inputClassName="!text-[10px] !py-1.5 !px-1.5 text-center"
+                    {/* Linha 2: Toggle "Prescrição detalhada" */}
+                    <div className="flex items-center gap-2 pl-5 pb-1">
+                        <label className="flex items-center gap-1.5 text-[8px] text-zinc-500 font-bold uppercase tracking-wider cursor-pointer select-none">
+                            <input
+                                type="checkbox"
+                                checked={!!ex.prescricaoSeries && ex.prescricaoSeries.length > 0}
+                                onChange={e => {
+                                    if (e.target.checked) {
+                                        // Ligar: inicializa arr vazia (BlocoPrescricaoSeries mostrará CTA para template)
+                                        onUpdate({ ...ex, prescricaoSeries: [], topSetKg: ex.topSetKg, topSetReps: ex.topSetReps })
+                                    } else {
+                                        // Desligar: remove prescrição detalhada, mantém campos legados
+                                        onUpdate({ ...ex, prescricaoSeries: undefined })
+                                    }
+                                }}
+                                className="w-3 h-3 accent-indigo-500"
                             />
-                        </div>
-                        <div>
-                            <label className="text-[7px] text-zinc-600 font-bold uppercase tracking-wider block mb-0.5">Reps</label>
-                            <EditableField
-                                type="text"
-                                isEditing
-                                value={ex.repeticoes}
-                                onChange={(v) => onUpdate({ ...ex, repeticoes: v })}
-                                placeholder="8-12"
-                                inputClassName="!text-[10px] !py-1.5 !px-1.5 text-center"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-[7px] text-zinc-600 font-bold uppercase tracking-wider block mb-0.5">Descanso</label>
-                            <EditableField
-                                type="select"
-                                isEditing
-                                value={String(ex.descansoSegundos)}
-                                onChange={(v) => onUpdate({ ...ex, descansoSegundos: Number(v) })}
-                                options={DESCANSO_OPCOES}
-                                inputClassName="!text-[10px] !py-1.5 !px-1"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-[7px] text-zinc-600 font-bold uppercase tracking-wider block mb-0.5">Técnica</label>
-                            <EditableField
-                                type="select"
-                                isEditing
-                                value={ex.tecnica || ''}
-                                onChange={(v) => onUpdate({ ...ex, tecnica: v || undefined })}
-                                options={TECNICAS_OPCOES}
-                                inputClassName="!text-[10px] !py-0.5 !px-1"
-                            />
-                        </div>
+                            Prescrição detalhada
+                        </label>
                     </div>
+
+                    {ex.prescricaoSeries !== undefined ? (
+                        /* Modo prescrição detalhada */
+                        <div className="pl-5">
+                            <BlocoPrescricaoSeries ex={ex} onUpdate={onUpdate} />
+                        </div>
+                    ) : (
+                        /* Modo legado: Séries, Reps, Descanso, Técnica */
+                        <div className="grid grid-cols-4 gap-1 pl-5">
+                            <div>
+                                <label className="text-[7px] text-zinc-600 font-bold uppercase tracking-wider block mb-0.5">Séries</label>
+                                <EditableField
+                                    type="number"
+                                    isEditing
+                                    value={ex.series}
+                                    onChange={(v) => onUpdate({ ...ex, series: v })}
+                                    min={1}
+                                    max={10}
+                                    inputClassName="!text-[10px] !py-1.5 !px-1.5 text-center"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-[7px] text-zinc-600 font-bold uppercase tracking-wider block mb-0.5">Reps</label>
+                                <EditableField
+                                    type="text"
+                                    isEditing
+                                    value={ex.repeticoes}
+                                    onChange={(v) => onUpdate({ ...ex, repeticoes: v })}
+                                    placeholder="8-12"
+                                    inputClassName="!text-[10px] !py-1.5 !px-1.5 text-center"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-[7px] text-zinc-600 font-bold uppercase tracking-wider block mb-0.5">Descanso</label>
+                                <EditableField
+                                    type="select"
+                                    isEditing
+                                    value={String(ex.descansoSegundos)}
+                                    onChange={(v) => onUpdate({ ...ex, descansoSegundos: Number(v) })}
+                                    options={DESCANSO_OPCOES}
+                                    inputClassName="!text-[10px] !py-1.5 !px-1"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-[7px] text-zinc-600 font-bold uppercase tracking-wider block mb-0.5">Técnica</label>
+                                <EditableField
+                                    type="select"
+                                    isEditing
+                                    value={ex.tecnica || ''}
+                                    onChange={(v) => onUpdate({ ...ex, tecnica: v || undefined })}
+                                    options={TECNICAS_OPCOES}
+                                    inputClassName="!text-[10px] !py-0.5 !px-1"
+                                />
+                            </div>
+                        </div>
+                    )}
                 </div>
             </td>
         </tr>

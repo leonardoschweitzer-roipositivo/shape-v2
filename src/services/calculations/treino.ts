@@ -70,8 +70,11 @@ export interface DivisaoTreino {
 export interface Exercicio {
     ordem: number;
     nome: string;
+    /** Total de séries (legado; fallback quando prescricaoSeries ausente). */
     series: number;
+    /** Range de reps como string, ex: "8-10" (legado). */
     repeticoes: string;
+    /** Descanso genérico em segundos (legado — override pela SeriePrescrita). */
     descansoSegundos: number;
     tecnica?: string;
     observacao?: string;
@@ -79,6 +82,16 @@ export interface Exercicio {
     bibliotecaId?: string;
     /** URL do vídeo do YouTube (herdado da biblioteca) */
     urlVideo?: string;
+    /**
+     * Prescrição detalhada série-a-série (opcional).
+     * Quando presente, tem precedência sobre series/repeticoes/descansoSegundos.
+     * Ver src/types/prescricao.ts.
+     */
+    prescricaoSeries?: import('../../types/prescricao').SeriePrescrita[];
+    /** Top set alvo da sessão em kg (usado p/ resolver cargaPercentTopSet). */
+    topSetKg?: number;
+    /** Reps-alvo do top set (informativo para personal e IA). */
+    topSetReps?: number;
 }
 
 export interface BlocoTreino {
