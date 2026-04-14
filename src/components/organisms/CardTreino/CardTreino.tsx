@@ -934,68 +934,73 @@ export function CardTreino({
                 </button>
 
                 {accordionOpen && treino.exercicios && treino.exercicios.length > 0 && (
-                    <div className="mt-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                        <div className="bg-amber-500/5 rounded-xl p-4 border border-amber-500/10">
-                            <div className="space-y-4">
-                                {treino.exercicios.map((ex, i) => {
-                                    const sets = ex.sets ?? []
-                                    const setsValidos = sets.filter(s => typeof s.carga === 'number' && typeof s.reps === 'number' && (s.carga as number) > 0 && (s.reps as number) > 0)
-                                    const temSets = setsValidos.length > 0
-                                    return (
-                                        <div
-                                            key={ex.id}
-                                            className="pb-3 border-b border-amber-500/5 last:border-0 last:pb-0"
-                                        >
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <span className="text-xs text-amber-500/40 font-mono w-5">
-                                                    {(i + 1).toString().padStart(2, '0')}
-                                                </span>
-                                                <div className="flex-1">
-                                                    <p className={`text-sm font-medium ${ex.concluido === false ? 'text-amber-100/40' : 'text-amber-100/90'}`}>
-                                                        {ex.nome}
-                                                    </p>
-                                                </div>
-                                                <div className="bg-amber-500/10 px-2 py-1 rounded-md">
-                                                    <span className="text-[11px] text-amber-500 font-mono">
-                                                        {temSets ? setsValidos.length : ex.series}×{ex.repeticoes || '—'}
-                                                    </span>
-                                                </div>
-                                            </div>
+                    <div className="mt-4 -mx-6 border-y border-amber-500/10 animate-in fade-in slide-in-from-top-2 duration-300 overflow-hidden">
+                        {treino.exercicios.map((ex, idx) => {
+                            const sets = (ex.sets ?? []).filter(s => (s.carga ?? 0) > 0 || (s.reps ?? 0) > 0)
+                            const temSets = sets.length > 0
+                            const naoFez = ex.concluido === false && !temSets
+                            return (
+                                <div
+                                    key={ex.id}
+                                    className={`transition-all duration-300 ${idx !== treino.exercicios!.length - 1 ? 'border-b border-amber-500/10' : ''} ${naoFez ? 'opacity-40' : ''}`}
+                                >
+                                    {/* Linha 1: check + nome + badge N×reps */}
+                                    <div className="flex items-center gap-3 px-6 pt-3 pb-1">
+                                        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-amber-500/20">
+                                            <Check size={16} className="text-amber-400" strokeWidth={3} />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className={`text-sm font-medium ${naoFez ? 'text-amber-100/40 line-through' : 'text-amber-100/90'}`}>
+                                                {ex.nome}
+                                            </p>
+                                        </div>
+                                        <div className="bg-amber-500/10 px-2 py-1 rounded-md">
+                                            <span className="text-[11px] text-amber-400 font-mono">
+                                                {temSets ? sets.length : ex.series}×{ex.repeticoes || '—'}
+                                            </span>
+                                        </div>
+                                    </div>
 
-                                            {temSets && (
-                                                <div className="ml-8 grid grid-cols-2 gap-1.5">
-                                                    {sets.map((s, idx) => {
-                                                        const carga = s.carga ?? 0
-                                                        const reps = s.reps ?? 0
-                                                        if (carga <= 0 && reps <= 0) return null
-                                                        const tipo = s.tipo && s.tipo !== 'valida' ? s.tipo : null
-                                                        return (
-                                                            <div key={idx} className="flex items-center gap-1.5 text-[11px]">
-                                                                <span className="text-amber-500/40 font-mono w-6">S{idx + 1}</span>
-                                                                <span className="text-amber-200/90 font-mono font-semibold">
-                                                                    {carga > 0 ? `${carga}kg` : '—'} × {reps || '—'}
+                                    {/* Sets realizados (um por linha, estilo do modo ativo) */}
+                                    {temSets && (
+                                        <div className="px-6 pb-3 pl-[68px]">
+                                            <div className="divide-y divide-amber-500/5 border-t border-amber-500/5">
+                                                {sets.map((s, sIdx) => {
+                                                    const carga = s.carga ?? 0
+                                                    const reps = s.reps ?? 0
+                                                    const tipo = s.tipo ?? 'valida'
+                                                    const tipoInfo = TIPO_SET_MAP[tipo]
+                                                    return (
+                                                        <div key={sIdx} className="py-1.5 flex items-center gap-2">
+                                                            <span className="text-[10px] font-mono text-amber-500/60 uppercase tracking-wider whitespace-nowrap">
+                                                                Série&nbsp;#{sIdx + 1}
+                                                            </span>
+                                                            <span className="text-[11px] font-mono text-amber-200/90 font-semibold">
+                                                                {carga > 0 ? `${carga}kg` : '—'}
+                                                            </span>
+                                                            <span className="text-amber-500/40 text-[11px]">×</span>
+                                                            <span className="text-[11px] font-mono text-amber-200/90 font-semibold">
+                                                                {reps || '—'}
+                                                            </span>
+                                                            {tipo !== 'valida' && (
+                                                                <span className={`ml-auto text-[9px] uppercase tracking-wider font-bold ${tipoInfo.cor}`}>
+                                                                    {tipoInfo.abrev}
                                                                 </span>
-                                                                {tipo && (
-                                                                    <span className="text-[9px] uppercase text-indigo-400/80 font-bold tracking-wider">
-                                                                        {tipo}
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                        )
-                                                    })}
-                                                </div>
-                                            )}
-
+                                                            )}
+                                                        </div>
+                                                    )
+                                                })}
+                                            </div>
                                             {ex.descansoSegundos != null && ex.descansoSegundos > 0 && (
-                                                <div className="ml-8 mt-1.5 text-[10px] text-amber-500/50 font-mono">
+                                                <div className="mt-1.5 text-[10px] text-amber-500/40 font-mono">
                                                     descanso: {ex.descansoSegundos}s
                                                 </div>
                                             )}
                                         </div>
-                                    )
-                                })}
-                            </div>
-                        </div>
+                                    )}
+                                </div>
+                            )
+                        })}
                     </div>
                 )}
             </div>
