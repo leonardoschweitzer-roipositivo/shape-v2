@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Activity, User, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { AssessmentForm } from '@/components/organisms/AssessmentForm';
 import { PersonalAthleteSelector } from './PersonalAthleteSelector';
-import { PersonalAthlete } from '@/mocks/personal';
+import { PersonalAthlete, MeasurementHistory } from '@/mocks/personal';
 import { calculateAge } from '@/utils/dateUtils';
+import { supabase } from '@/services/supabase';
 
 interface PersonalAssessmentViewProps {
     onConfirm: (data: {
@@ -19,6 +20,23 @@ interface PersonalAssessmentViewProps {
 
 export const PersonalAssessmentView: React.FC<PersonalAssessmentViewProps> = ({ onConfirm, initialAthlete }) => {
     const [selectedAthlete, setSelectedAthlete] = useState<PersonalAthlete | null>(initialAthlete || null);
+    const [freshBirthDate, setFreshBirthDate] = useState<string | undefined>(undefined);
+
+    // Busca birthDate atualizado direto do Supabase (ficha pode ter sido preenchida
+    // pelo próprio aluno no onboarding depois que o store do trainer foi carregado).
+    useEffect(() => {
+        setFreshBirthDate(undefined);
+        if (!selectedAthlete) return;
+        (async () => {
+            const { data } = await supabase
+                .from('fichas')
+                .select('data_nascimento')
+                .eq('atleta_id', selectedAthlete.id)
+                .single();
+            const dn = (data as { data_nascimento?: string } | null)?.data_nascimento;
+            if (dn) setFreshBirthDate(dn);
+        })();
+    }, [selectedAthlete?.id]);
 
     const handleConfirm = (formData: { measurements: any; skinfolds: any; age?: number }) => {
         if (!selectedAthlete) return;
@@ -35,7 +53,8 @@ export const PersonalAssessmentView: React.FC<PersonalAssessmentViewProps> = ({ 
         });
     };
 
-    const athleteAge = selectedAthlete ? calculateAge(selectedAthlete.birthDate) : undefined;
+    const birthDateEfetivo = freshBirthDate || selectedAthlete?.birthDate;
+    const athleteAge = birthDateEfetivo ? calculateAge(birthDateEfetivo) : undefined;
 
     return (
         <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth custom-scrollbar flex flex-col">
@@ -93,28 +112,132 @@ interface AssessmentFormStepProps {
 
 type ImportState = 'prompt' | 'imported' | 'blank';
 
+type FreshData = {
+    measurements: Partial<MeasurementHistory['measurements']>;
+    skinfolds?: Partial<MeasurementHistory['skinfolds']>;
+    source: 'assessment-completo' | 'onboarding' | 'none';
+    sourceDate: string | null;
+};
+
 const AssessmentFormStep: React.FC<AssessmentFormStepProps> = ({ athlete, athleteAge, onBack, onConfirm }) => {
-    const lastAssessment = athlete.assessments?.[0];
-    const hasAssessmentData = !!(lastAssessment?.measurements && lastAssessment.measurements.weight > 0);
+    // Busca ficha + última medida DIRETO do Supabase para garantir dados atualizados
+    // (o dataStore do Personal pode estar stale se o aluno preencheu o onboarding depois).
+    const [fresh, setFresh] = useState<FreshData | null>(null);
 
-    // Detectar dados parciais da ficha (dados estruturais como punho, joelho, tornozelo)
-    const hasPartialFichaData = !hasAssessmentData && !!(
-        lastAssessment?.measurements?.wristRight > 0 ||
-        lastAssessment?.measurements?.kneeRight > 0
-    );
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            const [{ data: ficha }, { data: medidas }] = await Promise.all([
+                supabase
+                    .from('fichas')
+                    .select('altura, punho, joelho, tornozelo, pelve')
+                    .eq('atleta_id', athlete.id)
+                    .single(),
+                supabase
+                    .from('medidas')
+                    .select('*')
+                    .eq('atleta_id', athlete.id)
+                    .order('data', { ascending: false })
+                    .order('created_at', { ascending: false })
+                    .limit(1),
+            ]);
+            if (cancelled) return;
 
-    const hasAnyData = hasAssessmentData || hasPartialFichaData;
+            const f = ficha as Record<string, number | null> | null;
+            const m = (medidas as Record<string, unknown>[] | null)?.[0] || null;
+            const lastAssessment = athlete.assessments?.[0];
+            const assessmentTemPeso = !!(lastAssessment?.measurements?.weight && lastAssessment.measurements.weight > 0);
 
-    // Estado da importação: 'prompt' (decidindo), 'imported' (dados importados), 'blank' (zerando)
-    const [importState, setImportState] = useState<ImportState>(hasAnyData ? 'prompt' : 'blank');
+            // Prioridade: avaliação completa anterior > medidas do onboarding > só ficha estrutural
+            let source: FreshData['source'] = 'none';
+            let measurementsMerged: Partial<MeasurementHistory['measurements']> = {};
+            let skinfoldsMerged: Partial<MeasurementHistory['skinfolds']> | undefined = undefined;
+            let sourceDate: string | null = null;
 
-    const lastDate = lastAssessment?.date
-        ? new Date(lastAssessment.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+            // Dados estruturais da ficha (punho, joelho, tornozelo, altura)
+            let alturaCm = Number(f?.altura) || 0;
+            if (alturaCm > 0 && alturaCm < 3) alturaCm = Math.round(alturaCm * 100);
+            const fichaBase: Partial<MeasurementHistory['measurements']> = {
+                height: alturaCm || undefined,
+                wristRight: Number(f?.punho) || undefined,
+                wristLeft: Number(f?.punho) || undefined,
+                kneeRight: Number(f?.joelho) || undefined,
+                kneeLeft: Number(f?.joelho) || undefined,
+                ankleRight: Number(f?.tornozelo) || undefined,
+                ankleLeft: Number(f?.tornozelo) || undefined,
+                pelvis: Number(f?.pelve) || undefined,
+            };
+
+            if (assessmentTemPeso && lastAssessment) {
+                measurementsMerged = { ...fichaBase, ...lastAssessment.measurements };
+                skinfoldsMerged = lastAssessment.skinfolds;
+                source = 'assessment-completo';
+                sourceDate = lastAssessment.date;
+            } else if (m) {
+                measurementsMerged = {
+                    ...fichaBase,
+                    weight: Number(m.peso) || undefined,
+                    neck: Number(m.pescoco) || undefined,
+                    shoulders: Number(m.ombros) || undefined,
+                    chest: Number(m.peitoral) || undefined,
+                    waist: Number(m.cintura) || undefined,
+                    hips: Number(m.quadril) || undefined,
+                    armRight: Number(m.braco_direito) || undefined,
+                    armLeft: Number(m.braco_esquerdo) || undefined,
+                    forearmRight: Number(m.antebraco_direito) || undefined,
+                    forearmLeft: Number(m.antebraco_esquerdo) || undefined,
+                    thighRight: Number(m.coxa_direita) || undefined,
+                    thighLeft: Number(m.coxa_esquerda) || undefined,
+                    calfRight: Number(m.panturrilha_direita) || undefined,
+                    calfLeft: Number(m.panturrilha_esquerda) || undefined,
+                };
+                skinfoldsMerged = {
+                    tricep: Number(m.dobra_tricipital) || undefined,
+                    subscapular: Number(m.dobra_subescapular) || undefined,
+                    chest: Number(m.dobra_peitoral) || undefined,
+                    axillary: Number(m.dobra_axilar_media) || undefined,
+                    suprailiac: Number(m.dobra_suprailiaca) || undefined,
+                    abdominal: Number(m.dobra_abdominal) || undefined,
+                    thigh: Number(m.dobra_coxa) || undefined,
+                };
+                source = 'onboarding';
+                sourceDate = (m.data as string) || null;
+            } else if (Object.values(fichaBase).some(v => v)) {
+                measurementsMerged = fichaBase;
+                source = 'onboarding';
+            }
+
+            setFresh({
+                measurements: measurementsMerged,
+                skinfolds: skinfoldsMerged,
+                source,
+                sourceDate,
+            });
+        })();
+        return () => { cancelled = true; };
+    }, [athlete.id]);
+
+    const hasFullAssessment = fresh?.source === 'assessment-completo';
+    const hasOnboardingData = fresh?.source === 'onboarding';
+
+    // Auto-importa se há dados do onboarding (aluno já preencheu — trainer não precisa redigitar).
+    // Mostra prompt apenas quando há avaliação COMPLETA anterior (trainer pode querer começar em branco).
+    const [importState, setImportState] = useState<ImportState>('blank');
+
+    useEffect(() => {
+        if (!fresh) return;
+        if (hasFullAssessment) setImportState('prompt');
+        else if (hasOnboardingData) setImportState('imported');
+        else setImportState('blank');
+    }, [fresh, hasFullAssessment, hasOnboardingData]);
+
+    const lastDate = fresh?.sourceDate
+        ? new Date(fresh.sourceDate).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
         : null;
 
-    const importedData = importState === 'imported' && lastAssessment ? {
-        measurements: lastAssessment.measurements,
-        skinfolds: lastAssessment.skinfolds,
+    const importedData = importState === 'imported' && fresh ? {
+        measurements: fresh.measurements,
+        skinfolds: fresh.skinfolds,
     } : undefined;
 
     return (
@@ -153,10 +276,10 @@ const AssessmentFormStep: React.FC<AssessmentFormStepProps> = ({ athlete, athlet
                 </div>
             </div>
 
-            {/* Banner de Importação de Dados */}
-            {importState === 'prompt' && hasAnyData && (
+            {/* Banner de Importação de Dados — só aparece quando há avaliação completa anterior */}
+            {importState === 'prompt' && hasFullAssessment && (
                 <ImportDataBanner
-                    hasFullData={hasAssessmentData}
+                    hasFullData={true}
                     lastDate={lastDate}
                     onImport={() => setImportState('imported')}
                     onBlank={() => setImportState('blank')}
@@ -171,15 +294,17 @@ const AssessmentFormStep: React.FC<AssessmentFormStepProps> = ({ athlete, athlet
                     }`}>
                     <span>
                         {importState === 'imported'
-                            ? `📋 Dados importados da avaliação de ${lastDate} — edite o que mudou e clique em Avaliar`
+                            ? hasOnboardingData
+                                ? `📋 Dados pré-preenchidos do onboarding do aluno${lastDate ? ` (${lastDate})` : ''} — confira e ajuste o que for necessário`
+                                : `📋 Dados importados da avaliação de ${lastDate} — edite o que mudou e clique em Avaliar`
                             : '📝 Formulário em branco — insira as novas medidas coletadas'}
                     </span>
-                    {hasAnyData && (
+                    {(hasFullAssessment || hasOnboardingData) && (
                         <button
-                            onClick={() => setImportState('prompt')}
+                            onClick={() => setImportState(importState === 'imported' ? 'blank' : 'imported')}
                             className="text-[10px] uppercase tracking-widest underline underline-offset-2 opacity-60 hover:opacity-100 transition-opacity ml-4 shrink-0"
                         >
-                            Alterar
+                            {importState === 'imported' ? 'Começar em branco' : 'Usar dados do aluno'}
                         </button>
                     )}
                 </div>

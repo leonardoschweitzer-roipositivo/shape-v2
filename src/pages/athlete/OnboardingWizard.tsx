@@ -21,8 +21,14 @@ import {
     Calendar,
     Activity,
     Target,
+    Bot,
 } from 'lucide-react';
 import { supabase } from '@/services/supabase';
+import {
+    gerarPlanoOnboardingIA,
+    type ObjetivoOnboarding,
+    type NivelAtividadeOnboarding,
+} from '@/services/onboarding/gerarPlanoOnboardingIA';
 
 // ═══════════════════════════════════════════════════════════
 // TYPES
@@ -37,7 +43,7 @@ interface OnboardingWizardProps {
     onLogout?: () => void;
 }
 
-type WizardScreen = 'escolha' | 'personal-form' | 'basico-form' | 'sucesso';
+type WizardScreen = 'escolha' | 'personal-form' | 'basico-form' | 'plano-autor' | 'sucesso';
 
 interface BasicFormData {
     dataNascimento: string;
@@ -195,13 +201,71 @@ export function OnboardingWizard({
                     .eq('atleta_id', atletaId);
             }
 
-            // 3. Marcar onboarding como COMPLETO agora que tudo deu certo
+            // 3. Medidas registradas. O onboarding_completo só será marcado
+            //    após o aluno escolher quem gera o plano (VITRU IA ou Personal).
+            setScreen('plano-autor');
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Erro ao salvar.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    // ─── "Quem monta seu plano?" → VITRU IA ────────────
+    const handleGerarPlanoIA = async () => {
+        if (!form.dataNascimento || !form.altura || !form.peso || !form.objetivo) return;
+
+        setSaving(true);
+        setError(null);
+
+        try {
+            const nivel: NivelAtividadeOnboarding = (form.nivelAtividade || 'SEDENTARIO') as NivelAtividadeOnboarding;
+            const objetivo: ObjetivoOnboarding = form.objetivo as ObjetivoOnboarding;
+
+            const resultado = await gerarPlanoOnboardingIA({
+                atletaId,
+                nome: atletaNome,
+                sexo,
+                dataNascimento: form.dataNascimento,
+                altura: parseFloat(form.altura),
+                peso: parseFloat(form.peso),
+                cintura: form.cintura ? parseFloat(form.cintura) : undefined,
+                quadril: form.quadril ? parseFloat(form.quadril) : undefined,
+                nivelAtividade: nivel,
+                objetivo,
+            });
+
+            // Marcar ficha: onboarding concluído via VITRU IA
+            await supabase
+                .from('fichas')
+                .update({
+                    onboarding_completo: true,
+                    metodo_medidas: 'BASICO_IA',
+                    objetivo_vitruvio: resultado.objetivoVitruvio,
+                } as Record<string, unknown>)
+                .eq('atleta_id', atletaId);
+
+            setSuccessMessage('Seu plano de evolução foi gerado pelo VITRU IA! Treino e dieta já estão prontos no seu portal.');
+            setScreen('sucesso');
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Erro ao gerar plano.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    // ─── "Quem monta seu plano?" → Deixar para o Personal ────────────
+    const handleDeixarParaPersonal = async () => {
+        setSaving(true);
+        setError(null);
+
+        try {
             await supabase
                 .from('fichas')
                 .update({ onboarding_completo: true } as Record<string, unknown>)
                 .eq('atleta_id', atletaId);
 
-            setSuccessMessage('Suas medidas básicas foram registradas. Seu personal pode complementá-las depois!');
+            setSuccessMessage('Suas medidas básicas foram registradas. Seu personal montará seu plano em breve.');
             setScreen('sucesso');
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Erro ao salvar.');
@@ -332,6 +396,110 @@ export function OnboardingWizard({
                             <><Check size={16} /> Confirmar</>
                         )}
                     </button>
+
+                    {onLogout && (
+                        <div className="pt-8 text-center opacity-30 hover:opacity-100 transition-opacity">
+                            <button
+                                onClick={onLogout}
+                                className="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-medium"
+                            >
+                                Sair da conta
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // "QUEM MONTA SEU PLANO?" → VITRU IA ou Personal
+    // ═══════════════════════════════════════════════════════
+    if (screen === 'plano-autor') {
+        return (
+            <div className="min-h-screen bg-background-dark text-white">
+                <div className="max-w-md mx-auto px-4 py-8 space-y-6">
+                    <div className="text-center space-y-3">
+                        <div className="text-4xl">✨</div>
+                        <h2 className="text-xl font-black uppercase tracking-wider">
+                            Quem Monta Seu Plano?
+                        </h2>
+                        <p className="text-zinc-400 text-sm leading-relaxed max-w-xs mx-auto">
+                            Com base nas suas informações, podemos gerar seu{' '}
+                            <strong className="text-white">Plano de Evolução</strong> agora
+                            ou deixar que seu personal monte pra você.
+                        </p>
+                    </div>
+
+                    {/* Opção A: VITRU IA */}
+                    <button
+                        onClick={handleGerarPlanoIA}
+                        disabled={saving}
+                        className="w-full bg-gradient-to-br from-indigo-600/20 to-purple-600/20 hover:from-indigo-600/30 hover:to-purple-600/30 border border-indigo-500/30 rounded-2xl p-5 text-left transition-all active:scale-[0.98] group disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <div className="flex items-start gap-4">
+                            <div className="w-12 h-12 bg-indigo-500/25 rounded-xl flex items-center justify-center shrink-0">
+                                {saving ? (
+                                    <Loader2 className="text-indigo-300 animate-spin" size={22} />
+                                ) : (
+                                    <Bot className="text-indigo-300" size={22} />
+                                )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-white font-black text-sm uppercase tracking-wider">
+                                        Gerar com VITRU IA
+                                    </h3>
+                                    <ChevronRight size={16} className="text-indigo-400 shrink-0" />
+                                </div>
+                                <p className="text-zinc-400 text-[11px] mt-1 leading-relaxed">
+                                    Diagnóstico, treino e dieta prontos em segundos. Seu personal pode ajustar depois.
+                                </p>
+                                <div className="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/30">
+                                    <Sparkles size={10} className="text-indigo-300" />
+                                    <span className="text-[9px] text-indigo-300 font-bold uppercase tracking-wider">Recomendado</span>
+                                </div>
+                            </div>
+                        </div>
+                    </button>
+
+                    {/* Divisor */}
+                    <div className="flex items-center gap-3">
+                        <div className="flex-1 h-px bg-white/5" />
+                        <span className="text-[10px] text-zinc-600 font-bold uppercase">ou</span>
+                        <div className="flex-1 h-px bg-white/5" />
+                    </div>
+
+                    {/* Opção B: Deixar para o Personal */}
+                    <button
+                        onClick={handleDeixarParaPersonal}
+                        disabled={saving}
+                        className="w-full bg-surface-deep hover:bg-white/[0.06] border border-white/5 hover:border-indigo-500/30 rounded-2xl p-5 text-left transition-all active:scale-[0.98] group disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <div className="flex items-start gap-4">
+                            <div className="w-12 h-12 bg-zinc-700/30 rounded-xl flex items-center justify-center shrink-0">
+                                <UserCheck className="text-zinc-300" size={22} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-white font-black text-sm uppercase tracking-wider">
+                                        Deixar para o Personal
+                                    </h3>
+                                    <ChevronRight size={16} className="text-zinc-600 shrink-0" />
+                                </div>
+                                <p className="text-zinc-500 text-[11px] mt-1 leading-relaxed">
+                                    Seu personal receberá suas medidas e montará o plano manualmente.
+                                </p>
+                            </div>
+                        </div>
+                    </button>
+
+                    {/* Erro */}
+                    {error && (
+                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs">
+                            ❌ {error}
+                        </div>
+                    )}
 
                     {onLogout && (
                         <div className="pt-8 text-center opacity-30 hover:opacity-100 transition-opacity">

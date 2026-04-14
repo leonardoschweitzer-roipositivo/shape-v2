@@ -199,11 +199,16 @@ export function PortalLanding({ token, atletaId, onClose }: PortalLandingProps) 
         );
     }
 
+    // Onboarding: fonte única de verdade é a flag `onboarding_completo` na ficha.
+    // Assim, mesmo que o Personal já tenha criado uma avaliação/medida antes do aluno logar,
+    // o aluno ainda passa pelo onboarding obrigatório para preencher seus dados e contexto.
+    // Fallback para alunos antigos (sem a flag): considera completo se já tinha avaliação/medida.
     const temAvaliacaoGlobal = !!(athleteData.avaliacoes?.length) || !!(athleteData.medidas?.length);
-    const onboardingParcialBasico = athleteData.ficha?.metodo_medidas === 'BASICO' && !temAvaliacaoGlobal;
-    const onboardingCompletoGlobal = !!athleteData.ficha?.onboarding_completo && !onboardingParcialBasico;
+    const flagOnboardingCompleto = !!athleteData.ficha?.onboarding_completo;
+    const legadoSemFlag = athleteData.ficha?.onboarding_completo === null && temAvaliacaoGlobal;
+    const onboardingCompletoGlobal = flagOnboardingCompleto || legadoSemFlag;
 
-    if (!temAvaliacaoGlobal && !onboardingCompletoGlobal) {
+    if (!onboardingCompletoGlobal) {
         return (
             <OnboardingWizard
                 atletaId={athleteData.id}
@@ -217,7 +222,8 @@ export function PortalLanding({ token, atletaId, onClose }: PortalLandingProps) 
                         updated = await portalService.getAthleteDataById(atletaId);
                     }
                     if (updated) setAthleteData(updated);
-                    setView('home');
+                    // Depois das medidas, aluno preenche o contexto (anamnese) — igual aos demais fluxos.
+                    setView('contexto');
                 }}
                 onGoToVirtualAssessment={() => setView('virtual-assessment')}
                 onLogout={onClose}
