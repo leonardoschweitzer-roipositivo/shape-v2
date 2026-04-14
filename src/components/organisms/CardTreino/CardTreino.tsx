@@ -1135,9 +1135,20 @@ export function CardTreino({
 
                                     {/* Linha 2: hint + resumo/toggle */}
                                     <div className="flex items-center justify-between px-6 pb-3 pl-[68px] gap-4">
-                                        <span className="text-xs text-gray-500 tracking-wide flex-1 min-w-0 leading-snug line-clamp-2">
-                                            {descricoes[ex.id] ?? (ex.foco || 'Carregando descrição...')}
-                                        </span>
+                                        {descricoes[ex.id] ? (
+                                            <span className="text-xs text-gray-500 tracking-wide flex-1 min-w-0 leading-snug line-clamp-2">
+                                                {descricoes[ex.id]}
+                                            </span>
+                                        ) : (
+                                            <span className="text-xs text-indigo-400/70 tracking-wide flex-1 min-w-0 leading-snug flex items-center gap-1.5">
+                                                <span className="animate-pulse">Personal IA analisando exercício</span>
+                                                <span className="inline-flex gap-0.5">
+                                                    <span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                                                    <span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                                                    <span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                                                </span>
+                                            </span>
+                                        )}
                                         <button
                                             onClick={() => toggleExpand(ex.id)}
                                             className="h-7 px-2 flex items-center gap-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
