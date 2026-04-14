@@ -104,6 +104,10 @@ export interface SetExecutado {
     carga?: number    // peso em kg nesta série
     reps?: number     // repetições realizadas nesta série
     tipo?: TipoSet    // classificação da série (undefined = 'valida')
+    concluido?: boolean                      // aluno marcou o check da série
+    descansoStatus?: 'running' | 'paused'   // estado do cronômetro de descanso
+    descansoInicio?: number                  // timestamp (Date.now()) do último play do cronômetro
+    descansoAcumuladoMs?: number             // tempo acumulado de descanso (soma entre pausas)
 }
 
 export interface ExercicioTimerState {

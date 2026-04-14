@@ -389,6 +389,16 @@ export function CardTreino({
         return () => clearInterval(interval)
     }, [sessionTimer.status])
 
+    // Tick interval enquanto houver algum cronômetro de descanso rodando
+    const hasRestTimerRunning = Object.values(exercicioTimers).some(
+        t => t.sets?.some(s => s.descansoStatus === 'running'),
+    )
+    useEffect(() => {
+        if (!hasRestTimerRunning) return undefined
+        const interval = setInterval(() => forceUpdate(n => n + 1), 1000)
+        return () => clearInterval(interval)
+    }, [hasRestTimerRunning])
+
     // Data de ontem em 'YYYY-MM-DD'
     const getOntemISO = (): string => {
         const d = new Date()
@@ -516,6 +526,72 @@ export function CardTreino({
             ...exercicioTimers,
             [exId]: { ...current, sets },
         })
+    }
+
+    /** Alterna o check da série. Ao marcar, inicia cronômetro de descanso; ao desmarcar, reseta. */
+    const handleToggleSerieConcluida = (exId: string, setIdx: number) => {
+        const current = exercicioTimers[exId] ?? { status: 'idle' as const, tempoAcumuladoMs: 0, sets: [] }
+        const sets = [...(current.sets ?? [])]
+        while (sets.length <= setIdx) sets.push({})
+        const set = sets[setIdx]
+        sets[setIdx] = set.concluido
+            ? {
+                ...set,
+                concluido: false,
+                descansoStatus: undefined,
+                descansoInicio: undefined,
+                descansoAcumuladoMs: undefined,
+            }
+            : {
+                ...set,
+                concluido: true,
+                descansoStatus: 'running',
+                descansoInicio: Date.now(),
+                descansoAcumuladoMs: 0,
+            }
+        onExercicioTimersChange({
+            ...exercicioTimers,
+            [exId]: { ...current, sets },
+        })
+    }
+
+    /** Alterna play/pause do cronômetro de descanso de uma série concluída. */
+    const handleToggleDescansoPause = (exId: string, setIdx: number) => {
+        const current = exercicioTimers[exId]
+        if (!current?.sets) return
+        const sets = [...current.sets]
+        const set = sets[setIdx]
+        if (!set?.concluido) return
+
+        if (set.descansoStatus === 'running') {
+            const elapsed = set.descansoInicio ? Date.now() - set.descansoInicio : 0
+            sets[setIdx] = {
+                ...set,
+                descansoStatus: 'paused',
+                descansoAcumuladoMs: (set.descansoAcumuladoMs ?? 0) + elapsed,
+                descansoInicio: undefined,
+            }
+        } else {
+            sets[setIdx] = {
+                ...set,
+                descansoStatus: 'running',
+                descansoInicio: Date.now(),
+            }
+        }
+        onExercicioTimersChange({
+            ...exercicioTimers,
+            [exId]: { ...current, sets },
+        })
+    }
+
+    /** Tempo atual do cronômetro de descanso de uma série (incluindo intervalo rodando). */
+    const getTempoDescanso = (set: SetExecutado): number => {
+        if (!set.concluido) return 0
+        const acc = set.descansoAcumuladoMs ?? 0
+        if (set.descansoStatus === 'running' && set.descansoInicio) {
+            return acc + (Date.now() - set.descansoInicio)
+        }
+        return acc
     }
 
     /** Parse de string para número (ou undefined se vazio/inválido). */
@@ -890,9 +966,24 @@ export function CardTreino({
                                                 const temUltima = ultimaSet && (ultimaSet.carga != null || ultimaSet.reps != null)
                                                 const vazioAtual = set.carga == null && set.reps == null
                                                 return (
-                                                    <div key={sIdx} className="flex items-center gap-2 py-1.5">
-                                                        <span className="w-[58px] text-[10px] font-mono text-gray-500 uppercase tracking-wider">
-                                                            Série #{sIdx + 1}
+                                                    <div key={sIdx} className="py-1.5">
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            onClick={e => { e.stopPropagation(); handleToggleSerieConcluida(ex.id, sIdx) }}
+                                                            className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 transition-all ${set.concluido
+                                                                ? 'bg-emerald-500/20 hover:bg-emerald-500/30'
+                                                                : 'bg-white/5 hover:bg-white/10 border border-white/10'
+                                                                }`}
+                                                            title={set.concluido ? 'Desmarcar série' : 'Marcar série feita'}
+                                                        >
+                                                            <Check
+                                                                size={12}
+                                                                className={`transition-all ${set.concluido ? 'text-emerald-400 scale-110' : 'text-gray-600'}`}
+                                                                strokeWidth={3}
+                                                            />
+                                                        </button>
+                                                        <span className="text-[10px] font-mono text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                                                            Série&nbsp;#{sIdx + 1}
                                                         </span>
 
                                                         <input
@@ -961,6 +1052,29 @@ export function CardTreino({
                                                                 ))}
                                                             </select>
                                                         </div>
+                                                    </div>
+
+                                                    {/* Cronômetro de descanso — aparece ao checar a série */}
+                                                    {set.concluido && (
+                                                        <div className="flex items-center gap-2 pt-1.5 pl-8 animate-in fade-in slide-in-from-top-1 duration-200">
+                                                            <span className="text-[10px] font-mono text-gray-500 uppercase tracking-wider">
+                                                                Tempo entre a série:
+                                                            </span>
+                                                            <span className={`ml-auto text-[11px] font-mono tabular-nums ${set.descansoStatus === 'running' ? 'text-indigo-300' : 'text-gray-400'}`}>
+                                                                {formatTime(getTempoDescanso(set))}
+                                                            </span>
+                                                            <button
+                                                                onClick={e => { e.stopPropagation(); handleToggleDescansoPause(ex.id, sIdx) }}
+                                                                className="w-6 h-6 rounded-md flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 transition-colors flex-shrink-0"
+                                                                title={set.descansoStatus === 'running' ? 'Pausar descanso' : 'Retomar descanso'}
+                                                            >
+                                                                {set.descansoStatus === 'running'
+                                                                    ? <Pause size={10} className="text-amber-400" fill="currentColor" />
+                                                                    : <Play size={10} className="text-emerald-400 ml-0.5" fill="currentColor" />
+                                                                }
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                     </div>
                                                 )
                                             })}
