@@ -142,6 +142,68 @@ export function piramideReversa(params: {
 }
 
 /**
+ * Prescrição padrão DETERMINÍSTICA aplicada em planos recém-gerados.
+ *
+ * Gera uma rampa científica usando apenas %TopSet (cargaKg fica undefined até
+ * o personal/runtime fornecer topSetKg — assim o aluno vê a estrutura aquec/recon/válida
+ * mesmo antes de qualquer kg ser definido).
+ *
+ * Regra:
+ *  - series <= 2 → straight sets (sem aquec)
+ *  - series 3-4 → 1-2 aquec + válidas
+ *  - series 5+  → 2-3 aquec + válidas
+ */
+export function gerarPrescricaoPadrao(input: {
+    series: number
+    repeticoes?: string
+    descansoSegundos?: number
+}): SeriePrescrita[] {
+    const totalSeries = Math.max(1, input.series || 4)
+    const extrairNumMax = (s: string | undefined, fb: number): number => {
+        if (!s) return fb
+        const m = s.match(/\d+/g)
+        return m ? Math.max(...m.map(Number)) : fb
+    }
+    const extrairNumMin = (s: string | undefined, fb: number): number => {
+        if (!s) return fb
+        const m = s.match(/\d+/g)
+        return m ? Math.min(...m.map(Number)) : fb
+    }
+    const repsMax = extrairNumMax(input.repeticoes, 10)
+    const repsMin = extrairNumMin(input.repeticoes, Math.max(1, repsMax - 2))
+    const descansoValida = input.descansoSegundos && input.descansoSegundos > 0 ? input.descansoSegundos : 150
+
+    const tabelaAquec: Array<{ pct: number; reps: number; desc: number; tipo: 'aquecimento' | 'reconhecimento' }> = [
+        { pct: 0.5, reps: 12, desc: 60, tipo: 'aquecimento' },
+        { pct: 0.7, reps: 8, desc: 60, tipo: 'aquecimento' },
+        { pct: 0.85, reps: 5, desc: 90, tipo: 'reconhecimento' },
+    ]
+    const numAquec = totalSeries <= 2 ? 0 : Math.min(3, totalSeries - 2)
+    const aquec: SeriePrescrita[] = tabelaAquec.slice(0, numAquec).map((t, i) => ({
+        ordem: i + 1,
+        tipo: t.tipo,
+        repsAlvoMin: t.reps,
+        repsAlvoMax: t.reps,
+        fonteCarga: 'pctTopSet',
+        cargaPercentTopSet: t.pct,
+        rirAlvo: t.tipo === 'aquecimento' ? 4 : 2,
+        descansoSegundos: t.desc,
+    }))
+    const numValidas = totalSeries - aquec.length
+    const validas: SeriePrescrita[] = Array.from({ length: numValidas }, (_, i) => ({
+        ordem: aquec.length + i + 1,
+        tipo: 'valida',
+        repsAlvoMin: repsMin,
+        repsAlvoMax: repsMax,
+        fonteCarga: 'pctTopSet',
+        cargaPercentTopSet: 1,
+        rirAlvo: i === numValidas - 1 ? 0 : 1,
+        descansoSegundos: descansoValida,
+    }))
+    return [...aquec, ...validas]
+}
+
+/**
  * Straight sets: N séries idênticas (hipertrofia clássica).
  * Sem aquecimento embutido (personal adiciona separado se quiser).
  */

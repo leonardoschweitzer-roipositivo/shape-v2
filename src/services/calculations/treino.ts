@@ -15,6 +15,7 @@ import { type ObjetivoVitruvio, getObjetivoMeta } from './objetivos';
 import { gerarConteudoIA } from '@/services/vitruviusAI';
 import { type PerfilAtletaIA, perfilParaTexto, treinoParaTexto, getFontesCientificas } from '@/services/vitruviusContext';
 import { buildTreinoPrompt } from '@/services/vitruviusPrompts';
+import { gerarPrescricaoPadrao } from '@/services/prescricao/templates';
 
 // ═══════════════════════════════════════════════════════════
 // TYPES
@@ -821,11 +822,36 @@ export const gerarPlanoTreino = (
             frequenciaSemanal: freq,
             estruturaSemanal
         },
-        treinos,
+        treinos: aplicarPrescricaoPadraoAoPlano(treinos),
         observacoes,
         geradoEm: dataRef
     };
 };
+
+/**
+ * Pós-processa o plano recém-gerado: para cada exercício sem prescrição detalhada,
+ * aplica uma rampa científica padrão (aquec/recon/válidas em %TopSet).
+ * Assim todo plano sai do gerador já com prescrição série-a-série visível.
+ */
+function aplicarPrescricaoPadraoAoPlano(treinos: TreinoDetalhado[]): TreinoDetalhado[] {
+    return treinos.map(t => ({
+        ...t,
+        blocos: t.blocos.map(b => ({
+            ...b,
+            exercicios: b.exercicios.map(ex => {
+                if (ex.prescricaoSeries && ex.prescricaoSeries.length > 0) return ex;
+                return {
+                    ...ex,
+                    prescricaoSeries: gerarPrescricaoPadrao({
+                        series: ex.series,
+                        repeticoes: ex.repeticoes,
+                        descansoSegundos: ex.descansoSegundos,
+                    }),
+                };
+            }),
+        })),
+    }));
+}
 
 /**
  * Enriquece o plano de treino com IA (Gemini).

@@ -18,10 +18,13 @@ import {
     ChevronUp,
     ChevronDown,
     GripVertical,
+    Sparkles,
+    Loader2,
 } from 'lucide-react';
 import type { TreinoDetalhado, BlocoTreino, Exercicio } from '@/services/calculations/treino';
 import { EditableField } from '@/components/atoms/EditableField/EditableField';
 import { BlocoPrescricaoSeries } from './BlocoPrescricaoSeries';
+import { sugerirPrescricaoIA } from '@/services/prescricao/gerarViaIA';
 
 // ═══════════════════════════════════════════════════════════
 // TYPES
@@ -278,6 +281,7 @@ export const SecaoTreinosEditavel: React.FC<SecaoTreinosEditavelProps> = ({
     onUpdateTreinos,
 }) => {
     const [activeTab, setActiveTab] = useState(treinos[0]?.id || '');
+    const [iaBulkLoading, setIaBulkLoading] = useState(false);
     const activeTreino = treinos.find(t => t.id === activeTab);
 
     // ── Handlers de exercício ──
@@ -298,6 +302,39 @@ export const SecaoTreinosEditavel: React.FC<SecaoTreinosEditavelProps> = ({
             };
         });
         onUpdateTreinos(newTreinos);
+    };
+
+    /** Gera prescrição série-a-série via IA para TODOS os exercícios do treino ativo, em paralelo. */
+    const gerarTudoComIA = async () => {
+        if (!activeTreino) return;
+        if (!window.confirm(`Gerar prescrição detalhada via IA para todos os exercícios do "${activeTreino.nome}"?\n\nPode levar alguns segundos.`)) return;
+        setIaBulkLoading(true);
+        try {
+            const novosBlocos = await Promise.all(activeTreino.blocos.map(async bloco => {
+                const novosExs = await Promise.all(bloco.exercicios.map(async ex => {
+                    try {
+                        const topKg = ex.topSetKg && ex.topSetKg > 0 ? ex.topSetKg : 100;
+                        const repsMatch = ex.repeticoes.match(/\d+/g);
+                        const repsTop = ex.topSetReps ?? (repsMatch ? Math.max(...repsMatch.map(Number)) : 10);
+                        const series = await sugerirPrescricaoIA({
+                            exercicioNome: ex.nome,
+                            grupoMuscular: bloco.nomeGrupo,
+                            topSetKg: topKg,
+                            repsTop,
+                            totalSeriesDesejado: Math.max(4, ex.series || 5),
+                        });
+                        return { ...ex, prescricaoSeries: series, topSetKg: ex.topSetKg, topSetReps: repsTop };
+                    } catch {
+                        return ex;
+                    }
+                }));
+                return { ...bloco, exercicios: novosExs };
+            }));
+            const newTreinos = treinos.map(t => t.id === activeTreino.id ? { ...t, blocos: novosBlocos } : t);
+            onUpdateTreinos(newTreinos);
+        } finally {
+            setIaBulkLoading(false);
+        }
     };
 
     const removeExercicio = (treinoId: string, blocoIdx: number, exOrdem: number) => {
@@ -468,7 +505,7 @@ export const SecaoTreinosEditavel: React.FC<SecaoTreinosEditavelProps> = ({
             {/* Ficha Ativa */}
             {activeTreino && (
                 <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                    <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center justify-between mb-6 gap-3">
                         <div>
                             {isEditing ? (
                                 <EditableField
@@ -490,6 +527,18 @@ export const SecaoTreinosEditavel: React.FC<SecaoTreinosEditavelProps> = ({
                                 </span>
                             </div>
                         </div>
+                        {isEditing && (
+                            <button
+                                type="button"
+                                onClick={gerarTudoComIA}
+                                disabled={iaBulkLoading}
+                                className="h-10 px-4 flex items-center gap-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 text-amber-400 text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50 shadow-lg shadow-amber-500/5"
+                                title="Gerar prescrição série-a-série via IA para todos os exercícios deste treino"
+                            >
+                                {iaBulkLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                                {iaBulkLoading ? 'Gerando…' : 'Gerar tudo com IA'}
+                            </button>
+                        )}
                     </div>
 
                     <div className="space-y-8">
