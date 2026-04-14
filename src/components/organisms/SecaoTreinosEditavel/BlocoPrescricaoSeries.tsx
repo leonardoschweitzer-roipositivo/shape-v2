@@ -35,6 +35,7 @@ const TEMPLATE_OPTIONS: Array<{ value: TemplateId | ''; label: string }> = [
 interface BlocoPrescricaoSeriesProps {
     ex: Exercicio
     onUpdate: (ex: Exercicio) => void
+    readOnly?: boolean
     contextoIA?: {
         grupoMuscular?: string
         nivel?: 'iniciante' | 'intermediario' | 'avancado'
@@ -45,7 +46,7 @@ interface BlocoPrescricaoSeriesProps {
     }
 }
 
-export const BlocoPrescricaoSeries: React.FC<BlocoPrescricaoSeriesProps> = ({ ex, onUpdate, contextoIA }) => {
+export const BlocoPrescricaoSeries: React.FC<BlocoPrescricaoSeriesProps> = ({ ex, onUpdate, readOnly = false, contextoIA }) => {
     const [iaLoading, setIaLoading] = useState(false)
     const series = ex.prescricaoSeries ?? []
     const topSetKg = ex.topSetKg ?? 0
@@ -130,7 +131,8 @@ export const BlocoPrescricaoSeries: React.FC<BlocoPrescricaoSeriesProps> = ({ ex
 
     return (
         <div className="space-y-3 border-t border-indigo-500/15 pt-3 mt-2">
-            {/* Cabeçalho: top set + actions */}
+            {/* Cabeçalho: top set + actions — escondido em readOnly */}
+            {!readOnly && (
             <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs text-zinc-500 uppercase tracking-wider font-bold">Top:</span>
                 <input
@@ -171,6 +173,7 @@ export const BlocoPrescricaoSeries: React.FC<BlocoPrescricaoSeriesProps> = ({ ex
                     IA
                 </button>
             </div>
+            )}
 
             {/* Tabela de séries */}
             {series.length === 0 ? (
@@ -199,7 +202,8 @@ export const BlocoPrescricaoSeries: React.FC<BlocoPrescricaoSeriesProps> = ({ ex
                             <select
                                 value={s.tipo}
                                 onChange={e => updateSerie(idx, { tipo: e.target.value as TipoSet })}
-                                className="h-9 bg-white/[0.03] border border-white/10 rounded-lg text-xs text-gray-200 px-1.5 outline-none focus:border-indigo-500/50"
+                                disabled={readOnly}
+                                className="h-9 bg-white/[0.03] border border-white/10 rounded-lg text-xs text-gray-200 px-1.5 outline-none focus:border-indigo-500/50 disabled:opacity-90 disabled:cursor-default"
                             >
                                 {TIPO_OPTIONS.map(opt => (
                                     <option key={opt.value} value={opt.value} className="bg-surface-deep">{opt.label}</option>
@@ -210,7 +214,8 @@ export const BlocoPrescricaoSeries: React.FC<BlocoPrescricaoSeriesProps> = ({ ex
                                 min="1"
                                 value={s.reps || ''}
                                 onChange={e => updateSerie(idx, { reps: Number(e.target.value) || 1 })}
-                                className="h-9 bg-white/[0.03] border border-white/10 rounded-lg text-sm text-indigo-300 font-mono text-center outline-none focus:border-indigo-500/50"
+                                readOnly={readOnly}
+                                className="h-9 bg-white/[0.03] border border-white/10 rounded-lg text-sm text-indigo-300 font-mono text-center outline-none focus:border-indigo-500/50 read-only:cursor-default"
                             />
                             <div className="flex items-center gap-1">
                                 <input
@@ -220,7 +225,8 @@ export const BlocoPrescricaoSeries: React.FC<BlocoPrescricaoSeriesProps> = ({ ex
                                     value={s.cargaKg > 0 ? s.cargaKg : ''}
                                     placeholder="kg"
                                     onChange={e => updateSerie(idx, { cargaKg: Number(e.target.value) || 0 })}
-                                    className="w-14 h-9 bg-white/[0.03] border border-white/10 rounded-lg text-sm text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/50"
+                                    readOnly={readOnly}
+                                    className="w-14 h-9 bg-white/[0.03] border border-white/10 rounded-lg text-sm text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/50 read-only:cursor-default"
                                 />
                                 <span className="text-[10px] text-zinc-600">kg</span>
                             </div>
@@ -233,7 +239,8 @@ export const BlocoPrescricaoSeries: React.FC<BlocoPrescricaoSeriesProps> = ({ ex
                                     const v = e.target.value === '' ? undefined : Math.max(0, Math.min(5, Number(e.target.value)))
                                     updateSerie(idx, { rirAlvo: v })
                                 }}
-                                className="h-9 bg-white/[0.03] border border-white/10 rounded-lg text-sm text-amber-300 font-mono text-center outline-none focus:border-indigo-500/50"
+                                readOnly={readOnly}
+                                className="h-9 bg-white/[0.03] border border-white/10 rounded-lg text-sm text-amber-300 font-mono text-center outline-none focus:border-indigo-500/50 read-only:cursor-default"
                             />
                             <div className="flex items-center gap-1">
                                 <input
@@ -242,24 +249,30 @@ export const BlocoPrescricaoSeries: React.FC<BlocoPrescricaoSeriesProps> = ({ ex
                                     step="15"
                                     value={s.descansoSegundos || ''}
                                     onChange={e => updateSerie(idx, { descansoSegundos: Number(e.target.value) || 0 })}
-                                    className="w-12 h-9 bg-white/[0.03] border border-white/10 rounded-lg text-sm text-gray-300 font-mono text-center outline-none focus:border-indigo-500/50"
+                                    readOnly={readOnly}
+                                    className="w-12 h-9 bg-white/[0.03] border border-white/10 rounded-lg text-sm text-gray-300 font-mono text-center outline-none focus:border-indigo-500/50 read-only:cursor-default"
                                 />
                                 <span className="text-[10px] text-zinc-600">s</span>
                             </div>
-                            <button
-                                type="button"
-                                onClick={() => removeSerie(idx)}
-                                className="text-zinc-600 hover:text-red-400 transition-colors"
-                                title="Remover série"
-                            >
-                                <Trash2 size={12} />
-                            </button>
+                            {!readOnly ? (
+                                <button
+                                    type="button"
+                                    onClick={() => removeSerie(idx)}
+                                    className="text-zinc-600 hover:text-red-400 transition-colors"
+                                    title="Remover série"
+                                >
+                                    <Trash2 size={12} />
+                                </button>
+                            ) : (
+                                <span />
+                            )}
                         </div>
                     ))}
                 </div>
             )}
 
-            {/* Actions */}
+            {/* Actions — escondido em readOnly */}
+            {!readOnly && (
             <div className="flex items-center gap-2 pt-1">
                 <button
                     type="button"
@@ -280,6 +293,7 @@ export const BlocoPrescricaoSeries: React.FC<BlocoPrescricaoSeriesProps> = ({ ex
                     </button>
                 )}
             </div>
+            )}
         </div>
     )
 }

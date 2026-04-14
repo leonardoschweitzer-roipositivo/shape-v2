@@ -109,7 +109,23 @@ const ExercicioRow: React.FC<{
     onMoveDown: (() => void) | null;
 }> = ({ ex, isEditing, onUpdate, onRemove, onMoveUp, onMoveDown }) => {
     if (!isEditing) {
-        // Modo display — igual ao original
+        // Modo display — quando há prescrição detalhada, mostra tabela série-a-série read-only
+        if (ex.prescricaoSeries && ex.prescricaoSeries.length > 0) {
+            return (
+                <tr className="border-b border-white/[0.04]">
+                    <td colSpan={6} className="p-0">
+                        <div className="px-6 py-4">
+                            <p className="font-bold text-gray-200 text-base leading-tight mb-2">
+                                <span className="text-gray-600 font-mono text-sm mr-2">{ex.ordem}.</span>
+                                {ex.nome}
+                            </p>
+                            <BlocoPrescricaoSeries ex={ex} onUpdate={onUpdate} readOnly />
+                        </div>
+                    </td>
+                </tr>
+            );
+        }
+        // Fallback — plano antigo sem prescrição detalhada
         return (
             <tr className="border-b border-white/[0.04] hover:bg-white/[0.01] transition-colors">
                 <td className="px-6 py-5 text-gray-600 font-mono text-lg">{ex.ordem}</td>
