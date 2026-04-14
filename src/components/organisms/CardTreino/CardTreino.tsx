@@ -967,7 +967,7 @@ export function CardTreino({
                                                 const vazioAtual = set.carga == null && set.reps == null
                                                 return (
                                                     <div key={sIdx} className="py-1.5">
-                                                    <div className="flex items-center gap-2">
+                                                    <div className={`flex items-center gap-2 transition-all duration-300 ${set.concluido ? 'opacity-50' : ''}`}>
                                                         <button
                                                             onClick={e => { e.stopPropagation(); handleToggleSerieConcluida(ex.id, sIdx) }}
                                                             className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 transition-all ${set.concluido
