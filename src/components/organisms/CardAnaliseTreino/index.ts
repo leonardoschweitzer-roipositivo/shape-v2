@@ -1,0 +1,1 @@
+export { CardAnaliseTreino } from './CardAnaliseTreino'

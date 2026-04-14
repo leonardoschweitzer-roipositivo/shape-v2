@@ -8,6 +8,7 @@
 import React from 'react'
 import { HeaderIdentidade } from './components/HeaderIdentidade'
 import { CardTreino } from '../../components/organisms/CardTreino'
+import { CardAnaliseTreino } from '../../components/organisms/CardAnaliseTreino'
 import { TrackersRapidos } from '../../components/organisms/TrackersRapidos'
 import { FeedbackTextual } from '../../components/organisms/FeedbackTextual'
 import { AccordionProximoTreino } from './components'
@@ -91,6 +92,11 @@ export function TodayScreen({
                     onCompletei={onCompletarTreino}
                     onPular={() => setModalPularOpen(true)}
                 />
+
+                {/* Análise IA do treino concluído */}
+                {data.treino.status === 'completo' && (
+                    <CardAnaliseTreino treino={data.treino} pesoAlunoKg={peso} />
+                )}
 
                 {/* Próximos Treinos (Accordions) */}
                 {proximosTreinos.length > 0 && (
