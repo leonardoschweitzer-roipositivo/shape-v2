@@ -961,12 +961,15 @@ export function CardTreino({
                                     {isExpanded && !isDone && treino.status === 'pendente' && (
                                         <div className="px-6 pb-4 pt-1 animate-in fade-in slide-in-from-top-1 duration-200">
                                             <div className="divide-y divide-white/5 border-t border-white/5">
-                                            {sets.map((set, sIdx) => {
+                                            {(() => {
+                                                const proximaIdx = sets.findIndex(s => !s.concluido)
+                                                return sets.map((set, sIdx) => {
                                                 const ultimaSet = ultima?.sets[sIdx]
                                                 const temUltima = ultimaSet && (ultimaSet.carga != null || ultimaSet.reps != null)
                                                 const vazioAtual = set.carga == null && set.reps == null
+                                                const isProxima = sIdx === proximaIdx
                                                 return (
-                                                    <div key={sIdx} className="py-1.5">
+                                                    <div key={sIdx} className={`py-1.5 transition-colors duration-300 ${isProxima ? 'bg-amber-500/10 -mx-2 px-2 rounded-lg' : ''}`}>
                                                     <div className={`flex items-center gap-2 transition-all duration-300 ${set.concluido ? 'opacity-50' : ''}`}>
                                                         <button
                                                             onClick={e => { e.stopPropagation(); handleToggleSerieConcluida(ex.id, sIdx) }}
@@ -1077,7 +1080,8 @@ export function CardTreino({
                                                     )}
                                                     </div>
                                                 )
-                                            })}
+                                            })
+                                            })()}
                                             </div>
 
                                             {/* Stepper: quantidade de séries (label esq · stepper dir), com linha divisória acima */}
