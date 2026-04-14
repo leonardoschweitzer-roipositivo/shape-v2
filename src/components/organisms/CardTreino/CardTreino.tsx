@@ -304,11 +304,11 @@ export function CardTreino({
                 return
             }
             const ai = new GoogleGenerativeAI(apiKey)
-            const model = ai.getGenerativeModel({ model: 'gemini-2.0-flash', generationConfig: { maxOutputTokens: 40, temperature: 0.7 } })
+            const model = ai.getGenerativeModel({ model: 'gemini-2.0-flash', generationConfig: { maxOutputTokens: 120, temperature: 0.7 } })
             const result = await model.generateContent(
-                `Descreva o exercício "${nomeTrimmed}" em uma frase curta (máximo 8 palavras), focando no músculo trabalhado. Responda só a frase, sem pontuação final.`
+                `Descreva o exercício "${nomeTrimmed}" em até duas frases curtas (máximo 25 palavras no total), explicando o músculo trabalhado e a execução principal. Responda só o texto corrido, sem listas nem aspas.`
             )
-            const texto = result.response.text().trim().replace(/\.$/, '')
+            const texto = result.response.text().trim().replace(/\s+/g, ' ')
             setDescricoes(prev => ({ ...prev, [exId]: texto || fallback }))
         } catch (err) {
             console.error('[CardTreino] gerarDescricao falhou para', nomeTrimmed, err)
@@ -1135,7 +1135,7 @@ export function CardTreino({
 
                                     {/* Linha 2: hint + resumo/toggle */}
                                     <div className="flex items-center justify-between px-6 pb-3 pl-[68px] gap-4">
-                                        <span className="text-xs text-gray-500 tracking-wide flex-1 min-w-0">
+                                        <span className="text-xs text-gray-500 tracking-wide flex-1 min-w-0 leading-snug line-clamp-2">
                                             {descricoes[ex.id] ?? (ex.foco || 'Carregando descrição...')}
                                         </span>
                                         <button
