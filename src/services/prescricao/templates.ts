@@ -19,8 +19,7 @@ function arredondarCarga(kg: number): number {
 
 /**
  * Gera aquecimento progressivo antes de uma carga-alvo.
- * Usa tabela Haun/Schoenfeld: 50%×12, 70%×8, 85%×5, 95%×3.
- * Retorna as primeiras `numAquec` séries (0-4).
+ * Tabela Haun/Schoenfeld: 50%×12, 70%×8, 85%×5, 95%×3.
  */
 export function gerarAquecimento(topKg: number, numAquec: number): SeriePrescrita[] {
     const tabela: Array<{ pct: number; reps: number; desc: number; tipo: 'aquecimento' | 'reconhecimento' }> = [
@@ -33,10 +32,7 @@ export function gerarAquecimento(topKg: number, numAquec: number): SeriePrescrit
     return escolhidas.map((t, i) => ({
         ordem: i + 1,
         tipo: t.tipo,
-        repsAlvoMin: t.reps,
-        repsAlvoMax: t.reps,
-        fonteCarga: 'pctTopSet',
-        cargaPercentTopSet: t.pct,
+        reps: t.reps,
         cargaKg: arredondarCarga(topKg * t.pct),
         rirAlvo: t.tipo === 'aquecimento' ? 4 : 2,
         descansoSegundos: t.desc,
@@ -45,7 +41,6 @@ export function gerarAquecimento(topKg: number, numAquec: number): SeriePrescrit
 
 /**
  * Rampa clássica: N-2 séries de aquecimento/reconhecimento + 2 válidas no top.
- * Uso típico: hipertrofia com progressão gradual até carga de trabalho.
  */
 export function rampaClassica(params: {
     totalSeries: number
@@ -59,9 +54,7 @@ export function rampaClassica(params: {
     const validas: SeriePrescrita[] = Array.from({ length: numValidas }, (_, i) => ({
         ordem: aquec.length + i + 1,
         tipo: 'valida',
-        repsAlvoMin: Math.max(1, repsValida - 2),
-        repsAlvoMax: repsValida,
-        fonteCarga: 'kg',
+        reps: repsValida,
         cargaKg: arredondarCarga(topKg),
         rirAlvo: i === numValidas - 1 ? 0 : 1,
         descansoSegundos: 180,
@@ -70,8 +63,7 @@ export function rampaClassica(params: {
 }
 
 /**
- * Top set + backoffs. 1 top pesado (RIR 0-1) + N backoffs a 80-85% do top (RIR 1-2).
- * Uso típico: força com acessório de volume.
+ * Top set + backoffs. 1 top pesado (RIR 0-1) + N backoffs a 80-85% (RIR 1-2).
  */
 export function topSetBackoff(params: {
     topKg: number
@@ -89,9 +81,7 @@ export function topSetBackoff(params: {
     const top: SeriePrescrita = {
         ordem: aquec.length + 1,
         tipo: 'top',
-        repsAlvoMin: Math.max(1, repsTop - 1),
-        repsAlvoMax: repsTop,
-        fonteCarga: 'kg',
+        reps: repsTop,
         cargaKg: arredondarCarga(topKg),
         rirAlvo: 0,
         descansoSegundos: 240,
@@ -100,10 +90,7 @@ export function topSetBackoff(params: {
     const backoffs: SeriePrescrita[] = Array.from({ length: backoffSeries }, (_, i) => ({
         ordem: aquec.length + 2 + i,
         tipo: 'backoff',
-        repsAlvoMin: Math.max(1, repsBackoff - 2),
-        repsAlvoMax: repsBackoff,
-        fonteCarga: 'pctTopSet',
-        cargaPercentTopSet: backoffPct,
+        reps: repsBackoff,
         cargaKg: backoffKg,
         rirAlvo: 2,
         descansoSegundos: 180,
@@ -130,9 +117,7 @@ export function piramideReversa(params: {
         return {
             ordem: aquec.length + i + 1,
             tipo: i === 0 ? 'top' : 'valida',
-            repsAlvoMin: repsTop + i * 2 - 1,
-            repsAlvoMax: repsTop + i * 2 + 1,
-            fonteCarga: 'kg',
+            reps: repsTop + i * 2,
             cargaKg: arredondarCarga(topKg * pct),
             rirAlvo: i === 0 ? 0 : 1,
             descansoSegundos: i === 0 ? 240 : 180,
@@ -142,70 +127,7 @@ export function piramideReversa(params: {
 }
 
 /**
- * Prescrição padrão DETERMINÍSTICA aplicada em planos recém-gerados.
- *
- * Gera uma rampa científica usando apenas %TopSet (cargaKg fica undefined até
- * o personal/runtime fornecer topSetKg — assim o aluno vê a estrutura aquec/recon/válida
- * mesmo antes de qualquer kg ser definido).
- *
- * Regra:
- *  - series <= 2 → straight sets (sem aquec)
- *  - series 3-4 → 1-2 aquec + válidas
- *  - series 5+  → 2-3 aquec + válidas
- */
-export function gerarPrescricaoPadrao(input: {
-    series: number
-    repeticoes?: string
-    descansoSegundos?: number
-}): SeriePrescrita[] {
-    const totalSeries = Math.max(1, input.series || 4)
-    const extrairNumMax = (s: string | undefined, fb: number): number => {
-        if (!s) return fb
-        const m = s.match(/\d+/g)
-        return m ? Math.max(...m.map(Number)) : fb
-    }
-    const extrairNumMin = (s: string | undefined, fb: number): number => {
-        if (!s) return fb
-        const m = s.match(/\d+/g)
-        return m ? Math.min(...m.map(Number)) : fb
-    }
-    const repsMax = extrairNumMax(input.repeticoes, 10)
-    const repsMin = extrairNumMin(input.repeticoes, Math.max(1, repsMax - 2))
-    const descansoValida = input.descansoSegundos && input.descansoSegundos > 0 ? input.descansoSegundos : 150
-
-    const tabelaAquec: Array<{ pct: number; reps: number; desc: number; tipo: 'aquecimento' | 'reconhecimento' }> = [
-        { pct: 0.5, reps: 12, desc: 60, tipo: 'aquecimento' },
-        { pct: 0.7, reps: 8, desc: 60, tipo: 'aquecimento' },
-        { pct: 0.85, reps: 5, desc: 90, tipo: 'reconhecimento' },
-    ]
-    const numAquec = totalSeries <= 2 ? 0 : Math.min(3, totalSeries - 2)
-    const aquec: SeriePrescrita[] = tabelaAquec.slice(0, numAquec).map((t, i) => ({
-        ordem: i + 1,
-        tipo: t.tipo,
-        repsAlvoMin: t.reps,
-        repsAlvoMax: t.reps,
-        fonteCarga: 'pctTopSet',
-        cargaPercentTopSet: t.pct,
-        rirAlvo: t.tipo === 'aquecimento' ? 4 : 2,
-        descansoSegundos: t.desc,
-    }))
-    const numValidas = totalSeries - aquec.length
-    const validas: SeriePrescrita[] = Array.from({ length: numValidas }, (_, i) => ({
-        ordem: aquec.length + i + 1,
-        tipo: 'valida',
-        repsAlvoMin: repsMin,
-        repsAlvoMax: repsMax,
-        fonteCarga: 'pctTopSet',
-        cargaPercentTopSet: 1,
-        rirAlvo: i === numValidas - 1 ? 0 : 1,
-        descansoSegundos: descansoValida,
-    }))
-    return [...aquec, ...validas]
-}
-
-/**
  * Straight sets: N séries idênticas (hipertrofia clássica).
- * Sem aquecimento embutido (personal adiciona separado se quiser).
  */
 export function straightSets(params: {
     series: number
@@ -220,11 +142,60 @@ export function straightSets(params: {
     return Array.from({ length: series }, (_, i) => ({
         ordem: i + 1,
         tipo: 'valida',
-        repsAlvoMin: Math.max(1, reps - 2),
-        repsAlvoMax: reps,
-        fonteCarga: 'kg',
+        reps,
         cargaKg: arredondarCarga(cargaKg),
         rirAlvo,
         descansoSegundos,
     }))
+}
+
+/**
+ * Prescrição padrão DETERMINÍSTICA aplicada em planos recém-gerados (antes do IA enriquecer).
+ *
+ * Gera a estrutura (tipos/reps/descanso) sem cargas reais — cargaKg=0 para todas.
+ * A IA (enriquecerPrescricaoComIA) roda logo em seguida e preenche as cargas reais.
+ *
+ * Regra:
+ *  - series <= 2 → 2 válidas straight (sem aquec)
+ *  - series 3-4 → 1-2 aquec + válidas
+ *  - series 5+  → 3 aquec (50/70/85% reps 12/8/5) + válidas
+ */
+export function gerarPrescricaoPadrao(input: {
+    series: number
+    repeticoes?: string
+    descansoSegundos?: number
+}): SeriePrescrita[] {
+    const totalSeries = Math.max(1, input.series || 4)
+    const extrairNumMax = (s: string | undefined, fb: number): number => {
+        if (!s) return fb
+        const m = s.match(/\d+/g)
+        return m ? Math.max(...m.map(Number)) : fb
+    }
+    const repsValida = extrairNumMax(input.repeticoes, 10)
+    const descansoValida = input.descansoSegundos && input.descansoSegundos > 0 ? input.descansoSegundos : 150
+
+    const tabelaAquec: Array<{ reps: number; desc: number; tipo: 'aquecimento' | 'reconhecimento' }> = [
+        { reps: 12, desc: 60, tipo: 'aquecimento' },
+        { reps: 8, desc: 60, tipo: 'aquecimento' },
+        { reps: 5, desc: 90, tipo: 'reconhecimento' },
+    ]
+    const numAquec = totalSeries <= 2 ? 0 : Math.min(3, totalSeries - 2)
+    const aquec: SeriePrescrita[] = tabelaAquec.slice(0, numAquec).map((t, i) => ({
+        ordem: i + 1,
+        tipo: t.tipo,
+        reps: t.reps,
+        cargaKg: 0,
+        rirAlvo: t.tipo === 'aquecimento' ? 4 : 2,
+        descansoSegundos: t.desc,
+    }))
+    const numValidas = totalSeries - aquec.length
+    const validas: SeriePrescrita[] = Array.from({ length: numValidas }, (_, i) => ({
+        ordem: aquec.length + i + 1,
+        tipo: 'valida',
+        reps: repsValida,
+        cargaKg: 0,
+        rirAlvo: i === numValidas - 1 ? 0 : 1,
+        descansoSegundos: descansoValida,
+    }))
+    return [...aquec, ...validas]
 }

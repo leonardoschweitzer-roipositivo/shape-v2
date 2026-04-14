@@ -1162,8 +1162,8 @@ export function CardTreino({
                                                 const placeholderCarga = prescrita?.cargaKg != null
                                                     ? String(prescrita.cargaKg)
                                                     : (ultimaSet?.carga != null ? String(ultimaSet.carga) : 'kg')
-                                                const placeholderReps = prescrita?.repsAlvoMax != null
-                                                    ? String(prescrita.repsAlvoMax)
+                                                const placeholderReps = prescrita?.reps != null
+                                                    ? String(prescrita.reps)
                                                     : (ultimaSet?.reps != null ? String(ultimaSet.reps) : extrairRepPlaceholder(ex.repeticoes))
                                                 return (
                                                     <div key={sIdx} className={`py-1.5 transition-colors duration-300 ${isProxima ? 'bg-amber-500/10 -mx-2 px-2 rounded-lg' : ''}`}>
@@ -1255,15 +1255,15 @@ export function CardTreino({
                                                     </div>
 
                                                     {/* Label compacto da prescrição — aparece quando há prescrição detalhada */}
-                                                    {prescrita && (prescrita.cargaKg != null || prescrita.rirAlvo != null || prescrita.descansoSegundos) && (
+                                                    {prescrita && (prescrita.cargaKg > 0 || prescrita.rirAlvo != null || prescrita.descansoSegundos) && (
                                                         <div className="pl-8 pt-0.5 text-[9px] font-mono text-gray-600 uppercase tracking-wider whitespace-nowrap overflow-hidden text-ellipsis">
-                                                            {prescrita.cargaKg != null && <span className="text-indigo-400/70">{prescrita.cargaKg}kg</span>}
-                                                            {prescrita.cargaKg != null && <span className="text-gray-700 mx-1">·</span>}
-                                                            <span>{prescrita.repsAlvoMin === prescrita.repsAlvoMax ? prescrita.repsAlvoMax : `${prescrita.repsAlvoMin}-${prescrita.repsAlvoMax}`} reps</span>
+                                                            {prescrita.cargaKg > 0 && <span className="text-indigo-400/70">{prescrita.cargaKg}kg</span>}
+                                                            {prescrita.cargaKg > 0 && <span className="text-gray-700 mx-1">·</span>}
+                                                            <span>{prescrita.reps} reps</span>
                                                             {prescrita.rirAlvo != null && (
                                                                 <>
                                                                     <span className="text-gray-700 mx-1">·</span>
-                                                                    <span className="text-amber-400/60">RIR {prescrita.rirAlvo}</span>
+                                                                    <span className="text-amber-400/60" title="Reps In Reserve — reps sobrando antes da falha">RIR {prescrita.rirAlvo}</span>
                                                                 </>
                                                             )}
                                                             {prescrita.descansoSegundos > 0 && (

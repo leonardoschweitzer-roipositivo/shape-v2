@@ -7,7 +7,7 @@
  */
 
 import React, { useState } from 'react'
-import { Plus, Minus, Sparkles, Loader2, Trash2 } from 'lucide-react'
+import { Plus, Minus, Sparkles, Loader2, Trash2, HelpCircle } from 'lucide-react'
 import type { Exercicio } from '@/services/calculations/treino'
 import type { SeriePrescrita, TemplateId } from '@/types/prescricao'
 import type { TipoSet } from '@/types/athlete-portal'
@@ -35,7 +35,6 @@ const TEMPLATE_OPTIONS: Array<{ value: TemplateId | ''; label: string }> = [
 interface BlocoPrescricaoSeriesProps {
     ex: Exercicio
     onUpdate: (ex: Exercicio) => void
-    /** Contexto opcional para melhorar sugestão via IA. */
     contextoIA?: {
         grupoMuscular?: string
         nivel?: 'iniciante' | 'intermediario' | 'avancado'
@@ -91,10 +90,6 @@ export const BlocoPrescricaoSeries: React.FC<BlocoPrescricaoSeriesProps> = ({ ex
     }
 
     const gerarIA = async () => {
-        if (!topSetKg || topSetKg <= 0) {
-            alert('Defina o top set alvo primeiro (kg e reps).')
-            return
-        }
         setIaLoading(true)
         try {
             const resultado = await sugerirPrescricaoIA({
@@ -105,7 +100,7 @@ export const BlocoPrescricaoSeries: React.FC<BlocoPrescricaoSeriesProps> = ({ ex
                 mesocicloNome: contextoIA?.mesocicloNome,
                 rpeAlvoMesociclo: contextoIA?.rpeAlvoMesociclo,
                 volumeRelativo: contextoIA?.volumeRelativo,
-                topSetKg,
+                topSetKg: topSetKg > 0 ? topSetKg : undefined,
                 repsTop: topSetReps,
                 totalSeriesDesejado: Math.max(4, series.length || ex.series || 5),
             })
@@ -124,7 +119,7 @@ export const BlocoPrescricaoSeries: React.FC<BlocoPrescricaoSeriesProps> = ({ ex
         const ultima = series[series.length - 1]
         const nova: SeriePrescrita = ultima
             ? { ...ultima, ordem: series.length + 1 }
-            : { ordem: 1, tipo: 'valida', repsAlvoMin: topSetReps, repsAlvoMax: topSetReps, fonteCarga: 'kg', cargaKg: topSetKg, descansoSegundos: 120 }
+            : { ordem: 1, tipo: 'valida', reps: topSetReps, cargaKg: topSetKg, descansoSegundos: 120 }
         setSeries([...series, nova])
     }
 
@@ -134,10 +129,10 @@ export const BlocoPrescricaoSeries: React.FC<BlocoPrescricaoSeriesProps> = ({ ex
     }
 
     return (
-        <div className="space-y-2 border-t border-indigo-500/15 pt-2 mt-1">
+        <div className="space-y-3 border-t border-indigo-500/15 pt-3 mt-2">
             {/* Cabeçalho: top set + actions */}
-            <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[8px] text-zinc-600 uppercase tracking-wider font-bold">Top:</span>
+            <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-zinc-500 uppercase tracking-wider font-bold">Top:</span>
                 <input
                     type="number"
                     step="0.5"
@@ -145,21 +140,21 @@ export const BlocoPrescricaoSeries: React.FC<BlocoPrescricaoSeriesProps> = ({ ex
                     value={topSetKg || ''}
                     onChange={e => setTop(Number(e.target.value) || 0, topSetReps)}
                     placeholder="kg"
-                    className="w-14 h-6 bg-white/[0.03] border border-white/10 rounded-md text-[10px] text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/50"
+                    className="w-20 h-9 bg-white/[0.03] border border-white/10 rounded-lg text-sm text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/50"
                 />
-                <span className="text-[9px] text-zinc-600">×</span>
+                <span className="text-sm text-zinc-600">×</span>
                 <input
                     type="number"
                     min="1"
                     value={topSetReps || ''}
                     onChange={e => setTop(topSetKg, Number(e.target.value) || 0)}
                     placeholder="reps"
-                    className="w-12 h-6 bg-white/[0.03] border border-white/10 rounded-md text-[10px] text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/50"
+                    className="w-16 h-9 bg-white/[0.03] border border-white/10 rounded-lg text-sm text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/50"
                 />
                 <select
                     value=""
                     onChange={e => { if (e.target.value) aplicarTemplate(e.target.value as TemplateId) }}
-                    className="h-6 bg-white/[0.03] border border-white/10 rounded-md text-[9px] text-gray-300 px-1.5 outline-none focus:border-indigo-500/50"
+                    className="h-9 bg-white/[0.03] border border-white/10 rounded-lg text-xs text-gray-300 px-2 outline-none focus:border-indigo-500/50"
                 >
                     {TEMPLATE_OPTIONS.map(opt => (
                         <option key={opt.value} value={opt.value} className="bg-surface-deep">{opt.label}</option>
@@ -169,99 +164,66 @@ export const BlocoPrescricaoSeries: React.FC<BlocoPrescricaoSeriesProps> = ({ ex
                     type="button"
                     onClick={gerarIA}
                     disabled={iaLoading}
-                    className="h-6 px-2 flex items-center gap-1 rounded-md bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[9px] font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
+                    className="h-9 px-3 flex items-center gap-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
                     title="Sugerir prescrição com IA"
                 >
-                    {iaLoading ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
+                    {iaLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
                     IA
                 </button>
             </div>
 
             {/* Tabela de séries */}
             {series.length === 0 ? (
-                <p className="text-[9px] text-zinc-600 italic py-1.5">
+                <p className="text-xs text-zinc-600 italic py-2">
                     Nenhuma série prescrita. Aplique um template ou clique em IA.
                 </p>
             ) : (
-                <div className="space-y-1">
-                    <div className="grid grid-cols-[16px_60px_58px_60px_32px_40px_16px] gap-1 items-center text-[7px] text-zinc-600 font-bold uppercase tracking-wider">
+                <div className="space-y-1.5">
+                    <div className="grid grid-cols-[24px_96px_68px_80px_56px_64px_24px] gap-2 items-center text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
                         <span>#</span>
                         <span>Tipo</span>
                         <span className="text-center">Reps</span>
                         <span className="text-center">Carga</span>
-                        <span className="text-center">RIR</span>
+                        <span className="text-center flex items-center justify-center gap-1">
+                            RIR
+                            <span title="Reps In Reserve — reps que sobram antes da falha. 0=até a falha, 2=poderia fazer mais 2. (Zourdos 2016)" className="cursor-help">
+                                <HelpCircle size={10} />
+                            </span>
+                        </span>
                         <span className="text-center">Desc</span>
                         <span></span>
                     </div>
                     {series.map((s, idx) => (
-                        <div key={idx} className="grid grid-cols-[16px_60px_58px_60px_32px_40px_16px] gap-1 items-center">
-                            <span className="text-[9px] text-zinc-500 font-mono">{idx + 1}</span>
+                        <div key={idx} className="grid grid-cols-[24px_96px_68px_80px_56px_64px_24px] gap-2 items-center">
+                            <span className="text-xs text-zinc-500 font-mono">{idx + 1}</span>
                             <select
                                 value={s.tipo}
                                 onChange={e => updateSerie(idx, { tipo: e.target.value as TipoSet })}
-                                className="h-6 bg-white/[0.03] border border-white/10 rounded-md text-[9px] text-gray-300 outline-none focus:border-indigo-500/50"
+                                className="h-9 bg-white/[0.03] border border-white/10 rounded-lg text-xs text-gray-200 px-1.5 outline-none focus:border-indigo-500/50"
                             >
                                 {TIPO_OPTIONS.map(opt => (
                                     <option key={opt.value} value={opt.value} className="bg-surface-deep">{opt.label}</option>
                                 ))}
                             </select>
-                            <div className="flex items-center gap-0.5">
+                            <input
+                                type="number"
+                                min="1"
+                                value={s.reps || ''}
+                                onChange={e => updateSerie(idx, { reps: Number(e.target.value) || 1 })}
+                                className="h-9 bg-white/[0.03] border border-white/10 rounded-lg text-sm text-indigo-300 font-mono text-center outline-none focus:border-indigo-500/50"
+                            />
+                            <div className="flex items-center gap-1">
                                 <input
                                     type="number"
-                                    min="1"
-                                    value={s.repsAlvoMin || ''}
-                                    onChange={e => updateSerie(idx, { repsAlvoMin: Number(e.target.value) || 1 })}
-                                    className="w-6 h-6 bg-white/[0.03] border border-white/10 rounded-md text-[9px] text-indigo-300 font-mono text-center outline-none focus:border-indigo-500/50"
+                                    step="0.5"
+                                    min="0"
+                                    value={s.cargaKg > 0 ? s.cargaKg : ''}
+                                    placeholder="kg"
+                                    onChange={e => updateSerie(idx, { cargaKg: Number(e.target.value) || 0 })}
+                                    className="w-14 h-9 bg-white/[0.03] border border-white/10 rounded-lg text-sm text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/50"
                                 />
-                                <span className="text-[8px] text-zinc-600">-</span>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    value={s.repsAlvoMax || ''}
-                                    onChange={e => updateSerie(idx, { repsAlvoMax: Number(e.target.value) || 1 })}
-                                    className="w-6 h-6 bg-white/[0.03] border border-white/10 rounded-md text-[9px] text-indigo-300 font-mono text-center outline-none focus:border-indigo-500/50"
-                                />
+                                <span className="text-[10px] text-zinc-600">kg</span>
                             </div>
-                            {s.fonteCarga === 'pctTopSet' ? (
-                                <div className="flex items-center gap-0.5">
-                                    <input
-                                        type="number"
-                                        step="5"
-                                        min="0"
-                                        max="120"
-                                        value={s.cargaPercentTopSet != null ? Math.round(s.cargaPercentTopSet * 100) : ''}
-                                        onChange={e => {
-                                            const pct = Math.max(0, Math.min(1.2, Number(e.target.value) / 100))
-                                            const kg = Math.round(topSetKg * pct * 2) / 2
-                                            updateSerie(idx, { cargaPercentTopSet: pct, cargaKg: kg })
-                                        }}
-                                        className="w-9 h-6 bg-white/[0.03] border border-white/10 rounded-md text-[9px] text-indigo-300 font-mono text-center outline-none focus:border-indigo-500/50"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => updateSerie(idx, { fonteCarga: 'kg' })}
-                                        className="text-[7px] text-amber-400/80 hover:text-amber-300 uppercase"
-                                        title="Mudar para kg absoluto"
-                                    >%TS</button>
-                                </div>
-                            ) : (
-                                <div className="flex items-center gap-0.5">
-                                    <input
-                                        type="number"
-                                        step="0.5"
-                                        min="0"
-                                        value={s.cargaKg ?? ''}
-                                        onChange={e => updateSerie(idx, { cargaKg: Number(e.target.value) || 0 })}
-                                        className="w-9 h-6 bg-white/[0.03] border border-white/10 rounded-md text-[9px] text-indigo-300 font-mono text-center outline-none focus:border-indigo-500/50"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => updateSerie(idx, { fonteCarga: 'pctTopSet' })}
-                                        className="text-[7px] text-zinc-600 hover:text-indigo-300 uppercase"
-                                        title="Mudar para %TopSet"
-                                    >kg</button>
-                                </div>
-                            )}
                             <input
                                 type="number"
                                 min="0"
@@ -271,23 +233,26 @@ export const BlocoPrescricaoSeries: React.FC<BlocoPrescricaoSeriesProps> = ({ ex
                                     const v = e.target.value === '' ? undefined : Math.max(0, Math.min(5, Number(e.target.value)))
                                     updateSerie(idx, { rirAlvo: v })
                                 }}
-                                className="h-6 bg-white/[0.03] border border-white/10 rounded-md text-[9px] text-amber-300 font-mono text-center outline-none focus:border-indigo-500/50"
+                                className="h-9 bg-white/[0.03] border border-white/10 rounded-lg text-sm text-amber-300 font-mono text-center outline-none focus:border-indigo-500/50"
                             />
-                            <input
-                                type="number"
-                                min="0"
-                                step="15"
-                                value={s.descansoSegundos || ''}
-                                onChange={e => updateSerie(idx, { descansoSegundos: Number(e.target.value) || 0 })}
-                                className="h-6 bg-white/[0.03] border border-white/10 rounded-md text-[9px] text-gray-300 font-mono text-center outline-none focus:border-indigo-500/50"
-                            />
+                            <div className="flex items-center gap-1">
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="15"
+                                    value={s.descansoSegundos || ''}
+                                    onChange={e => updateSerie(idx, { descansoSegundos: Number(e.target.value) || 0 })}
+                                    className="w-12 h-9 bg-white/[0.03] border border-white/10 rounded-lg text-sm text-gray-300 font-mono text-center outline-none focus:border-indigo-500/50"
+                                />
+                                <span className="text-[10px] text-zinc-600">s</span>
+                            </div>
                             <button
                                 type="button"
                                 onClick={() => removeSerie(idx)}
                                 className="text-zinc-600 hover:text-red-400 transition-colors"
                                 title="Remover série"
                             >
-                                <Trash2 size={10} />
+                                <Trash2 size={12} />
                             </button>
                         </div>
                     ))}
@@ -295,22 +260,22 @@ export const BlocoPrescricaoSeries: React.FC<BlocoPrescricaoSeriesProps> = ({ ex
             )}
 
             {/* Actions */}
-            <div className="flex items-center gap-1 pt-1">
+            <div className="flex items-center gap-2 pt-1">
                 <button
                     type="button"
                     onClick={addSerie}
-                    className="h-6 px-2 flex items-center gap-1 rounded-md bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 text-gray-300 text-[9px] font-bold uppercase tracking-wider transition-colors"
+                    className="h-8 px-3 flex items-center gap-1.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 text-gray-300 text-[11px] font-bold uppercase tracking-wider transition-colors"
                 >
-                    <Plus size={10} />
+                    <Plus size={12} />
                     Série
                 </button>
                 {series.length > 1 && (
                     <button
                         type="button"
                         onClick={() => removeSerie(series.length - 1)}
-                        className="h-6 px-2 flex items-center gap-1 rounded-md bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 text-gray-400 text-[9px] font-bold uppercase tracking-wider transition-colors"
+                        className="h-8 px-3 flex items-center gap-1.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 text-gray-400 text-[11px] font-bold uppercase tracking-wider transition-colors"
                     >
-                        <Minus size={10} />
+                        <Minus size={12} />
                         Última
                     </button>
                 )}

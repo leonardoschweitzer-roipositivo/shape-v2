@@ -14,36 +14,24 @@
 
 import type { TipoSet } from './athlete-portal'
 
-/** Origem da carga de uma série prescrita. */
-export type FonteCarga = 'kg' | 'pctTopSet'
-
 /** Uma série prescrita pelo personal (input do plano, não execução). */
 export interface SeriePrescrita {
     /** Posição 1..N dentro do exercício. */
     ordem: number
     /** Classificação do esforço (reuso de TipoSet do athlete-portal). */
     tipo: TipoSet
-    /** Repetições-alvo mínimas. Se fixo, igual a repsAlvoMax. */
-    repsAlvoMin: number
-    /** Repetições-alvo máximas. */
-    repsAlvoMax: number
-    /** Define como interpretar cargaKg vs cargaPercentTopSet. */
-    fonteCarga: FonteCarga
-    /** Carga absoluta em kg (usada quando fonteCarga='kg'). */
-    cargaKg?: number
-    /** Fração do top set 0..1 (usada quando fonteCarga='pctTopSet'). */
-    cargaPercentTopSet?: number
-    /** Reps in Reserve alvo (0-5). Zourdos 2016. */
+    /** Número exato de repetições prescritas. */
+    reps: number
+    /** Carga prescrita em kg. 0 quando ainda não definida. */
+    cargaKg: number
+    /** Reps In Reserve alvo (0-5). Zourdos 2016. 0 = até a falha. */
     rirAlvo?: number
     /** Descanso prescrito em segundos até a próxima série. */
     descansoSegundos: number
-    /** Observação livre (ex: "tempo sob tensão 3-1-1"). */
-    observacao?: string
 }
 
-/** Contexto para resolver percentuais em kg concretos. */
+/** Contexto (mantido por compatibilidade; não mais usado para resolver %). */
 export interface PrescricaoContext {
-    /** Carga do top set da sessão em kg — usada p/ expandir pctTopSet. */
     topSetKg?: number
 }
 

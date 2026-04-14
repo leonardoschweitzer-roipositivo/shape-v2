@@ -50,6 +50,7 @@ import {
     type TreinoDetalhado,
     type VolumePorGrupo
 } from '@/services/calculations/treino';
+import { enriquecerPrescricaoComIA } from '@/services/prescricao/enriquecer';
 import {
     calcularPotencialAtleta,
     type PotencialAtleta,
@@ -230,23 +231,29 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
             setPlano(resultado);
             setEstado('ready');
 
-            // Enriquecer com IA em background
+            // Enriquecer com IA em background (insights + prescrição série-a-série em paralelo)
             setIaEnriching(true);
             const perfil = buildPerfilIA(atleta.name, atleta.gender, atleta.birthDate, ultimaAvaliacao.measurements as Record<string, number>, ultimaAvaliacao.bf ?? 15, atleta.score, atleta.contexto ?? undefined);
-            console.info('[TreinoView] 🚀 Iniciando enriquecimento IA...');
-            enriquecerTreinoComIA(resultado, perfil)
-                .then(enriquecido => {
-                    if (enriquecido !== resultado) {
-                        console.info('[TreinoView] 🤖 Treino enriquecido com IA!', {
-                            temInsights: !!enriquecido.insightsPorSecao,
-                            mensagemFinal: enriquecido.observacoes?.mensagemFinal?.substring(0, 50) + '...',
-                        });
-                        setPlano(enriquecido);
-                    } else {
-                        console.warn('[TreinoView] ⚠️ IA retornou mesmo objeto (falha?)');
-                    }
+            console.info('[TreinoView] 🚀 Iniciando enriquecimento IA (insights + prescrição)...');
+            Promise.all([
+                enriquecerTreinoComIA(resultado, perfil).catch(err => {
+                    console.error('[TreinoView] ❌ Erro insights IA:', err);
+                    return resultado;
+                }),
+                enriquecerPrescricaoComIA(resultado).catch(err => {
+                    console.error('[TreinoView] ❌ Erro prescrição IA:', err);
+                    return resultado;
+                }),
+            ])
+                .then(([comInsights, comPrescricao]) => {
+                    // Merge: prescricaoSeries de comPrescricao + insightsPorSecao/observacoes de comInsights.
+                    const final: PlanoTreino = {
+                        ...comInsights,
+                        treinos: comPrescricao.treinos,
+                    };
+                    console.info('[TreinoView] 🤖 Plano enriquecido (insights + prescrição série-a-série)');
+                    setPlano(final);
                 })
-                .catch(err => console.error('[TreinoView] ❌ Erro IA:', err))
                 .finally(() => setIaEnriching(false));
         }, 1800);
     };

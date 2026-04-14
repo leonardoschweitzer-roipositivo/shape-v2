@@ -159,23 +159,15 @@ const ExercicioRow: React.FC<{
                             </div>
                         </div>
 
-                        {/* Nome + Obs */}
-                        <div className="flex-1 min-w-0 space-y-0.5">
+                        {/* Nome (a descrição do exercício é gerada no portal do aluno pela IA) */}
+                        <div className="flex-1 min-w-0">
                             <EditableField
                                 type="text"
                                 isEditing
                                 value={ex.nome}
                                 onChange={(v) => onUpdate({ ...ex, nome: v })}
                                 placeholder="Nome do exercício"
-                                inputClassName="!text-[11px] !py-2 !px-2 font-bold"
-                            />
-                            <EditableField
-                                type="text"
-                                isEditing
-                                value={ex.observacao || ''}
-                                onChange={(v) => onUpdate({ ...ex, observacao: v || undefined })}
-                                placeholder="Obs (opcional)"
-                                inputClassName="!text-[9px] !py-1.5 !px-2 opacity-60"
+                                inputClassName="!text-sm !py-2 !px-2 font-bold"
                             />
                         </div>
 
@@ -189,22 +181,20 @@ const ExercicioRow: React.FC<{
                         </button>
                     </div>
 
-                    {/* Linha 2: Toggle "Prescrição detalhada" */}
+                    {/* Toggle "Prescrição detalhada" */}
                     <div className="flex items-center gap-2 pl-5 pb-1">
-                        <label className="flex items-center gap-1.5 text-[8px] text-zinc-500 font-bold uppercase tracking-wider cursor-pointer select-none">
+                        <label className="flex items-center gap-2 text-xs text-zinc-400 font-bold uppercase tracking-wider cursor-pointer select-none">
                             <input
                                 type="checkbox"
                                 checked={!!ex.prescricaoSeries && ex.prescricaoSeries.length > 0}
                                 onChange={e => {
                                     if (e.target.checked) {
-                                        // Ligar: inicializa arr vazia (BlocoPrescricaoSeries mostrará CTA para template)
                                         onUpdate({ ...ex, prescricaoSeries: [], topSetKg: ex.topSetKg, topSetReps: ex.topSetReps })
                                     } else {
-                                        // Desligar: remove prescrição detalhada, mantém campos legados
                                         onUpdate({ ...ex, prescricaoSeries: undefined })
                                     }
                                 }}
-                                className="w-3 h-3 accent-indigo-500"
+                                className="w-4 h-4 accent-indigo-500"
                             />
                             Prescrição detalhada
                         </label>
