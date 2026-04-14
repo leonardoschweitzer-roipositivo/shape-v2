@@ -19,6 +19,7 @@ import { ExercicioDetalheModal } from '../../molecules/ExercicioDetalheModal'
 import { exercicioBibliotecaService } from '../../../services/exercicioBiblioteca.service'
 import type { ExercicioBiblioteca } from '../../../types/exercicio-biblioteca'
 import { SwipeableRow } from '../../molecules/SwipeableRow'
+import { ConfirmModal } from '../../molecules/ConfirmModal'
 
 interface CardTreinoProps {
     treino: WorkoutOfDay
@@ -293,6 +294,7 @@ export function CardTreino({
     const [localExercicios, setLocalExercicios] = useState<ExercicioTreino[]>(treino.exercicios || [])
     // Exercícios começam colapsados — aluno expande o que está executando no momento.
     const [expandedExIds, setExpandedExIds] = useState<Set<string>>(new Set())
+    const [exercicioParaExcluir, setExercicioParaExcluir] = useState<ExercicioTreino | null>(null)
 
     useEffect(() => {
         setLocalExercicios(treino.exercicios || [])
@@ -404,56 +406,79 @@ export function CardTreino({
     const lastBeepMarkRef = useRef<Record<string, number>>({})
 
     const ensureAudioCtx = (): AudioContext | null => {
+        const wasNull = !audioCtxRef.current
         if (!audioCtxRef.current) {
             const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
             if (Ctx) audioCtxRef.current = new Ctx()
         }
-        if (audioCtxRef.current?.state === 'suspended') {
-            audioCtxRef.current.resume().catch(() => { /* ignore */ })
+        const ctx = audioCtxRef.current
+        if (!ctx) return null
+        if (ctx.state === 'suspended') ctx.resume().catch(() => { /* ignore */ })
+        // Unlock áudio no iOS/Safari tocando um buffer silencioso no primeiro gesto
+        if (wasNull) {
+            try {
+                const buf = ctx.createBuffer(1, 1, 22050)
+                const src = ctx.createBufferSource()
+                src.buffer = buf
+                src.connect(ctx.destination)
+                src.start(0)
+            } catch { /* ignore */ }
         }
-        return audioCtxRef.current
+        return ctx
     }
 
     const playBeep = () => {
         const ctx = audioCtxRef.current
         if (!ctx) return
-        const osc = ctx.createOscillator()
-        const gain = ctx.createGain()
-        osc.connect(gain)
-        gain.connect(ctx.destination)
-        osc.type = 'sine'
-        osc.frequency.value = 880
+        if (ctx.state === 'suspended') ctx.resume().catch(() => { /* ignore */ })
         const t0 = ctx.currentTime
-        gain.gain.setValueAtTime(0.0001, t0)
-        gain.gain.exponentialRampToValueAtTime(0.3, t0 + 0.01)
-        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.22)
-        osc.start(t0)
-        osc.stop(t0 + 0.24)
+        // Dois bipes curtos encadeados para ficar nítido
+        const tone = (start: number, freq: number, dur: number) => {
+            const osc = ctx.createOscillator()
+            const gain = ctx.createGain()
+            osc.connect(gain)
+            gain.connect(ctx.destination)
+            osc.type = 'sine'
+            osc.frequency.value = freq
+            gain.gain.setValueAtTime(0.0001, start)
+            gain.gain.exponentialRampToValueAtTime(0.5, start + 0.01)
+            gain.gain.exponentialRampToValueAtTime(0.0001, start + dur)
+            osc.start(start)
+            osc.stop(start + dur + 0.02)
+        }
+        tone(t0, 880, 0.18)
+        tone(t0 + 0.22, 1175, 0.22)
     }
 
+    // Intervalo dedicado só para verificar marcas de 30s — independente do ciclo de render
     useEffect(() => {
-        Object.entries(exercicioTimers).forEach(([exId, timer]) => {
-            timer.sets?.forEach((set, sIdx) => {
-                const key = `${exId}:${sIdx}`
-                if (!set.concluido) {
-                    delete lastBeepMarkRef.current[key]
-                    return
-                }
-                if (set.descansoStatus !== 'running') return
-                const acc = set.descansoAcumuladoMs ?? 0
-                const totalMs = set.descansoInicio
-                    ? acc + (Date.now() - set.descansoInicio)
-                    : acc
-                const seconds = Math.floor(totalMs / 1000)
-                const mark = Math.floor(seconds / 30)
-                const last = lastBeepMarkRef.current[key] ?? 0
-                if (mark > last && mark > 0) {
-                    lastBeepMarkRef.current[key] = mark
-                    playBeep()
-                }
+        if (!hasRestTimerRunning) return undefined
+        const check = () => {
+            Object.entries(exercicioTimers).forEach(([exId, timer]) => {
+                timer.sets?.forEach((set, sIdx) => {
+                    const key = `${exId}:${sIdx}`
+                    if (!set.concluido) {
+                        delete lastBeepMarkRef.current[key]
+                        return
+                    }
+                    if (set.descansoStatus !== 'running') return
+                    const acc = set.descansoAcumuladoMs ?? 0
+                    const totalMs = set.descansoInicio
+                        ? acc + (Date.now() - set.descansoInicio)
+                        : acc
+                    const seconds = Math.floor(totalMs / 1000)
+                    const mark = Math.floor(seconds / 30)
+                    const last = lastBeepMarkRef.current[key] ?? 0
+                    if (mark > last && mark > 0) {
+                        lastBeepMarkRef.current[key] = mark
+                        playBeep()
+                    }
+                })
             })
-        })
-    })
+        }
+        const id = setInterval(check, 250)
+        return () => clearInterval(id)
+    }, [hasRestTimerRunning, exercicioTimers])
 
     // Data de ontem em 'YYYY-MM-DD'
     const getOntemISO = (): string => {
@@ -906,11 +931,7 @@ export function CardTreino({
                                     key={ex.id}
                                     className={`transition-all duration-300 ${idx !== localExercicios.length - 1 ? 'border-b border-white/5' : ''} ${isDone ? 'opacity-60' : ''}`}
                                     innerClassName=""
-                                    onDelete={() => {
-                                        const nome = ex.nome?.trim() || 'este exercício'
-                                        if (!confirm(`Tem certeza que deseja excluir "${nome}" do treino de hoje?`)) return
-                                        setLocalExercicios(prev => prev.filter(x => x.id !== ex.id))
-                                    }}
+                                    onDelete={() => setExercicioParaExcluir(ex)}
                                 >
                                     {/* Linha 1: checkbox + nome + vídeo */}
                                     <div className="flex items-center gap-3 px-6 pt-3 pb-1">
@@ -1293,6 +1314,32 @@ export function CardTreino({
                     />
                 )
             }
+
+            {/* Confirmação de exclusão de exercício */}
+            <ConfirmModal
+                open={exercicioParaExcluir !== null}
+                title="Excluir exercício"
+                message={
+                    <>
+                        Tem certeza que deseja remover{' '}
+                        <span className="text-white font-bold">
+                            {exercicioParaExcluir?.nome?.trim() || 'este exercício'}
+                        </span>{' '}
+                        do treino de hoje?
+                        <br />
+                        <span className="text-red-400 font-medium">Esta ação não pode ser desfeita.</span>
+                    </>
+                }
+                confirmLabel="Sim, excluir"
+                cancelLabel="Cancelar"
+                onCancel={() => setExercicioParaExcluir(null)}
+                onConfirm={() => {
+                    if (!exercicioParaExcluir) return
+                    const id = exercicioParaExcluir.id
+                    setLocalExercicios(prev => prev.filter(x => x.id !== id))
+                    setExercicioParaExcluir(null)
+                }}
+            />
         </>
     )
 }
