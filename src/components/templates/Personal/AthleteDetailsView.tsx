@@ -47,6 +47,7 @@ import { portalService } from '@/services/portalService';
 import { AthleteContextSection } from './AthleteContextSection';
 import type { ContextoAtleta } from './AthleteContextSection';
 import { DEFAULT_ATHLETE_PASSWORD } from '@/components/templates/StudentRegistration/StudentRegistration';
+import { CardHistoricoTreinos } from '@/components/organisms/CardHistoricoTreinos/CardHistoricoTreinos';
 
 import { getObjetivoLabel } from '@/services/calculations/objetivos';
 
@@ -799,6 +800,18 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                     <p className="text-gray-500 text-sm italic">Nenhuma avaliação realizada ainda.</p>
                                 )}
                             </Accordion>
+                        </div>
+                    </div>
+
+                    {/* Section 2.5: Histórico de Treinos (carga e volume por sessão) */}
+                    <div className="pt-6">
+                        <SectionHeader
+                            icon={Dumbbell}
+                            title="Histórico de Treinos"
+                            subtitle="Evolução de carga por exercício e volume por sessão"
+                        />
+                        <div className="bg-surface border border-white/10 rounded-2xl p-6 shadow-xl">
+                            <CardHistoricoTreinos atletaId={athlete.id} variant="plain" />
                         </div>
                     </div>
 
