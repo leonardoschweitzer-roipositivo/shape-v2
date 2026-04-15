@@ -10,6 +10,7 @@ import { HeaderIdentidade } from './components/HeaderIdentidade'
 import { CardTreino } from '../../components/organisms/CardTreino'
 import { CardAnaliseTreino } from '../../components/organisms/CardAnaliseTreino'
 import { TrackersRapidos } from '../../components/organisms/TrackersRapidos'
+import { CardHistoricoTreinos } from '@/components/organisms/CardHistoricoTreinos/CardHistoricoTreinos'
 import { FeedbackTextual } from '../../components/organisms/FeedbackTextual'
 import { AccordionProximoTreino } from './components'
 import { TodayScreenData, TrackerRapido } from '../../types/athlete-portal'
@@ -121,6 +122,9 @@ export function TodayScreen({
                     trackers={data.trackers}
                     onTrackerClick={onTrackerClick}
                 />
+
+                {/* Histórico de Treinos — evolução de carga e volume */}
+                <CardHistoricoTreinos atletaId={atletaId} />
             </div>
 
             {/* Modal de Pular Treino/Descanso */}
