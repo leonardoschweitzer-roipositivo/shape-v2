@@ -6,6 +6,7 @@ import { CardConsistenciaPersonal } from './components/CardConsistenciaPersonal'
 import { CardUltimosRegistros } from './components/CardUltimosRegistros'
 import { CardMetasTrimestrePersonal } from './components/CardMetasTrimestrePersonal'
 import { CardTreinosAccordion } from './components/CardTreinosAccordion'
+import { CardHistoricoTreinos } from '@/components/organisms/CardHistoricoTreinos/CardHistoricoTreinos'
 import { EditarTreinoScreen } from './components/EditarTreinoScreen'
 import { buscarFichaAluno } from '@/services/personalPortal.service'
 import { atletaService } from '@/services/atleta.service'
@@ -255,6 +256,12 @@ FORMATO:
                     planoTreino={ficha.planoTreino}
                     atletaId={alunoId}
                     onEditar={ficha.planoTreino ? () => setEditandoTreino(true) : undefined}
+                />
+
+                {/* 1.2 Histórico de Treinos (gráficos de carga e volume) */}
+                <CardHistoricoTreinos
+                    atletaId={alunoId}
+                    planoTreino={ficha.planoTreino}
                 />
 
                 {/* 2. Últimos Registros */}
