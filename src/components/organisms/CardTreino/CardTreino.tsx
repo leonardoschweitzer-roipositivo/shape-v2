@@ -1272,6 +1272,16 @@ export function CardTreino({
                                                         />
                                                         <span className="text-[10px] text-gray-500">reps</span>
 
+                                                        {/* RIR alvo (definido pelo personal, somente leitura) */}
+                                                        {prescrita?.rirAlvo != null && (
+                                                            <span
+                                                                className="h-7 px-1.5 flex items-center rounded-md bg-amber-500/10 border border-amber-500/20 text-[9px] font-mono font-bold text-amber-300 uppercase tracking-wider"
+                                                                title="Reps In Reserve alvo — definido pelo personal"
+                                                            >
+                                                                RIR&nbsp;{prescrita.rirAlvo}
+                                                            </span>
+                                                        )}
+
                                                         {/* Botão "usar última" (só se vazio e houver histórico) */}
                                                         {temUltima && vazioAtual && (
                                                             <button

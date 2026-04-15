@@ -319,9 +319,38 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
 
         // Persiste modificações de exercícios de volta ao plano de treino
         // para que o aluno veja os mesmos exercícios nos próximos treinos.
+        //
+        // Ajuste importante: o aluno pode ter alterado a QUANTIDADE DE SÉRIES
+        // via stepper (+/-). Essa alteração vive em `timer.sets.length` e precisa
+        // ser propagada para `ex.series` e para `ex.prescricaoSeries` (trunca ou
+        // estende clonando a última série prescrita) antes de sincronizar com o plano.
+        // RIR, descanso e carga-alvo continuam sendo definidos apenas pelo personal —
+        // a prescricaoSeries é apenas redimensionada, nunca sobrescrita.
         const treinoIndex = todayData?.treino?.indiceTreino
         if (exerciciosModificados && typeof treinoIndex === 'number') {
-            await atualizarExerciciosNoPlano(atletaId, treinoIndex, exerciciosModificados)
+            const sincronizados: ExercicioTreino[] = exerciciosModificados.map(ex => {
+                const timerSets = exercicioTimers[ex.id]?.sets
+                if (!timerSets || timerSets.length === 0) return ex
+                const novaQtdSeries = timerSets.length
+                if (novaQtdSeries === ex.series && (ex.prescricaoSeries?.length ?? novaQtdSeries) === novaQtdSeries) {
+                    return ex
+                }
+                let prescricaoAjustada = ex.prescricaoSeries
+                if (prescricaoAjustada && prescricaoAjustada.length > 0 && prescricaoAjustada.length !== novaQtdSeries) {
+                    if (novaQtdSeries < prescricaoAjustada.length) {
+                        prescricaoAjustada = prescricaoAjustada.slice(0, novaQtdSeries).map((s, i) => ({ ...s, ordem: i + 1 }))
+                    } else {
+                        const ultima = prescricaoAjustada[prescricaoAjustada.length - 1]
+                        const extras = Array.from({ length: novaQtdSeries - prescricaoAjustada.length }, (_, i) => ({
+                            ...ultima,
+                            ordem: prescricaoAjustada!.length + i + 1,
+                        }))
+                        prescricaoAjustada = [...prescricaoAjustada, ...extras]
+                    }
+                }
+                return { ...ex, series: novaQtdSeries, prescricaoSeries: prescricaoAjustada }
+            })
+            await atualizarExerciciosNoPlano(atletaId, treinoIndex, sincronizados)
         }
 
         clearAllTimers() // Reset todos os timers após completar
