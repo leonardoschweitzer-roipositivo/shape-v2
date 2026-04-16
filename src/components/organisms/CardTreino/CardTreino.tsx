@@ -329,6 +329,27 @@ export function CardTreino({
     const [expandedExIds, setExpandedExIds] = useState<Set<string>>(new Set())
     const [exercicioParaExcluir, setExercicioParaExcluir] = useState<ExercicioTreino | null>(null)
 
+    // Responsividade da lista de séries: se a largura do card (em rem, para
+    // respeitar o tamanho de fonte do usuário) não comportar a coluna RIR
+    // + Tipo, a coluna RIR é ocultada — é a menos crítica, pois o RIR-alvo
+    // já pode ser inferido pelo plano e o Tipo precisa ficar totalmente visível.
+    const cardRef = useRef<HTMLDivElement>(null)
+    const [hideRirColuna, setHideRirColuna] = useState(false)
+
+    useEffect(() => {
+        const el = cardRef.current
+        if (!el) return
+        const THRESHOLD_REM = 22
+        const update = () => {
+            const remPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
+            setHideRirColuna(el.clientWidth < THRESHOLD_REM * remPx)
+        }
+        update()
+        const ro = new ResizeObserver(update)
+        ro.observe(el)
+        return () => ro.disconnect()
+    }, [])
+
     useEffect(() => {
         setLocalExercicios(treino.exercicios || [])
         setExpandedExIds(new Set())
@@ -1078,7 +1099,7 @@ export function CardTreino({
     // Estado: PENDENTE (padrão)
     return (
         <>
-            <div className="bg-surface-deep rounded-2xl p-6 border border-white/5">
+            <div ref={cardRef} className="bg-surface-deep rounded-2xl p-6 border border-white/5">
                 <div className="flex items-center gap-2 mb-2">
                     <div className="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center">
                         <Dumbbell size={12} className="text-indigo-400" />
@@ -1264,7 +1285,9 @@ export function CardTreino({
                                                 <span className="w-11 flex-shrink-0 text-center">Kg</span>
                                                 <span className="mx-0.5" aria-hidden="true">&nbsp;</span>
                                                 <span className="w-12 flex-shrink-0 text-center">Reps</span>
-                                                <span className="w-12 flex-shrink-0 text-center">RIR</span>
+                                                {!hideRirColuna && (
+                                                    <span className="w-12 flex-shrink-0 text-center">RIR</span>
+                                                )}
                                                 <span className="flex-1 min-w-0" aria-hidden="true" />
                                                 <span className="w-[80px] flex-shrink-0 text-center">Tipo</span>
                                             </div>
@@ -1329,17 +1352,19 @@ export function CardTreino({
                                                             className="w-12 h-7 flex-shrink-0 bg-white/[0.03] border border-white/10 rounded-lg text-[7px] text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors"
                                                         />
 
-                                                        {/* RIR alvo — coluna sempre reservada para alinhar com cabeçalho */}
-                                                        <div className="w-12 flex-shrink-0 flex justify-center">
-                                                            {prescrita?.rirAlvo != null && (
-                                                                <span
-                                                                    className="h-7 min-w-7 px-1.5 flex items-center justify-center rounded-md bg-amber-500/10 border border-amber-500/20 text-[10px] font-mono font-bold text-amber-300 tabular-nums"
-                                                                    title="Reps In Reserve alvo — definido pelo personal"
-                                                                >
-                                                                    {prescrita.rirAlvo}
-                                                                </span>
-                                                            )}
-                                                        </div>
+                                                        {/* RIR alvo — coluna escondida automaticamente se o card não tiver largura suficiente */}
+                                                        {!hideRirColuna && (
+                                                            <div className="w-12 flex-shrink-0 flex justify-center">
+                                                                {prescrita?.rirAlvo != null && (
+                                                                    <span
+                                                                        className="h-7 min-w-7 px-1.5 flex items-center justify-center rounded-md bg-amber-500/10 border border-amber-500/20 text-[10px] font-mono font-bold text-amber-300 tabular-nums"
+                                                                        title="Reps In Reserve alvo — definido pelo personal"
+                                                                    >
+                                                                        {prescrita.rirAlvo}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        )}
 
                                                         {/* Spacer flexível com botão "usar última" opcional */}
                                                         <div className="flex-1 min-w-0 flex justify-end">
