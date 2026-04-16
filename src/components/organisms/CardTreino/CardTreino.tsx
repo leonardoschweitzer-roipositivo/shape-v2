@@ -985,7 +985,7 @@ export function CardTreino({
                                                     return (
                                                         <div key={sIdx} className="py-1.5 flex items-center gap-2">
                                                             <span className="text-[10px] font-mono text-amber-500/60 uppercase tracking-wider whitespace-nowrap">
-                                                                Série&nbsp;#{sIdx + 1}
+                                                                Série#{sIdx + 1}
                                                             </span>
                                                             <span className="text-[11px] font-mono text-amber-200/90 font-semibold">
                                                                 {carga > 0 ? `${carga}kg` : '—'}
@@ -1301,7 +1301,7 @@ export function CardTreino({
                                                             />
                                                         </button>
                                                         <span className="w-14 flex-shrink-0 text-[10px] font-mono text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                                                            Série&nbsp;#{sIdx + 1}
+                                                            Série#{sIdx + 1}
                                                         </span>
 
                                                         <input
@@ -1333,10 +1333,10 @@ export function CardTreino({
                                                         <div className="w-12 flex-shrink-0 flex justify-center">
                                                             {prescrita?.rirAlvo != null && (
                                                                 <span
-                                                                    className="h-7 px-1.5 flex items-center rounded-md bg-amber-500/10 border border-amber-500/20 text-[9px] font-mono font-bold text-amber-300 uppercase tracking-wider"
+                                                                    className="h-7 min-w-7 px-1.5 flex items-center justify-center rounded-md bg-amber-500/10 border border-amber-500/20 text-[10px] font-mono font-bold text-amber-300 tabular-nums"
                                                                     title="Reps In Reserve alvo — definido pelo personal"
                                                                 >
-                                                                    RIR&nbsp;{prescrita.rirAlvo}
+                                                                    {prescrita.rirAlvo}
                                                                 </span>
                                                             )}
                                                         </div>
@@ -1467,7 +1467,7 @@ export function CardTreino({
                                                 {sets.map((set, sIdx) => (
                                                     (set.carga != null || set.reps != null) && (
                                                         <div key={sIdx} className="flex items-center gap-2 py-1.5 text-[10px] font-mono text-emerald-400/60">
-                                                            <span className="w-[58px] text-gray-600 uppercase tracking-wider">Série #{sIdx + 1}</span>
+                                                            <span className="w-[58px] text-gray-600 uppercase tracking-wider">Série#{sIdx + 1}</span>
                                                             <span>{set.carga != null ? `${set.carga}kg` : '—'}</span>
                                                             <span className="text-gray-700">×</span>
                                                             <span>{set.reps != null ? `${set.reps} reps` : '—'}</span>
