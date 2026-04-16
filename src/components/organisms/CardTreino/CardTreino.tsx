@@ -319,6 +319,7 @@ export function CardTreino({
     }, [])
 
     const [accordionOpen, setAccordionOpen] = useState(treino.status === 'pendente')
+    const [amanhaOpen, setAmanhaOpen] = useState(false)
     const [showCompleteiMenu, setShowCompleteiMenu] = useState(false)
     const completeiMenuRef = useRef<HTMLDivElement>(null)
     const [, forceUpdate] = useState(0) // for timer ticking
@@ -922,16 +923,27 @@ export function CardTreino({
                     )}
                 </div>
 
-                <button
-                    onClick={() => {
-                        setAccordionOpen(!accordionOpen)
-                        onVerTreino()
-                    }}
-                    className="text-sm text-amber-500 hover:text-amber-400 transition-colors font-bold flex items-center gap-1"
-                >
-                    {accordionOpen ? 'OCULTAR DETALHES' : 'VER DETALHES'}
-                    {accordionOpen ? <ChevronUp size={14} /> : <span>→</span>}
-                </button>
+                <div className="flex items-center gap-5 flex-wrap">
+                    <button
+                        onClick={() => {
+                            setAccordionOpen(!accordionOpen)
+                            onVerTreino()
+                        }}
+                        className="text-sm text-amber-500 hover:text-amber-400 transition-colors font-bold flex items-center gap-1"
+                    >
+                        {accordionOpen ? 'OCULTAR DETALHES' : 'VER DETALHES'}
+                        {accordionOpen ? <ChevronUp size={14} /> : <span>→</span>}
+                    </button>
+                    {proximoTreino && (
+                        <button
+                            onClick={() => setAmanhaOpen(!amanhaOpen)}
+                            className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors font-bold flex items-center gap-1"
+                        >
+                            {amanhaOpen ? 'OCULTAR PRÓXIMO' : 'PRÓXIMO TREINO'}
+                            {amanhaOpen ? <ChevronUp size={14} /> : <span>→</span>}
+                        </button>
+                    )}
+                </div>
 
                 {accordionOpen && treino.exercicios && treino.exercicios.length > 0 && (
                     <div className="mt-4 -mx-6 border-y border-amber-500/10 animate-in fade-in slide-in-from-top-2 duration-300 overflow-hidden">
@@ -1001,6 +1013,42 @@ export function CardTreino({
                                 </div>
                             )
                         })}
+                    </div>
+                )}
+
+                {amanhaOpen && proximoTreino && (
+                    <div className="mt-4 -mx-6 border-t border-amber-500/10 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="px-6 pt-4 pb-2 flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                                <Dumbbell size={12} className="text-indigo-400" />
+                            </div>
+                            <h3 className="text-xs text-gray-400 uppercase tracking-wide font-bold">TREINO DE AMANHÃ</h3>
+                            <span className="ml-auto text-[11px] text-indigo-400 font-mono uppercase tracking-wider">
+                                📅 {proximoTreino.data}
+                            </span>
+                        </div>
+
+                        <div className="px-6 pb-5">
+                            <p className="text-sm font-semibold text-white uppercase mb-3">
+                                {proximoTreino.letraLabel} — {proximoTreino.grupoMuscular}
+                            </p>
+
+                            <div className="bg-white/[0.03] rounded-xl border border-white/5 divide-y divide-white/5">
+                                {proximoTreino.exercicios.map((ex, i) => (
+                                    <div key={ex.id} className="flex items-center gap-3 px-4 py-2.5">
+                                        <span className="text-xs text-indigo-400 font-mono w-5 text-right">
+                                            {(i + 1).toString().padStart(2, '0')}
+                                        </span>
+                                        <span className="flex-1 text-sm text-gray-300">
+                                            {ex.nome}
+                                        </span>
+                                        <span className="text-xs text-gray-500 font-mono">
+                                            {ex.series}×{ex.repeticoes}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>
