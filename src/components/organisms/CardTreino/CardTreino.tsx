@@ -1209,7 +1209,18 @@ export function CardTreino({
                                     {/* Linha 2: inputs set-by-set (expandido, modo pendente) */}
                                     {isExpanded && !isDone && treino.status === 'pendente' && (
                                         <div className="px-6 pb-4 pt-1 animate-in fade-in slide-in-from-top-1 duration-200">
-                                            <div className="divide-y divide-white/5 border-t border-white/5">
+                                            {/* Cabeçalho de colunas */}
+                                            <div className="flex items-center gap-2 py-1.5 border-y border-white/5 text-[9px] font-mono text-gray-600 uppercase tracking-wider">
+                                                <span className="w-6 flex-shrink-0" aria-hidden="true" />
+                                                <span className="w-14 flex-shrink-0 whitespace-nowrap">Série</span>
+                                                <span className="w-11 flex-shrink-0 text-center">Kg</span>
+                                                <span className="mx-0.5" aria-hidden="true">&nbsp;</span>
+                                                <span className="w-12 flex-shrink-0 text-center">Reps</span>
+                                                <span className="w-12 flex-shrink-0 text-center">RIR</span>
+                                                <span className="flex-1 min-w-0" aria-hidden="true" />
+                                                <span className="w-[80px] flex-shrink-0 text-center">Tipo</span>
+                                            </div>
+                                            <div className="divide-y divide-white/5">
                                             {(() => {
                                                 const proximaIdx = sets.findIndex(s => !s.concluido)
                                                 return sets.map((set, sIdx) => {
@@ -1241,7 +1252,7 @@ export function CardTreino({
                                                                 strokeWidth={3}
                                                             />
                                                         </button>
-                                                        <span className="text-[10px] font-mono text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                                                        <span className="w-14 flex-shrink-0 text-[10px] font-mono text-gray-500 uppercase tracking-wider whitespace-nowrap">
                                                             Série&nbsp;#{sIdx + 1}
                                                         </span>
 
@@ -1254,9 +1265,8 @@ export function CardTreino({
                                                             value={set.carga ?? ''}
                                                             onChange={e => handleSetChange(ex.id, sIdx, 'carga', parseNumOrUndef(e.target.value))}
                                                             onClick={e => e.stopPropagation()}
-                                                            className="w-11 h-7 bg-white/[0.03] border border-white/10 rounded-lg text-[7px] text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors"
+                                                            className="w-11 h-7 flex-shrink-0 bg-white/[0.03] border border-white/10 rounded-lg text-[7px] text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors"
                                                         />
-                                                        <span className="text-[10px] text-gray-500">kg</span>
 
                                                         <span className="text-gray-700 mx-0.5">×</span>
 
@@ -1268,36 +1278,39 @@ export function CardTreino({
                                                             value={set.reps ?? ''}
                                                             onChange={e => handleSetChange(ex.id, sIdx, 'reps', parseNumOrUndef(e.target.value))}
                                                             onClick={e => e.stopPropagation()}
-                                                            className="w-12 h-7 bg-white/[0.03] border border-white/10 rounded-lg text-[7px] text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors"
+                                                            className="w-12 h-7 flex-shrink-0 bg-white/[0.03] border border-white/10 rounded-lg text-[7px] text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors"
                                                         />
-                                                        <span className="text-[10px] text-gray-500">reps</span>
 
-                                                        {/* RIR alvo (definido pelo personal, somente leitura) */}
-                                                        {prescrita?.rirAlvo != null && (
-                                                            <span
-                                                                className="h-7 px-1.5 flex items-center rounded-md bg-amber-500/10 border border-amber-500/20 text-[9px] font-mono font-bold text-amber-300 uppercase tracking-wider"
-                                                                title="Reps In Reserve alvo — definido pelo personal"
-                                                            >
-                                                                RIR&nbsp;{prescrita.rirAlvo}
-                                                            </span>
-                                                        )}
+                                                        {/* RIR alvo — coluna sempre reservada para alinhar com cabeçalho */}
+                                                        <div className="w-12 flex-shrink-0 flex justify-center">
+                                                            {prescrita?.rirAlvo != null && (
+                                                                <span
+                                                                    className="h-7 px-1.5 flex items-center rounded-md bg-amber-500/10 border border-amber-500/20 text-[9px] font-mono font-bold text-amber-300 uppercase tracking-wider"
+                                                                    title="Reps In Reserve alvo — definido pelo personal"
+                                                                >
+                                                                    RIR&nbsp;{prescrita.rirAlvo}
+                                                                </span>
+                                                            )}
+                                                        </div>
 
-                                                        {/* Botão "usar última" (só se vazio e houver histórico) */}
-                                                        {temUltima && vazioAtual && (
-                                                            <button
-                                                                onClick={() => repetirUltimoSet(ex, sIdx)}
-                                                                className="ml-auto text-[9px] text-indigo-400/60 hover:text-indigo-300 transition-colors uppercase tracking-wider whitespace-nowrap"
-                                                                title="Usar valores da última execução"
-                                                            >
-                                                                usar última
-                                                            </button>
-                                                        )}
+                                                        {/* Spacer flexível com botão "usar última" opcional */}
+                                                        <div className="flex-1 min-w-0 flex justify-end">
+                                                            {temUltima && vazioAtual && (
+                                                                <button
+                                                                    onClick={() => repetirUltimoSet(ex, sIdx)}
+                                                                    className="text-[9px] text-indigo-400/60 hover:text-indigo-300 transition-colors uppercase tracking-wider whitespace-nowrap"
+                                                                    title="Usar valores da última execução"
+                                                                >
+                                                                    usar última
+                                                                </button>
+                                                            )}
+                                                        </div>
 
                                                         {/* Dropdown: tipo da série. Botão visual + select nativo invisível
                                                             por cima. O usuário clica no "botão" mas o browser abre o picker
                                                             nativo (dropdown no desktop, wheel picker no mobile). */}
-                                                        <div className={`relative ${!(temUltima && vazioAtual) ? 'ml-auto' : ''}`}>
-                                                            <div className={`pointer-events-none h-7 px-2 flex items-center gap-1.5 rounded-lg bg-white/5 ${TIPO_SET_MAP[set.tipo ?? 'valida'].cor}`}>
+                                                        <div className="relative w-[80px] flex-shrink-0">
+                                                            <div className={`pointer-events-none h-7 px-2 flex items-center justify-center gap-1.5 rounded-lg bg-white/5 ${TIPO_SET_MAP[set.tipo ?? 'valida'].cor}`}>
                                                                 <span className="text-[10px] font-mono whitespace-nowrap uppercase tracking-wider">
                                                                     {TIPO_SET_MAP[set.tipo ?? 'valida'].abrev}
                                                                 </span>
