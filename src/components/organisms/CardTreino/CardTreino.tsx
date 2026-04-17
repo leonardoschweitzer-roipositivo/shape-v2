@@ -1336,7 +1336,7 @@ export function CardTreino({
                                                             value={set.carga ?? ''}
                                                             onChange={e => handleSetChange(ex.id, sIdx, 'carga', parseNumOrUndef(e.target.value))}
                                                             onClick={e => e.stopPropagation()}
-                                                            className="w-11 h-7 flex-shrink-0 bg-white/[0.03] border border-white/10 rounded-lg text-[7px] text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors"
+                                                            className="w-9 h-6 flex-shrink-0 bg-white/[0.03] border border-white/10 rounded-lg text-[5px] text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors"
                                                         />
 
                                                         <span className="text-gray-700 mx-0.5">×</span>
@@ -1349,7 +1349,7 @@ export function CardTreino({
                                                             value={set.reps ?? ''}
                                                             onChange={e => handleSetChange(ex.id, sIdx, 'reps', parseNumOrUndef(e.target.value))}
                                                             onClick={e => e.stopPropagation()}
-                                                            className="w-12 h-7 flex-shrink-0 bg-white/[0.03] border border-white/10 rounded-lg text-[7px] text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors"
+                                                            className="w-10 h-6 flex-shrink-0 bg-white/[0.03] border border-white/10 rounded-lg text-[5px] text-indigo-300 font-mono text-center placeholder-gray-600 outline-none focus:border-indigo-500/40 transition-colors"
                                                         />
 
                                                         {/* RIR alvo — coluna escondida automaticamente se o card não tiver largura suficiente */}
