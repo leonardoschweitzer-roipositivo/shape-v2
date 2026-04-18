@@ -310,18 +310,24 @@ export type NivelAtividade = 'SEDENTARIO' | 'LEVE' | 'MODERADO' | 'ATIVO' | 'MUI
  * Usado como fallback em DiagnosticoInput.nivelAtividade quando o personal
  * não preencheu o campo explícito na ficha.
  *
- * Considera 3 sinais:
+ * Considera 4 sinais:
  *   1. Profissão (braçal vs em-pé vs escritório)
- *   2. Estilo de vida / histórico de treino (frequência de treino semanal)
- *   3. Combinação: trabalho físico + treino frequente → MUITO_ATIVO
+ *   2. Estilo de vida (marcadores de vida ativa ou sedentária)
+ *   3. Histórico de treino (frequência extraída por regex)
+ *   4. Frequência já conhecida do potencial (opcional — mais confiável que regex)
  *
+ * @param contexto - dados textuais da ficha
+ * @param options.frequenciaSemanal - frequência já calculada (`potencial.frequenciaSemanal`),
+ *   usada quando a regex do histórico_treino não encontra padrão reconhecível.
  * @returns NivelAtividade (5 valores)
  */
-export function inferirNivelAtividade(contexto?: ContextoAtleta): NivelAtividade {
+export function inferirNivelAtividade(
+    contexto?: ContextoAtleta,
+    options: { frequenciaSemanal?: number } = {},
+): NivelAtividade {
     const profissao = (contexto?.profissao || '').toLowerCase();
     const estilo = (contexto?.estilo_vida || '').toLowerCase();
     const historico = (contexto?.historico_treino || '').toLowerCase();
-    const texto = profissao + ' ' + estilo;
 
     // Profissão braçal: trabalho físico pesado
     const profissaoBracal = /obra|constru|pedreiro|encanador|eletricista|campo|operador|carregador|motorista|entregador|militar|policia|agr[ií]cola|mec[aâ]nico|bombeiro/i.test(profissao);
@@ -331,25 +337,27 @@ export function inferirNivelAtividade(contexto?: ContextoAtleta): NivelAtividade
     const estiloAtivo = /muito ativo|ativa|anda bastante|caminha muito|corre|corrida|ciclismo|pedala|esporte|nata[cç][aã]o|futebol|crossfit/i.test(estilo);
     const estiloSedentario = /sedent[aá]ri|fica sentad|home office|pouco se movimenta|pouca atividade/i.test(estilo);
 
-    // Frequência de treino (mesmas regex usadas na inferência de frequência semanal)
+    // Frequência de treino: preferimos a passada (potencial já resolveu), cai em regex como fallback.
     const mFreq = historico.match(/(\d+)\s*(?:vezes|dias|treinos)\s*(?:por|na)\s*semana/i)
         || historico.match(/(\d+)\s*x\s*\/\s*semana/i)
         || historico.match(/(\d+)\s*x\s*semana/i)
         || historico.match(/treino\s*(\d+)\s*(?:x|vezes)/i);
-    const freqTreino = mFreq ? parseInt(mFreq[1], 10) : 0;
+    const freqRegex = mFreq ? parseInt(mFreq[1], 10) : 0;
+    const freqTreino = options.frequenciaSemanal ?? freqRegex;
 
     // MUITO_ATIVO: trabalho físico pesado + treina ≥5x/semana OU treina 2x/dia
     if ((profissaoBracal && freqTreino >= 5) || /2x ao dia|duas vezes ao dia|dois treinos|bi-?di[aá]rio/i.test(historico)) {
         return 'MUITO_ATIVO';
     }
 
-    // ATIVO: treina 6-7x/semana OU (profissão braçal E treina)
-    if (freqTreino >= 6 || (profissaoBracal && freqTreino >= 1)) {
+    // ATIVO: treina 5-7x/semana OU (profissão braçal E treina)
+    // (5x/semana regular + atividades incidentais caracterizam rotina ATIVA em atletas)
+    if (freqTreino >= 5 || (profissaoBracal && freqTreino >= 1)) {
         return 'ATIVO';
     }
 
-    // MODERADO: trabalho braçal (sem treino declarado), treina 3-5x/semana, ou estilo explicitamente ativo + treina
-    if (profissaoBracal || (freqTreino >= 3 && freqTreino <= 5) || (estiloAtivo && freqTreino >= 2)) {
+    // MODERADO: trabalho braçal (sem treino declarado), treina 3-4x/semana, ou estilo ativo + treina
+    if (profissaoBracal || (freqTreino >= 3 && freqTreino <= 4) || (estiloAtivo && freqTreino >= 2)) {
         return 'MODERADO';
     }
 

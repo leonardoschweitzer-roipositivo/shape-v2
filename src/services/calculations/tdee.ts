@@ -245,9 +245,10 @@ export function calcularEAT(args: {
  */
 export function inferirSomatotipoDeFFMI(ffmi: number, bf: number, sexo: 'M' | 'F'): Somatotipo {
     const bfAlto = sexo === 'M' ? bf >= 20 : bf >= 28;
-    const bfBaixo = sexo === 'M' ? bf <= 12 : bf <= 20;
+    const bfBaixo = sexo === 'M' ? bf <= 13 : bf <= 21;
     if (bfAlto) return 'ENDOMORFO';
-    if (ffmi < 19 && bfBaixo) return 'ECTOMORFO';
+    // FFMI < 20 com BF baixo caracteriza perfil ectomorfo (estrutura fina, músculo proporcional mas baixo total)
+    if (ffmi < 20 && bfBaixo) return 'ECTOMORFO';
     return 'MESOMORFO';
 }
 
@@ -304,13 +305,17 @@ export function calcularTaxasMetabolicas(entrada: EntradaTDEE): TaxasMetabolicas
     // Piso: 10% da TMB ajustada (mesmo sedentário extremo tem alguma atividade espontânea).
     const neat = Math.max(Math.round(tmbAjustada * 0.10), tdeeBruto - tmbAjustada - eat);
 
-    // 6. Somatotipo — usado (declarado) e inferido (prova cruzada)
-    const somatotipoUsado: Somatotipo | null = entrada.somatotipo ?? null;
+    // 6. Somatotipo — declarado (fonte de verdade) e inferido (prova cruzada).
+    // Se personal não declarou, aplicamos o inferido automaticamente para não perder precisão;
+    // o campo `somatotipoUsado` permanece vazio para indicar que veio da inferência.
+    const somatotipoDeclarado: Somatotipo | null = entrada.somatotipo ?? null;
     const somatotipoInferido: Somatotipo | null = (entrada.ffmi != null && entrada.gorduraPct != null)
         ? inferirSomatotipoDeFFMI(entrada.ffmi, entrada.gorduraPct, entrada.sexo)
         : null;
+    const somatotipoEfetivo: Somatotipo | null = somatotipoDeclarado ?? somatotipoInferido;
+    const somatotipoUsado = somatotipoDeclarado;
 
-    const ajusteSomatotipo = calcularAjusteSomatotipo(somatotipoUsado, tdeeBruto);
+    const ajusteSomatotipo = calcularAjusteSomatotipo(somatotipoEfetivo, tdeeBruto);
 
     // 7. TDEE final
     const tdee = tdeeBruto + ajusteSomatotipo;
@@ -321,8 +326,8 @@ export function calcularTaxasMetabolicas(entrada: EntradaTDEE): TaxasMetabolicas
     const fatoresConsiderados = [
         ...fatores,
         ...(ajusteCrescimento > 0 ? [`Crescimento adolescente (+${ajusteCrescimento} kcal)`] : []),
-        ...(ajusteSomatotipo !== 0 && somatotipoUsado
-            ? [`Somatotipo ${somatotipoUsado} (${ajusteSomatotipo > 0 ? '+' : ''}${ajusteSomatotipo} kcal)`]
+        ...(ajusteSomatotipo !== 0 && somatotipoEfetivo
+            ? [`Somatotipo ${somatotipoEfetivo}${!somatotipoDeclarado ? ' (inferido via FFMI+BF%)' : ''} (${ajusteSomatotipo > 0 ? '+' : ''}${ajusteSomatotipo} kcal)`]
             : []),
     ];
 

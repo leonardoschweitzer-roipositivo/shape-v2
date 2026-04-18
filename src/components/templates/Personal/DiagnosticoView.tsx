@@ -296,9 +296,13 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
             // Pipeline completo: Potencial → Diagnóstico reanalisado
             const classificacao = getClassificacao(scoreEfetivo);
             const potencial = calcularPotencialAtleta(classificacao, scoreEfetivo, atleta.contexto ?? undefined);
-            // Nível de atividade: prioridade ao campo explícito da ficha; fallback para inferência textual
+            // Nível de atividade: prioridade ao campo explícito da ficha; fallback para inferência
+            // considerando a frequência de treino já resolvida pelo potencial.
             if (!nivelAtividadeFicha) {
-                input.nivelAtividade = inferirNivelAtividade(atleta.contexto ?? undefined);
+                input.nivelAtividade = inferirNivelAtividade(
+                    atleta.contexto ?? undefined,
+                    { frequenciaSemanal: potencial.frequenciaSemanal },
+                );
             }
             input.freqTreino = potencial.frequenciaSemanal;
             input.nivelAtleta = potencial.nivel;
