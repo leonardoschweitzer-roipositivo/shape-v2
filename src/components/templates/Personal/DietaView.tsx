@@ -8,7 +8,7 @@
  * @see docs/specs/plano-evolucao-etapa-3-dieta.md
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
     ArrowLeft,
     Flame,
@@ -59,6 +59,7 @@ import {
     getObjetivoMeta,
     type ObjetivoVitruvio,
 } from '@/services/calculations/objetivos';
+import { buscarObjetivoVitruvio } from '@/services/calculations/objetivoAtleta';
 import { ChatPlanoEvolucao } from '@/components/organisms/ChatPlanoEvolucao/ChatPlanoEvolucao';
 import { perfilParaTexto, dietaParaTexto, getFontesCientificas } from '@/services/vitruviusContext';
 import { extrairDiretrizesDoChat } from '@/services/vitruviusAI';
@@ -126,9 +127,24 @@ export const DietaView: React.FC<DietaViewProps> = ({
     const [potencial, setPotencial] = useState<PotencialAtleta | null>(null);
     const [diagnostico, setDiagnostico] = useState<DiagnosticoDados | null>(null);
     const [showDescanso, setShowDescanso] = useState(false);
+    const [objetivoSalvo, setObjetivoSalvo] = useState<ObjetivoVitruvio | null>(null);
     const [objetivoAtleta, setObjetivoAtleta] = useState<ObjetivoVitruvio>(
         readOnlyData?.objetivo || recomendacaoPadrao?.objetivo || 'RECOMP'
     );
+
+    // Busca o objetivo que o personal escolheu no Diagnóstico (pode ser override
+    // da recomendação do VITRU). Se existir, é a fonte da verdade para a Dieta.
+    useEffect(() => {
+        if (isReadOnly) return;
+        let cancelled = false;
+        buscarObjetivoVitruvio(atletaId).then(obj => {
+            if (cancelled || !obj) return;
+            setObjetivoSalvo(obj);
+            setObjetivoAtleta(obj);
+        });
+        return () => { cancelled = true; };
+    }, [atletaId, isReadOnly]);
+
     const [cardapioAberto, setCardapioAberto] = useState<Set<string>>(new Set());
     const [toastStatus, setToastStatus] = useState<'success' | 'error' | null>(null);
     const [iaEnriching, setIaEnriching] = useState(false);
@@ -208,6 +224,7 @@ export const DietaView: React.FC<DietaViewProps> = ({
             setDiagnostico(diag);
 
             // 3. Calcular objetivo recomendado (mesmo algoritmo do Diagnóstico/Treino)
+            // Mas priorizar o objetivo que o personal escolheu no Diagnóstico (override).
             const adonisProp = diag.analiseEstetica.proporcoes.find(
                 p => p.grupo === 'Shape-V' || p.grupo === 'V-Taper'
             );
@@ -219,10 +236,11 @@ export const DietaView: React.FC<DietaViewProps> = ({
                 nivel: diag.analiseEstetica.classificacaoAtual,
                 adonis: adonisProp?.atual ?? undefined,
             });
-            setObjetivoAtleta(rec.objetivo);
+            const objetivoFinal: ObjetivoVitruvio = objetivoSalvo ?? rec.objetivo;
+            setObjetivoAtleta(objetivoFinal);
 
             // 4. Gerar Plano de Dieta (passando o objetivo Estrela do Norte + contexto do atleta)
-            const resultado = gerarPlanoDieta(atletaId, atleta.name, diag, pot, rec.objetivo, atleta.contexto ?? undefined);
+            const resultado = gerarPlanoDieta(atletaId, atleta.name, diag, pot, objetivoFinal, atleta.contexto ?? undefined);
             setPlano(resultado);
             setEstado('ready');
 

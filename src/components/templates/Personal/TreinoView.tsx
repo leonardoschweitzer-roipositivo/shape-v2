@@ -10,7 +10,7 @@
  * @see docs/specs/plano-evolucao-etapa-2-treino.md
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
     ArrowLeft,
     ArrowRight,
@@ -60,6 +60,7 @@ import {
     getObjetivoMeta,
     type ObjetivoVitruvio,
 } from '@/services/calculations/objetivos';
+import { buscarObjetivoVitruvio } from '@/services/calculations/objetivoAtleta';
 import { ChatPlanoEvolucao } from '@/components/organisms/ChatPlanoEvolucao/ChatPlanoEvolucao';
 import { perfilParaTexto, treinoParaTexto, getFontesCientificas } from '@/services/vitruviusContext';
 import { extrairDiretrizesDoChat } from '@/services/vitruviusAI';
@@ -130,9 +131,23 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
     const [diagnostico, setDiagnostico] = useState<DiagnosticoDados | null>(null);
     const [potencial, setPotencial] = useState<PotencialAtleta | null>(null);
     const [estado, setEstado] = useState<TreinoState>(readOnlyData ? 'saved' : 'idle');
+    const [objetivoSalvo, setObjetivoSalvo] = useState<ObjetivoVitruvio | null>(null);
     const [objetivoAtleta, setObjetivoAtleta] = useState<ObjetivoVitruvio>(
         readOnlyData?.objetivo || recomendacaoPadrao?.objetivo || 'RECOMP'
     );
+
+    // Busca o objetivo que o personal escolheu no Diagnóstico (pode ser override
+    // da recomendação do VITRU). Se existir, é a fonte da verdade para Treino/Dieta.
+    useEffect(() => {
+        if (isReadOnly) return;
+        let cancelled = false;
+        buscarObjetivoVitruvio(atletaId).then(obj => {
+            if (cancelled || !obj) return;
+            setObjetivoSalvo(obj);
+            setObjetivoAtleta(obj);
+        });
+        return () => { cancelled = true; };
+    }, [atletaId, isReadOnly]);
     const [toastStatus, setToastStatus] = useState<'success' | 'error' | null>(null);
     const [iaEnriching, setIaEnriching] = useState(false);
     const [isApplying, setIsApplying] = useState(false);
@@ -213,6 +228,7 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
             setDiagnostico(diag);
 
             // 3. Calcular objetivo recomendado (mesmo algoritmo do Diagnóstico)
+            // Mas priorizar o objetivo que o personal escolheu no Diagnóstico (override).
             const adonisProp = diag.analiseEstetica.proporcoes.find(
                 p => p.grupo === 'Shape-V' || p.grupo === 'V-Taper'
             );
@@ -224,10 +240,11 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
                 nivel: diag.analiseEstetica.classificacaoAtual,
                 adonis: adonisProp?.atual ?? undefined,
             });
-            setObjetivoAtleta(rec.objetivo);
+            const objetivoFinal: ObjetivoVitruvio = objetivoSalvo ?? rec.objetivo;
+            setObjetivoAtleta(objetivoFinal);
 
             // 4. Gerar treino consumindo o potencial como fonte única + objetivo + contexto + sexo
-            const resultado = gerarPlanoTreino(atletaId, atleta.name, diag, pot, rec.objetivo, atleta.contexto ?? undefined, atleta.gender === 'FEMALE' ? 'F' : 'M');
+            const resultado = gerarPlanoTreino(atletaId, atleta.name, diag, pot, objetivoFinal, atleta.contexto ?? undefined, atleta.gender === 'FEMALE' ? 'F' : 'M');
             setPlano(resultado);
             setEstado('ready');
 
