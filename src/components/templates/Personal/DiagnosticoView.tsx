@@ -384,17 +384,22 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
 
         setToastStatus('success');
 
-        // 2. Persistir objetivo recomendado em fichas
+        // 2. Persistir objetivo selecionado (pode ser o recomendado ou um override
+        // manual do personal) em fichas.objetivo_vitruvio.
         if (objetivoSelecionado) {
-            try {
-                await supabase
-                    .from('fichas')
-                    .update({ objetivo_vitruvio: objetivoSelecionado } as Record<string, unknown>)
-                    .eq('atleta_id', atletaId);
-                console.info('[Diagnostico] ✅ Objetivo Vitrúvio salvo:', objetivoSelecionado);
-            } catch (err) {
-                console.warn('[Diagnostico] Aviso ao salvar objetivo:', err);
+            const { error: updateError } = await supabase
+                .from('fichas')
+                .update({ objetivo_vitruvio: objetivoSelecionado } as Record<string, unknown>)
+                .eq('atleta_id', atletaId);
+
+            if (updateError) {
+                console.error('[Diagnostico] ❌ Erro ao salvar objetivo_vitruvio:', updateError);
+                setToastStatus('error');
+                setEstado('ready');
+                setTimeout(() => setToastStatus(null), 4000);
+                return;
             }
+            console.info('[Diagnostico] ✅ Objetivo Vitrúvio salvo:', objetivoSelecionado);
         }
 
         setEstado('saved');
