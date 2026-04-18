@@ -17,15 +17,9 @@ export async function buscarObjetivoVitruvio(atletaId: string): Promise<Objetivo
             .eq('atleta_id', atletaId)
             .single();
 
-        if (error) {
-            console.warn('[buscarObjetivoVitruvio] erro ao buscar ficha:', error);
-            return null;
-        }
-        const obj = (data?.objetivo_vitruvio as ObjetivoVitruvio | null) ?? null;
-        console.info('[buscarObjetivoVitruvio] atleta', atletaId, '→', obj);
-        return obj;
-    } catch (e) {
-        console.warn('[buscarObjetivoVitruvio] exception:', e);
+        if (error || !data) return null;
+        return (data.objetivo_vitruvio as ObjetivoVitruvio | null) ?? null;
+    } catch {
         return null;
     }
 }
