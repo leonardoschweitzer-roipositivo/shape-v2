@@ -78,13 +78,20 @@ export function perfilParaTexto(perfil: PerfilAtletaIA): string {
  * Converte dados do diagnóstico para texto (consumido pelo prompt).
  */
 export function diagnosticoParaTexto(diag: DiagnosticoDados): string {
+    const t = diag.taxas;
     const linhas: string[] = [
         '### Taxas Metabólicas',
-        `- TMB: ${diag.taxas.tmb} kcal/dia`,
-        `- TMB Ajustada: ${diag.taxas.tmbAjustada} kcal/dia`,
-        `- NEAT: ${diag.taxas.neat} kcal/dia`,
-        `- EAT: ${diag.taxas.eat} kcal/dia`,
-        `- TDEE: ${diag.taxas.tdee} kcal/dia`,
+        `- TMB: ${t.tmb} kcal/dia${t.metodoBMR ? ` (método: ${t.metodoBMR})` : ''}`,
+        `- TMB Ajustada: ${t.tmbAjustada} kcal/dia`,
+        `- NEAT: ${t.neat} kcal/dia${t.fatorAtividade && t.nivelAtividade ? ` (nível ${t.nivelAtividade}, fator ${t.fatorAtividade})` : ''}`,
+        `- EAT: ${t.eat} kcal/dia`,
+        `- TDEE: ${t.tdee} kcal/dia${t.tdeeMin != null && t.tdeeMax != null ? ` (faixa ${t.tdeeMin}–${t.tdeeMax} kcal, ±${t.margemErroPct}%)` : ''}`,
+        ...(t.ajusteCrescimento ? [`- Ajuste crescimento adolescente: +${t.ajusteCrescimento} kcal`] : []),
+        ...(t.ajusteSomatotipo ? [`- Ajuste somatotipo ${t.somatotipoUsado}: ${t.ajusteSomatotipo > 0 ? '+' : ''}${t.ajusteSomatotipo} kcal`] : []),
+        ...(t.somatotipoUsado && t.somatotipoInferido && t.somatotipoUsado !== t.somatotipoInferido
+            ? [`- DIVERGÊNCIA: personal declarou ${t.somatotipoUsado}, mas FFMI+BF% indicam ${t.somatotipoInferido}`]
+            : []),
+        ...(t.fatoresConsiderados.length > 0 ? [`- Fatores considerados: ${t.fatoresConsiderados.join('; ')}`] : []),
         '',
         '### Composição Corporal Atual',
         `- Peso: ${diag.composicaoAtual.peso} kg`,
@@ -228,7 +235,14 @@ export function avaliacaoParaTexto(avaliacao: import('@/types/assessment').Avali
  */
 const FONTES_POR_PROCESSO: Record<string, string> = {
     diagnostico: `
-**Metabolismo (Mifflin-St Jeor, 1990)**: TMB = (10×peso) + (6.25×altura) − (5×idade) + 5 (♂) ou −161 (♀). Precisão ±10% para não-obesos.
+**BMR adulto padrão (Mifflin-St Jeor, 1990)**: TMB = (10×peso) + (6.25×altura) − (5×idade) + 5 (♂) ou −161 (♀). Precisão ±10% para não-obesos.
+**BMR em atletas (Cunningham, 1991)**: TMB = 500 + 22×LBM. Precisão ±8% para atletas com LBM medida — superior a Mifflin para treinados.
+**BMR com LBM (Katch-McArdle)**: TMB = 370 + 21.6×LBM. Alternativa conservadora quando há LBM mas o atleta não é avançado.
+**BMR adolescente (Schofield, 1985 — WHO/FAO)**: 10–18 anos ♂ = 17.686×peso + 658.2; ♀ = 13.384×peso + 692.6. Mifflin subestima TMB em jovens em crescimento.
+**Fator de atividade (Harris-Benedict clássico)**: SEDENTARIO 1.2 / LEVE 1.375 / MODERADO 1.55 / ATIVO 1.725 / MUITO_ATIVO 1.9. Multiplica a TMB para estimar TDEE.
+**NEAT (Levine, 2002/2005)**: ectomorfos têm NEAT 5-8% maior (termogênese adaptativa); endomorfos 3-5% menor por menor atividade espontânea.
+**EAT por METs (Ainsworth, 2011 Compendium)**: musculação iniciante 5 METs, intermediária 6 METs, avançada 7 METs. kcal = METs × peso(kg) × duração(h).
+**Crescimento adolescente**: 10–13 anos +10% da TMB, 14–18 +5% — demanda extra de maturação óssea e ganho de massa magra não capturada pelo BMR isolado.
 **Composição Corporal**: FFMI (Fat-Free Mass Index) é o melhor indicador de desenvolvimento muscular. FFMI > 25 é raro natural. BF% atlético: 6-13% ♂, 14-20% ♀.
 **Proporções Áureas (Vitrúvio/Da Vinci)**: Razão ombros/cintura ideal = φ (1.618). Braço/punho = 2.52. Peito/punho = 6.5. Cintura/pelvis = 0.86.
 **Hormônios**: TRT aumenta TMB em ~10%. GLP-1 agonistas reduzem apetite em ~30% mas podem acelerar perda de massa magra em até 40% da perda total se proteína < 1.6g/kg.

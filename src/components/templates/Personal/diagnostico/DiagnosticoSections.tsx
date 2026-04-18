@@ -255,6 +255,13 @@ export const SectionCard: React.FC<{
 // SEÇÕES DO DIAGNÓSTICO
 // ═══════════════════════════════════════════════════════════
 
+const METODO_BMR_LABEL: Record<string, string> = {
+    MIFFLIN: 'Mifflin-St Jeor',
+    CUNNINGHAM: 'Cunningham (atleta com LBM)',
+    KATCH_MCARDLE: 'Katch-McArdle (LBM)',
+    SCHOFIELD: 'Schofield (WHO/FAO, adolescente)',
+};
+
 /** Seção 1: Taxas Metabólicas */
 export const SecaoTaxas: React.FC<{ dados: DiagnosticoDados; insightIA?: string; isLoading?: boolean }> = ({ dados, insightIA, isLoading }) => {
     const { taxas } = dados;
@@ -262,8 +269,31 @@ export const SecaoTaxas: React.FC<{ dados: DiagnosticoDados; insightIA?: string;
     const neatPct = Math.round((taxas.neat / taxas.tdee) * 100);
     const eatPct = Math.round((taxas.eat / taxas.tdee) * 100);
 
+    const metodoLabel = taxas.metodoBMR ? (METODO_BMR_LABEL[taxas.metodoBMR] ?? taxas.metodoBMR) : null;
+    const divergenciaSomatotipo = taxas.somatotipoUsado
+        && taxas.somatotipoInferido
+        && taxas.somatotipoUsado !== taxas.somatotipoInferido;
+
     return (
         <SectionCard icon={Flame} title="Taxas Metabólicas" subtitle="Gasto calórico diário baseado no contexto do atleta">
+            {metodoLabel && (
+                <div className="mb-4 flex flex-wrap items-center gap-2 text-[11px]">
+                    <span className="px-2.5 py-1 rounded-md bg-blue-500/10 border border-blue-500/20 text-blue-300 uppercase tracking-wider font-bold">
+                        BMR: {metodoLabel}
+                    </span>
+                    {taxas.fatorAtividade && taxas.nivelAtividade && (
+                        <span className="px-2.5 py-1 rounded-md bg-yellow-500/10 border border-yellow-500/20 text-yellow-300 uppercase tracking-wider font-bold">
+                            NEAT: {taxas.nivelAtividade.replace('_', ' ')} ({taxas.fatorAtividade})
+                        </span>
+                    )}
+                    {taxas.tdeeMin != null && taxas.tdeeMax != null && (
+                        <span className="px-2.5 py-1 rounded-md bg-orange-500/10 border border-orange-500/20 text-orange-300 uppercase tracking-wider font-bold">
+                            Faixa TDEE: {taxas.tdeeMin}–{taxas.tdeeMax} kcal (±{taxas.margemErroPct}%)
+                        </span>
+                    )}
+                </div>
+            )}
+
             <div className="grid grid-cols-3 gap-5 mb-6">
                 <MetricCard icon={Activity} label="TMB" value={taxas.tmbAjustada} unit="kcal/dia" sublabel="Taxa Metab. Basal" color="text-blue-400" />
                 <MetricCard icon={Zap} label="TMB + NEAT" value={taxas.tmbAjustada + taxas.neat} unit="kcal/dia" sublabel="+ Atividades Diárias" color="text-yellow-400" />
@@ -286,6 +316,17 @@ export const SecaoTaxas: React.FC<{ dados: DiagnosticoDados; insightIA?: string;
                 </div>
             </div>
 
+            {divergenciaSomatotipo && (
+                <div className="mb-4 bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 flex items-start gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-2 shrink-0" />
+                    <p className="text-xs text-amber-300 leading-relaxed">
+                        <strong className="uppercase tracking-wider">Divergência de somatotipo:</strong> personal declarou{' '}
+                        <strong>{taxas.somatotipoUsado}</strong>, mas FFMI+BF% indicam{' '}
+                        <strong>{taxas.somatotipoInferido}</strong>. O cálculo usou o valor declarado; revise se necessário.
+                    </p>
+                </div>
+            )}
+
             {taxas.fatoresConsiderados.length > 0 && (
                 <div className="bg-white/[0.03] rounded-lg p-4 mb-4">
                     <p className="text-sm uppercase tracking-wider text-gray-500 mb-2">Fatores Considerados</p>
@@ -295,12 +336,14 @@ export const SecaoTaxas: React.FC<{ dados: DiagnosticoDados; insightIA?: string;
                 </div>
             )}
 
-            <InsightBox isLoading={isLoading} text={insightIA || `Seu TDEE total é de ${taxas.tdee} kcal/dia, composto por TMB (${taxas.tmbAjustada} kcal — o mínimo para funções vitais), NEAT (${taxas.neat} kcal — atividades do dia a dia) e EAT (${taxas.eat} kcal — exercícios). ${taxas.neat < 400 ? 'O NEAT está baixo — incluir caminhadas de 20-30min pode elevar o gasto em ~150-200 kcal/dia, acelerando resultados sem esforço extra no treino.' : 'Seu NEAT está em bom nível, mas pode ser otimizado com deslocamentos ativos e atividades diárias.'} ${taxas.fatoresConsiderados.length > 0 ? `Foram considerados ajustes por: ${taxas.fatoresConsiderados.join(', ').toLowerCase()}.` : ''} Para recomposição corporal, o déficit ideal é de 300-500 kcal abaixo do TDEE.`} />
+            <InsightBox isLoading={isLoading} text={insightIA || `Seu TDEE total é de ${taxas.tdee} kcal/dia (faixa realista ${taxas.tdeeMin ?? taxas.tdee}–${taxas.tdeeMax ?? taxas.tdee} kcal), composto por TMB (${taxas.tmbAjustada} kcal — o mínimo para funções vitais), NEAT (${taxas.neat} kcal — atividades do dia a dia) e EAT (${taxas.eat} kcal — exercícios). ${metodoLabel ? `BMR calculado via ${metodoLabel}.` : ''} ${taxas.fatoresConsiderados.length > 0 ? `Ajustes: ${taxas.fatoresConsiderados.join(', ').toLowerCase()}.` : ''} Para recomposição corporal, o déficit ideal é de 10-15% do TDEE.`} />
 
             <RefsBox refs={[
-                'Harris, J.A. & Benedict, F.G. (1918). <span class="text-gray-500 italic">"A biometric study of human basal metabolism."</span> Proc Natl Acad Sci, 4(12), 370-373.',
+                'Mifflin, M.D. et al. (1990). <span class="text-gray-500 italic">"A new predictive equation for resting energy expenditure."</span> Am J Clin Nutr, 51(2), 241-247.',
                 'Cunningham, J.J. (1991). <span class="text-gray-500 italic">"Body composition as a determinant of energy expenditure."</span> Am J Clin Nutr, 54(6), 963-969.',
+                'Schofield, W.N. (1985). <span class="text-gray-500 italic">"Predicting basal metabolic rate, new standards and review of previous work."</span> WHO/FAO/UNU, Hum Nutr Clin Nutr, 39 Suppl 1:5-41.',
                 'Levine, J.A. (2002). <span class="text-gray-500 italic">"Non-exercise activity thermogenesis (NEAT)."</span> Best Pract Res Clin Endocrinol Metab, 16(4), 679-702.',
+                'Ainsworth, B.E. et al. (2011). <span class="text-gray-500 italic">"2011 Compendium of Physical Activities (METs)."</span> Med Sci Sports Exerc, 43(8), 1575-1581.',
             ]} />
         </SectionCard>
     );

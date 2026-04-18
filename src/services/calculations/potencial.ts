@@ -303,24 +303,58 @@ export function calcularPotencialAtleta(
     };
 }
 
+export type NivelAtividade = 'SEDENTARIO' | 'LEVE' | 'MODERADO' | 'ATIVO' | 'MUITO_ATIVO';
+
 /**
  * Infere o nível de atividade diária (NEAT) a partir do contexto do atleta.
- * Usado em DiagnosticoInput.nivelAtividade para calcular corretamente TMB+NEAT e TDEE.
- * @returns 'SEDENTARIO' | 'LEVE' | 'MODERADO'
+ * Usado como fallback em DiagnosticoInput.nivelAtividade quando o personal
+ * não preencheu o campo explícito na ficha.
+ *
+ * Considera 3 sinais:
+ *   1. Profissão (braçal vs em-pé vs escritório)
+ *   2. Estilo de vida / histórico de treino (frequência de treino semanal)
+ *   3. Combinação: trabalho físico + treino frequente → MUITO_ATIVO
+ *
+ * @returns NivelAtividade (5 valores)
  */
-export function inferirNivelAtividade(contexto?: ContextoAtleta): 'SEDENTARIO' | 'LEVE' | 'MODERADO' {
-    // Campos reais snake_case do banco
+export function inferirNivelAtividade(contexto?: ContextoAtleta): NivelAtividade {
     const profissao = (contexto?.profissao || '').toLowerCase();
     const estilo = (contexto?.estilo_vida || '').toLowerCase();
+    const historico = (contexto?.historico_treino || '').toLowerCase();
     const texto = profissao + ' ' + estilo;
 
-    // NEAT ALTO: trabalho físico intenso, obras, campo, rua
-    if (/obra|constru|pedreiro|encanador|eletricista|campo|operador|carregador|motorista|entregador|militar|policia|agr[ií]cola|mec[aâ]nico|bombeiro/i.test(texto)) {
+    // Profissão braçal: trabalho físico pesado
+    const profissaoBracal = /obra|constru|pedreiro|encanador|eletricista|campo|operador|carregador|motorista|entregador|militar|policia|agr[ií]cola|mec[aâ]nico|bombeiro/i.test(profissao);
+    // Profissão em pé: vendedor, enfermeiro, professor
+    const profissaoEmPe = /vendedor|professor|enfermeiro|balconista|gar[cç]|comerci|varejo|supermercado|escola|hospital|loja|fisio|recepci/i.test(profissao);
+    // Marcadores de vida ativa em texto livre
+    const estiloAtivo = /muito ativo|ativa|anda bastante|caminha muito|corre|corrida|ciclismo|pedala|esporte|nata[cç][aã]o|futebol|crossfit/i.test(estilo);
+    const estiloSedentario = /sedent[aá]ri|fica sentad|home office|pouco se movimenta|pouca atividade/i.test(estilo);
+
+    // Frequência de treino (mesmas regex usadas na inferência de frequência semanal)
+    const mFreq = historico.match(/(\d+)\s*(?:vezes|dias|treinos)\s*(?:por|na)\s*semana/i)
+        || historico.match(/(\d+)\s*x\s*\/\s*semana/i)
+        || historico.match(/(\d+)\s*x\s*semana/i)
+        || historico.match(/treino\s*(\d+)\s*(?:x|vezes)/i);
+    const freqTreino = mFreq ? parseInt(mFreq[1], 10) : 0;
+
+    // MUITO_ATIVO: trabalho físico pesado + treina ≥5x/semana OU treina 2x/dia
+    if ((profissaoBracal && freqTreino >= 5) || /2x ao dia|duas vezes ao dia|dois treinos|bi-?di[aá]rio/i.test(historico)) {
+        return 'MUITO_ATIVO';
+    }
+
+    // ATIVO: treina 6-7x/semana OU (profissão braçal E treina)
+    if (freqTreino >= 6 || (profissaoBracal && freqTreino >= 1)) {
+        return 'ATIVO';
+    }
+
+    // MODERADO: trabalho braçal (sem treino declarado), treina 3-5x/semana, ou estilo explicitamente ativo + treina
+    if (profissaoBracal || (freqTreino >= 3 && freqTreino <= 5) || (estiloAtivo && freqTreino >= 2)) {
         return 'MODERADO';
     }
 
-    // NEAT LEVE: em pé parte do dia, andando
-    if (/vendedor|professor|enfermeiro|balconista|gar[cç]|comerci|varejo|supermercado|escola|hospital|loja|fisio|recepci|anda bastante/i.test(texto)) {
+    // LEVE: em pé parte do dia, ou treina 1-2x/semana
+    if (profissaoEmPe || (freqTreino >= 1 && freqTreino <= 2) || (estiloAtivo && !estiloSedentario)) {
         return 'LEVE';
     }
 

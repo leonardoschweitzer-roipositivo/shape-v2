@@ -51,7 +51,7 @@ interface BasicFormData {
     peso: string;
     cintura: string;
     quadril: string;
-    nivelAtividade: 'SEDENTARIO' | 'LEVE' | 'MODERADO' | 'INTENSO' | '';
+    nivelAtividade: 'SEDENTARIO' | 'LEVE' | 'MODERADO' | 'INTENSO' | 'MUITO_INTENSO' | '';
     objetivo: 'HIPERTROFIA' | 'EMAGRECIMENTO' | 'SAUDE' | 'COMPETICAO' | '';
 }
 
@@ -60,6 +60,7 @@ const NIVEL_OPTIONS = [
     { value: 'LEVE', label: 'Leve', desc: '1-2x por semana' },
     { value: 'MODERADO', label: 'Moderado', desc: '3-5x por semana' },
     { value: 'INTENSO', label: 'Intenso', desc: '6-7x por semana' },
+    { value: 'MUITO_INTENSO', label: 'Muito Intenso', desc: '2x/dia ou trabalho físico + treino' },
 ] as const;
 
 const OBJETIVO_OPTIONS = [

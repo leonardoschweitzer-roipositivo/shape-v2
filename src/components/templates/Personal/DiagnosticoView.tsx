@@ -248,6 +248,11 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
 
         // Simular delay de processamento IA
         setTimeout(() => {
+            const ctxAny = (atleta.contexto ?? {}) as Record<string, unknown>;
+            const nivelAtividadeFicha = typeof ctxAny.nivel_atividade === 'string' ? ctxAny.nivel_atividade : undefined;
+            const duracaoFicha = typeof ctxAny.duracao_min_sessao === 'number' ? ctxAny.duracao_min_sessao : undefined;
+            const somatotipoFicha = typeof ctxAny.somatotipo === 'string' ? ctxAny.somatotipo : undefined;
+
             const input: DiagnosticoInput = {
                 peso: m.weight,
                 altura: m.height,
@@ -257,8 +262,11 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                 score: scoreEfetivo,
                 classificacao: getClassificacao(scoreEfetivo),
                 ratio: ratioEfetivo,
-                freqTreino: 5,
-                nivelAtividade: 'SEDENTARIO',
+                freqTreino: 5, // sobrescrito após calcular potencial
+                nivelAtividade: (nivelAtividadeFicha as DiagnosticoInput['nivelAtividade']) ?? 'MODERADO',
+                duracaoMinSessao: duracaoFicha,
+                somatotipo: (somatotipoFicha as DiagnosticoInput['somatotipo']) ?? null,
+                ffmi: ultimaAvaliacao?.ffmi,
                 usaAnabolizantes: !!((atleta.contexto as unknown as Record<string, unknown>)?.medicacoes),
                 usaTermogenicos: false,
                 nomeAtleta: atleta.name,
@@ -288,9 +296,12 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
             // Pipeline completo: Potencial → Diagnóstico reanalisado
             const classificacao = getClassificacao(scoreEfetivo);
             const potencial = calcularPotencialAtleta(classificacao, scoreEfetivo, atleta.contexto ?? undefined);
-            // Corrigir com valores reais do contexto (não mais hardcoded)
-            input.nivelAtividade = inferirNivelAtividade(atleta.contexto ?? undefined);
+            // Nível de atividade: prioridade ao campo explícito da ficha; fallback para inferência textual
+            if (!nivelAtividadeFicha) {
+                input.nivelAtividade = inferirNivelAtividade(atleta.contexto ?? undefined);
+            }
             input.freqTreino = potencial.frequenciaSemanal;
+            input.nivelAtleta = potencial.nivel;
             const resultado = gerarDiagnosticoCompleto(input, potencial);
 
             // Calcular o objetivo recomendado baseado nos dados do diagnóstico

@@ -23,10 +23,14 @@ import {
     Loader2,
     ClipboardList,
     Mic,
-    MicOff
+    MicOff,
+    Activity,
+    Timer,
+    User,
 } from 'lucide-react';
 import { atletaService } from '@/services/atleta.service';
 import { useSpeechToText } from '@/hooks/useSpeechToText';
+import { FATORES_ATIVIDADE, type NivelAtividade, type Somatotipo } from '@/services/calculations/tdee';
 
 // ===== TYPES =====
 
@@ -39,6 +43,12 @@ export interface ContextoAtleta {
     profissao: string;
     historico_treino: string;
     historico_dietas: string;
+    /** Nível explícito de atividade diária (afeta NEAT no cálculo de TDEE). */
+    nivel_atividade?: NivelAtividade;
+    /** Duração média de cada sessão de treino em minutos (default 60). */
+    duracao_min_sessao?: number;
+    /** Somatotipo declarado pelo personal. Inferido automaticamente no diagnóstico via FFMI+BF%. */
+    somatotipo?: Somatotipo;
     atualizado_em?: string;
     atualizado_por?: string;
 }
@@ -130,7 +140,16 @@ const EMPTY_CONTEXTO: ContextoAtleta = {
     profissao: '',
     historico_treino: '',
     historico_dietas: '',
+    nivel_atividade: undefined,
+    duracao_min_sessao: undefined,
+    somatotipo: undefined,
 };
+
+const SOMATOTIPOS: { value: Somatotipo; label: string; description: string }[] = [
+    { value: 'ECTOMORFO', label: 'Ectomorfo', description: 'Magro, estrutura fina, dificuldade para ganhar massa' },
+    { value: 'MESOMORFO', label: 'Mesomorfo', description: 'Estrutura atlética, ganha massa com facilidade' },
+    { value: 'ENDOMORFO', label: 'Endomorfo', description: 'Estrutura maior, retém gordura com mais facilidade' },
+];
 
 // ===== SUBCOMPONENTS =====
 
@@ -242,6 +261,133 @@ const ContextField: React.FC<ContextFieldProps> = ({
     );
 };
 
+// ===== METABOLIC FIELDS (structured NEAT / session / somatotype) =====
+
+interface MetabolicFieldsProps {
+    draft: ContextoAtleta;
+    isEditing: boolean;
+    onChange: (patch: Partial<ContextoAtleta>) => void;
+}
+
+const MetabolicFields: React.FC<MetabolicFieldsProps> = ({ draft, isEditing, onChange }) => {
+    const nivelAtual = draft.nivel_atividade;
+    const duracaoAtual = draft.duracao_min_sessao ?? 60;
+    const somatotipoAtual = draft.somatotipo;
+
+    return (
+        <div className="mb-4 bg-background-dark rounded-xl border border-white/10 p-4 space-y-4">
+            <div className="flex items-center gap-3 mb-1">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                    <Activity size={16} />
+                </div>
+                <div>
+                    <h4 className="text-xs font-bold text-white uppercase tracking-widest">
+                        Perfil Metabólico
+                    </h4>
+                    <p className="text-[10px] text-gray-600">
+                        Alimenta o cálculo científico de TMB, NEAT e TDEE no diagnóstico
+                    </p>
+                </div>
+            </div>
+
+            {/* Nível de Atividade */}
+            <div>
+                <label className="text-[10px] text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                    <Activity size={10} /> Nível de Atividade Diária
+                </label>
+                {isEditing ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
+                        {(Object.keys(FATORES_ATIVIDADE) as NivelAtividade[]).map(nivel => {
+                            const info = FATORES_ATIVIDADE[nivel];
+                            const selected = nivelAtual === nivel;
+                            return (
+                                <button
+                                    key={nivel}
+                                    type="button"
+                                    onClick={() => onChange({ nivel_atividade: nivel })}
+                                    className={`text-left rounded-lg border p-2.5 transition-all ${selected
+                                        ? 'bg-primary/15 border-primary/50 text-white'
+                                        : 'bg-white/[0.03] border-white/10 text-gray-400 hover:border-white/20 hover:text-white'
+                                        }`}
+                                >
+                                    <div className="text-[10px] font-bold uppercase tracking-wider">
+                                        {nivel.replace('_', ' ')}
+                                    </div>
+                                    <div className="text-[10px] text-gray-500 mt-0.5">
+                                        fator {info.fator}
+                                    </div>
+                                    <div className="text-[9px] text-gray-600 mt-1 leading-tight">
+                                        {info.descricao}
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </div>
+                ) : (
+                    <p className={`text-sm ${nivelAtual ? 'text-gray-300' : 'text-gray-600 italic'}`}>
+                        {nivelAtual ? `${nivelAtual.replace('_', ' ')} (fator ${FATORES_ATIVIDADE[nivelAtual].fator})` : 'Não informado — inferido do texto do estilo de vida'}
+                    </p>
+                )}
+            </div>
+
+            {/* Duração média da sessão + Somatotipo */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label className="text-[10px] text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                        <Timer size={10} /> Duração Média da Sessão (min)
+                    </label>
+                    {isEditing ? (
+                        <input
+                            type="number"
+                            min={15}
+                            max={240}
+                            step={5}
+                            value={duracaoAtual}
+                            onChange={e => onChange({ duracao_min_sessao: Number(e.target.value) || undefined })}
+                            className="w-full bg-white/[0.03] text-white text-sm rounded-lg border border-white/10 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 outline-none p-2.5 transition-all"
+                        />
+                    ) : (
+                        <p className={`text-sm ${draft.duracao_min_sessao ? 'text-gray-300' : 'text-gray-600 italic'}`}>
+                            {draft.duracao_min_sessao ? `${draft.duracao_min_sessao} min` : 'Padrão (60 min)'}
+                        </p>
+                    )}
+                </div>
+
+                <div>
+                    <label className="text-[10px] text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                        <User size={10} /> Somatotipo Declarado
+                    </label>
+                    {isEditing ? (
+                        <div className="grid grid-cols-3 gap-1.5">
+                            {SOMATOTIPOS.map(({ value, label, description }) => {
+                                const selected = somatotipoAtual === value;
+                                return (
+                                    <button
+                                        key={value}
+                                        type="button"
+                                        title={description}
+                                        onClick={() => onChange({ somatotipo: selected ? undefined : value })}
+                                        className={`rounded-lg border p-2 transition-all ${selected
+                                            ? 'bg-primary/15 border-primary/50 text-white'
+                                            : 'bg-white/[0.03] border-white/10 text-gray-400 hover:border-white/20 hover:text-white'
+                                            }`}
+                                    >
+                                        <div className="text-[10px] font-bold uppercase tracking-wider">{label}</div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <p className={`text-sm ${somatotipoAtual ? 'text-gray-300' : 'text-gray-600 italic'}`}>
+                            {somatotipoAtual ?? 'Não informado — inferido via FFMI+BF% no diagnóstico'}
+                        </p>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // ===== MAIN COMPONENT =====
 
 export const AthleteContextSection: React.FC<AthleteContextSectionProps> = ({
@@ -268,6 +414,14 @@ export const AthleteContextSection: React.FC<AthleteContextSectionProps> = ({
     const updateField = useCallback((key: keyof ContextoAtleta, value: string) => {
         setDraft(prev => {
             const next = { ...prev, [key]: value };
+            if (onDraftChange) onDraftChange(next);
+            return next;
+        });
+    }, [onDraftChange]);
+
+    const updatePatch = useCallback((patch: Partial<ContextoAtleta>) => {
+        setDraft(prev => {
+            const next = { ...prev, ...patch };
             if (onDraftChange) onDraftChange(next);
             return next;
         });
@@ -302,7 +456,7 @@ export const AthleteContextSection: React.FC<AthleteContextSectionProps> = ({
 
     // Contar campos preenchidos
     const filledCount = CONTEXT_FIELDS.filter(
-        f => (draft[f.key] || '').trim().length > 0
+        f => ((draft[f.key] as string) || '').trim().length > 0
     ).length;
 
     return (
@@ -404,13 +558,20 @@ export const AthleteContextSection: React.FC<AthleteContextSectionProps> = ({
                 </div>
             )}
 
+            {/* Perfil Metabólico (campos estruturados) */}
+            <MetabolicFields
+                draft={draft}
+                isEditing={isActuallyEditing}
+                onChange={updatePatch}
+            />
+
             {/* Context Fields Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {CONTEXT_FIELDS.map((config) => (
                     <ContextField
                         key={config.key}
                         config={config}
-                        value={draft[config.key] || ''}
+                        value={(draft[config.key] as string) || ''}
                         isEditing={isActuallyEditing}
                         onChange={(val: string) => updateField(config.key, val)}
                     />

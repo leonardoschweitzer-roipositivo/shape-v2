@@ -81,8 +81,13 @@ export function buildDiagnosticoInput(
     measurements: Record<string, unknown>,
     bf: number,
     potencial: PotencialAtleta,
-    nivelAtividade: string = 'SEDENTARIO',
+    nivelAtividade: string = 'MODERADO',
     proporcoesPreCalculadas?: unknown[],
+    extras: {
+        duracaoMinSessao?: number;
+        somatotipo?: DiagnosticoInput['somatotipo'];
+        ffmi?: number;
+    } = {},
 ): DiagnosticoInput {
     const m = measurements as Record<string, number>;
     const anyM = measurements as Record<string, unknown>;
@@ -103,6 +108,10 @@ export function buildDiagnosticoInput(
         ratio: atleta.ratio ?? 0,
         freqTreino: potencial.frequenciaSemanal,
         nivelAtividade: nivelAtividade as DiagnosticoInput['nivelAtividade'],
+        nivelAtleta: potencial.nivel,
+        duracaoMinSessao: extras.duracaoMinSessao,
+        somatotipo: extras.somatotipo,
+        ffmi: extras.ffmi,
         usaAnabolizantes: (() => {
             const ctx = atleta.contexto as Record<string, unknown> | undefined;
             const medUso = ctx?.medicacoesUso as Record<string, string> | undefined;
@@ -151,7 +160,12 @@ export function gerarDiagnosticoLocal(
     potencial: PotencialAtleta,
     nivelAtividade?: string,
     proporcoesPreCalculadas?: unknown[],
+    extras?: {
+        duracaoMinSessao?: number;
+        somatotipo?: DiagnosticoInput['somatotipo'];
+        ffmi?: number;
+    },
 ): DiagnosticoDados {
-    const input = buildDiagnosticoInput(atleta, measurements, bf, potencial, nivelAtividade, proporcoesPreCalculadas);
+    const input = buildDiagnosticoInput(atleta, measurements, bf, potencial, nivelAtividade, proporcoesPreCalculadas, extras);
     return gerarDiagnosticoCompleto(input, potencial);
 }

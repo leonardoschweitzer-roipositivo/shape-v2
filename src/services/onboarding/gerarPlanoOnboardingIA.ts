@@ -37,7 +37,7 @@ import type { PerfilAtletaIA } from '@/services/vitruviusContext';
 // ═══════════════════════════════════════════════════════════
 
 export type ObjetivoOnboarding = 'HIPERTROFIA' | 'EMAGRECIMENTO' | 'SAUDE' | 'COMPETICAO';
-export type NivelAtividadeOnboarding = 'SEDENTARIO' | 'LEVE' | 'MODERADO' | 'INTENSO';
+export type NivelAtividadeOnboarding = 'SEDENTARIO' | 'LEVE' | 'MODERADO' | 'INTENSO' | 'MUITO_INTENSO';
 
 export interface GerarPlanoOnboardingInput {
     atletaId: string;
@@ -74,12 +74,13 @@ const OBJETIVO_MAP: Record<ObjetivoOnboarding, ObjetivoVitruvio> = {
     COMPETICAO: 'RECOMP',
 };
 
-// Diagnóstico internamente exige nivelAtividade simplificado (3 níveis).
-const NIVEL_MAP: Record<NivelAtividadeOnboarding, 'SEDENTARIO' | 'LEVE' | 'MODERADO'> = {
+// Mapeia os valores do wizard para os 5 níveis usados no pipeline de TDEE.
+const NIVEL_MAP: Record<NivelAtividadeOnboarding, 'SEDENTARIO' | 'LEVE' | 'MODERADO' | 'ATIVO' | 'MUITO_ATIVO'> = {
     SEDENTARIO: 'SEDENTARIO',
     LEVE: 'LEVE',
     MODERADO: 'MODERADO',
-    INTENSO: 'MODERADO',
+    INTENSO: 'ATIVO',
+    MUITO_INTENSO: 'MUITO_ATIVO',
 };
 
 function calcularIdade(dataNascimento: string): number {

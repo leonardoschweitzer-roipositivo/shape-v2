@@ -11,23 +11,23 @@
  */
 
 import { supabase } from '@/services/supabase';
-import { PotencialAtleta } from './potencial';
+import { PotencialAtleta, NivelAtleta } from './potencial';
 import { gerarConteudoIA } from '@/services/vitruviusAI';
 import { type PerfilAtletaIA, perfilParaTexto, diagnosticoParaTexto, getFontesCientificas } from '@/services/vitruviusContext';
 import { buildDiagnosticoPrompt } from '@/services/vitruviusPrompts';
+import {
+    calcularTaxasMetabolicas,
+    calcularBMRMifflin,
+    type NivelAtividade,
+    type Somatotipo,
+    type TaxasMetabolicas,
+} from './tdee';
 
 // ═══════════════════════════════════════════════════════════
 // TYPES
 // ═══════════════════════════════════════════════════════════
 
-export interface TaxasMetabolicas {
-    tmb: number;
-    tmbAjustada: number;
-    neat: number;
-    eat: number;
-    tdee: number;
-    fatoresConsiderados: string[];
-}
+export type { TaxasMetabolicas, NivelAtividade, Somatotipo } from './tdee';
 
 export interface ComposicaoAtual {
     peso: number;
@@ -128,10 +128,18 @@ export interface DiagnosticoInput {
     classificacao: string;
     ratio: number;
     freqTreino: number;
-    nivelAtividade: 'SEDENTARIO' | 'LEVE' | 'MODERADO';
+    nivelAtividade: NivelAtividade;
     usaAnabolizantes: boolean;
     usaTermogenicos: boolean;
     nomeAtleta: string;
+    /** Opcional: duração média de sessão de treino (minutos). Default 60. */
+    duracaoMinSessao?: number;
+    /** Opcional: somatotipo declarado pelo personal (ficha). */
+    somatotipo?: Somatotipo | null;
+    /** Opcional: nível do atleta (para Cunningham e METs). Vem de potencial.nivel. */
+    nivelAtleta?: NivelAtleta;
+    /** Opcional: FFMI já calculado (para inferência de somatotipo). */
+    ffmi?: number;
     medidas: {
         ombros: number;
         cintura: number;
@@ -158,77 +166,9 @@ export interface DiagnosticoInput {
 // CÁLCULOS - TMB / TDEE
 // ═══════════════════════════════════════════════════════════
 
-const FATORES_NEAT: Record<string, number> = {
-    SEDENTARIO: 0.15,
-    LEVE: 0.30,
-    MODERADO: 0.50,
-};
-
-/**
- * Calcula TMB pela fórmula de Mifflin-St Jeor.
- * 
- * @param peso - Peso em kg
- * @param altura - Altura em cm
- * @param idade - Idade em anos
- * @param sexo - 'M' ou 'F'
- * @returns TMB em kcal/dia
- */
-export function calcularTMB(peso: number, altura: number, idade: number, sexo: 'M' | 'F'): number {
-    if (sexo === 'M') {
-        return Math.round((10 * peso) + (6.25 * altura) - (5 * idade) + 5);
-    }
-    return Math.round((10 * peso) + (6.25 * altura) - (5 * idade) - 161);
-}
-
-/**
- * Ajusta TMB por uso de medicações.
- * +10% para anabolizantes, +5% para termogênicos.
- */
-export function ajustarTMBPorMedicacoes(
-    tmb: number,
-    usaAnabolizantes: boolean,
-    usaTermogenicos: boolean
-): { tmbAjustada: number; fatores: string[] } {
-    let fator = 1.0;
-    const fatores: string[] = [];
-
-    if (usaAnabolizantes) {
-        fator += 0.10;
-        fatores.push('Anabolizantes (+10% metabolismo)');
-    }
-    if (usaTermogenicos) {
-        fator += 0.05;
-        fatores.push('Termogênicos (+5% metabolismo)');
-    }
-
-    return {
-        tmbAjustada: Math.round(tmb * fator),
-        fatores,
-    };
-}
-
-/**
- * Calcula TDEE completo: TMB + NEAT + EAT.
- */
-export function calcularTDEE(
-    tmb: number,
-    nivelAtividade: string,
-    freqTreino: number
-): TaxasMetabolicas {
-    const neatFactor = FATORES_NEAT[nivelAtividade] ?? FATORES_NEAT.SEDENTARIO;
-    const neat = Math.round(tmb * neatFactor);
-    const eat = Math.round((350 * freqTreino) / 7);
-    const tdee = tmb + neat + eat;
-
-    return {
-        tmb,
-        tmbAjustada: tmb,
-        neat,
-        eat,
-        tdee,
-        fatoresConsiderados: [],
-    };
-}
+// Lógica centralizada em ./tdee.ts. Re-exportada aqui para compatibilidade
+// com consumidores antigos (calcularTMB usado em outros módulos).
+export { calcularBMRMifflin as calcularTMB, ajustarTMBPorMedicacoes, calcularTaxasMetabolicas } from './tdee';
 
 // ═══════════════════════════════════════════════════════════
 // CÁLCULOS - COMPOSIÇÃO CORPORAL
@@ -827,16 +767,26 @@ export function gerarDiagnosticoCompleto(
     input: DiagnosticoInput,
     potencial?: PotencialAtleta
 ): DiagnosticoDados {
-    // 1. Taxas metabólicas
-    const tmbBase = calcularTMB(input.peso, input.altura, input.idade, input.sexo);
-    const { tmbAjustada, fatores } = ajustarTMBPorMedicacoes(tmbBase, input.usaAnabolizantes, input.usaTermogenicos);
-    const taxas = calcularTDEE(tmbAjustada, input.nivelAtividade, input.freqTreino);
-    taxas.tmb = tmbBase;
-    taxas.tmbAjustada = tmbAjustada;
-    taxas.fatoresConsiderados = fatores;
-
-    // 2. Composição corporal
+    // 1. Composição corporal (calculada antes para fornecer LBM ao cálculo de TDEE)
     const composicaoAtual = calcularComposicao(input.peso, input.gorduraPct);
+
+    // 2. Taxas metabólicas (pipeline científico: Schofield/Cunningham/Katch/Mifflin + METs + somatotipo)
+    const taxas = calcularTaxasMetabolicas({
+        peso: input.peso,
+        altura: input.altura,
+        idade: input.idade,
+        sexo: input.sexo,
+        gorduraPct: input.gorduraPct,
+        lbm: composicaoAtual.massaMagra,
+        ffmi: input.ffmi,
+        nivelAtividade: input.nivelAtividade,
+        freqTreino: input.freqTreino,
+        duracaoMinSessao: input.duracaoMinSessao,
+        nivelAtleta: input.nivelAtleta ?? potencial?.nivel,
+        somatotipo: input.somatotipo,
+        usaAnabolizantes: input.usaAnabolizantes,
+        usaTermogenicos: input.usaTermogenicos,
+    });
 
     // Meta de gordura: atlético (10-12%) para homens, fitness (18-20%) para mulheres
     const gorduraMeta12M = input.sexo === 'M'
