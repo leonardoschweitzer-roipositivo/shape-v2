@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { ChevronLeft, TrendingUp, TrendingDown, Flame, Trophy, Loader2, Sparkles, Camera, User } from 'lucide-react'
+import { ChevronLeft, TrendingUp, TrendingDown, Flame, Trophy, Loader2, Sparkles, Camera, User, ClipboardList, Link2, Copy, Share2, CheckCircle, X } from 'lucide-react'
 import type { FichaAlunoResumo } from '@/types/personal-portal'
 import { HeaderAluno } from './components/HeaderAluno'
 import { CardConsistenciaPersonal } from './components/CardConsistenciaPersonal'
@@ -13,6 +13,8 @@ import { atletaService } from '@/services/atleta.service'
 import { storageService } from '@/services/storage.service'
 import { gerarConteudoIA } from '@/services/vitruviusAI'
 import { getFontesCientificas } from '@/services/vitruviusContext'
+import { supabase } from '@/services/supabase'
+import { DEFAULT_ATHLETE_PASSWORD } from '@/components/templates/StudentRegistration/StudentRegistration'
 
 interface AlunoFichaScreenProps {
     alunoId: string
@@ -83,6 +85,11 @@ export function AlunoFichaScreen({ alunoId, onVoltar }: AlunoFichaScreenProps) {
     const [uploading, setUploading] = useState(false)
     const [fotoUrl, setFotoUrl] = useState<string | null>(null)
     const [editandoTreino, setEditandoTreino] = useState(false)
+    const [showContextoModal, setShowContextoModal] = useState(false)
+    const [contextoLink, setContextoLink] = useState<string | null>(null)
+    const [contextoCopied, setContextoCopied] = useState(false)
+    const [contextoLoading, setContextoLoading] = useState(false)
+    const [contextoError, setContextoError] = useState<string | null>(null)
 
     useEffect(() => {
         buscarFichaAluno(alunoId).then(data => {
@@ -176,6 +183,66 @@ FORMATO:
             setInsightError('Ocorreu um erro na comunicação com o serviço de IA.')
         } finally {
             setInsightLoading(false)
+        }
+    }
+
+    const gerarLinkContexto = async () => {
+        if (!ficha) return
+        setContextoLoading(true)
+        setContextoError(null)
+        setContextoLink(null)
+
+        try {
+            const baseUrl = window.location.origin
+            const email = ficha.email.trim()
+
+            if (!email) {
+                setContextoError('Aluno sem email cadastrado. Edite os dados primeiro.')
+                return
+            }
+
+            const { data: atletaRow } = await supabase
+                .from('atletas')
+                .select('auth_user_id')
+                .eq('id', alunoId)
+                .single()
+
+            let link: string
+
+            if (atletaRow?.auth_user_id) {
+                link = `${baseUrl}/atleta?email=${encodeURIComponent(email)}&tab=contexto`
+            } else {
+                const { data: { session: personalSession } } = await supabase.auth.getSession()
+
+                const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+                    email,
+                    password: DEFAULT_ATHLETE_PASSWORD,
+                    options: { data: { full_name: ficha.nome.trim(), role: 'ATLETA' } },
+                })
+
+                if (personalSession) {
+                    await supabase.auth.setSession({
+                        access_token: personalSession.access_token,
+                        refresh_token: personalSession.refresh_token,
+                    })
+                }
+
+                if (signUpError && signUpError.message.includes('already registered')) {
+                    link = `${baseUrl}/atleta?email=${encodeURIComponent(email)}&tab=contexto`
+                } else if (signUpData?.user) {
+                    await supabase.from('atletas').update({ auth_user_id: signUpData.user.id } as Record<string, unknown>).eq('id', alunoId)
+                    link = `${baseUrl}/atleta?email=${encodeURIComponent(email)}&p=${encodeURIComponent(DEFAULT_ATHLETE_PASSWORD).replace(/!/g, '%21')}&tab=contexto`
+                } else {
+                    throw new Error(signUpError?.message || 'Falha ao criar acesso.')
+                }
+            }
+
+            setContextoLink(link)
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : 'Erro ao gerar link.'
+            setContextoError(msg)
+        } finally {
+            setContextoLoading(false)
         }
     }
 
@@ -343,7 +410,116 @@ FORMATO:
                     scoreAtual={ficha.score}
                     scoreMeta3M={ficha.scoreMeta3M}
                 />
+
+                {/* 5. Card Contexto do Aluno */}
+                <div className="bg-surface-deep rounded-3xl p-5 border border-white/5 shadow-xl">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-xl bg-indigo-500/10 flex items-center justify-center">
+                                <ClipboardList size={16} className="text-indigo-400" />
+                            </div>
+                            <div>
+                                <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">Contexto do Aluno</h3>
+                                <p className="text-[10px] text-gray-600 mt-0.5">Saúde, lesões, estilo de vida e histórico</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => { setShowContextoModal(true); gerarLinkContexto() }}
+                            className="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all shadow-lg shadow-indigo-600/20 active:scale-95 flex items-center gap-1.5"
+                        >
+                            <Link2 size={12} />
+                            Gerar Link
+                        </button>
+                    </div>
+                </div>
             </div>
+
+            {/* Modal: Link de Contexto */}
+            {showContextoModal && (
+                <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm" onClick={() => setShowContextoModal(false)}>
+                    <div
+                        className="bg-[#111] border border-white/10 rounded-t-3xl w-full max-w-lg px-6 py-6 pb-10 space-y-5 animate-in slide-in-from-bottom duration-300"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-xl bg-indigo-500/10 flex items-center justify-center">
+                                    <ClipboardList size={18} className="text-indigo-400" />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-black text-white uppercase tracking-wider">Link de Contexto</h3>
+                                    <p className="text-[10px] text-gray-500">Para {ficha.nome} preencher</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setShowContextoModal(false)} className="p-2 rounded-xl text-gray-500 hover:text-white hover:bg-white/10 transition-all">
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        {/* Body */}
+                        {contextoLoading && (
+                            <div className="flex items-center justify-center py-8 gap-3 text-gray-400">
+                                <Loader2 size={20} className="animate-spin text-indigo-400" />
+                                <span className="text-sm">Gerando link...</span>
+                            </div>
+                        )}
+
+                        {contextoError && !contextoLoading && (
+                            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm text-center">
+                                {contextoError}
+                            </div>
+                        )}
+
+                        {contextoLink && !contextoLoading && (
+                            <>
+                                <div className="bg-white/[0.03] border border-white/10 rounded-2xl px-4 py-3 flex items-center gap-3">
+                                    <Link2 size={14} className="text-indigo-400 shrink-0" />
+                                    <span className="text-xs text-gray-300 font-mono truncate flex-1">{contextoLink}</span>
+                                </div>
+
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={async () => {
+                                            try {
+                                                await navigator.clipboard.writeText(contextoLink)
+                                            } catch {
+                                                const t = document.createElement('textarea')
+                                                t.value = contextoLink
+                                                document.body.appendChild(t)
+                                                t.select()
+                                                document.execCommand('copy')
+                                                document.body.removeChild(t)
+                                            }
+                                            setContextoCopied(true)
+                                            setTimeout(() => setContextoCopied(false), 3000)
+                                        }}
+                                        className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${contextoCopied
+                                            ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400'
+                                            : 'bg-indigo-600 text-white hover:bg-indigo-500 active:scale-95 shadow-lg shadow-indigo-600/20'
+                                        }`}
+                                    >
+                                        {contextoCopied ? <><CheckCircle size={14} /> Copiado!</> : <><Copy size={14} /> Copiar Link</>}
+                                    </button>
+
+                                    {typeof navigator.share === 'function' && (
+                                        <button
+                                            onClick={() => navigator.share({ title: `Contexto — ${ficha.nome}`, text: 'Preencha seu contexto para personalizar seu plano:', url: contextoLink })}
+                                            className="flex items-center justify-center gap-2 px-4 py-3.5 bg-white/5 border border-white/10 rounded-2xl text-gray-400 hover:text-white hover:bg-white/10 transition-all font-black text-xs uppercase tracking-widest"
+                                        >
+                                            <Share2 size={14} />
+                                        </button>
+                                    )}
+                                </div>
+
+                                <p className="text-[10px] text-gray-600 text-center">
+                                    Envie esse link para o aluno via WhatsApp ou outro canal.
+                                </p>
+                            </>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

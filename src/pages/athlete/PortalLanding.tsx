@@ -87,6 +87,8 @@ export function PortalLanding({ token, atletaId, onClose }: PortalLandingProps) 
                     setAthleteData(data);
                     buscarDadosConsistencia(data.id).then(setDadosConsistencia).catch(console.error);
                     portalNotificacaoService.contarNaoLidas(data.id).then(setNotificacoesBadge).catch(console.error);
+                    const tabParam = new URLSearchParams(window.location.search).get('tab');
+                    if (tabParam === 'contexto') setView('contexto');
                 }
             } catch (err) {
                 setError('Erro ao carregar dados. Tente novamente.');
