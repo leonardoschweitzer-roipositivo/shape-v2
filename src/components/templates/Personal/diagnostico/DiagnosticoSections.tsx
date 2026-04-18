@@ -6,6 +6,7 @@ import {
     Flame, Activity, Zap, Target, TrendingUp, TrendingDown,
     BarChart3, Star, AlertTriangle, Award, ArrowRight, Bot,
     Stethoscope, Dumbbell, Salad, Check,
+    User as UserIcon,
 } from 'lucide-react';
 import type { DiagnosticoDados } from '@/services/calculations/diagnostico';
 import { colors } from '@/tokens';
@@ -262,6 +263,21 @@ const METODO_BMR_LABEL: Record<string, string> = {
     SCHOFIELD: 'Schofield (WHO/FAO, adolescente)',
 };
 
+const SOMATOTIPO_DESC: Record<string, { short: string; long: string }> = {
+    ECTOMORFO: {
+        short: 'Estrutura fina, metabolismo acelerado',
+        long: 'Naturalmente magro, ombros mais estreitos, metabolismo acelerado. Ganha massa muscular com dificuldade; requer superávit calórico generoso e alta ingestão proteica.',
+    },
+    MESOMORFO: {
+        short: 'Estrutura atlética, ganha massa com facilidade',
+        long: 'Estrutura óssea média, boa resposta ao treino de força. Ganha massa com relativa facilidade e perde gordura com déficit moderado — perfil mais versátil.',
+    },
+    ENDOMORFO: {
+        short: 'Estrutura maior, retém gordura',
+        long: 'Estrutura óssea maior, tende a reter gordura. Precisa de maior controle calórico e priorização de treinos com componente aeróbico + sensibilidade à insulina.',
+    },
+};
+
 /** Seção 1: Taxas Metabólicas */
 export const SecaoTaxas: React.FC<{ dados: DiagnosticoDados; insightIA?: string; isLoading?: boolean }> = ({ dados, insightIA, isLoading }) => {
     const { taxas } = dados;
@@ -274,8 +290,30 @@ export const SecaoTaxas: React.FC<{ dados: DiagnosticoDados; insightIA?: string;
         && taxas.somatotipoInferido
         && taxas.somatotipoUsado !== taxas.somatotipoInferido;
 
+    const somatotipoEfetivo = taxas.somatotipoUsado ?? taxas.somatotipoInferido ?? null;
+    const somatotipoFoiInferido = !taxas.somatotipoUsado && !!taxas.somatotipoInferido;
+    const somatotipoInfo = somatotipoEfetivo ? SOMATOTIPO_DESC[somatotipoEfetivo] : null;
+
     return (
         <SectionCard icon={Flame} title="Taxas Metabólicas" subtitle="Gasto calórico diário baseado no contexto do atleta">
+            {somatotipoEfetivo && somatotipoInfo && (
+                <div className="mb-4 bg-gradient-to-r from-purple-500/10 via-purple-500/5 to-transparent border border-purple-500/20 rounded-xl p-4 flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-lg bg-purple-500/20 text-purple-300 flex items-center justify-center shrink-0 border border-purple-500/30">
+                        <UserIcon size={22} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <span className="text-[10px] font-bold text-purple-300 uppercase tracking-widest">Perfil Corporal</span>
+                            <span className="text-lg font-bold text-white uppercase tracking-wider">{somatotipoEfetivo}</span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-gray-400 uppercase tracking-wider">
+                                {somatotipoFoiInferido ? 'Inferido via FFMI+BF%' : 'Declarado pelo Personal'}
+                            </span>
+                        </div>
+                        <p className="text-sm text-gray-400 leading-relaxed">{somatotipoInfo.long}</p>
+                    </div>
+                </div>
+            )}
+
             {metodoLabel && (
                 <div className="mb-4 flex flex-wrap items-center gap-2 text-[11px]">
                     <span className="px-2.5 py-1 rounded-md bg-blue-500/10 border border-blue-500/20 text-blue-300 uppercase tracking-wider font-bold">
@@ -351,11 +389,35 @@ export const SecaoTaxas: React.FC<{ dados: DiagnosticoDados; insightIA?: string;
 
 /** Seção 2: Composição Corporal */
 export const SecaoComposicao: React.FC<{ dados: DiagnosticoDados; insightIA?: string; isLoading?: boolean }> = ({ dados, insightIA, isLoading }) => {
-    const { composicaoAtual, metasComposicao } = dados;
+    const { composicaoAtual, metasComposicao, taxas } = dados;
     const projecao = metasComposicao.projecaoMensal;
+
+    const somatotipo = taxas.somatotipoUsado ?? taxas.somatotipoInferido ?? null;
+    const somatotipoFoiInferido = !taxas.somatotipoUsado && !!taxas.somatotipoInferido;
+    const somatotipoInfo = somatotipo ? SOMATOTIPO_DESC[somatotipo] : null;
 
     return (
         <SectionCard icon={BarChart3} title="Composição Corporal" subtitle="Análise da distribuição de massa magra e gordura">
+            {somatotipo && somatotipoInfo && (
+                <div className="mb-5 bg-[#0D1525] border border-purple-500/20 rounded-xl p-4 flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-lg bg-purple-500/15 text-purple-300 flex items-center justify-center shrink-0">
+                        <UserIcon size={18} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-[10px] font-bold text-purple-300 uppercase tracking-widest">Perfil Corporal</span>
+                            <span className="text-sm font-bold text-white uppercase tracking-wider">{somatotipo}</span>
+                            {somatotipoFoiInferido && (
+                                <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-gray-500 uppercase tracking-wider">
+                                    Inferido
+                                </span>
+                            )}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-0.5">{somatotipoInfo.short}</p>
+                    </div>
+                </div>
+            )}
+
             {/* Atual */}
             <div className="grid grid-cols-2 gap-5 mb-6">
                 <div className="bg-[#0D1525] border border-white/5 rounded-xl p-5 text-center">

@@ -107,6 +107,13 @@ ${fontesCientificas}
 - Reaja a dores e lesões com empatia e cautela, sugerindo adaptações
 - Não forneça dicas médicas ou prescrições caso esbarre em diagnóstico clínico.
 
+## Perfil Corporal (somatotipo) — OBRIGATÓRIO mencionar
+O resumoVitruvio e os insights de taxas e composição DEVEM citar explicitamente o somatotipo do atleta (ECTOMORFO, MESOMORFO ou ENDOMORFO), usando o campo somatotipoUsado (declarado pelo personal) ou somatotipoInferido (inferido via FFMI+BF%) dos dados calculados.
+- ECTOMORFO: "perfil ectomorfo — estrutura fina e metabolismo acelerado. Ganho de massa exige superávit calórico generoso e proteína alta (1.8–2.2 g/kg). Priorizar volume e carga progressiva em compostos."
+- MESOMORFO: "perfil mesomorfo — estrutura atlética com boa resposta ao treino. Perfil versátil para bulk ou recomposição; resposta hipertrófica alta com volume moderado."
+- ENDOMORFO: "perfil endomorfo — tendência a reter gordura. Priorizar déficit moderado + proteína alta (2.0–2.4 g/kg) e incluir componente aeróbico/NEAT elevado para sensibilidade à insulina."
+Se o somatotipo foi inferido (somatotipoUsado vazio), mencione que foi inferido via FFMI+BF% e sugerir que o personal confirme na ficha.
+
 ## Taxas Metabólicas (obrigatório no insight "taxas")
 - Cite o MÉTODO de BMR usado e justifique a escolha:
   - SCHOFIELD → "por ser adolescente (idade X), usamos fórmula WHO/FAO validada para 10–18 anos — Mifflin subestimaria."
@@ -114,7 +121,7 @@ ${fontesCientificas}
   - KATCH_MCARDLE → "por ter LBM medida, usamos Katch-McArdle como alternativa conservadora."
   - MIFFLIN → "Mifflin-St Jeor (padrão-ouro para adultos não-obesos sem LBM medida)."
 - Se houver ajuste de crescimento (>0), mencione que foram somados +N kcal pela fase de crescimento.
-- Se somatotipoUsado estiver preenchido, explicite o ajuste aplicado ao TDEE (+5% ECTOMORFO / −4% ENDOMORFO / 0 MESOMORFO).
+- Cite o ajuste aplicado ao TDEE pelo somatotipo (+5% ECTOMORFO / −4% ENDOMORFO / 0 MESOMORFO) e justifique fisiologicamente.
 - Se houver DIVERGÊNCIA entre somatotipo declarado e inferido, comente sugerindo que o personal revise a classificação.
 - Ao sugerir déficit/superávit para dieta, use a FAIXA de confiança (tdeeMin–tdeeMax) em vez de um único valor — o TDEE tem ±X% de erro.
 
