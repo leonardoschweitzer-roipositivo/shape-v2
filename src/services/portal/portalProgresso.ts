@@ -539,12 +539,18 @@ function _derivarAvaliacaoDetalhada(a: SupaAssessment): AvaliacaoDadosResult {
         else { classComp = 'OBESIDADE'; emojiComp = '❌'; }
     }
 
+    const sexoNorm: 'M' | 'F' = (genero === 'MALE' || genero === 'male' || genero === 'M') ? 'M' : 'F';
+    const somatotipo = (ffmi > 0 && bf > 0)
+        ? inferirSomatotipoDeFFMI(ffmi, bf, sexoNorm)
+        : undefined;
+
     const diagnostico = {
         bf, scoreBF, ffmi, scoreFFMI,
         massaMagra: pesoMagro, massaGorda: pesoGordo,
         pesoRelativo: pesoRelativoVal, scorePesoRelativo,
         scoreTotal: scoreComposicao,
         classificacao: classComp, emoji: emojiComp,
+        somatotipo,
     };
 
     const rawProporcoes = results?.proporcoes_aureas || [];
