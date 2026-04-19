@@ -1414,9 +1414,9 @@ export function CardTreino({
                                                     Quantidade de séries
                                                 </span>
                                                 <div className="flex items-center gap-2">
-                                                    {ex.series && sets.length !== ex.series && (
+                                                    {prescricao.length > 0 && sets.length !== prescricao.length && (
                                                         <span className="text-[9px] text-gray-600 uppercase tracking-wider">
-                                                            plano: {ex.series}
+                                                            plano: {prescricao.length}
                                                         </span>
                                                     )}
                                                     <div className="flex items-center gap-1 bg-white/[0.03] border border-white/10 rounded-lg p-0.5">

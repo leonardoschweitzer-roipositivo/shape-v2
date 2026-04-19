@@ -127,9 +127,12 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
 
     /**
      * Hidratação dos inputs set-by-set:
-     *  - Se sessionStorage tem timers do mesmo treino → respeita (aluno pausou e voltou).
-     *  - Se é um treino novo (hash de ids mudou) ou não hidratado → inicializa `sets`
-     *    com a última execução do mesmo treinoIndex, ou sets vazios de length=ex.series.
+     *  - O número de séries SEMPRE segue `prescricaoSeries.length` (o que o Personal
+     *    definiu no Plano). Se o plano mudar, a contagem do Portal é reconciliada.
+     *  - Se sessionStorage tem timers do mesmo treino+prescrição → preserva valores
+     *    do aluno (carga/reps/check/descanso), só ajusta o tamanho ao plano.
+     *  - Se é um treino novo ou a prescrição mudou → inicializa `sets` com base na
+     *    última execução (até o tamanho do plano) ou em sets vazios.
      *  - Migra registros legados (apenas `carga` escalar) para `sets[0].carga`.
      */
     useEffect(() => {
@@ -140,7 +143,11 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
         if (treino.status !== 'pendente') return
 
         const exercicios = treino.exercicios
-        const hashAtual = exercicios.map(e => e.id).join('|')
+        // Hash inclui contagem de séries prescritas — força re-hidratação quando
+        // o personal altera prescricaoSeries (adiciona/remove série no Plano).
+        const hashAtual = exercicios
+            .map(e => `${e.id}:${e.prescricaoSeries?.length ?? e.series ?? 0}`)
+            .join('|')
 
         // Evita rerun no mesmo render cycle
         if (hidratacaoRef.current === hashAtual) return
@@ -158,25 +165,33 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
             const existente = exercicioTimers[ex.id]
             const temSetsValidos = existente?.sets && existente.sets.length > 0
 
+            // Prescrição é a FONTE DA VERDADE para o número de séries — o Portal
+            // do Aluno deve refletir EXATAMENTE o que o Personal definiu no Plano.
+            const prescricao = expandirPrescricao(ex, { topSetKg: ex.topSetKg })
+            const totalSets = Math.max(1, prescricao.length)
+
             if (mesmoTreino && existente && temSetsValidos) {
-                // Respeita o estado atual (aluno já interagiu), mas faz backfill do
-                // `tipo` quando ausente (estado legado salvo sem o campo).
-                const prescricaoBackfill = expandirPrescricao(ex, { topSetKg: ex.topSetKg })
-                const setsBackfill = existente.sets!.map((s, i) => ({
-                    ...s,
-                    tipo: s.tipo ?? prescricaoBackfill[i]?.tipo,
-                }))
-                proximoState[ex.id] = { ...existente, sets: setsBackfill }
+                // Respeita o estado atual (aluno já interagiu), mas reconcilia
+                // tamanho com o plano: trunca se sobrar, completa se faltar.
+                const setsReconciliados: SetExecutado[] = Array.from(
+                    { length: totalSets },
+                    (_, i) => {
+                        const s = existente.sets![i]
+                        return s
+                            ? { ...s, tipo: s.tipo ?? prescricao[i]?.tipo }
+                            : { tipo: prescricao[i]?.tipo }
+                    },
+                )
+                proximoState[ex.id] = { ...existente, sets: setsReconciliados }
                 continue
             }
 
             // Migração legado: só tinha `carga` escalar
             if (mesmoTreino && existente && typeof existente.carga === 'number' && !temSetsValidos) {
-                const prescricaoMig = expandirPrescricao(ex, { topSetKg: ex.topSetKg })
                 const setsMigrados: SetExecutado[] = Array.from(
-                    { length: Math.max(1, ex.series || 1) },
+                    { length: totalSets },
                     (_, i) => ({
-                        tipo: prescricaoMig[i]?.tipo,
+                        tipo: prescricao[i]?.tipo,
                         ...(i === 0 ? { carga: existente.carga } : {}),
                     }),
                 )
@@ -190,29 +205,12 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                 ultimas.porNome[normalizar(ex.nome)] ??
                 null
 
-            // Prescrição (com tipo por série) — usa prescricaoSeries do plano ou
-            // fallback determinístico (aquec/recon/válida) quando ausente.
-            const prescricao = expandirPrescricao(ex, { topSetKg: ex.topSetKg })
-
-            let sets: SetExecutado[]
-            if (ultima && ultima.sets.length > 0) {
-                // Respeita EXATAMENTE a quantidade de séries que o aluno usou na
-                // última execução — não trunca nem completa com base em ex.series.
-                // Assim, se ele ajustou de 7 para 10 séries no último treino,
-                // o próximo já começa com 10.
-                // Preserva tipo da execução; se ausente, semeia a partir da prescrição.
-                sets = ultima.sets.map((s, i) => ({
-                    tipo: prescricao[i]?.tipo,
-                    ...s,
-                }))
-            } else {
-                // Primeira vez: usa a quantidade do plano como ponto de partida.
-                // Semeia tipo a partir da prescrição série-a-série.
-                const totalSets = Math.max(1, ex.series || 1)
-                sets = Array.from({ length: totalSets }, (_, i) => ({
-                    tipo: prescricao[i]?.tipo,
-                }))
-            }
+            const sets: SetExecutado[] = Array.from({ length: totalSets }, (_, i) => {
+                const ultimaSet = ultima?.sets[i]
+                return ultimaSet
+                    ? { ...ultimaSet, tipo: ultimaSet.tipo ?? prescricao[i]?.tipo }
+                    : { tipo: prescricao[i]?.tipo }
+            })
 
             proximoState[ex.id] = {
                 status: 'idle',
