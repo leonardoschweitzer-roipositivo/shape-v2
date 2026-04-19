@@ -38,6 +38,7 @@ import {
 import { useDataStore } from '@/stores/dataStore';
 import {
     gerarDiagnosticoCompleto,
+    buscarDiagnostico,
     type DiagnosticoDados,
     type DiagnosticoInput,
 } from '@/services/calculations/diagnostico';
@@ -204,23 +205,44 @@ export const DietaView: React.FC<DietaViewProps> = ({
     const handleGerar = () => {
         if (!ultimaAvaliacao) return;
         setEstado('generating');
-        setTimeout(() => {
+        setTimeout(async () => {
             // 1. Calcular Potencial
             const classificacao = getClassificacao(atleta.score);
             const pot = calcularPotencialAtleta(classificacao, atleta.score, atleta.contexto ?? undefined);
             setPotencial(pot);
 
-            // 2. Calcular Diagnóstico (usando helper compartilhado)
-            const nivelAtiv = inferirNivelAtividade(atleta.contexto ?? undefined);
-            const input = buildDiagnosticoInput(
-                atleta,
-                ultimaAvaliacao.measurements as Record<string, unknown>,
-                ultimaAvaliacao.bf ?? 15,
-                pot,
-                nivelAtiv,
-                ultimaAvaliacao.proporcoes,
-            );
-            const diag = gerarDiagnosticoCompleto(input, pot);
+            // 2. Diagnóstico — preferir o confirmado no Supabase (fonte de verdade de TDEE,
+            //    somatotipo, nivel de atividade). Fallback: recomputar com os MESMOS inputs
+            //    do DiagnosticoView para manter TDEE consistente entre as etapas.
+            let diag = await buscarDiagnostico(atletaId);
+            if (!diag) {
+                const ctxAny = (atleta.contexto ?? {}) as Record<string, unknown>;
+                const nivelAtividadeFicha = typeof ctxAny.nivel_atividade === 'string'
+                    ? (ctxAny.nivel_atividade as DiagnosticoInput['nivelAtividade'])
+                    : undefined;
+                const duracaoFicha = typeof ctxAny.duracao_min_sessao === 'number'
+                    ? ctxAny.duracao_min_sessao
+                    : undefined;
+                const somatotipoFicha = typeof ctxAny.somatotipo === 'string'
+                    ? (ctxAny.somatotipo as DiagnosticoInput['somatotipo'])
+                    : undefined;
+                const nivelAtiv = nivelAtividadeFicha
+                    ?? inferirNivelAtividade(atleta.contexto ?? undefined, { frequenciaSemanal: pot.frequenciaSemanal });
+                const input = buildDiagnosticoInput(
+                    atleta,
+                    ultimaAvaliacao.measurements as Record<string, unknown>,
+                    ultimaAvaliacao.bf ?? 15,
+                    pot,
+                    nivelAtiv,
+                    ultimaAvaliacao.proporcoes,
+                    {
+                        duracaoMinSessao: duracaoFicha,
+                        somatotipo: somatotipoFicha,
+                        ffmi: ultimaAvaliacao.ffmi ?? undefined,
+                    },
+                );
+                diag = gerarDiagnosticoCompleto(input, pot);
+            }
             setDiagnostico(diag);
 
             // 3. Calcular objetivo recomendado (mesmo algoritmo do Diagnóstico/Treino)
