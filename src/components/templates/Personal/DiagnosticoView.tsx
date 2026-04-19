@@ -34,6 +34,7 @@ import {
     Save,
     CheckCircle,
     XCircle,
+    RefreshCw,
 } from 'lucide-react';
 import { useDataStore } from '@/stores/dataStore';
 import {
@@ -56,7 +57,7 @@ import { supabase } from '@/services/supabase';
 import { ScoreWidget } from '@/components/organisms/AssessmentCards/ScoreWidget';
 import { colors } from '@/tokens';
 import { type ContextoAtleta } from './AthleteContextSection';
-import { getClassificacao } from './PlanoEvolucaoHelpers';
+import { getClassificacao, gerarDiagnosticoLocal } from './PlanoEvolucaoHelpers';
 import { gerarConteudoIA } from '@/services/vitruviusAI';
 import { type PerfilAtletaIA, perfilParaTexto, getFontesCientificas, diagnosticoParaTexto } from '@/services/vitruviusContext';
 import { buildAnaliseContextoPrompt } from '@/services/vitruviusPrompts';
@@ -108,10 +109,12 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
     const [recomendacao, setRecomendacao] = useState<RecomendacaoObjetivo | null>(null);
     const [objetivoSelecionado, setObjetivoSelecionado] = useState<ObjetivoVitruvio | null>(null);
     const [toastStatus, setToastStatus] = useState<'success' | 'error' | null>(null);
+    const [toastMessage, setToastMessage] = useState<string | null>(null);
     const [iaEnriching, setIaEnriching] = useState(false);
     const [analiseContextoIA, setAnaliseContextoIA] = useState<string | null>(null);
     const [contextLoading, setContextLoading] = useState(true);
     const [isApplying, setIsApplying] = useState(false);
+    const [recalcLoading, setRecalcLoading] = useState(false);
 
     // ── Edição inline do diagnóstico (metas e prioridades) ──
     const {
@@ -405,6 +408,80 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
         setTimeout(() => setToastStatus(null), 3000);
     };
 
+    /**
+     * Recalcula somente a meta 12M (e demais campos do diagnóstico) com a fórmula
+     * vigente, sem tocar em fichas.objetivo_vitruvio nem em treino/dieta. Útil para
+     * atualizar diagnósticos antigos quando a lógica de cálculo foi corrigida.
+     */
+    const handleRecalcularMeta = async () => {
+        if (!ultimaAvaliacao || !m) return;
+        setRecalcLoading(true);
+
+        try {
+            const ctxAny = (atleta.contexto ?? {}) as Record<string, unknown>;
+            const nivelAtividadeFicha = typeof ctxAny.nivel_atividade === 'string' ? ctxAny.nivel_atividade : undefined;
+            const duracaoFicha = typeof ctxAny.duracao_min_sessao === 'number' ? ctxAny.duracao_min_sessao : undefined;
+            const somatotipoFicha = typeof ctxAny.somatotipo === 'string' ? ctxAny.somatotipo : undefined;
+
+            const classificacao = getClassificacao(scoreEfetivo);
+            const potencial = calcularPotencialAtleta(classificacao, scoreEfetivo, atleta.contexto ?? undefined);
+
+            const nivelAtividade = nivelAtividadeFicha ?? inferirNivelAtividade(
+                atleta.contexto ?? undefined,
+                { frequenciaSemanal: potencial.frequenciaSemanal },
+            );
+
+            const novoDiagnostico = gerarDiagnosticoLocal(
+                {
+                    name: atleta.name,
+                    gender: atleta.gender,
+                    birthDate: atleta.birthDate,
+                    score: scoreEfetivo,
+                    ratio: ratioEfetivo,
+                    contexto: atleta.contexto,
+                },
+                m as unknown as Record<string, unknown>,
+                ultimaAvaliacao.bf ?? 15,
+                potencial,
+                nivelAtividade,
+                Array.isArray(ultimaAvaliacao?.proporcoes) ? ultimaAvaliacao.proporcoes : undefined,
+                {
+                    duracaoMinSessao: duracaoFicha,
+                    somatotipo: (somatotipoFicha as DiagnosticoInput['somatotipo']) ?? null,
+                    ffmi: ultimaAvaliacao.ffmi,
+                },
+            );
+
+            const antigo = diagnostico?.analiseEstetica?.scoreMeta12M;
+            const novo = novoDiagnostico.analiseEstetica?.scoreMeta12M;
+            console.info(`[RecalcMeta] ${atleta.name}: ${antigo} → ${novo}`);
+
+            const result = await salvarDiagnostico(atletaId, atleta.personalId ?? null, novoDiagnostico);
+            if (!result) {
+                setToastStatus('error');
+                setToastMessage('Falha ao recalcular meta. Tente novamente.');
+                setTimeout(() => { setToastStatus(null); setToastMessage(null); }, 4000);
+                return;
+            }
+
+            setDiagnostico(novoDiagnostico);
+            setToastStatus('success');
+            setToastMessage(
+                Number.isFinite(antigo) && Number.isFinite(novo)
+                    ? `Meta 12M recalculada: ${antigo} → ${novo}`
+                    : 'Meta 12M recalculada com sucesso.'
+            );
+            setTimeout(() => { setToastStatus(null); setToastMessage(null); }, 4000);
+        } catch (err) {
+            console.error('[RecalcMeta] Erro:', err);
+            setToastStatus('error');
+            setToastMessage('Erro ao recalcular meta.');
+            setTimeout(() => { setToastStatus(null); setToastMessage(null); }, 4000);
+        } finally {
+            setRecalcLoading(false);
+        }
+    };
+
     /** Extrai diretrizes do chat e reprocessa o diagnostico com IA */
     const handleAplicarAjustes = async () => {
         if (!diagnostico || !ultimaAvaliacao) return;
@@ -459,7 +536,7 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                         {toastStatus === 'success'
                             ? <CheckCircle size={18} className="text-emerald-400" />
                             : <XCircle size={18} className="text-red-400" />}
-                        {toastStatus === 'success' ? 'Diagnóstico salvo com sucesso!' : 'Erro ao salvar. Tente novamente.'}
+                        {toastMessage ?? (toastStatus === 'success' ? 'Diagnóstico salvo com sucesso!' : 'Erro ao salvar. Tente novamente.')}
                     </div>
                 )}
                 {/* Page Header */}
@@ -747,13 +824,28 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
                                 )}
                             </div>
                         ) : (
-                            <button
-                                onClick={() => onNext()}
-                                className="flex items-center gap-3 px-8 py-3.5 bg-primary text-white font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all"
-                            >
-                                Próximo: Plano de Treino
-                                <ArrowRight size={18} />
-                            </button>
+                            <div className="flex items-center gap-3">
+                                {ultimaAvaliacao && (
+                                    <button
+                                        onClick={handleRecalcularMeta}
+                                        disabled={recalcLoading}
+                                        title="Recalcula a Meta 12M com a fórmula vigente. Não altera Treino, Dieta nem objetivo."
+                                        className="flex items-center gap-2 px-5 py-3.5 bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:bg-white/10 font-bold text-xs uppercase tracking-wider rounded-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                                    >
+                                        {recalcLoading
+                                            ? <Loader2 size={16} className="animate-spin" />
+                                            : <RefreshCw size={16} />}
+                                        {recalcLoading ? 'Recalculando...' : 'Recalcular Meta'}
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => onNext()}
+                                    className="flex items-center gap-3 px-8 py-3.5 bg-primary text-white font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all"
+                                >
+                                    Próximo: Plano de Treino
+                                    <ArrowRight size={18} />
+                                </button>
+                            </div>
                         )}
                     </div>
                 )}
