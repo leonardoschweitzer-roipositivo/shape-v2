@@ -61,7 +61,14 @@ export function derivarUltimasExecucoes(
     for (const ex of exerciciosRealizados) {
         let sets: SetExecutado[] = [];
         if (Array.isArray(ex.sets) && ex.sets.length > 0) {
-            sets = ex.sets;
+            // Só performance passada (carga/reps/tipo/rir). Estado de execução
+            // efêmero (concluido, descanso*) NÃO deve vazar para o treino de hoje.
+            sets = ex.sets.map(s => ({
+                carga: s.carga,
+                reps: s.reps,
+                tipo: s.tipo,
+                rirReportado: s.rirReportado,
+            }));
         } else if (typeof ex.carga === 'number') {
             // Registros legados gravaram só carga escalar — tratamos como 1 set
             sets = [{ carga: ex.carga }];
