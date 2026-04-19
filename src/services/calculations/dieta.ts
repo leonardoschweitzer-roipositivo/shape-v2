@@ -682,6 +682,38 @@ export async function salvarPlanoDieta(
             (_, v) => typeof v === 'number' && !isFinite(v) ? 0 : v
         ));
 
+        // Busca plano ativo anterior
+        const { data: planoAnterior } = await supabase
+            .from('planos_dieta')
+            .select('id')
+            .eq('atleta_id', atletaId)
+            .eq('status', 'ativo')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+        // Se existe plano anterior, atualiza ao invés de inserir
+        if (planoAnterior?.id) {
+            const { data, error } = await supabase
+                .from('planos_dieta')
+                .update({
+                    personal_id: personalId,
+                    diagnostico_id: diagnosticoId ?? null,
+                    dados: safeDados,
+                } as Record<string, unknown>)
+                .eq('id', planoAnterior.id)
+                .select('id')
+                .single();
+
+            if (error) {
+                console.error('[Dieta] Erro ao atualizar:', error.message);
+                return null;
+            }
+            console.info('[Dieta] ✏️ Plano atualizado:', planoAnterior.id);
+            return data as { id: string };
+        }
+
+        // Se não existe plano anterior, insere novo
         const { data, error } = await supabase
             .from('planos_dieta')
             .insert({
@@ -698,6 +730,13 @@ export async function salvarPlanoDieta(
             console.error('[Dieta] Erro ao salvar:', error.message);
             return null;
         }
+        console.info('[Dieta] ✨ Plano criado:', data?.id);
+
+        // Limpeza automática de planos duplicados (em background)
+        limparPlanosDietaDuplicados(atletaId).catch(err =>
+            console.warn('[Dieta] Aviso: limpeza automática falhou (não crítico):', err)
+        );
+
         return data as { id: string };
     } catch (err) {
         console.error('[Dieta] Exceção ao salvar:', err);
@@ -723,5 +762,44 @@ export async function buscarPlanoDieta(atletaId: string): Promise<PlanoDieta | n
         return data.dados as PlanoDieta;
     } catch {
         return null;
+    }
+}
+
+/**
+ * Remove planos de dieta duplicados, mantendo apenas o mais recente ativo.
+ * Útil para limpar planos órfãos criados antes da correção de duplicação.
+ */
+export async function limparPlanosDietaDuplicados(atletaId: string): Promise<number> {
+    try {
+        // Busca todos os planos ativos deste atleta
+        const { data: planos, error: selectError } = await supabase
+            .from('planos_dieta')
+            .select('id, created_at')
+            .eq('atleta_id', atletaId)
+            .eq('status', 'ativo')
+            .order('created_at', { ascending: false });
+
+        if (selectError || !planos || planos.length <= 1) {
+            return 0;
+        }
+
+        // Mantém o mais recente, desativa os antigos
+        const idsParaDesativar = planos.slice(1).map(p => p.id);
+
+        const { error: updateError } = await supabase
+            .from('planos_dieta')
+            .update({ status: 'inativo' })
+            .in('id', idsParaDesativar);
+
+        if (updateError) {
+            console.error('[Dieta] Erro ao limpar duplicados:', updateError);
+            return 0;
+        }
+
+        console.info(`[Dieta] 🧹 ${idsParaDesativar.length} plano(s) duplicado(s) desativado(s) para atleta ${atletaId}`);
+        return idsParaDesativar.length;
+    } catch (err) {
+        console.error('[Dieta] Exceção ao limpar duplicados:', err);
+        return 0;
     }
 }

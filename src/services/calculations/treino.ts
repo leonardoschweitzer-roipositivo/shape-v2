@@ -989,6 +989,38 @@ export async function salvarPlanoTreino(
             (_, v) => typeof v === 'number' && !isFinite(v) ? 0 : v
         ));
 
+        // Busca plano ativo anterior
+        const { data: planoAnterior } = await supabase
+            .from('planos_treino')
+            .select('id')
+            .eq('atleta_id', atletaId)
+            .eq('status', 'ativo')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+        // Se existe plano anterior, atualiza ao invés de inserir
+        if (planoAnterior?.id) {
+            const { data, error } = await supabase
+                .from('planos_treino')
+                .update({
+                    personal_id: personalId,
+                    diagnostico_id: diagnosticoId ?? null,
+                    dados: safeDados,
+                } as Record<string, unknown>)
+                .eq('id', planoAnterior.id)
+                .select('id')
+                .single();
+
+            if (error) {
+                console.error('[Treino] Erro ao atualizar:', error.message);
+                return null;
+            }
+            console.info('[Treino] ✏️ Plano atualizado:', planoAnterior.id);
+            return data as { id: string };
+        }
+
+        // Se não existe plano anterior, insere novo
         const { data, error } = await supabase
             .from('planos_treino')
             .insert({
@@ -1005,6 +1037,13 @@ export async function salvarPlanoTreino(
             console.error('[Treino] Erro ao salvar:', error.message);
             return null;
         }
+        console.info('[Treino] ✨ Plano criado:', data?.id);
+
+        // Limpeza automática de planos duplicados (em background)
+        limparPlanosTreinoDuplicados(atletaId).catch(err =>
+            console.warn('[Treino] Aviso: limpeza automática falhou (não crítico):', err)
+        );
+
         return data as { id: string };
     } catch (err) {
         console.error('[Treino] Exceção ao salvar:', err);
@@ -1042,5 +1081,44 @@ export async function buscarPlanoTreino(atletaId: string): Promise<PlanoTreino |
         }
     } catch {
         return null;
+    }
+}
+
+/**
+ * Remove planos de treino duplicados, mantendo apenas o mais recente ativo.
+ * Útil para limpar planos órfãos criados antes da correção de duplicação.
+ */
+export async function limparPlanosTreinoDuplicados(atletaId: string): Promise<number> {
+    try {
+        // Busca todos os planos ativos deste atleta
+        const { data: planos, error: selectError } = await supabase
+            .from('planos_treino')
+            .select('id, created_at')
+            .eq('atleta_id', atletaId)
+            .eq('status', 'ativo')
+            .order('created_at', { ascending: false });
+
+        if (selectError || !planos || planos.length <= 1) {
+            return 0;
+        }
+
+        // Mantém o mais recente, desativa os antigos
+        const idsParaDesativar = planos.slice(1).map(p => p.id);
+
+        const { error: updateError } = await supabase
+            .from('planos_treino')
+            .update({ status: 'inativo' })
+            .in('id', idsParaDesativar);
+
+        if (updateError) {
+            console.error('[Treino] Erro ao limpar duplicados:', updateError);
+            return 0;
+        }
+
+        console.info(`[Treino] 🧹 ${idsParaDesativar.length} plano(s) duplicado(s) desativado(s) para atleta ${atletaId}`);
+        return idsParaDesativar.length;
+    } catch (err) {
+        console.error('[Treino] Exceção ao limpar duplicados:', err);
+        return 0;
     }
 }
