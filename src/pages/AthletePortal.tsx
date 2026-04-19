@@ -35,6 +35,7 @@ import {
     type ProximoTreino,
     derivarProximosTreinos,
 } from '../services/portalDataService'
+import { expandirPrescricao } from '../services/prescricao/expandir'
 
 interface AthletePortalProps {
     atletaId: string;
@@ -158,16 +159,26 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
             const temSetsValidos = existente?.sets && existente.sets.length > 0
 
             if (mesmoTreino && existente && temSetsValidos) {
-                // Respeita o estado atual (aluno já interagiu)
-                proximoState[ex.id] = existente
+                // Respeita o estado atual (aluno já interagiu), mas faz backfill do
+                // `tipo` quando ausente (estado legado salvo sem o campo).
+                const prescricaoBackfill = expandirPrescricao(ex, { topSetKg: ex.topSetKg })
+                const setsBackfill = existente.sets!.map((s, i) => ({
+                    ...s,
+                    tipo: s.tipo ?? prescricaoBackfill[i]?.tipo,
+                }))
+                proximoState[ex.id] = { ...existente, sets: setsBackfill }
                 continue
             }
 
             // Migração legado: só tinha `carga` escalar
             if (mesmoTreino && existente && typeof existente.carga === 'number' && !temSetsValidos) {
+                const prescricaoMig = expandirPrescricao(ex, { topSetKg: ex.topSetKg })
                 const setsMigrados: SetExecutado[] = Array.from(
                     { length: Math.max(1, ex.series || 1) },
-                    (_, i) => (i === 0 ? { carga: existente.carga } : {}),
+                    (_, i) => ({
+                        tipo: prescricaoMig[i]?.tipo,
+                        ...(i === 0 ? { carga: existente.carga } : {}),
+                    }),
                 )
                 proximoState[ex.id] = { ...existente, sets: setsMigrados }
                 continue
@@ -179,16 +190,28 @@ export function AthletePortal({ atletaId, atletaNome, initialTab = 'hoje', onGoT
                 ultimas.porNome[normalizar(ex.nome)] ??
                 null
 
+            // Prescrição (com tipo por série) — usa prescricaoSeries do plano ou
+            // fallback determinístico (aquec/recon/válida) quando ausente.
+            const prescricao = expandirPrescricao(ex, { topSetKg: ex.topSetKg })
+
             let sets: SetExecutado[]
             if (ultima && ultima.sets.length > 0) {
                 // Respeita EXATAMENTE a quantidade de séries que o aluno usou na
                 // última execução — não trunca nem completa com base em ex.series.
                 // Assim, se ele ajustou de 7 para 10 séries no último treino,
                 // o próximo já começa com 10.
-                sets = ultima.sets.map(s => ({ ...s }))
+                // Preserva tipo da execução; se ausente, semeia a partir da prescrição.
+                sets = ultima.sets.map((s, i) => ({
+                    tipo: prescricao[i]?.tipo,
+                    ...s,
+                }))
             } else {
                 // Primeira vez: usa a quantidade do plano como ponto de partida.
-                sets = Array.from({ length: Math.max(1, ex.series || 1) }, () => ({}))
+                // Semeia tipo a partir da prescrição série-a-série.
+                const totalSets = Math.max(1, ex.series || 1)
+                sets = Array.from({ length: totalSets }, (_, i) => ({
+                    tipo: prescricao[i]?.tipo,
+                }))
             }
 
             proximoState[ex.id] = {
