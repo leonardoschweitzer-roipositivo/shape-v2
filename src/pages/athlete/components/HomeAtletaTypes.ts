@@ -34,6 +34,8 @@ export interface CardScoreMetaProps {
     diagnosticoDados?: DiagnosticoDados
     sexo?: 'M' | 'F'
     medidas?: any
+    nivelAtleta?: 'INICIANTE' | 'INTERMEDIÁRIO' | 'AVANÇADO'
+    justificativaMeta?: string
 }
 
 export interface CardRankingProps {

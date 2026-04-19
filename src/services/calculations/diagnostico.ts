@@ -73,6 +73,9 @@ export interface AnaliseEstetica {
     scoreMeta3M: number;
     scoreMeta6M: number;
     scoreMeta12M: number;
+    nivelAtleta: NivelAtleta;
+    deltaPotencialScore12M: number;
+    justificativaMeta: string;
     proporcoes: ProporcoesGrupo[];
     simetria: {
         scoreGeral: number;
@@ -626,7 +629,7 @@ function projetarScoreMeta(
     metasComposicao: MetasComposicao,
     metasProporcoes: MetaProporcao[],
     gorduraMeta12M: number,
-    fallbackDelta: number
+    potencial: PotencialAtleta,
 ): { scoreMeta3M: number; scoreMeta6M: number; scoreMeta12M: number } {
     try {
         const isFemale = input.sexo === 'F';
@@ -710,45 +713,44 @@ function projetarScoreMeta(
         const deltaSymmetry = projectedSymScore - currentSymScore;
 
         // ═══════════════════════════════════════════════════════════
-        // SCORE FINAL PROJETADO
+        // SCORE FINAL PROJETADO — cap duro pelo potencial realista
         // ═══════════════════════════════════════════════════════════
-        // Aplicar os pesos de cada pilar (mesmos de assessment.ts)
-        const deltaTotal12M =
+        // Delta teórico dos 3 pilares (otimista)
+        const deltaTeorico12M =
             deltaComposicao * 0.35 +           // 35% composição
             deltaProportionScore * 0.40 +      // 40% proporções
             deltaSymmetry * 0.25;              // 25% simetria
 
-        // Ganho front-loaded: 3 meses ≈ 30% do ganho total, 6 meses ≈ 55%
-        const deltaTotal3M = deltaTotal12M * 0.30;
-        const deltaTotal6M = deltaTotal12M * 0.55;
+        // Cap realista de potencial.ts (nível + contexto: meds, lesões, profissão)
+        const capRealista = potencial.deltaPotencialScore12M;
+        const deltaTotal12M = Math.max(0, Math.min(deltaTeorico12M, capRealista));
 
-        console.info(`[ScoreMeta] Deltas calculados (${isFemale ? 'F' : 'M'}):`,
+        // Distribuição trimestral: reusa curva de potencial.ts (INICIANTE front-loaded, etc)
+        const [q1, q2] = potencial.deltaScorePorTrimestre;
+        const fator = capRealista > 0 ? deltaTotal12M / capRealista : 0;
+        const deltaTotal3M = q1 * fator;
+        const deltaTotal6M = (q1 + q2) * fator;
+
+        console.info(`[ScoreMeta] ${input.sexo}`,
             `Composição=${deltaComposicao.toFixed(1)} (BF:${deltaBF.toFixed(1)}, FFMI:${deltaFFMI.toFixed(1)}, PR:${deltaPesoRel.toFixed(1)})`,
             `| Proporções=${deltaProportionScore.toFixed(1)} (avg +${avgPctImprovement.toFixed(1)}%, ${countGroupsWithImprovement} grupos)`,
             `| Simetria=${deltaSymmetry.toFixed(1)} (${currentSymScore} → ${projectedSymScore.toFixed(1)})`,
-            `| Total 12M=${deltaTotal12M.toFixed(1)}, 6M=${deltaTotal6M.toFixed(1)}`
+            `| Teórico=${deltaTeorico12M.toFixed(1)} vs Cap (${potencial.nivel})=${capRealista.toFixed(1)} → Final=${deltaTotal12M.toFixed(1)}`
         );
 
-        const scoreMeta3M = Math.min(100, Math.round((input.score + deltaTotal3M) * 10) / 10);
-        const scoreMeta6M = Math.min(100, Math.round((input.score + deltaTotal6M) * 10) / 10);
-        const scoreMeta12M = Math.min(100, Math.round((input.score + deltaTotal12M) * 10) / 10);
-
-        // Segurança: meta deve ser pelo menos 0.5 pontos acima do score atual
         return {
-            scoreMeta3M: Math.max(input.score + 0.3, scoreMeta3M),
-            scoreMeta6M: Math.max(input.score + 0.6, scoreMeta6M),
-            scoreMeta12M: Math.max(input.score + 1.2, scoreMeta12M),
+            scoreMeta3M: Math.min(100, Math.round((input.score + deltaTotal3M) * 10) / 10),
+            scoreMeta6M: Math.min(100, Math.round((input.score + deltaTotal6M) * 10) / 10),
+            scoreMeta12M: Math.min(100, Math.round((input.score + deltaTotal12M) * 10) / 10),
         };
     } catch (error) {
-        console.error('[Diagnostico] Erro ao projetar Score Meta, usando fallback:', error);
-        // Fallback: método antigo (delta flat)
-        const deltaScore3M = Math.round(fallbackDelta * 0.30 * 10) / 10;
-        const deltaScore6M = Math.round(fallbackDelta * 0.55 * 10) / 10;
-        const deltaScore12M = fallbackDelta; // Assuming fallbackDelta is for 12M
+        console.error('[Diagnostico] Erro nos 3 pilares; usando cap realista puro do potencial:', error);
+        const cap = potencial.deltaPotencialScore12M;
+        const [q1, q2] = potencial.deltaScorePorTrimestre;
         return {
-            scoreMeta3M: Math.min(100, Math.round((input.score + deltaScore3M) * 10) / 10),
-            scoreMeta6M: Math.min(100, Math.round((input.score + deltaScore6M) * 10) / 10),
-            scoreMeta12M: Math.min(100, Math.round((input.score + deltaScore12M) * 10) / 10),
+            scoreMeta3M: Math.min(100, Math.round((input.score + q1) * 10) / 10),
+            scoreMeta6M: Math.min(100, Math.round((input.score + q1 + q2) * 10) / 10),
+            scoreMeta12M: Math.min(100, Math.round((input.score + cap) * 10) / 10),
         };
     }
 }
@@ -765,7 +767,7 @@ function projetarScoreMeta(
  */
 export function gerarDiagnosticoCompleto(
     input: DiagnosticoInput,
-    potencial?: PotencialAtleta
+    potencial: PotencialAtleta,
 ): DiagnosticoDados {
     // 1. Composição corporal (calculada antes para fornecer LBM ao cálculo de TDEE)
     const composicaoAtual = calcularComposicao(input.peso, input.gorduraPct);
@@ -782,7 +784,7 @@ export function gerarDiagnosticoCompleto(
         nivelAtividade: input.nivelAtividade,
         freqTreino: input.freqTreino,
         duracaoMinSessao: input.duracaoMinSessao,
-        nivelAtleta: input.nivelAtleta ?? potencial?.nivel,
+        nivelAtleta: input.nivelAtleta ?? potencial.nivel,
         somatotipo: input.somatotipo,
         usaAnabolizantes: input.usaAnabolizantes,
         usaTermogenicos: input.usaTermogenicos,
@@ -802,16 +804,18 @@ export function gerarDiagnosticoCompleto(
     const prioridades = gerarPrioridades(proporcoes);
     const metasProporcoes = gerarMetasProporcoes(proporcoes, input.medidas);
 
-    // 5. Meta de score: SIMULAÇÃO CONTEXTUALIZADA via 3 pilares
-    //    Projeta melhorias reais em composição, proporções e simetria
-    //    e calcula o score resultante via calcularAvaliacaoGeral.
-    const fallbackDelta = potencial?.deltaPotencialScore12M ?? 6;
+    // 5. Meta de score: 3 pilares com CAP DURO pelo potencial realista
+    //    (nível + contexto: meds, lesões, profissão). Fonte única: potencial.ts.
     const { scoreMeta3M, scoreMeta6M, scoreMeta12M } = projetarScoreMeta(
-        input, proporcoes, simetria, metasComposicao, metasProporcoes, gorduraMeta12M, fallbackDelta
+        input, proporcoes, simetria, metasComposicao, metasProporcoes, gorduraMeta12M, potencial
     );
     const deltaScore = Math.round((scoreMeta12M - input.score) * 10) / 10;
     const classificacaoMeta = scoreMeta12M >= 95 ? 'ELITE' : scoreMeta12M >= 85 ? 'META' : 'CAMINHO';
-    const labelNivel = potencial?.nivel ?? input.classificacao.toUpperCase();
+    const labelNivel = potencial.nivel;
+
+    const justificativaMeta =
+        `Nível ${potencial.nivel} — ganho realista de +${potencial.deltaPotencialScore12M.toFixed(1)} pts ` +
+        `em 12 meses, considerando seu perfil, objetivo e contexto atual.`;
 
     const analiseEstetica: AnaliseEstetica = {
         scoreAtual: input.score,
@@ -819,6 +823,9 @@ export function gerarDiagnosticoCompleto(
         scoreMeta3M,
         scoreMeta6M,
         scoreMeta12M,
+        nivelAtleta: potencial.nivel,
+        deltaPotencialScore12M: potencial.deltaPotencialScore12M,
+        justificativaMeta,
         proporcoes,
         simetria,
     };

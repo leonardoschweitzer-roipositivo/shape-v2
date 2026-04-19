@@ -40,6 +40,8 @@ export function CardScoreMeta({
     diagnosticoDados,
     sexo,
     medidas,
+    nivelAtleta,
+    justificativaMeta,
 }: CardScoreMetaProps) {
     const corAtual = getClassificacaoCor(classificacaoAtual)
     const corMeta = getClassificacaoCor(classificacaoMeta)
@@ -256,9 +258,20 @@ export function CardScoreMeta({
                                 <span className="text-[10px] font-black tracking-widest uppercase mt-1" style={{ color: corMeta }}>
                                     {classificacaoMeta}
                                 </span>
+                                {nivelAtleta && (
+                                    <span className="text-[9px] font-semibold tracking-wider uppercase mt-1 text-gray-500">
+                                        {nivelAtleta}
+                                    </span>
+                                )}
                             </div>
                         </div>
                     </div>
+
+                    {justificativaMeta && (
+                        <p className="text-[11px] text-gray-500 text-center mt-2 px-2 leading-relaxed">
+                            {justificativaMeta}
+                        </p>
+                    )}
 
                     {/* Gráfico de Evolução 12 Meses (Movido para cá) */}
                     {renderGrafico()}

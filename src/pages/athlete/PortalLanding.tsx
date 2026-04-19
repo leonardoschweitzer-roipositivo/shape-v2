@@ -274,8 +274,14 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
     const dataUltimaAvaliacao = lastAval ? new Date(lastAval.data) : new Date();
     const diag = athleteData.diagnostico?.dados as Record<string, Record<string, unknown>> | undefined;
     const analiseEstetica = diag?.analiseEstetica as Record<string, unknown> | undefined;
-    const scoreMeta = Number(analiseEstetica?.scoreMeta12M) || 65;
-    const classificacaoMeta = analiseEstetica?.scoreMeta12M ? getClassificacao(scoreMeta) : 'ATLETA';
+    const scoreMeta12MRaw = Number(analiseEstetica?.scoreMeta12M);
+    const hasScoreMeta = Number.isFinite(scoreMeta12MRaw) && scoreMeta12MRaw > 0;
+    const scoreMeta = hasScoreMeta ? scoreMeta12MRaw : scoreAtual;
+    const classificacaoMeta = hasScoreMeta ? getClassificacao(scoreMeta) : classificacaoAtual;
+    const nivelAtleta = analiseEstetica?.nivelAtleta as 'INICIANTE' | 'INTERMEDIÁRIO' | 'AVANÇADO' | undefined;
+    const justificativaMeta = typeof analiseEstetica?.justificativaMeta === 'string'
+        ? (analiseEstetica.justificativaMeta as string)
+        : undefined;
     const firstMedida = athleteData.medidas?.[athleteData.medidas.length - 1] || lastMedida;
     const medidasDiag = diag?._medidas as Record<string, unknown> | undefined;
     const ombrosAtual = Number(measurements?.linear?.shoulders) || Number(medidasDiag?.ombros) || lastMedida?.ombros || 0;
@@ -410,6 +416,8 @@ function HomeAtletaV2({ athleteData, dadosConsistencia, onGoToPortal, onGoToMeas
                             diagnosticoDados={diagTyped}
                             sexo={athleteData.ficha?.sexo as 'M' | 'F' || 'M'}
                             medidas={medidasParaCard}
+                            nivelAtleta={nivelAtleta}
+                            justificativaMeta={justificativaMeta}
                         />
 
                         {/* 4. Metas do Trimestre */}
