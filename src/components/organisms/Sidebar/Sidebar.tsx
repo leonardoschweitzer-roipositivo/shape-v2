@@ -51,7 +51,7 @@ const NavItem: React.FC<NavItemProps> = ({ icon: Icon, label, isActive, isPro, i
       <Icon size={20} className="flex-shrink-0" />
       {!isSidebarCollapsed && <span className="text-sm font-medium truncate">{label}</span>}
       {!isSidebarCollapsed && isPro && (
-        <span className="ml-auto px-1.5 py-0.5 rounded text-[10px] font-bold bg-secondary/20 text-secondary border border-secondary/20">
+        <span className="ml-auto px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-600 text-white border border-indigo-600">
           PRO
         </span>
       )}
