@@ -18,7 +18,7 @@ export interface DadosConsistencia {
     recorde: number               // Maior streak do histórico
     proximoBadge: BadgeProximo | null
     totalTreinos: number
-    consistencia: number          // % (treinos / dias passados no ano)
+    consistencia: number          // % (treinos feitos / treinos esperados no período)
     tempoTotalMinutos: number
 }
 
@@ -140,22 +140,39 @@ export async function buscarDadosConsistencia(
     atletaId: string,
     ano: number = new Date().getFullYear()
 ): Promise<DadosConsistencia> {
-    // Buscar registros de treino do ano
+    // Buscar registros de treino do ano + plano ativo (para frequência semanal e data de início)
     const inicioAno = `${ano}-01-01`
     const fimAno = `${ano}-12-31`
 
-    const { data: registros, error } = await supabase
-        .from('registros_diarios')
-        .select('data, dados')
-        .eq('atleta_id', atletaId)
-        .eq('tipo', 'treino')
-        .gte('data', inicioAno)
-        .lte('data', fimAno)
-        .order('data', { ascending: true })
+    const [
+        { data: registros, error },
+        { data: planoData }
+    ] = await Promise.all([
+        supabase
+            .from('registros_diarios')
+            .select('data, dados')
+            .eq('atleta_id', atletaId)
+            .eq('tipo', 'treino')
+            .gte('data', inicioAno)
+            .lte('data', fimAno)
+            .order('data', { ascending: true }),
+        supabase
+            .from('planos_treino')
+            .select('dados, created_at')
+            .eq('atleta_id', atletaId)
+            .eq('status', 'ativo')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+    ])
 
     if (error) {
         console.error('[ConsistenciaService] Erro ao buscar registros:', error)
     }
+
+    const freqSemanal: number = (planoData?.dados as { divisao?: { frequenciaSemanal?: number } } | null)
+        ?.divisao?.frequenciaSemanal ?? 5
+    const planoCreatedAt = planoData?.created_at as string | undefined
 
     // Filtrar apenas treinos completos e extrair datas únicas
     const treinosCompletos = (registros ?? []).filter(
@@ -179,11 +196,25 @@ export async function buscarDadosConsistencia(
     // Métricas
     const totalTreinos = datasUnicas.length
 
-    // Dias passados no ano até hoje
-    const inicioDate = new Date(ano, 0, 1)
-    const hojeFim = new Date(Math.min(hoje.getTime(), new Date(ano, 11, 31).getTime()))
-    const diasPassados = Math.max(1, Math.floor((hojeFim.getTime() - inicioDate.getTime()) / (1000 * 60 * 60 * 24)) + 1)
-    const consistencia = Math.round((totalTreinos / diasPassados) * 100)
+    // Consistência = treinos realizados / treinos esperados no período
+    // Período inicia no plano ativo (ou primeiro check-in, o que for mais antigo) e termina hoje
+    const candidatosInicio: number[] = []
+    if (planoCreatedAt) {
+        const dt = new Date(planoCreatedAt)
+        dt.setHours(0, 0, 0, 0)
+        candidatosInicio.push(dt.getTime())
+    }
+    if (datasUnicas.length > 0) {
+        candidatosInicio.push(new Date(datasUnicas[0] + 'T00:00:00').getTime())
+    }
+    const inicioPeriodoMs = candidatosInicio.length > 0
+        ? Math.min(...candidatosInicio)
+        : hoje.getTime()
+    const diasPassados = Math.max(1, Math.floor((hoje.getTime() - inicioPeriodoMs) / (1000 * 60 * 60 * 24)) + 1)
+    const treinosEsperados = Math.max(1, (diasPassados * freqSemanal) / 7)
+    const consistencia = totalTreinos === 0
+        ? 0
+        : Math.min(100, Math.round((totalTreinos / treinosEsperados) * 100))
 
     // Tempo total (soma duração de cada treino, default 60min se não informado)
     const tempoTotalMinutos = treinosCompletos.reduce((acc: number, r) => {
