@@ -10,7 +10,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { GoogleGenerativeAI } from '@google/generative-ai'
-import { Dumbbell, Check, SkipForward, Moon, Play, ChevronDown, ChevronUp, Calendar, Clock, Pause, Timer, Video, Plus, TrendingUp } from 'lucide-react'
+import { Dumbbell, Check, SkipForward, Moon, Play, ChevronDown, ChevronUp, Calendar, Clock, Pause, Timer, Video, Plus, TrendingUp, RotateCcw } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { WorkoutOfDay, ExercicioTreino } from '../../../types/athlete-portal'
 import type { ExercicioTimerState, SetExecutado, UltimaExecucao, TipoSet, PontoHistoricoCarga } from '../../../types/athlete-portal'
@@ -742,6 +742,24 @@ export function CardTreino({
         })
     }
 
+    const handleResetDescanso = (exId: string, setIdx: number) => {
+        const current = exercicioTimers[exId]
+        if (!current?.sets) return
+        const sets = [...current.sets]
+        const set = sets[setIdx]
+        if (!set?.concluido) return
+        sets[setIdx] = {
+            ...set,
+            descansoStatus: 'running',
+            descansoInicio: Date.now(),
+            descansoAcumuladoMs: 0,
+        }
+        onExercicioTimersChange({
+            ...exercicioTimers,
+            [exId]: { ...current, sets },
+        })
+    }
+
     /** Tempo atual do cronômetro de descanso de uma série (incluindo intervalo rodando). */
     const getTempoDescanso = (set: SetExecutado): number => {
         if (!set.concluido) return 0
@@ -1356,7 +1374,7 @@ export function CardTreino({
                                                         return (
                                                             <div className="flex items-center gap-2 pt-1.5 pl-8 animate-in fade-in slide-in-from-top-1 duration-200">
                                                                 <span className="text-[10px] font-mono text-gray-500 uppercase tracking-wider">
-                                                                    Tempo entre a série:
+                                                                    Tempo de descanso:
                                                                 </span>
                                                                 <span className={`ml-auto text-[11px] font-mono tabular-nums ${atingiuMeta ? 'text-emerald-400 font-bold' : set.descansoStatus === 'running' ? 'text-indigo-300' : 'text-gray-400'}`}>
                                                                     {formatTime(getTempoDescanso(set))}
@@ -1364,6 +1382,13 @@ export function CardTreino({
                                                                         <span className="text-gray-600 ml-1">/ {formatTime(meta * 1000)}</span>
                                                                     )}
                                                                 </span>
+                                                                <button
+                                                                    onClick={e => { e.stopPropagation(); handleResetDescanso(ex.id, sIdx) }}
+                                                                    className="w-6 h-6 rounded-md flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 transition-colors flex-shrink-0"
+                                                                    title="Reiniciar descanso"
+                                                                >
+                                                                    <RotateCcw size={10} className="text-gray-400" />
+                                                                </button>
                                                                 <button
                                                                     onClick={e => { e.stopPropagation(); handleToggleDescansoPause(ex.id, sIdx) }}
                                                                     className="w-6 h-6 rounded-md flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 transition-colors flex-shrink-0"
