@@ -35,6 +35,7 @@ import {
     BookOpen,
     CheckCircle,
     XCircle,
+    ClipboardList,
 } from 'lucide-react';
 import { useDataStore } from '@/stores/dataStore';
 import {
@@ -152,6 +153,10 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
     const [iaEnriching, setIaEnriching] = useState(false);
     const [isApplying, setIsApplying] = useState(false);
 
+    // Instruções iniciais do Personal (antes de gerar o treino)
+    const [frequenciaPersonal, setFrequenciaPersonal] = useState<'' | '3' | '4' | '5'>('');
+    const [instrucoesPersonal, setInstrucoesPersonal] = useState('');
+
     // ── Edição inline do treino ──
     const {
         isEditing: isEditingTreino,
@@ -244,7 +249,19 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
             setObjetivoAtleta(objetivoFinal);
 
             // 4. Gerar treino consumindo o potencial como fonte única + objetivo + contexto + sexo
-            const resultado = gerarPlanoTreino(atletaId, atleta.name, diag, pot, objetivoFinal, atleta.contexto ?? undefined, atleta.gender === 'FEMALE' ? 'F' : 'M');
+            //    + instruções iniciais do Personal (frequência + diretrizes livres)
+            const freqOverride = frequenciaPersonal ? (Number(frequenciaPersonal) as 3 | 4 | 5) : undefined;
+            const instrucoesTrim = instrucoesPersonal.trim() || undefined;
+            const resultado = gerarPlanoTreino(
+                atletaId,
+                atleta.name,
+                diag,
+                pot,
+                objetivoFinal,
+                atleta.contexto ?? undefined,
+                atleta.gender === 'FEMALE' ? 'F' : 'M',
+                { frequenciaSemanal: freqOverride, instrucoes: instrucoesTrim },
+            );
             setPlano(resultado);
             setEstado('ready');
 
@@ -253,7 +270,7 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
             const perfil = buildPerfilIA(atleta.name, atleta.gender, atleta.birthDate, ultimaAvaliacao.measurements as Record<string, number>, ultimaAvaliacao.bf ?? 15, atleta.score, atleta.contexto ?? undefined);
             console.info('[TreinoView] 🚀 Iniciando enriquecimento IA (insights + prescrição)...');
             Promise.all([
-                enriquecerTreinoComIA(resultado, perfil).catch(err => {
+                enriquecerTreinoComIA(resultado, perfil, instrucoesTrim).catch(err => {
                     console.error('[TreinoView] ❌ Erro insights IA:', err);
                     return resultado;
                 }),
@@ -412,18 +429,58 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
 
                 {/* Estado: Ainda não gerou */}
                 {estado === 'idle' && (
-                    <div className="bg-surface border border-white/10 rounded-2xl p-10 text-center">
-                        <Dumbbell size={48} className="text-primary mx-auto mb-5" />
-                        <h3 className="text-xl font-bold text-white mb-3">Gerar Plano de Treino Completo</h3>
-                        <p className="text-sm text-gray-500 mb-8 max-w-lg mx-auto">
-                            O Vitrúvio vai calcular sua periodização anual, divisão semanal, fichas detalhadas e volume calibrado com base no diagnóstico.
-                        </p>
-                        <button
-                            onClick={handleGerar}
-                            className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary text-white font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all"
-                        >
-                            <Dumbbell size={18} /> Gerar Plano de Treino
-                        </button>
+                    <div className="bg-surface border border-white/10 rounded-2xl p-8 md:p-10">
+                        <div className="flex items-center gap-3 mb-5">
+                            <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+                                <ClipboardList size={20} className="text-primary" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-white">Instruções Iniciais (opcional)</h3>
+                                <p className="text-xs text-gray-500">O Vitrúvio já usa contexto, avaliação e diagnóstico do aluno. Adicione aqui orientações específicas para esta montagem.</p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 mb-6">
+                            <div>
+                                <label className="block text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-2">
+                                    Frequência Semanal
+                                </label>
+                                <select
+                                    value={frequenciaPersonal}
+                                    onChange={(e) => setFrequenciaPersonal(e.target.value as '' | '3' | '4' | '5')}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-primary/50 transition-colors"
+                                >
+                                    <option value="">Auto (pelo nível)</option>
+                                    <option value="3">3x / semana (ABC)</option>
+                                    <option value="4">4x / semana (ABCD)</option>
+                                    <option value="5">5x / semana (ABCDE)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-2">
+                                    Diretrizes adicionais
+                                </label>
+                                <textarea
+                                    value={instrucoesPersonal}
+                                    onChange={(e) => setInstrucoesPersonal(e.target.value)}
+                                    placeholder="Ex: Treino A focar em peito e tríceps com supino reto, supino inclinado e crossover. Evitar agachamento livre. Priorizar glúteo no treino C."
+                                    rows={4}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-primary/50 transition-colors resize-none"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col items-center gap-3 pt-2 border-t border-white/5 mt-2">
+                            <p className="text-sm text-gray-500 max-w-lg text-center mt-6">
+                                O Vitrúvio vai cruzar estas instruções com o contexto, a avaliação e o diagnóstico do aluno para montar a periodização, a divisão, as fichas detalhadas e o volume calibrado.
+                            </p>
+                            <button
+                                onClick={handleGerar}
+                                className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary text-white font-bold text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all"
+                            >
+                                <Dumbbell size={18} /> Gerar Plano de Treino
+                            </button>
+                        </div>
                     </div>
                 )}
 

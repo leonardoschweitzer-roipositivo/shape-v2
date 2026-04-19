@@ -186,18 +186,20 @@ ${dadosCalculados}
 ${fontesCientificas}
 
 ## Regras de Seleção de Exercícios
+- BASEIE A ESCOLHA DE CADA EXERCÍCIO no CRUZAMENTO das três fontes: (1) CONTEXTO do atleta (lesões, medicações, profissão, estilo de vida, histórico de treino), (2) DIAGNÓSTICO (prioridades de grupos musculares, proporções fracas, score), (3) DADOS DA AVALIAÇÃO (medidas, BF%, FFMI, composição). Cada exercício deve fazer sentido para ESTE atleta específico.
 - Se há lesão de ombro: evitar press militar pronado, elevações frontais. Usar desenvolvimento neutro, face pull, cabo
 - Se há lesão lombar: evitar stiff com barra, agachamento livre pesado. Usar leg press, hip thrust
 - Se há lesão de joelho: evitar extensora com carga alta, agachamento profundo. Usar leg press 45°, hack machine
+- Se o diagnóstico aponta proporção fraca em um grupo, priorize exercícios que ataquem esse grupo no início do treino correspondente
 - Sempre começar com exercício composto multiarticular
 - Adaptar para equipamentos comuns de academia
 ${diretrizesAdicionais ? `
-## ⚠️ DIRETRIZES DO PERSONAL DO CHAT (AUTORIDADE MÁXIMA)
-O Personal solicitou alterações no plano de treino. APLIQUE IMEDIATAMENTE as seguintes mudanças:
+## ⚠️ INSTRUÇÕES DO PERSONAL (AUTORIDADE MÁXIMA)
+O Personal forneceu as seguintes instruções para a montagem/ajuste do treino. APLIQUE IMEDIATAMENTE:
 """
 ${diretrizesAdicionais}
 """
-ATENÇÃO: Se o Personal solicitou a **remoção**, **adição** ou **alteração** de exercícios, grupos musculares, blocos inteiros, ou mudança na quantidade de séries, VOCÊ DEVE OBEDECER CEGAMENTE, sobrepondo-se às restrições originais. Você tem permissão para quebrar o "esqueleto" original do plano para acomodar o pedido do Personal.
+ATENÇÃO: Se o Personal solicitou a **remoção**, **adição** ou **alteração** de exercícios, grupos musculares, blocos inteiros, mudança na quantidade de séries, ou definiu quais exercícios devem aparecer em cada treino (ex: "Treino A: agachamento, leg press, cadeira extensora"), VOCÊ DEVE OBEDECER CEGAMENTE, sobrepondo-se às restrições originais. Você tem permissão para quebrar o "esqueleto" original do plano para acomodar o pedido do Personal — MAS continue respeitando o contexto/lesões do atleta (ex: não incluir press militar se houver lesão de ombro, mesmo que o Personal peça, e avisar isso em "observacao" do exercício).
 ` : `
 ATENÇÃO - RESTRIÇÃO MATEMÁTICA: Você DEVE respeitar o número EXATO de séries por grupo muscular em cada bloco calculado na entrada. Você PODE trocar exercícios, ordem, descrições, técnicas ou rep ranges, desde que não quebre o esqueleto das séries e divisões estabelecidos no plano.
 `}

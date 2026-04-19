@@ -140,6 +140,16 @@ export interface PlanoTreino {
 // ═══════════════════════════════════════════════════════════
 
 /**
+ * Instruções iniciais opcionais do Personal para a montagem do treino.
+ */
+export interface InstrucoesPersonalTreino {
+    /** Override da frequência semanal (3, 4 ou 5). Quando presente, sobrescreve o potencial. */
+    frequenciaSemanal?: 3 | 4 | 5;
+    /** Texto livre com diretrizes adicionais (exercícios preferidos/evitados, foco por treino, etc.) */
+    instrucoes?: string;
+}
+
+/**
  * Gera o plano de treino completo.
  * Consome PotencialAtleta como fonte única de verdade para nível, volumes e scores.
  */
@@ -150,7 +160,8 @@ export const gerarPlanoTreino = (
     potencial: PotencialAtleta,
     objetivo: ObjetivoVitruvio = 'RECOMP',
     contexto?: import('./potencial').ContextoAtleta,
-    sexo: 'M' | 'F' = 'M'
+    sexo: 'M' | 'F' = 'M',
+    instrucoesPersonal?: InstrucoesPersonalTreino
 ): PlanoTreino => {
     const dataRef = new Date().toISOString();
     const isFemale = sexo === 'F';
@@ -164,11 +175,15 @@ export const gerarPlanoTreino = (
     // ═══════════════════════════════════════════════════════
     // FATORES DO POTENCIAL — fonte única de verdade
     // ═══════════════════════════════════════════════════════
-    const { nivel, fatorVolume, fatorPrioAlta, fatorPrioMedia, frequenciaSemanal, divisao: tipoDivisao } = potencial;
+    const { nivel, fatorVolume, fatorPrioAlta, fatorPrioMedia } = potencial;
     const isIniciante = nivel === 'INICIANTE';
     const isIntermediario = nivel === 'INTERMEDIÁRIO';
     const labelNivel = nivel;
-    const freq = frequenciaSemanal;
+
+    // Override do Personal: frequência semanal (opcional). Quando presente,
+    // substitui o valor derivado do potencial/histórico e recalcula a divisão.
+    const freq: 3 | 4 | 5 = instrucoesPersonal?.frequenciaSemanal ?? potencial.frequenciaSemanal;
+    const tipoDivisao: 'ABC' | 'ABCD' | 'ABCDE' = freq >= 5 ? 'ABCDE' : freq >= 4 ? 'ABCD' : 'ABC';
 
     // ═══════════════════════════════════════════════════════
     // CONFIG POR OBJETIVO — rep ranges, descanso, volume
@@ -796,7 +811,10 @@ export const gerarPlanoTreino = (
             'Iniciar o treino sempre pelos grupos prioritários.',
             'Deload na semana 4 de cada mesociclo é obrigatório.',
             ...(temLesaoOmbro ? ['⚠️ RESTRIÇÃO DE OMBRO/MANGUITO: Evitar press militar pronado e elevações frontais. Treino C adaptado com variações neutras e de cabo. Aumentar progressão de carga gradualmente e interromper se houver dor aguda.'] : []),
-            ...alertasContexto
+            ...alertasContexto,
+            ...(instrucoesPersonal?.instrucoes?.trim()
+                ? [`📋 Instruções do Personal aplicadas na montagem: ${instrucoesPersonal.instrucoes.trim()}`]
+                : []),
         ],
         alinhamentoMetodologia: true,
         sugestaoForaMetodologia: potencial.fatorRecuperacao < 0.90
