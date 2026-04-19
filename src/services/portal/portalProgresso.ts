@@ -6,6 +6,7 @@ import type {
     ScoreGeral, GraficoEvolucaoData, ProporcaoResumo,
 } from '@/types/athlete-portal';
 import type { SupaAssessment, SupaMedida, AssessmentResults } from './portalTypes';
+import { inferirSomatotipoDeFFMI } from '@/services/calculations/tdee';
 
 /**
  * Monta dados de score geral a partir do último assessment
@@ -202,6 +203,11 @@ export async function buscarDadosAvaliacao(atletaId: string): Promise<AvaliacaoD
         else { classComp = 'OBESIDADE'; emojiComp = '❌'; }
     }
 
+    const sexoNorm: 'M' | 'F' = (genero === 'MALE' || genero === 'male' || genero === 'M') ? 'M' : 'F';
+    const somatotipo = (ffmi > 0 && bf > 0)
+        ? inferirSomatotipoDeFFMI(ffmi, bf, sexoNorm)
+        : undefined;
+
     const diagnostico = {
         bf,
         scoreBF,
@@ -214,6 +220,7 @@ export async function buscarDadosAvaliacao(atletaId: string): Promise<AvaliacaoD
         scoreTotal: scoreComposicao,
         classificacao: classComp,
         emoji: emojiComp,
+        somatotipo,
     };
 
     // === PROPORÇÕES ÁUREAS (do campo results.proporcoes_aureas) ===

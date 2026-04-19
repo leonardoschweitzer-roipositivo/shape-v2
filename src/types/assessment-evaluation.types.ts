@@ -49,6 +49,8 @@ export interface DiagnosticoEstetico {
     classificacao: string
     /** Emoji da classificação */
     emoji: string
+    /** Tipo corporal inferido: ECTOMORFO | MESOMORFO | ENDOMORFO */
+    somatotipo?: 'ECTOMORFO' | 'MESOMORFO' | 'ENDOMORFO'
 }
 
 // ==========================================

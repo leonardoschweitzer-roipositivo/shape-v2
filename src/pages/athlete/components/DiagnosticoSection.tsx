@@ -130,6 +130,30 @@ export const DiagnosticoSection = memo(function DiagnosticoSection({
                             {diagnostico.emoji} {diagnostico.classificacao}
                         </span>
                     </div>
+
+                    {/* Tipo Corporal */}
+                    {diagnostico.somatotipo && (
+                        <div className="bg-white/[0.03] rounded-xl p-3 border border-white/5">
+                            <div className="flex items-center justify-between mb-1.5">
+                                <span className="text-xs text-gray-400 font-medium">Tipo Corporal</span>
+                                <span className={`text-xs font-black uppercase tracking-wider px-2.5 py-1 rounded-full ${
+                                    diagnostico.somatotipo === 'MESOMORFO'
+                                        ? 'bg-indigo-500/20 text-indigo-300'
+                                        : diagnostico.somatotipo === 'ECTOMORFO'
+                                            ? 'bg-sky-500/20 text-sky-300'
+                                            : 'bg-amber-500/20 text-amber-300'
+                                }`}>
+                                    {diagnostico.somatotipo === 'MESOMORFO' ? '💪' : diagnostico.somatotipo === 'ECTOMORFO' ? '🏃' : '🔥'}{' '}
+                                    {diagnostico.somatotipo}
+                                </span>
+                            </div>
+                            <p className="text-[10px] text-gray-500 leading-relaxed">
+                                {diagnostico.somatotipo === 'MESOMORFO' && 'Frame atlético — responde bem ao treino e mantém composição equilibrada.'}
+                                {diagnostico.somatotipo === 'ECTOMORFO' && 'Frame fino — metabolismo acelerado, maior dificuldade em ganhar massa muscular.'}
+                                {diagnostico.somatotipo === 'ENDOMORFO' && 'Tendência a acumular gordura — metabolismo mais lento, priorize déficit calórico.'}
+                            </p>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
