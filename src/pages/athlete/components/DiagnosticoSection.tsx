@@ -13,17 +13,25 @@ interface DiagnosticoSectionProps {
     diagnostico: DiagnosticoEstetico
 }
 
+const SOMATOTIPO_CONFIG = {
+    MESOMORFO: { emoji: '💪', color: 'bg-indigo-500/20 text-indigo-300' },
+    ECTOMORFO: { emoji: '🏃', color: 'bg-sky-500/20 text-sky-300' },
+    ENDOMORFO: { emoji: '🔥', color: 'bg-amber-500/20 text-amber-300' },
+} as const
+
 function MetricCard({
     label,
     valor,
     unidade,
     score,
+    somatotipo,
     destaque = false,
 }: {
     label: string
     valor: string
     unidade?: string
     score?: number
+    somatotipo?: keyof typeof SOMATOTIPO_CONFIG
     destaque?: boolean
 }) {
     return (
@@ -42,7 +50,14 @@ function MetricCard({
                     <span className="text-xs text-gray-500">{unidade}</span>
                 )}
             </div>
-            {score !== undefined && (
+            {somatotipo && SOMATOTIPO_CONFIG[somatotipo] && (
+                <div className="mt-2">
+                    <span className={`inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${SOMATOTIPO_CONFIG[somatotipo].color}`}>
+                        {SOMATOTIPO_CONFIG[somatotipo].emoji} {somatotipo}
+                    </span>
+                </div>
+            )}
+            {score !== undefined && !somatotipo && (
                 <div className="mt-2">
                     <div className="h-1 rounded-full bg-white/5 overflow-hidden">
                         <div
@@ -109,7 +124,7 @@ export const DiagnosticoSection = memo(function DiagnosticoSection({
                         <MetricCard
                             label="FFMI"
                             valor={diagnostico.ffmi.toFixed(1)}
-                            score={diagnostico.scoreFFMI}
+                            somatotipo={diagnostico.somatotipo as keyof typeof SOMATOTIPO_CONFIG}
                         />
                         <MetricCard
                             label="Massa Magra"
