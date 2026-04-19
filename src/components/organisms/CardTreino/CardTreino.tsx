@@ -58,39 +58,6 @@ function formatTime(ms: number): string {
     return `${min}:${sec.toString().padStart(2, '0')}`
 }
 
-/** Gera um data URI de WAV PCM 16-bit com um beep senoidal curto. */
-function gerarBeepWavDataUrl(freqHz = 880, duracaoSeg = 0.35, sampleRate = 44100): string {
-    const numSamples = Math.floor(sampleRate * duracaoSeg)
-    const buffer = new ArrayBuffer(44 + numSamples * 2)
-    const view = new DataView(buffer)
-    let o = 0
-    const writeStr = (s: string) => { for (let i = 0; i < s.length; i++) view.setUint8(o++, s.charCodeAt(i)) }
-    writeStr('RIFF'); view.setUint32(o, 36 + numSamples * 2, true); o += 4
-    writeStr('WAVE'); writeStr('fmt ')
-    view.setUint32(o, 16, true); o += 4
-    view.setUint16(o, 1, true); o += 2
-    view.setUint16(o, 1, true); o += 2
-    view.setUint32(o, sampleRate, true); o += 4
-    view.setUint32(o, sampleRate * 2, true); o += 4
-    view.setUint16(o, 2, true); o += 2
-    view.setUint16(o, 16, true); o += 2
-    writeStr('data'); view.setUint32(o, numSamples * 2, true); o += 4
-    const attack = Math.floor(numSamples * 0.03)
-    const release = Math.floor(numSamples * 0.2)
-    for (let i = 0; i < numSamples; i++) {
-        let env = 1
-        if (i < attack) env = i / attack
-        else if (i > numSamples - release) env = (numSamples - i) / release
-        const s = Math.sin(2 * Math.PI * freqHz * i / sampleRate) * env * 0.8
-        view.setInt16(o, Math.max(-1, Math.min(1, s)) * 32767, true)
-        o += 2
-    }
-    let bin = ''
-    const bytes = new Uint8Array(buffer)
-    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i])
-    return 'data:audio/wav;base64,' + btoa(bin)
-}
-
 /**
  * Extrai um único número representativo de uma string de repetições.
  * Ex: "10-12" → "12", "8-10" → "10", "15" → "15", "até a falha" → "".
@@ -469,25 +436,15 @@ export function CardTreino({
         return () => clearInterval(interval)
     }, [hasRestTimerRunning])
 
-    // Beep audível a cada 30s no cronômetro de descanso
+    // Beep audível a cada 30s no cronômetro de descanso.
+    // Usa apenas Web Audio API (sem HTMLAudioElement) para que o Android peça
+    // AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK — o SO abaixa o volume do Spotify
+    // durante o beep em vez de pausá-lo.
     const audioCtxRef = useRef<AudioContext | null>(null)
-    const audioElRef = useRef<HTMLAudioElement | null>(null)
-    const beepUrlRef = useRef<string>('')
     const lastBeepMarkRef = useRef<Record<string, number>>({})
     const metaBeepPlayedRef = useRef<Record<string, boolean>>({})
 
     const ensureAudioCtx = (): void => {
-        // 1) HTMLAudioElement — melhor compatibilidade em mobile (Android/iOS)
-        if (!beepUrlRef.current) beepUrlRef.current = gerarBeepWavDataUrl(880, 0.35)
-        if (!audioElRef.current) {
-            const a = new Audio(beepUrlRef.current)
-            a.preload = 'auto'
-            a.volume = 1
-            audioElRef.current = a
-            // Unlock: toca e pausa imediatamente dentro do gesto do usuário
-            a.play().then(() => { a.pause(); a.currentTime = 0 }).catch(() => { /* ignore */ })
-        }
-        // 2) Web Audio API como reforço no desktop
         if (!audioCtxRef.current) {
             const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
             if (Ctx) {
@@ -508,16 +465,6 @@ export function CardTreino({
     }
 
     const playBeep = () => {
-        // Tenta HTMLAudioElement primeiro (mobile-friendly)
-        const a = audioElRef.current
-        if (a) {
-            try {
-                a.currentTime = 0
-                const p = a.play()
-                if (p && typeof p.catch === 'function') p.catch(() => { /* ignore */ })
-            } catch { /* ignore */ }
-        }
-        // Reforço Web Audio (desktop)
         const ctx = audioCtxRef.current
         if (ctx) {
             if (ctx.state === 'suspended') ctx.resume().catch(() => { /* ignore */ })
@@ -530,7 +477,7 @@ export function CardTreino({
                 osc.frequency.value = 880
                 const t0 = ctx.currentTime
                 gain.gain.setValueAtTime(0.0001, t0)
-                gain.gain.exponentialRampToValueAtTime(0.5, t0 + 0.01)
+                gain.gain.exponentialRampToValueAtTime(0.6, t0 + 0.01)
                 gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.3)
                 osc.start(t0)
                 osc.stop(t0 + 0.32)
@@ -542,14 +489,6 @@ export function CardTreino({
 
     /** Beep reforçado ao atingir a meta de descanso prescrita — triplo ascendente. */
     const playMetaBeep = () => {
-        const a = audioElRef.current
-        if (a) {
-            try {
-                a.currentTime = 0
-                const p = a.play()
-                if (p && typeof p.catch === 'function') p.catch(() => { /* ignore */ })
-            } catch { /* ignore */ }
-        }
         const ctx = audioCtxRef.current
         if (ctx) {
             if (ctx.state === 'suspended') ctx.resume().catch(() => { /* ignore */ })
