@@ -194,12 +194,18 @@ ${fontesCientificas}
 - Sempre começar com exercício composto multiarticular
 - Adaptar para equipamentos comuns de academia
 ${diretrizesAdicionais ? `
-## ⚠️ INSTRUÇÕES DO PERSONAL (AUTORIDADE MÁXIMA)
-O Personal forneceu as seguintes instruções para a montagem/ajuste do treino. APLIQUE IMEDIATAMENTE:
+## ⚠️ INSTRUÇÕES DO PERSONAL (AUTORIDADE MÁXIMA — OBEDECIMENTO TOTAL)
+O Personal forneceu as seguintes instruções. APLIQUE EXATAMENTE:
 """
 ${diretrizesAdicionais}
 """
-ATENÇÃO: Se o Personal solicitou a **remoção**, **adição** ou **alteração** de exercícios, grupos musculares, blocos inteiros, mudança na quantidade de séries, ou definiu quais exercícios devem aparecer em cada treino (ex: "Treino A: agachamento, leg press, cadeira extensora"), VOCÊ DEVE OBEDECER CEGAMENTE, sobrepondo-se às restrições originais. Você tem permissão para quebrar o "esqueleto" original do plano para acomodar o pedido do Personal — MAS continue respeitando o contexto/lesões do atleta (ex: não incluir press militar se houver lesão de ombro, mesmo que o Personal peça, e avisar isso em "observacao" do exercício).
+
+REGRAS DE OBEDIÊNCIA (sem exceções):
+1. **LISTA EXPLÍCITA DE EXERCÍCIOS**: Se as instruções acima listam exercícios específicos para cada treino (ex: "TREINO A: supino reto barra, crucifixo..."), você DEVE usar EXATAMENTE esses exercícios, na ordem listada, sem adicionar, remover ou substituir nenhum. Os nomes devem ser reproduzidos LITERALMENTE como escrito pelo Personal.
+2. **NENHUMA SUBSTITUIÇÃO**: Mesmo que você "conheça variantes melhores" ou o diagnóstico sugira outro exercício, se o Personal listou exercícios específicos, eles são a lei. Não substitua "supino reto barra" por "supino inclinado", não adicione exercícios que não estão na lista, não remova exercícios que estão na lista.
+3. **DIVISÃO DE TREINOS**: Se o Personal definiu quais grupos musculares estão em cada treino (ex: "TREINO A: PEITO, OMBRO, TRICEPS"), siga essa divisão exata — não reagrupe músculos de forma diferente.
+4. **SÉRIES E REPS**: Distribua séries e repetições de forma equilibrada entre os exercícios listados. Se o total calculado é diferente, priorize cobrir todos os exercícios listados.
+5. **ÚNICO CASO DE EXCEÇÃO**: Só omita ou avise em "observacao" se houver lesão contraindicando DIRETAMENTE o exercício (ex: lesão de ombro + press militar). Mesmo assim, tente incluir com adaptação antes de omitir.
 ` : `
 ATENÇÃO - RESTRIÇÃO MATEMÁTICA: Você DEVE respeitar o número EXATO de séries por grupo muscular em cada bloco calculado na entrada. Você PODE trocar exercícios, ordem, descrições, técnicas ou rep ranges, desde que não quebre o esqueleto das séries e divisões estabelecidos no plano.
 `}

@@ -489,7 +489,7 @@ export async function extrairDiretrizesDoChat(
 
     try {
         const result = await chat.sendMessage(
-            "RESUMO DE DIRETRIZES: Por favor, analise a nossa conversa acima e extraia um resumo claro, direto e objetivo de TODAS AS ALTERAÇÕES que combinamos de fazer no plano. Não inclua texto explicativo, responda apenas com a lista de diretrizes (ex: 'Substituir exercício X por Y', 'Adicionar alimento Z'). Se não combinamos nenhuma alteração estrutural, explique brevemente que não houve mudanças."
+            "RESUMO DE DIRETRIZES: Analise a conversa acima e extraia TODAS AS INSTRUÇÕES a aplicar no plano.\n\nREGRAS CRÍTICAS:\n1. Se o Personal forneceu uma lista específica de exercícios por treino (ex: 'TREINO A: exercício X, exercício Y'), reproduza essa lista EXATAMENTE como foi escrita — sem parafrasear, sem trocar nomes, sem omitir exercícios. Copie os nomes dos exercícios e a divisão dos treinos de forma literal.\n2. Se houve mudanças pontuais (ex: 'substituir X por Y'), liste-as de forma direta.\n3. Se não houve mudanças estruturais, informe brevemente.\n\nResponda APENAS com a lista de diretrizes/instruções, sem texto explicativo."
         );
         return result.response.text();
     } catch (error) {
