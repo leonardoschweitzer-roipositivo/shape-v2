@@ -78,6 +78,7 @@ interface DietaViewProps {
     onComplete?: () => void;
     diagnosticoId?: string;
     readOnlyData?: PlanoDieta;
+    initialData?: PlanoDieta;
 }
 
 type DietaState = 'idle' | 'generating' | 'ready' | 'saving' | 'saved';
@@ -102,6 +103,7 @@ export const DietaView: React.FC<DietaViewProps> = ({
     onComplete,
     diagnosticoId,
     readOnlyData,
+    initialData,
 }) => {
     const { personalAthletes } = useDataStore();
     const atleta = useMemo(() => personalAthletes.find(a => a.id === atletaId), [personalAthletes, atletaId]);
@@ -123,14 +125,15 @@ export const DietaView: React.FC<DietaViewProps> = ({
     }, [atleta, ultimaAvaliacao]);
 
     const isReadOnly = !!readOnlyData;
-    const [estado, setEstado] = useState<DietaState>(readOnlyData ? 'saved' : 'idle');
-    const [plano, setPlano] = useState<PlanoDieta | null>(readOnlyData ?? null);
+    const preloadedData = readOnlyData ?? initialData ?? null;
+    const [estado, setEstado] = useState<DietaState>(preloadedData ? 'saved' : 'idle');
+    const [plano, setPlano] = useState<PlanoDieta | null>(preloadedData);
     const [potencial, setPotencial] = useState<PotencialAtleta | null>(null);
     const [diagnostico, setDiagnostico] = useState<DiagnosticoDados | null>(null);
     const [showDescanso, setShowDescanso] = useState(false);
     const [objetivoSalvo, setObjetivoSalvo] = useState<ObjetivoVitruvio | null>(null);
     const [objetivoAtleta, setObjetivoAtleta] = useState<ObjetivoVitruvio>(
-        readOnlyData?.objetivo || recomendacaoPadrao?.objetivo || 'RECOMP'
+        preloadedData?.objetivo || recomendacaoPadrao?.objetivo || 'RECOMP'
     );
 
     // Busca o objetivo que o personal escolheu no Diagnóstico (pode ser override

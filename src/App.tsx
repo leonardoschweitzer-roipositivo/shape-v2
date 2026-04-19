@@ -416,6 +416,51 @@ const App: React.FC = () => {
     setCurrentView('consulta-diagnostico');
   };
 
+  const carregarDadosPlano = async (plano: any) => {
+    if (plano.atleta_id) setSelectedAthleteId(plano.atleta_id);
+
+    if (plano.dados) setConsultaDiagData(plano.dados);
+
+    if (plano.planos_treino && plano.planos_treino.length > 0) {
+      setConsultaTreinoData(plano.planos_treino[0].dados);
+    } else if (plano.atleta_id) {
+      const treinoData = await buscarPlanoTreino(plano.atleta_id);
+      setConsultaTreinoData(treinoData);
+    } else {
+      setConsultaTreinoData(null);
+    }
+
+    if (plano.planos_dieta && plano.planos_dieta.length > 0) {
+      setConsultaDietaData(plano.planos_dieta[0].dados);
+    } else if (plano.atleta_id) {
+      const dietaData = await buscarPlanoDieta(plano.atleta_id);
+      setConsultaDietaData(dietaData);
+    } else {
+      setConsultaDietaData(null);
+    }
+  };
+
+  const handleEditDiagnostico = async (plano: any) => {
+    console.info('[App] ✏️ Editar Diagnóstico do plano:', plano.id);
+    setConsultaPlanoCompleto(null);
+    await carregarDadosPlano(plano);
+    setCurrentView('editar-diagnostico');
+  };
+
+  const handleEditTreino = async (plano: any) => {
+    console.info('[App] ✏️ Editar Treino do plano:', plano.id);
+    setConsultaPlanoCompleto(null);
+    await carregarDadosPlano(plano);
+    setCurrentView('editar-treino');
+  };
+
+  const handleEditDieta = async (plano: any) => {
+    console.info('[App] ✏️ Editar Dieta do plano:', plano.id);
+    setConsultaPlanoCompleto(null);
+    await carregarDadosPlano(plano);
+    setCurrentView('editar-dieta');
+  };
+
   const handleInviteAthlete = () => {
     setIsInviteModalOpen(true);
   };
@@ -733,6 +778,9 @@ const App: React.FC = () => {
                 setCurrentView('assessment');
               }}
               onViewPlan={handleViewEvolutionPlan}
+              onEditDiagnostico={handleEditDiagnostico}
+              onEditTreino={handleEditTreino}
+              onEditDieta={handleEditDieta}
               onDeleteAthlete={handleDeleteAthlete}
             />
           );
@@ -853,6 +901,51 @@ const App: React.FC = () => {
                 }
               }}
               readOnlyData={consultaDietaData || undefined}
+            />
+          ) : null;
+        case 'editar-diagnostico':
+          return selectedAthleteId ? (
+            <DiagnosticoView
+              atletaId={selectedAthleteId}
+              initialData={consultaDiagData ?? undefined}
+              onBack={() => {
+                setConsultaDiagData(null);
+                setCurrentView('athlete-details');
+              }}
+              onNext={() => {
+                setConsultaDiagData(null);
+                setCurrentView('athlete-details');
+              }}
+            />
+          ) : null;
+        case 'editar-treino':
+          return selectedAthleteId ? (
+            <TreinoView
+              atletaId={selectedAthleteId}
+              initialData={consultaTreinoData ?? undefined}
+              onBack={() => {
+                setConsultaTreinoData(null);
+                setCurrentView('athlete-details');
+              }}
+              onNext={() => {
+                setConsultaTreinoData(null);
+                setCurrentView('athlete-details');
+              }}
+            />
+          ) : null;
+        case 'editar-dieta':
+          return selectedAthleteId ? (
+            <DietaView
+              atletaId={selectedAthleteId}
+              initialData={consultaDietaData ?? undefined}
+              onBack={() => {
+                setConsultaDietaData(null);
+                setCurrentView('athlete-details');
+              }}
+              onComplete={() => {
+                setConsultaDietaData(null);
+                setCurrentView('athlete-details');
+              }}
             />
           ) : null;
         case 'hall':
@@ -1030,6 +1123,9 @@ const App: React.FC = () => {
               setCurrentView('assessment');
             }}
             onViewPlan={handleViewEvolutionPlan}
+            onEditDiagnostico={handleEditDiagnostico}
+            onEditTreino={handleEditTreino}
+            onEditDieta={handleEditDieta}
             hideStatusControl={true}
           />
         );

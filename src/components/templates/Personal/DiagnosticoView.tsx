@@ -76,6 +76,7 @@ interface DiagnosticoViewProps {
     onBack: () => void;
     onNext: (diagnosticoId?: string) => void;
     readOnlyData?: DiagnosticoDados;
+    initialData?: DiagnosticoDados;
 }
 
 type DiagnosticoState = 'idle' | 'generating' | 'ready' | 'saving' | 'saved';
@@ -99,13 +100,15 @@ export const DiagnosticoView: React.FC<DiagnosticoViewProps> = ({
     onBack,
     onNext,
     readOnlyData,
+    initialData,
 }) => {
     const { personalAthletes } = useDataStore();
     const atleta = useMemo(() => personalAthletes.find(a => a.id === atletaId), [personalAthletes, atletaId]);
 
     const isReadOnly = !!readOnlyData;
-    const [diagnostico, setDiagnostico] = useState<DiagnosticoDados | null>(readOnlyData ?? null);
-    const [estado, setEstado] = useState<DiagnosticoState>(readOnlyData ? 'saved' : 'idle');
+    const preloadedData = readOnlyData ?? initialData ?? null;
+    const [diagnostico, setDiagnostico] = useState<DiagnosticoDados | null>(preloadedData);
+    const [estado, setEstado] = useState<DiagnosticoState>(preloadedData ? 'saved' : 'idle');
     const [recomendacao, setRecomendacao] = useState<RecomendacaoObjetivo | null>(null);
     const [objetivoSelecionado, setObjetivoSelecionado] = useState<ObjetivoVitruvio | null>(null);
     const [toastStatus, setToastStatus] = useState<'success' | 'error' | null>(null);

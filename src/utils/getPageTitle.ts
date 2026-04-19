@@ -4,7 +4,7 @@
  */
 import type { ProfileType } from '@/components/organisms/ProfileSelector/ProfileSelector';
 
-export type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details' | 'terms' | 'privacy' | 'my-record' | 'gamification' | 'athlete-portal' | 'personal-details' | 'student-details' | 'diagnostico' | 'treino-plano' | 'dieta-plano' | 'consulta-diagnostico' | 'consulta-treino' | 'consulta-dieta' | 'library' | 'library-golden-ratio' | 'library-metabolism' | 'library-training-volume' | 'library-protein' | 'library-energy-balance' | 'library-training-frequency' | 'library-periodization' | 'library-feminine-proportions' | 'notifications' | 'notification-settings' | 'exercicios-biblioteca';
+export type ViewState = 'dashboard' | 'results' | 'design-system' | 'evolution' | 'hall' | 'coach' | 'profile' | 'settings' | 'assessment' | 'trainers' | 'students' | 'trainers-ranking' | 'student-registration' | 'athlete-details' | 'terms' | 'privacy' | 'my-record' | 'gamification' | 'athlete-portal' | 'personal-details' | 'student-details' | 'diagnostico' | 'treino-plano' | 'dieta-plano' | 'consulta-diagnostico' | 'consulta-treino' | 'consulta-dieta' | 'editar-diagnostico' | 'editar-treino' | 'editar-dieta' | 'library' | 'library-golden-ratio' | 'library-metabolism' | 'library-training-volume' | 'library-protein' | 'library-energy-balance' | 'library-training-frequency' | 'library-periodization' | 'library-feminine-proportions' | 'notifications' | 'notification-settings' | 'exercicios-biblioteca';
 
 export function getPageTitle(currentView: ViewState, userProfile: ProfileType): string {
     if (currentView === 'terms') return 'TERMOS DE USO';
@@ -55,6 +55,9 @@ export function getPageTitle(currentView: ViewState, userProfile: ProfileType): 
             case 'coach': return 'VITRÚVIO IA';
             case 'diagnostico': return 'DIAGNÓSTICO — PLANO DE EVOLUÇÃO';
             case 'treino-plano': return 'PLANO DE TREINO — PLANO DE EVOLUÇÃO';
+            case 'editar-diagnostico': return 'EDITAR DIAGNÓSTICO';
+            case 'editar-treino': return 'EDITAR TREINO';
+            case 'editar-dieta': return 'EDITAR DIETA';
             case 'hall': return 'HALL DOS DEUSES';
             case 'results': return 'RESULTADOS DA AVALIAÇÃO IA';
             case 'design-system': return 'DESIGN SYSTEM';

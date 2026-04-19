@@ -79,6 +79,7 @@ interface TreinoViewProps {
     onNext: () => void;
     diagnosticoId?: string;
     readOnlyData?: PlanoTreino;
+    initialData?: PlanoTreino;
 }
 
 type TreinoState = 'idle' | 'generating' | 'ready' | 'saving' | 'saved';
@@ -102,11 +103,13 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
     onNext,
     diagnosticoId,
     readOnlyData,
+    initialData,
 }) => {
     const { personalAthletes } = useDataStore();
     const atleta = useMemo(() => personalAthletes.find(a => a.id === atletaId), [personalAthletes, atletaId]);
 
     const isReadOnly = !!readOnlyData;
+    const preloadedData = readOnlyData ?? initialData ?? null;
     // Pegar dados da última avaliação (mesmo que DiagnosticoView)
     const ultimaAvaliacao = useMemo(() => {
         if (!atleta || atleta.assessments.length === 0) return null;
@@ -128,13 +131,13 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
         });
     }, [atleta, ultimaAvaliacao]);
 
-    const [plano, setPlano] = useState<PlanoTreino | null>(readOnlyData ?? null);
+    const [plano, setPlano] = useState<PlanoTreino | null>(preloadedData);
     const [diagnostico, setDiagnostico] = useState<DiagnosticoDados | null>(null);
     const [potencial, setPotencial] = useState<PotencialAtleta | null>(null);
-    const [estado, setEstado] = useState<TreinoState>(readOnlyData ? 'saved' : 'idle');
+    const [estado, setEstado] = useState<TreinoState>(preloadedData ? 'saved' : 'idle');
     const [objetivoSalvo, setObjetivoSalvo] = useState<ObjetivoVitruvio | null>(null);
     const [objetivoAtleta, setObjetivoAtleta] = useState<ObjetivoVitruvio>(
-        readOnlyData?.objetivo || recomendacaoPadrao?.objetivo || 'RECOMP'
+        preloadedData?.objetivo || recomendacaoPadrao?.objetivo || 'RECOMP'
     );
 
     // Busca o objetivo que o personal escolheu no Diagnóstico (pode ser override

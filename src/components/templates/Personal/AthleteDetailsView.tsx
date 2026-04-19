@@ -27,6 +27,7 @@ import {
     Sparkles,
     Dumbbell,
     UtensilsCrossed,
+    Stethoscope,
     Loader2,
     Link2,
     Copy,
@@ -59,6 +60,9 @@ interface AthleteDetailsViewProps {
     hideStatusControl?: boolean;
     onDeleteAthlete?: (athleteId: string) => void;
     onViewPlan?: (plano: Record<string, unknown>) => void;
+    onEditDiagnostico?: (plano: Record<string, unknown>) => void;
+    onEditTreino?: (plano: Record<string, unknown>) => void;
+    onEditDieta?: (plano: Record<string, unknown>) => void;
 }
 
 
@@ -78,7 +82,7 @@ const OBJETIVO_LABELS: Record<string, string> = {
 };
 
 
-export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete, onBack, onNewAssessment, onConsultAssessment, hideStatusControl = false, onDeleteAthlete, onViewPlan }) => {
+export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete, onBack, onNewAssessment, onConsultAssessment, hideStatusControl = false, onDeleteAthlete, onViewPlan, onEditDiagnostico, onEditTreino, onEditDieta }) => {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const { updateAthlete } = useDataStore();
@@ -1037,13 +1041,38 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                                         <button
                                                             onClick={() => onViewPlan?.(plano)}
                                                             className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-all flex items-center gap-2 text-[10px] font-bold uppercase"
+                                                            title="Visualizar plano completo"
                                                         >
                                                             <Eye size={16} />
                                                             Visualizar
                                                         </button>
                                                         <button
+                                                            onClick={() => onEditDiagnostico?.(plano)}
+                                                            className="p-2 hover:bg-sky-500/20 rounded-lg text-gray-400 hover:text-sky-400 transition-all"
+                                                            title="Editar ou refazer Diagnóstico"
+                                                        >
+                                                            <Stethoscope size={16} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => onEditTreino?.(plano)}
+                                                            disabled={!plano.planos_treino?.length}
+                                                            className="p-2 hover:bg-indigo-500/20 rounded-lg text-gray-400 hover:text-indigo-400 transition-all disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                                                            title={plano.planos_treino?.length ? 'Editar ou refazer Treino' : 'Este plano não tem Treino'}
+                                                        >
+                                                            <Dumbbell size={16} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => onEditDieta?.(plano)}
+                                                            disabled={!plano.planos_dieta?.length}
+                                                            className="p-2 hover:bg-amber-500/20 rounded-lg text-gray-400 hover:text-amber-400 transition-all disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                                                            title={plano.planos_dieta?.length ? 'Editar ou refazer Dieta' : 'Este plano não tem Dieta'}
+                                                        >
+                                                            <UtensilsCrossed size={16} />
+                                                        </button>
+                                                        <button
                                                             onClick={() => handleDeletePlano(plano.id)}
                                                             className="p-2 hover:bg-red-500/20 rounded-lg text-gray-500 hover:text-red-400 transition-all flex items-center gap-2 text-[10px] font-bold uppercase"
+                                                            title="Excluir plano"
                                                         >
                                                             <Trash2 size={16} />
                                                             Excluir
