@@ -1290,7 +1290,10 @@ export function CardTreino({
                                                     : (ultimaSet?.reps != null ? String(ultimaSet.reps) : extrairRepPlaceholder(ex.repeticoes))
                                                 return (
                                                     <div key={sIdx} className={`py-1.5 transition-colors duration-300 ${isProxima ? 'bg-amber-500/10 -mx-2 px-2 rounded-lg' : ''}`}>
-                                                    <div className={`flex items-center gap-2 transition-all duration-300 ${set.concluido ? 'opacity-50' : ''}`}>
+                                                    <div className={`relative flex items-center gap-2 transition-all duration-300 ${set.concluido ? 'opacity-40' : ''}`}>
+                                                        {set.concluido && (
+                                                            <div className="absolute inset-x-0 top-1/2 h-px bg-emerald-400/60 pointer-events-none z-10 -translate-y-1/2" />
+                                                        )}
                                                         <button
                                                             onClick={e => { e.stopPropagation(); handleToggleSerieConcluida(ex.id, sIdx) }}
                                                             className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 transition-all ${set.concluido
