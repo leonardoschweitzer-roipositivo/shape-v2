@@ -10,6 +10,15 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+
+const DESC_CACHE_KEY = 'shape-ex-desc:'
+const getDescCache = (nome: string): string | null => {
+    try { return localStorage.getItem(DESC_CACHE_KEY + nome.toLowerCase()) } catch { return null }
+}
+const setDescCache = (nome: string, desc: string) => {
+    try { localStorage.setItem(DESC_CACHE_KEY + nome.toLowerCase(), desc) } catch {}
+}
+
 import { Dumbbell, Check, SkipForward, Moon, Play, ChevronDown, ChevronUp, Calendar, Clock, Pause, Timer, Video, Plus, TrendingUp, RotateCcw } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { WorkoutOfDay, ExercicioTreino } from '../../../types/athlete-portal'
@@ -262,6 +271,13 @@ export function CardTreino({
     const gerarDescricao = useCallback(async (exId: string, nome: string, foco?: string, delayMs = 0) => {
         const nomeTrimmed = nome.trim()
         if (!nomeTrimmed || descricoesCarregando.current.has(exId)) return
+
+        const cached = getDescCache(nomeTrimmed)
+        if (cached) {
+            setDescricoes(prev => ({ ...prev, [exId]: cached }))
+            return
+        }
+
         descricoesCarregando.current.add(exId)
         const fallback = foco ? `Trabalha ${foco.toLowerCase()}` : 'Exercício de musculação'
         try {
@@ -277,7 +293,12 @@ export function CardTreino({
                 `Descreva o exercício "${nomeTrimmed}" em uma única frase de até 18 palavras, citando o músculo trabalhado e um detalhe da execução. Responda apenas a frase, sem listas, aspas nem ponto final.`
             )
             const texto = result.response.text().trim().replace(/\s+/g, ' ')
-            setDescricoes(prev => ({ ...prev, [exId]: texto || fallback }))
+            if (texto) {
+                setDescCache(nomeTrimmed, texto)
+                setDescricoes(prev => ({ ...prev, [exId]: texto }))
+            } else {
+                setDescricoes(prev => ({ ...prev, [exId]: fallback }))
+            }
         } catch (err) {
             const msg = err instanceof Error ? err.message : String(err)
             console.error('[CardTreino] gerarDescricao falhou para', nomeTrimmed, msg)
