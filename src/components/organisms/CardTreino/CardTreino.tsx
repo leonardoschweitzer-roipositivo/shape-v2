@@ -259,12 +259,13 @@ export function CardTreino({
     const descricoesCarregando = useRef<Set<string>>(new Set())
     const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
 
-    const gerarDescricao = useCallback(async (exId: string, nome: string, foco?: string) => {
+    const gerarDescricao = useCallback(async (exId: string, nome: string, foco?: string, delayMs = 0) => {
         const nomeTrimmed = nome.trim()
         if (!nomeTrimmed || descricoesCarregando.current.has(exId)) return
         descricoesCarregando.current.add(exId)
-        const fallback = foco?.trim() || 'Exercício de musculação'
+        const fallback = foco ? `Trabalha ${foco.toLowerCase()}` : 'Exercício de musculação'
         try {
+            if (delayMs > 0) await new Promise(r => setTimeout(r, delayMs))
             const apiKey = import.meta.env.VITE_GEMINI_API_KEY
             if (!apiKey) {
                 setDescricoes(prev => ({ ...prev, [exId]: fallback }))
@@ -278,7 +279,8 @@ export function CardTreino({
             const texto = result.response.text().trim().replace(/\s+/g, ' ')
             setDescricoes(prev => ({ ...prev, [exId]: texto || fallback }))
         } catch (err) {
-            console.error('[CardTreino] gerarDescricao falhou para', nomeTrimmed, err)
+            const msg = err instanceof Error ? err.message : String(err)
+            console.error('[CardTreino] gerarDescricao falhou para', nomeTrimmed, msg)
             setDescricoes(prev => ({ ...prev, [exId]: fallback }))
         } finally {
             descricoesCarregando.current.delete(exId)
@@ -322,11 +324,13 @@ export function CardTreino({
         setExpandedExIds(new Set())
     }, [treino.id])
 
-    // Gera descrições IA conforme exercícios carregam (reage a id/nome/foco).
+    // Gera descrições IA com delay escalonado para evitar rate limit da API.
     useEffect(() => {
+        let delay = 0
         localExercicios.forEach(ex => {
             if (!descricoes[ex.id] && !descricoesCarregando.current.has(ex.id)) {
-                gerarDescricao(ex.id, ex.nome, ex.foco)
+                gerarDescricao(ex.id, ex.nome, ex.foco, delay)
+                delay += 200
             }
         })
     }, [localExercicios, descricoes, gerarDescricao])
