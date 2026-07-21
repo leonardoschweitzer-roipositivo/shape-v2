@@ -1,0 +1,22 @@
+# Estado atual — VITRU IA (shape-v2) — edite no lugar
+
+> Fotografia viva. **Consulte antes de mexer.** Atualize quando o mapa mudar.
+> (Arquivo criado em 21/07/2026 para dar a este projeto a seção de **Pendências** que faltava —
+> o retrato abaixo é o melhor conhecido; refine ao retomar o trabalho.)
+
+## O que é
+Dashboard de **avaliação física com IA** (VITRU IA). App front-end exportado do Google AI Studio.
+
+## Stack & deploy
+- **Vite 6 + React 19 + TypeScript + Zustand 5**; design tokens em `src/tokens/`; serviços em `src/services/` (~39 módulos); stores em `src/stores/`.
+- IA = **Google Gemini** (`@google/generative-ai`) — requer `GEMINI_API_KEY` (`.env`).
+- Convenção de memória própria em `.agent/`: `rules/`, `skills/`, e `memory/` (changelog/decisions/patterns-learned).
+- Comandos: `npm run dev` · `npm run build`. **Quem testa é o Leo.**
+
+## Pendências (o que ficou pendente)
+- **Projeto dormente** desde ~20/04/2026 (último commit `40b8743`) — confirmar com o Leo se segue vivo antes de investir.
+- Retrato detalhado de rotas/features **a preencher** ao retomar (este arquivo nasceu como esqueleto honesto).
+- Conferir `GEMINI_API_KEY` no ambiente de deploy.
+
+## Gotchas
+- Histórico de decisões e padrões já está em `.agent/memory/decisions.md` e `patterns-learned.md` — ler antes de propor mudanças estruturais.
