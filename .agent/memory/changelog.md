@@ -81,3 +81,15 @@
 **Mudança**: Adicionado SwipeableRow, edição de exercícios e botão de adicionar.
 **Motivo**: Facilitar a edição da sessão de treino atual localmente pelo usuário.
 
+
+### 2026-09-22 - Heatmap de Consistência (atleta) com janela móvel
+
+**Tipo**: Atualização
+**Mudança**: `src/pages/athlete/components/CardConsistencia.tsx` — o heatmap deixou de usar janela fixa
+(1º de março + 26 semanas = sempre Mar–Ago) e passou a mostrar as **últimas 26 semanas terminando na semana
+atual**. Hook `useHojeKey` vira o dia à meia-noite / ao voltar para a aba, então o heatmap anda sozinho com o
+app aberto. Datas agora em fuso local (antes `toISOString`/UTC). Rótulos de mês alinhados ao início da coluna.
+`src/services/consistencia.service.ts` — a busca começa no mais antigo entre 1º/jan e o início da janela
+(~27 semanas), para o heatmap não ficar vazio em jan–jun; métricas (treinos, consistência, tempo, recorde)
+continuam restritas ao ano. Streak usa a janela completa (não zera na virada do ano).
+**Motivo**: Leo reportou o heatmap "travado" em agosto, sem marcar os treinos dos últimos dias (setembro).

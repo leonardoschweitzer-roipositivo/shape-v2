@@ -13,7 +13,7 @@ import { supabase } from './supabase'
 
 export interface DadosConsistencia {
     ano: number
-    checkins: string[]            // Datas ISO 'YYYY-MM-DD' que treinou
+    checkins: string[]            // Datas ISO 'YYYY-MM-DD' que treinou (ano + janela do heatmap)
     streakAtual: number           // Dias consecutivos até hoje
     recorde: number               // Maior streak do histórico
     proximoBadge: BadgeProximo | null
@@ -42,6 +42,9 @@ const BADGES = [
     { dias: 180, nome: 'Semestre', emoji: '👑' },
     { dias: 365, nome: 'Lendário', emoji: '🏅' },
 ]
+
+/** Quantos dias para trás o heatmap do atleta mostra (26 semanas + folga da semana parcial) */
+const JANELA_HEATMAP_DIAS = 26 * 7 + 7
 
 // ==========================================
 // HELPERS
@@ -140,9 +143,14 @@ export async function buscarDadosConsistencia(
     atletaId: string,
     ano: number = new Date().getFullYear()
 ): Promise<DadosConsistencia> {
-    // Buscar registros de treino do ano + plano ativo (para frequência semanal e data de início)
+    // Buscar registros de treino do ano + plano ativo (para frequência semanal e data de início).
+    // A busca começa no que for mais antigo: 1º de janeiro ou o início da janela móvel do
+    // heatmap (~6 meses), para o heatmap não ficar vazio no começo do ano.
     const inicioAno = `${ano}-01-01`
     const fimAno = `${ano}-12-31`
+    const inicioJanela = new Date()
+    inicioJanela.setDate(inicioJanela.getDate() - JANELA_HEATMAP_DIAS)
+    const inicioBusca = toDateKey(inicioJanela) < inicioAno ? toDateKey(inicioJanela) : inicioAno
 
     const [
         { data: registros, error },
@@ -153,7 +161,7 @@ export async function buscarDadosConsistencia(
             .select('data, dados')
             .eq('atleta_id', atletaId)
             .eq('tipo', 'treino')
-            .gte('data', inicioAno)
+            .gte('data', inicioBusca)
             .lte('data', fimAno)
             .order('data', { ascending: true }),
         supabase
@@ -175,12 +183,15 @@ export async function buscarDadosConsistencia(
     const planoCreatedAt = planoData?.created_at as string | undefined
 
     // Filtrar apenas treinos completos e extrair datas únicas
-    const treinosCompletos = (registros ?? []).filter(
+    const treinosCompletosJanela = (registros ?? []).filter(
         (r: { data: string; dados: Record<string, unknown> | null }) => r.dados?.status === 'completo'
     )
+    const checkinsJanela = [...new Set(treinosCompletosJanela.map((r) => r.data as string))]
+    const checkinsSet = new Set(checkinsJanela)
 
+    // Métricas (treinos, consistência, tempo, recorde) continuam restritas ao ano
+    const treinosCompletos = treinosCompletosJanela.filter((r) => (r.data as string) >= inicioAno)
     const datasUnicas = [...new Set(treinosCompletos.map((r) => r.data as string))]
-    const checkinsSet = new Set(datasUnicas)
 
     // Calcular streak atual
     const hoje = new Date()
@@ -223,7 +234,7 @@ export async function buscarDadosConsistencia(
 
     return {
         ano,
-        checkins: datasUnicas,
+        checkins: checkinsJanela,
         streakAtual,
         recorde,
         proximoBadge,
