@@ -17,6 +17,8 @@ Dashboard de **avaliação física com IA** (VITRU IA). App front-end exportado 
 - **Projeto dormente** desde ~20/04/2026 (último commit `40b8743`) — confirmar com o Leo se segue vivo antes de investir.
 - Retrato detalhado de rotas/features **a preencher** ao retomar (este arquivo nasceu como esqueleto honesto).
 - Conferir `GEMINI_API_KEY` no ambiente de deploy.
+- **Leo testar** (22/09/2026): heatmap de Consistência na Home do atleta deve mostrar ~Abr→Set com os treinos de setembro marcados e o dia de hoje em verde/âmbar na última coluna. Métricas (116 treinos etc.) não devem mudar.
+- `CardConsistenciaPersonal` (portal do personal) segue com janela ancorada no plano/trimestres — não mexido; revisar se também parecer travado.
 
 ## Gotchas
 - Histórico de decisões e padrões já está em `.agent/memory/decisions.md` e `patterns-learned.md` — ler antes de propor mudanças estruturais.

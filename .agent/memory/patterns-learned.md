@@ -98,3 +98,10 @@ const { register, isDirty, saveStatus } = useAutoSaveForm({
 ---
 
 <!-- Novos padrões serão adicionados acima desta linha -->
+### 2026-09-22 - Janelas de tempo sempre relativas a "hoje"
+
+**Contexto**: Heatmap de consistência do atleta travou em Mar–Ago porque a janela foi hardcoded (`new Date(ano, 2, 1)`).
+**Padrão**: Visualizações temporais (heatmaps, gráficos "últimos N") devem ancorar em hoje, nunca em mês fixo.
+Chaves de dia via `getFullYear/getMonth/getDate` (fuso local), não `toISOString()` (UTC). Se a janela cruza o
+ano, a query de dados também precisa cruzar.
+**Aplicar em**: `CardConsistencia`, `CalendarHeatmap`, qualquer gráfico de evolução.

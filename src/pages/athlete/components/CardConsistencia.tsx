@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Flame, Trophy, Hourglass } from 'lucide-react'
 import { getEmojiStreak, formatarTempo, type DadosConsistencia } from '@/services/consistencia.service'
 
@@ -15,8 +15,30 @@ const CORES = {
 
 const MESES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
 
+/** 'YYYY-MM-DD' no fuso local (toISOString usaria UTC e poderia trocar o dia) */
 function toDateKey(d: Date): string {
-    return d.toISOString().split('T')[0]
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${y}-${m}-${day}`
+}
+
+/** Chave do dia atual — muda à meia-noite para o heatmap andar sozinho com o app aberto */
+function useHojeKey(): string {
+    const [hojeKey, setHojeKey] = useState(() => toDateKey(new Date()))
+    useEffect(() => {
+        const atualizar = () => setHojeKey(toDateKey(new Date()))
+        const agora = new Date()
+        const meiaNoite = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate() + 1)
+        const timer = setTimeout(atualizar, meiaNoite.getTime() - agora.getTime() + 1000)
+        const onVisible = () => { if (document.visibilityState === 'visible') atualizar() }
+        document.addEventListener('visibilitychange', onVisible)
+        return () => {
+            clearTimeout(timer)
+            document.removeEventListener('visibilitychange', onVisible)
+        }
+    }, [hojeKey])
+    return hojeKey
 }
 
 // ==========================================
@@ -28,7 +50,6 @@ interface CardConsistenciaProps {
 
 export function CardConsistencia({ dados }: CardConsistenciaProps) {
     const {
-        ano,
         checkins,
         streakAtual,
         recorde,
@@ -47,20 +68,19 @@ export function CardConsistencia({ dados }: CardConsistenciaProps) {
     const totalCellSize = cellSize + cellGap
     const numWeeksToShow = 26 // Exatamente 6 meses (26 semanas)
 
-    // ---- Gerar grade do heatmap (últimas 34 semanas) ----
+    const hojeKey = useHojeKey()
+
+    // ---- Gerar grade do heatmap (janela móvel: últimas 26 semanas até a semana atual) ----
     const gradeData = useMemo(() => {
         const checkinsSet = new Set(checkins)
-        const hoje = new Date()
-        hoje.setHours(0, 0, 0, 0)
-        const hojeKey = hoje.toISOString().split('T')[0]
+        const [y, m, d] = hojeKey.split('-').map(Number)
+        const hoje = new Date(y, m - 1, d)
 
-        // Janela de 6 meses: Março a Agosto de 2026
-        const startDate = new Date(ano, 2, 1) // 1 de Março
-
-        // Ajustar para segunda-feira
-        const diaSemana = startDate.getDay()
+        // Segunda-feira da semana atual, recuando (numWeeksToShow - 1) semanas
+        const diaSemana = hoje.getDay()
         const offset = diaSemana === 0 ? 6 : diaSemana - 1
-        startDate.setDate(startDate.getDate() - offset)
+        const startDate = new Date(hoje)
+        startDate.setDate(startDate.getDate() - offset - (numWeeksToShow - 1) * 7)
 
         const semanas: { key: string; cor: string; mes: number }[][] = []
         const mesesLabels: { mes: number; coluna: number }[] = []
@@ -71,7 +91,7 @@ export function CardConsistencia({ dados }: CardConsistenciaProps) {
         for (let col = 0; col < numWeeksToShow; col++) {
             const semana: { key: string; cor: string; mes: number }[] = []
 
-            for (let d = 0; d < 7; d++) {
+            for (let dia = 0; dia < 7; dia++) {
                 const key = toDateKey(cursor)
                 const cursorMes = cursor.getMonth()
 
@@ -88,11 +108,10 @@ export function CardConsistencia({ dados }: CardConsistenciaProps) {
                 cursor.setDate(cursor.getDate() + 1)
             }
 
-            // Registrar label do mês
-            const mesAtual = semana[0].mes
+            // Label do mês na primeira coluna em que ele aparece (pula a 1ª coluna parcial)
+            const mesAtual = semana[semana.length - 1].mes
             if (mesAtual !== mesAnterior) {
-                // Registrar apenas se estiver dentro da janela Mar-Ago (2 a 7)
-                if (mesAtual >= 2 && mesAtual <= 7) {
+                if (col > 0 || semana[0].mes === mesAtual) {
                     mesesLabels.push({ mes: mesAtual, coluna: col })
                 }
                 mesAnterior = mesAtual
@@ -102,7 +121,7 @@ export function CardConsistencia({ dados }: CardConsistenciaProps) {
         }
 
         return { semanas, mesesLabels }
-    }, [checkins, numWeeksToShow, ano])
+    }, [checkins, numWeeksToShow, hojeKey])
 
     const svgWidth = numWeeksToShow * totalCellSize
     const svgHeight = 7 * totalCellSize
@@ -137,27 +156,25 @@ export function CardConsistencia({ dados }: CardConsistenciaProps) {
                     <div className="mb-2 w-full">
                         {/* Labels dos meses */}
                         <div className="relative h-4 w-full">
-                            {gradeData.mesesLabels.map((ml, i) => {
-                                // Calcula % da posição baseada na coluna atual vs total de colunas.
-                                // Subtraímos uma pequena margem para no último mês não colar totalmente na borda e sumir texto
-                                const leftPercentage = (ml.coluna / numWeeksToShow) * 100;
-                                const isUltimo = i === gradeData.mesesLabels.length - 1;
+                            {gradeData.mesesLabels.map((ml) => {
+                                // Alinha o rótulo ao início da coluna em que o mês começa;
+                                // perto da borda direita, ancora pela direita para não cortar o texto
+                                const leftPercentage = (ml.coluna / numWeeksToShow) * 100
+                                const pertoDaBorda = ml.coluna >= numWeeksToShow - 2
 
                                 return (
                                     <span
-                                        key={i}
+                                        key={`${ml.mes}-${ml.coluna}`}
                                         className="text-[9px] text-gray-500 font-bold uppercase inline-block"
                                         style={{
                                             position: 'absolute',
-                                            // Se for o último, alinha à direita da porcentagem calculada para evitar clipping
-                                            left: isUltimo ? undefined : `${leftPercentage}%`,
-                                            right: isUltimo ? '0%' : undefined,
-                                            transform: isUltimo ? 'none' : 'translateX(-50%)' // Centraliza o texto no ponto exato
+                                            left: pertoDaBorda ? undefined : `${leftPercentage}%`,
+                                            right: pertoDaBorda ? '0%' : undefined,
                                         }}
                                     >
                                         {MESES[ml.mes]}
                                     </span>
-                                );
+                                )
                             })}
                         </div>
 
