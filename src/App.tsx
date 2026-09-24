@@ -84,6 +84,7 @@ import { buscarPlanoDieta, type PlanoDieta } from '@/services/calculations/dieta
 import { supabase } from '@/services/supabase';
 import { isGodEmail } from '@/types/auth';
 import { getPageTitle, type ViewState } from '@/utils/getPageTitle';
+import { PortraitLock } from '@/components/organisms/PortraitLock';
 
 const App: React.FC = () => {
 
@@ -1192,6 +1193,7 @@ const App: React.FC = () => {
             <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
           </div>
         }>
+          <PortraitLock />
           <PortalLanding
             atletaId={atletaId}
             onClose={async () => {
@@ -1232,6 +1234,7 @@ const App: React.FC = () => {
           <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
         </div>
       }>
+        <PortraitLock />
         <AtletaIndependentePortal
           onLogout={async () => {
             await signOut();

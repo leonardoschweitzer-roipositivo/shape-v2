@@ -20,5 +20,8 @@ Dashboard de **avaliação física com IA** (VITRU IA). App front-end exportado 
 - **Leo testar** (22/09/2026): heatmap de Consistência na Home do atleta deve mostrar ~Abr→Set com os treinos de setembro marcados e o dia de hoje em verde/âmbar na última coluna. Métricas (116 treinos etc.) não devem mudar.
 - `CardConsistenciaPersonal` (portal do personal) segue com janela ancorada no plano/trimestres — não mexido; revisar se também parecer travado.
 
+- **Leo testar** (24/09/2026): no celular, abrir `/atleta` (e `/meu-portal`) e deitar o aparelho → deve aparecer "Gire o celular" cobrindo tudo; ao voltar pra vertical, o portal volta normal. Tablet deitado não deve mostrar o aviso.
+- (Opcional) Adicionar manifest PWA com `"orientation": "portrait"` para trava nativa no Android quando instalado na tela inicial — não existe manifest hoje.
+
 ## Gotchas
 - Histórico de decisões e padrões já está em `.agent/memory/decisions.md` e `patterns-learned.md` — ler antes de propor mudanças estruturais.
