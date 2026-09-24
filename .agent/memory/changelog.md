@@ -93,3 +93,14 @@ app aberto. Datas agora em fuso local (antes `toISOString`/UTC). Rótulos de mê
 (~27 semanas), para o heatmap não ficar vazio em jan–jun; métricas (treinos, consistência, tempo, recorde)
 continuam restritas ao ano. Streak usa a janela completa (não zera na virada do ano).
 **Motivo**: Leo reportou o heatmap "travado" em agosto, sem marcar os treinos dos últimos dias (setembro).
+
+### 2026-09-24 - Portal do Aluno travado na vertical (celular)
+
+**Tipo**: Criação
+**Mudança**: Novo `src/components/organisms/PortraitLock/` — tenta `screen.orientation.lock('portrait')`
+(só funciona no Android com app instalado/tela cheia) e, como fallback universal, cobre a tela com
+"Gire o celular" quando a media query `(orientation: landscape) and (pointer: coarse) and (max-height: 540px)`
+bate. Montado em `App.tsx` nas rotas `/atleta` (PortalLanding) e `/meu-portal` (AtletaIndependentePortal).
+Tablet deitado e desktop não são afetados (validado com Playwright: iPhone retrato ✗, iPhone deitado ✓,
+iPad deitado ✗, desktop ✗).
+**Motivo**: Leo pediu que o portal do aluno no celular nunca fique na horizontal (layout quebrava).

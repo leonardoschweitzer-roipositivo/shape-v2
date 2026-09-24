@@ -121,4 +121,16 @@ specs/
 
 ---
 
+### 2026-09-24 - Trava de orientação via overlay (não via API)
+
+**Decisão**: Portal do Aluno "travado" na vertical com overlay CSS "Gire o celular" + tentativa de
+`screen.orientation.lock` como bônus.
+**Por quê**: iOS/Safari não permite travar rotação de página web (nem em PWA). O overlay é o único
+jeito que funciona em todos os celulares. Trava nativa real só existiria com app nativo (Capacitor etc.)
+ou manifest PWA `orientation: portrait` (Android, app instalado) — o projeto não tem manifest hoje.
+
+**Status**: Ativa
+
+---
+
 <!-- Novas decisões serão adicionadas acima desta linha -->
