@@ -104,7 +104,12 @@ export type Database = {
                     cref: string | null
                     foto_url: string | null
                     plano: 'FREE' | 'PRO' | 'UNLIMITED'
-                    limite_atletas: number
+                    limite_atletas: number | null
+                    cidade: string | null
+                    estado: string | null
+                    especialidades: string[]
+                    bio: string | null
+                    onboarding_completo: boolean
                     status: 'ATIVO' | 'INATIVO' | 'PENDENTE' | 'SUSPENSO' | 'TRIAL'
                     data_vinculo: string
                     created_at: string
@@ -121,7 +126,12 @@ export type Database = {
                     cref?: string | null
                     foto_url?: string | null
                     plano?: 'FREE' | 'PRO' | 'UNLIMITED'
-                    limite_atletas?: number
+                    limite_atletas?: number | null
+                    cidade?: string | null
+                    estado?: string | null
+                    especialidades?: string[]
+                    bio?: string | null
+                    onboarding_completo?: boolean
                     status?: 'ATIVO' | 'INATIVO' | 'PENDENTE' | 'SUSPENSO' | 'TRIAL'
                     data_vinculo?: string
                     created_at?: string
@@ -138,7 +148,12 @@ export type Database = {
                     cref?: string | null
                     foto_url?: string | null
                     plano?: 'FREE' | 'PRO' | 'UNLIMITED'
-                    limite_atletas?: number
+                    limite_atletas?: number | null
+                    cidade?: string | null
+                    estado?: string | null
+                    especialidades?: string[]
+                    bio?: string | null
+                    onboarding_completo?: boolean
                     status?: 'ATIVO' | 'INATIVO' | 'PENDENTE' | 'SUSPENSO' | 'TRIAL'
                     data_vinculo?: string
                     created_at?: string
@@ -159,6 +174,8 @@ export type Database = {
                     portal_token_expira: string | null
                     portal_acessos: number
                     portal_ultimo_acesso: string | null
+                    convite_enviado_em: string | null
+                    acesso_ativado_em: string | null
                     status: 'ATIVO' | 'INATIVO' | 'PENDENTE' | 'SUSPENSO' | 'TRIAL'
                     created_at: string
                     updated_at: string
@@ -176,6 +193,8 @@ export type Database = {
                     portal_token_expira?: string | null
                     portal_acessos?: number
                     portal_ultimo_acesso?: string | null
+                    convite_enviado_em?: string | null
+                    acesso_ativado_em?: string | null
                     status?: 'ATIVO' | 'INATIVO' | 'PENDENTE' | 'SUSPENSO' | 'TRIAL'
                     created_at?: string
                     updated_at?: string
@@ -193,6 +212,8 @@ export type Database = {
                     portal_token_expira?: string | null
                     portal_acessos?: number
                     portal_ultimo_acesso?: string | null
+                    convite_enviado_em?: string | null
+                    acesso_ativado_em?: string | null
                     status?: 'ATIVO' | 'INATIVO' | 'PENDENTE' | 'SUSPENSO' | 'TRIAL'
                     created_at?: string
                     updated_at?: string

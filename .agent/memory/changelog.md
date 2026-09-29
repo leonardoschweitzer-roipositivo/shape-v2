@@ -126,3 +126,23 @@ iPad deitado ✗, desktop ✗).
   `src/components/templates/ContaIncompleta` em vez do dashboard do atleta com mocks.
 **Motivo**: análise do fluxo do personal achou escalada de papel no cadastro, sequestro de aluno via RPC,
 policies de token abertas para qualquer logado e contas órfãs silenciosas.
+
+### 2026-10-03 - Fase 1: conta do personal (onboarding, senha, plano real)
+
+**Tipo**: Criação / Atualização
+**Mudança**:
+- `supabase/migrations/20261003_fase1_conta_personal.sql`: `personais` ganha cidade/estado/especialidades/bio/
+  onboarding_completo (backfill true p/ existentes, controlado por `app_migracoes_aplicadas`); UNLIMITED = limite NULL;
+  trigger `a_trg_personais_sync_limite` (FREE 10 · PRO 50 · UNLIMITED ∞) ao trocar plano.
+- `authStore`: signUp com `emailRedirectTo` e login imediato quando há sessão; `refreshEntity`, `resetPassword`,
+  `changePassword` (reautentica), `initAuthListener` (SIGNED_OUT / PASSWORD_RECOVERY).
+- Novas telas: `src/pages/auth/DefinirSenhaPage.tsx` (/definir-senha — token só é consumido no submit),
+  `src/pages/onboarding/PersonalOnboarding.tsx` (2 passos). Organisms `PersonalDadosForm` (+ validação/máscara) e
+  `AlterarSenhaModal`. Utils `planoPersonal.ts` e `redirecionarPosLogin.ts` (extraído do Login).
+- `Login`: "Esqueci minha senha" funcional (mensagem neutra), cadastro começa em Personal, senha ≥ 8 no cadastro,
+  **fim do auto-login `?p=`** (só pré-preenche `?email=`).
+- `App`: gates /definir-senha, conta suspensa, onboarding; `/personal/:id` e `/academia/:id` exigem login e
+  `/personal/:id` só abre o do próprio personal; settings do personal = perfil profissional; breakpoint mobile único.
+- `PersonalProfilePage` / `ProfileScreen` (mobile): plano, limite e uso reais, dados editáveis, alterar senha.
+  `PersonalDashboard` usa `limite_atletas` real. `PersonalPortal` mostra erro em vez de spinner infinito.
+**Motivo**: Fase 1 do plano `docs/plano-conta-personal-alunos-treinos.md`.

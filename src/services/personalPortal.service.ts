@@ -69,10 +69,12 @@ export async function carregarContextoPersonal(
     // Buscar atletas (query simples, sem join problemático)
     const { data: atletas } = await supabase
         .from('atletas')
-        .select('id')
+        .select('id, status')
         .eq('personal_id', personalId)
 
     const atletaIds = (atletas ?? []).map(a => a.id)
+    // Alunos que ocupam vaga no plano (arquivados = INATIVO não contam)
+    const alunosNoPlano = (atletas ?? []).filter(a => a.status !== 'INATIVO').length
 
     // Para cada atleta, buscar última medição para classificar status
     let ativos = 0
@@ -144,6 +146,7 @@ export async function carregarContextoPersonal(
         alunosAtivos: ativos,
         alunosAtencao: atencaoCount,
         alunosInativos: inativos,
+        alunosNoPlano,
         scoreMedio,
     }
 }

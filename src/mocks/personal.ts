@@ -3,7 +3,8 @@ import type { ContextoAtleta } from '@/components/templates/Personal/AthleteCont
 
 export interface PersonalStats {
     totalAthletes: number;
-    maxAthletes: number;
+    /** null = ilimitado */
+    maxAthletes: number | null;
     measuredThisWeek: number;
     averageScore: number;
     scoreVariation: number;

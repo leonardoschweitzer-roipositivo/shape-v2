@@ -110,6 +110,8 @@ export interface PersonalPortalContext {
     alunosAtivos: number
     alunosAtencao: number
     alunosInativos: number
+    /** Alunos com status diferente de INATIVO — ocupam vaga no plano */
+    alunosNoPlano: number
     scoreMedio: number
 }
 

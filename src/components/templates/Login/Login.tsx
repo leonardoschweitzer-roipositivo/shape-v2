@@ -13,8 +13,7 @@ import {
 } from 'lucide-react';
 import { ProfileSelector, ProfileType } from '@/components/organisms';
 import { useAuthStore } from '@/stores/authStore';
-import { isMobileDevice } from '@/utils/mobileDetect';
-import { isGodEmail } from '@/types/auth';
+import { redirecionarPosLogin } from '@/utils/redirecionarPosLogin';
 
 interface LoginProps {
     onLogin: (profile: ProfileType) => void;
@@ -22,7 +21,7 @@ interface LoginProps {
 
 export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     const [isNewUser, setIsNewUser] = useState(false);
-    const [profile, setProfile] = useState<ProfileType>('atleta'); // Default
+    const [profile, setProfile] = useState<ProfileType>('personal'); // Cadastro público é majoritariamente de personais
     const [showPassword, setShowPassword] = useState(false);
 
     // Form States
@@ -32,109 +31,28 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [autoLoginAttempted, setAutoLoginAttempted] = useState(false);
+    const [modoRecuperar, setModoRecuperar] = useState(false);
 
-    const { signIn, signUp } = useAuthStore();
+    const { signIn, signUp, resetPassword } = useAuthStore();
 
-    // 🔗 Auto-preencher credenciais da URL (link gerado pelo Personal no cadastro do aluno)
-    // Formato: /atleta?email=xxx&p=yyy
+    // 🔗 Pré-preenche o e-mail vindo do link do personal (/atleta?email=...).
+    // A senha NUNCA vem na URL — o aluno cria a própria pelo link de convite (/definir-senha).
     React.useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const urlEmail = params.get('email');
-        const urlPassword = params.get('p');
-
-        if (urlEmail) {
-            setEmail(decodeURIComponent(urlEmail));
-        }
-        if (urlPassword) {
-            setPassword(decodeURIComponent(urlPassword));
-        }
-
-        // Auto-login se ambos estão presentes e ainda não tentamos
-        if (urlEmail && urlPassword && !autoLoginAttempted) {
-            setAutoLoginAttempted(true);
-            setIsLoading(true);
-
-            signIn(decodeURIComponent(urlEmail), decodeURIComponent(urlPassword))
-                .then(({ error: signInError }) => {
-                    if (signInError) {
-                        setError('Credenciais inválidas. Tente manualmente.');
-                        setIsLoading(false);
-                    } else {
-                        // Redirecionamento inteligente pós-login
-                        // Pequeno delay para garantir que o authStore atualizou
-                        setTimeout(() => {
-                            handleSmartRedirect();
-                            setIsLoading(false);
-                        }, 500);
-                    }
-                })
-                .catch(() => {
-                    setError('Erro ao conectar. Tente manualmente.');
-                    setIsLoading(false);
-                });
-        }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        const urlEmail = new URLSearchParams(window.location.search).get('email');
+        if (urlEmail) setEmail(urlEmail);
     }, []);
 
-    /**
-     * Redirecionamento inteligente pós-login.
-     * Decide o destino baseado no role do usuário + dispositivo (mobile/desktop).
-     */
-    const handleSmartRedirect = () => {
-        const state = useAuthStore.getState();
-        const userRole = state.profile?.role?.toUpperCase();
-        const userEmail = state.profile?.email || '';
-        const mobile = isMobileDevice();
+    const handleSmartRedirect = () => redirecionarPosLogin(onLogin);
 
-        // GOD check (email whitelist)
-        if (userEmail && isGodEmail(userEmail)) {
-            if (mobile) {
-                window.location.replace('/god');
-                return;
-            }
-            onLogin('god');
-            return;
-        }
-
-        switch (userRole) {
-            case 'PERSONAL': {
-                const personalId = state.entity?.personal?.id;
-                if (mobile && personalId) {
-                    window.location.replace(`/personal/${personalId}`);
-                    return;
-                }
-                onLogin('personal');
-                return;
-            }
-            case 'ATLETA': {
-                const atleta = state.entity?.atleta;
-                const isVinculado = !!atleta?.personal_id;
-                if (isVinculado) {
-                    // Atleta vinculado → sempre Portal do Aluno
-                    window.location.replace('/atleta');
-                    return;
-                }
-                // Atleta independente → mobile vai pro portal, desktop fica no app
-                if (mobile) {
-                    window.location.replace('/meu-portal');
-                    return;
-                }
-                onLogin('atleta');
-                return;
-            }
-            case 'ACADEMIA': {
-                const academiaId = state.entity?.academia?.id;
-                if (mobile && academiaId) {
-                    window.location.replace(`/academia/${academiaId}`);
-                    return;
-                }
-                onLogin('academia');
-                return;
-            }
-            default:
-                onLogin('atleta');
-        }
+    const handleRecuperarSenha = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError(null);
+        setSuccess(null);
+        setIsLoading(true);
+        await resetPassword(email);
+        setIsLoading(false);
+        // Mensagem neutra: não revela se o e-mail existe
+        setSuccess('Se este e-mail estiver cadastrado, você vai receber um link para criar uma nova senha.');
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -146,23 +64,38 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
         try {
             if (isNewUser) {
                 // Sign Up Flow
-                const { error: signUpError } = await signUp(email, password, {
+                const { error: signUpError, needsConfirmation } = await signUp(email, password, {
                     fullName,
                     role: profile.toUpperCase() as 'PERSONAL' | 'ATLETA' | 'ACADEMIA'
                 });
 
                 if (signUpError) {
-                    throw new Error(signUpError instanceof Error ? signUpError.message : String(signUpError));
+                    const msg = signUpError instanceof Error ? signUpError.message : String(signUpError);
+                    throw new Error(
+                        msg.toLowerCase().includes('already registered')
+                            ? 'Este e-mail já tem conta. Entre ou use "Esqueci minha senha".'
+                            : msg
+                    );
                 }
 
-                setSuccess('Cadastro realizado com sucesso!');
-                setIsNewUser(false); // Switch back to login
+                if (needsConfirmation) {
+                    setSuccess('Conta criada! Confirme seu e-mail pelo link que enviamos e depois entre aqui.');
+                    setIsNewUser(false);
+                } else {
+                    // Sessão já ativa → App assume (onboarding do personal, portal etc.)
+                    handleSmartRedirect();
+                }
             } else {
                 // Sign In Flow
                 const { error: signInError } = await signIn(email, password);
 
                 if (signInError) {
-                    throw new Error('Email ou senha inválidos.');
+                    const msg = signInError instanceof Error ? signInError.message.toLowerCase() : '';
+                    throw new Error(
+                        msg.includes('not confirmed')
+                            ? 'Confirme seu e-mail pelo link que enviamos antes de entrar.'
+                            : 'Email ou senha inválidos.'
+                    );
                 }
 
                 // Redirecionamento inteligente baseado no role + dispositivo
@@ -276,13 +209,45 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     {success && (
                         <div className="p-4 bg-primary/10 border border-primary/20 text-primary rounded-lg text-sm flex items-start gap-3 animate-in fade-in slide-in-from-top-1 duration-300">
                             <CheckCircle2 size={20} className="mt-0.5 shrink-0" />
-                            <div>
-                                <p className="font-bold">Seja bem-vindo!</p>
-                                <p className="text-xs text-gray-400 mt-1">Sua conta foi criada com sucesso. Use seu e-mail e senha para acessar o painel.</p>
-                            </div>
+                            <p className="text-sm">{success}</p>
                         </div>
                     )}
 
+                    {modoRecuperar ? (
+                        <form onSubmit={handleRecuperarSenha} className="flex flex-col gap-4">
+                            <p className="text-sm text-gray-400">
+                                Informe seu e-mail e enviaremos um link para você criar uma nova senha.
+                            </p>
+                            <div className="relative group">
+                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-white transition-colors" size={18} />
+                                <input
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="seu@email.com"
+                                    className="w-full bg-[#0E1424] border border-white/10 rounded-lg pl-11 pr-4 py-3.5 text-white placeholder-gray-600 focus:outline-none focus:border-primary/50 transition-all text-sm"
+                                    required
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                disabled={isLoading}
+                                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black py-4 rounded-xl uppercase tracking-widest disabled:opacity-50"
+                            >
+                                {isLoading ? 'ENVIANDO...' : 'ENVIAR LINK'}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setModoRecuperar(false);
+                                    setSuccess(null);
+                                }}
+                                className="text-xs text-gray-400 hover:text-white"
+                            >
+                                Voltar para o login
+                            </button>
+                        </form>
+                    ) : (
                     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
 
                         {/* Profile Selector (Only for Sign Up to choose role) */}
@@ -340,7 +305,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                                         placeholder="••••••••"
                                         className="w-full bg-[#0E1424] border border-white/10 rounded-lg pl-11 pr-12 py-3.5 text-white placeholder-gray-600 focus:outline-none focus:border-primary/50 transition-all text-sm"
                                         required
-                                        minLength={6}
+                                        minLength={isNewUser ? 8 : 6}
                                     />
                                     <button
                                         type="button"
@@ -355,7 +320,15 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
                         {!isNewUser && (
                             <div className="flex justify-center lg:justify-end">
-                                <button type="button" className="text-xs text-primary hover:text-primary/80 transition-colors font-medium">
+                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setModoRecuperar(true);
+                                        setError(null);
+                                        setSuccess(null);
+                                    }}
+                                    className="text-xs text-primary hover:text-primary/80 transition-colors font-medium"
+                                >
                                     Esqueci minha senha
                                 </button>
                             </div>
@@ -399,6 +372,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                             </div>
                         )}
                     </form>
+                    )}
 
                     <div className="flex items-center justify-center gap-6 mt-8">
                         <a href="#" className="text-[10px] text-gray-600 hover:text-gray-400 transition-colors">Termos de Uso</a>

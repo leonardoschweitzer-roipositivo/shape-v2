@@ -4,10 +4,18 @@
  * Dados básicos do personal + botão de logout.
  */
 
-import React from 'react'
-import { LogOut, Mail, User } from 'lucide-react'
+import React, { useState } from 'react'
+import { Crown, KeyRound, LogOut, Mail, User } from 'lucide-react'
 import { ScreenHeader } from './components/ScreenHeader'
 import type { PersonalPortalContext } from '@/types/personal-portal'
+import { useAuthStore } from '@/stores/authStore'
+import { AlterarSenhaModal } from '@/components/organisms/AlterarSenhaModal'
+import {
+    PLANO_PERSONAL_LABEL,
+    SUPORTE_WHATSAPP_URL,
+    formatarLimiteAlunos,
+    percentualUsoPlano,
+} from '@/utils/planoPersonal'
 
 interface ProfileScreenProps {
     contexto: PersonalPortalContext
@@ -15,6 +23,12 @@ interface ProfileScreenProps {
 }
 
 export function ProfileScreen({ contexto, onLogout }: ProfileScreenProps) {
+    const personal = useAuthStore(s => s.entity.personal)
+    const [senhaAberta, setSenhaAberta] = useState(false)
+    const plano = personal?.plano ?? 'FREE'
+    const limite = personal?.limite_atletas ?? null
+    const ativos = contexto.alunosNoPlano
+    const uso = percentualUsoPlano(ativos, limite)
     const iniciais = contexto.nome
         .split(' ')
         .slice(0, 2)
@@ -88,6 +102,42 @@ export function ProfileScreen({ contexto, onLogout }: ProfileScreenProps) {
                         </div>
                     </div>
                 </div>
+
+                {/* Plano */}
+                <div className="bg-surface rounded-3xl border border-white/5 p-5 mb-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <Crown size={16} className="text-amber-400" />
+                            <div>
+                                <p className="text-gray-400 text-xs">Plano atual</p>
+                                <p className="text-white text-sm font-semibold">{PLANO_PERSONAL_LABEL[plano]}</p>
+                            </div>
+                        </div>
+                        <p className="text-indigo-400 text-[10px] font-black uppercase tracking-widest">{formatarLimiteAlunos(limite)}</p>
+                    </div>
+                    {uso != null && (
+                        <div className="mt-4">
+                            <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
+                                <div className={`h-full rounded-full ${uso >= 100 ? 'bg-rose-500' : 'bg-indigo-500'}`} style={{ width: `${uso}%` }} />
+                            </div>
+                            <p className="text-zinc-500 text-[10px] mt-2">{ativos} de {limite} alunos ativos</p>
+                        </div>
+                    )}
+                    {plano !== 'UNLIMITED' && (
+                        <a href={SUPORTE_WHATSAPP_URL} target="_blank" rel="noreferrer" className="block mt-4 text-center text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400">
+                            Fazer upgrade
+                        </a>
+                    )}
+                </div>
+
+                <button
+                    onClick={() => setSenhaAberta(true)}
+                    className="w-full flex items-center justify-center gap-3 bg-white/5 text-gray-300 border border-white/10 rounded-2xl p-5 font-black uppercase tracking-[0.2em] text-[10px] mb-4 active:scale-95 transition-all"
+                >
+                    <KeyRound size={16} />
+                    Alterar senha
+                </button>
+                <AlterarSenhaModal aberto={senhaAberta} onFechar={() => setSenhaAberta(false)} />
 
                 {/* Logout Premium */}
                 <button

@@ -22,7 +22,7 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
     const personalName = entity.personal?.nome || authProfile?.full_name || 'Personal';
 
     // Calculate stats from store
-    const totalAthletes = personalAthletes.length;
+    const totalAthletes = personalAthletes.filter(a => a.status !== 'inactive').length; // arquivados não contam no plano
 
     // Calcula o score médio baseado nos scores que não são zero
     const athletesWithScore = personalAthletes.filter(a => (a.score || 0) > 0);
@@ -39,7 +39,7 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
 
     const stats = {
         totalAthletes,
-        maxAthletes: 50, // Limite do plano (pode vir do perfil no futuro)
+        maxAthletes: entity.personal?.limite_atletas ?? null, // null = plano ilimitado
         measuredThisWeek,
         averageScore,
         scoreVariation: 0, // Variação média global será calculada a partir do histórico no futuro
@@ -158,7 +158,7 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
                         </h1>
                     </div>
                     <p className="text-zinc-500 mt-3 font-bold text-[11px] uppercase tracking-[0.25em] flex items-center gap-2">
-                        Você tem <span className="text-indigo-400 font-black">{stats.totalAthletes} alunos ativos</span> de {stats.maxAthletes} no seu plano.
+                        Você tem <span className="text-indigo-400 font-black">{stats.totalAthletes} alunos ativos</span> {stats.maxAthletes != null ? ` de ${stats.maxAthletes}` : ''} no seu plano{stats.maxAthletes == null ? ' ilimitado' : ''}.
                         {dataSource === 'SUPABASE' && <span className="text-[10px] text-emerald-500 flex items-center gap-1.5 ml-2">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                             Dados reais
@@ -177,8 +177,8 @@ export const PersonalDashboard: React.FC<PersonalDashboardProps> = ({
                         value={stats.totalAthletes}
                         icon={Users}
                         color="primary"
-                        showProgress
-                        target={stats.maxAthletes}
+                        showProgress={stats.maxAthletes != null}
+                        target={stats.maxAthletes ?? undefined}
                     />
                     <PersonalStatsCard
                         title="Mediram esta Semana"

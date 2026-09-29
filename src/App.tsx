@@ -86,11 +86,14 @@ import { isGodEmail } from '@/types/auth';
 import { getPageTitle, type ViewState } from '@/utils/getPageTitle';
 import { PortraitLock } from '@/components/organisms/PortraitLock';
 import { ContaIncompleta } from '@/components/templates/ContaIncompleta';
+import { DefinirSenhaPage } from '@/pages/auth/DefinirSenhaPage';
+import { PersonalOnboarding } from '@/pages/onboarding/PersonalOnboarding';
+import { isMobileDevice } from '@/utils/mobileDetect';
 
 const App: React.FC = () => {
 
   // Auth Store
-  const { isAuthenticated, user: authUser, profile: authProfile, signOut, checkSession, isLoading: isAuthLoading, entity } = useAuthStore();
+  const { isAuthenticated, user: authUser, profile: authProfile, signOut, checkSession, initAuthListener, isLoading: isAuthLoading, entity } = useAuthStore();
 
   // Local UI State
   const [isAssessmentOpen, setIsAssessmentOpen] = useState(false);
@@ -99,7 +102,6 @@ const App: React.FC = () => {
   const [isPersonalInviteModalOpen, setIsPersonalInviteModalOpen] = useState(false);
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
   const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(null);
-  const [portalToken, setPortalToken] = useState<string | null>(null);
 
   // Personal Portal URL detection (/personal/:personalId)
   const personalPortalId = (() => {
@@ -109,13 +111,9 @@ const App: React.FC = () => {
 
   // Athlete Portal URL detection (/atleta)
   const isAtletaRoute = window.location.pathname.startsWith('/atleta');
-  const atletaUrlParams = (() => {
-    const params = new URLSearchParams(window.location.search);
-    return {
-      email: params.get('email') || undefined,
-      password: params.get('p') || undefined,
-    };
-  })();
+
+  // Definir senha (convite do aluno / recuperação de senha)
+  const isDefinirSenhaRoute = window.location.pathname.startsWith('/definir-senha');
 
   // New Portal Route Detection
   const isMeuPortalRoute = window.location.pathname.startsWith('/meu-portal');
@@ -133,7 +131,7 @@ const App: React.FC = () => {
   const [selectedNotifDetail, setSelectedNotifDetail] = useState<Notificacao | null>(null);
 
   // Mobile detection for redirection logic
-  const isMobile = window.innerWidth < 768;
+  const isMobile = isMobileDevice();
 
   // Notifications hook (polling + state)
   const {
@@ -188,6 +186,9 @@ const App: React.FC = () => {
     checkSession();
   }, [checkSession]);
 
+  // Listener único de auth: logout em outra aba, evento de recuperação de senha
+  useEffect(() => initAuthListener(), [initAuthListener]);
+
   // 🛡️ Redirecionamento Automático Proativo para Portais
   // Garante que o usuário vá direto ao portal se cair na raiz por engano ou refresh.
   // Atleta vinculado (com personal_id) SEMPRE vai para /atleta, qualquer dispositivo.
@@ -228,16 +229,6 @@ const App: React.FC = () => {
 
     if (purged) {
       console.info('[App] 🧹 Caches de dados antigos/mocks limpos automaticamente com a nova versão.');
-    }
-  }, []);
-
-  // Detect portal token in URL (?token=XXX)
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get('token');
-    if (token) {
-      console.info('[App] 🔗 Portal token detectado na URL:', token.substring(0, 8) + '...');
-      setPortalToken(token);
     }
   }, []);
 
@@ -967,9 +958,8 @@ const App: React.FC = () => {
         case 'design-system':
           return <DesignSystem />;
         case 'profile':
+        case 'settings': // configurações do personal = perfil profissional (plano, senha, dados)
           return <PersonalProfilePage />;
-        case 'settings':
-          return <AthleteSettingsPage />;
         case 'trainers-ranking':
           return <RankingPersonaisPage />;
         case 'student-registration':
@@ -1161,6 +1151,11 @@ const App: React.FC = () => {
     );
   }
 
+  // A1. Definir senha (convite / recuperação) — funciona logado ou não
+  if (isDefinirSenhaRoute) {
+    return <DefinirSenhaPage />;
+  }
+
   // A2. Conta incompleta: logado, mas sem profile (ou PERSONAL/ACADEMIA sem entidade).
   // Antes caía no dashboard do atleta com dados de exemplo.
   if (isAuthenticated) {
@@ -1182,6 +1177,20 @@ const App: React.FC = () => {
     }
   }
 
+  // A3. Personal: conta suspensa/inativa ou onboarding pendente (vale para desktop e /personal/:id)
+  if (isAuthenticated && authProfile?.role === 'PERSONAL' && entity?.personal && !isGodEmail(authProfile.email || '')) {
+    const sair = async () => {
+      await signOut();
+      window.location.replace('/');
+    };
+    if (entity.personal.status === 'SUSPENSO' || entity.personal.status === 'INATIVO') {
+      return <ContaIncompleta variante="suspensa" email={authProfile.email} onSair={sair} />;
+    }
+    if (!entity.personal.onboarding_completo) {
+      return <PersonalOnboarding onSair={sair} />;
+    }
+  }
+
   // B. Dashboard Flash Guard (Mobile @ Root OR Atleta vinculado @ Root):
   // Evita montar o Dashboard desktop antes do redirect
   if (isAuthenticated && window.location.pathname === '/') {
@@ -1200,7 +1209,7 @@ const App: React.FC = () => {
   }
 
   // C. General Unauthenticated: Renderiza Login se não houver sessão ativa
-  if (!isAuthenticated && !personalPortalId && !academiaPortalId && !isGodRoute && !isMeuPortalRoute) {
+  if (!isAuthenticated && !isGodRoute && !isMeuPortalRoute) {
     // Inclui /atleta — Login vai auto-preencher credenciais da URL se presentes
     return <Login onLogin={() => { }} />;
   }
@@ -1229,8 +1238,17 @@ const App: React.FC = () => {
 
   }
 
-  // Portal do Personal via URL (/personal/:personalId) — requer auth p/ RLS funcionar
+  // Portal do Personal via URL (/personal/:personalId) — só o próprio personal
   if (personalPortalId) {
+    const meuPersonalId = entity?.personal?.id;
+    if (!meuPersonalId) {
+      window.location.replace('/');
+      return null;
+    }
+    if (meuPersonalId !== personalPortalId) {
+      window.location.replace(`/personal/${meuPersonalId}`);
+      return null;
+    }
     return (
       <Suspense fallback={
         <div className="flex h-screen w-full items-center justify-center bg-black text-white">

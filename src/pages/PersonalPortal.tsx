@@ -9,7 +9,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { Loader2 } from 'lucide-react'
+import { AlertTriangle, Loader2 } from 'lucide-react'
 import { BottomNavigationPersonal } from '@/components/organisms/BottomNavigationPersonal'
 import { HomeScreen } from './personal/HomeScreen'
 import { AlunosScreen } from './personal/AlunosScreen'
@@ -88,6 +88,36 @@ export function PersonalPortal({ personalId, onLogout }: PersonalPortalProps) {
         setAlunoSelecionadoId(alunoId)
         setActiveTab('alunos')
     }, [])
+
+    // Falha ao carregar (sem permissão / personal inexistente) — antes girava para sempre
+    if (!loading && !contexto) {
+        return (
+            <div className="min-h-screen bg-black flex items-center justify-center px-6">
+                <div className="text-center space-y-4 max-w-xs">
+                    <AlertTriangle className="text-amber-400 mx-auto" size={36} />
+                    <p className="text-white font-semibold">Não foi possível carregar seu portal.</p>
+                    <p className="text-gray-500 text-sm">Verifique sua conexão ou entre novamente.</p>
+                    <div className="flex gap-3 justify-center pt-2">
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="px-4 py-2.5 rounded-xl border border-white/10 text-xs font-bold uppercase tracking-wider text-gray-300"
+                        >
+                            Tentar de novo
+                        </button>
+                        <button
+                            onClick={async () => {
+                                if (onLogout) await onLogout()
+                                window.location.replace('/')
+                            }}
+                            className="px-4 py-2.5 rounded-xl bg-white/5 text-xs font-bold uppercase tracking-wider text-white"
+                        >
+                            Sair
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )
+    }
 
     // Loading state
     if (loading || !contexto) {

@@ -1,0 +1,1 @@
+export { AlterarSenhaModal } from './AlterarSenhaModal';

@@ -193,8 +193,8 @@ export function mapPersonalToProfile(personal: Personal): PersonalProfile {
         gender: 'MALE', // Default, não temos no schema
         avatarUrl: personal.foto_url,
         cref: personal.cref || '',
-        specialties: [],
-        bio: '',
+        specialties: personal.especialidades ?? [],
+        bio: personal.bio ?? '',
         createdAt: personal.created_at,
         stats: {
             totalAthletes: 0,

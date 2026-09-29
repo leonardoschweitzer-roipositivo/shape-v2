@@ -26,7 +26,7 @@ export { avaliacaoService } from './avaliacao.service';
 export type { CriarAvaliacaoInput } from './avaliacao.service';
 
 export { personalService } from './personal.service';
-export type { PersonalComKPIs, CriarPersonalInput } from './personal.service';
+export type { PersonalComKPIs, DadosProfissionaisPayload } from './personal.service';
 
 export { academiaService } from './academia.service';
 export type { AcademiaComKPIs, CriarAcademiaInput } from './academia.service';
