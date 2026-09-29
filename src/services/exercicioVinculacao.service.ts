@@ -15,7 +15,7 @@ import type { Exercicio, PlanoTreino, TreinoDetalhado } from '@/services/calcula
  * Normaliza um nome de exercício para melhorar o matching.
  * Remove acentos, converte para lowercase, normaliza abreviações.
  */
-function normalizarNome(nome: string): string {
+export function normalizarNome(nome: string): string {
     return nome
         .toLowerCase()
         .normalize('NFD')
@@ -30,7 +30,8 @@ function normalizarNome(nome: string): string {
  */
 let _cacheBiblioteca: ExercicioBiblioteca[] | null = null
 
-async function carregarBiblioteca(): Promise<ExercicioBiblioteca[]> {
+/** Biblioteca de exercícios ativa (cacheada) — também usada pelo autocomplete do editor. */
+export async function carregarBiblioteca(): Promise<ExercicioBiblioteca[]> {
     if (_cacheBiblioteca) return _cacheBiblioteca
 
     const { data, error } = await supabase

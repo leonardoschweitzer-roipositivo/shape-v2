@@ -166,3 +166,27 @@ policies de token abertas para qualquer logado e contas órfãs silenciosas.
 - Removidos: `DEFAULT_ATHLETE_PASSWORD` (3 cópias), troca de sessão no navegador (5 cópias), `AthleteLogin.tsx`,
   `AthleteInvitationModal` (mock), estado `portalToken` do App, `atletaService.criar/criarFicha/deletar`.
 **Motivo**: Fase 2 do plano `docs/plano-conta-personal-alunos-treinos.md`.
+
+### 2026-10-15 - Fase 3: treinos (correções, criar do zero, copiar e modelos)
+
+**Tipo**: Criação / Correção
+**Mudança**:
+- `supabase/migrations/20261015_fase3_treinos.sql`: 1 plano ativo por aluno (dedupe + índice único parcial);
+  RPC `criar_plano_treino` (desativa o ativo e insere o novo numa transação — o antigo vira histórico);
+  tabela `treino_modelos` (RLS do personal, nome único por personal, `personal_id` default = logado).
+- `calculations/treino.ts`: `origem` no plano; `visaoAnual`/`trimestreAtual` opcionais (planos manuais não têm
+  periodização fictícia); `derivarDivisao(treinos)` (divisão sempre = treinos finais); masculino 3x = A (peito+
+  ombro+tríceps) · B (costas/bíceps) · C (pernas) — antes ficava sem perna; `enriquecerTreinoComIA` não muta mais
+  o plano; `salvarPlanoTreino` só atualiza no lugar se for o mesmo diagnóstico, senão cria novo (histórico); removido
+  `limparPlanosTreinoDuplicados` (índice único garante).
+- `calculations/treinoPipeline.ts`: IA em SEQUÊNCIA (exercícios → prescrição) — antes as escolhas da IA e as
+  diretrizes do personal eram descartadas. Usado no wizard e no onboarding VITRU IA.
+- `services/treino/planosTreino.service.ts` (criar/atualizar/listar/excluir, plano vazio, sanitizar cópia) e
+  `treinoModelos.service.ts`. `src/types/resultado.ts` (Resultado compartilhado).
+- UI: `TreinoEditorView` (novo: do zero / copiar de aluno / aplicar modelo / salvar como modelo / editar),
+  `CopiarTreinoModal`, `PlanosTreinoCard` na ficha do aluno (todos os planos, ativo + histórico, qualquer origem),
+  `ExercicioAutocomplete` (biblioteca com vídeo) + seletor de técnica no `SecaoTreinosEditavel`; aba ativa não some
+  ao trocar treinos. `TreinoView`: edições depois de salvar persistem; consulta é só leitura. Linha do Plano de
+  Evolução "Editar treino" abre o editor (view `editar-treino` removida → `treino-editor`). Excluir plano de evolução
+  não apaga mais todos os treinos do aluno. Mobile: "Criar treino" quando o aluno não tem plano.
+**Motivo**: Fase 3 do plano `docs/plano-conta-personal-alunos-treinos.md` (decisões de arquitetura por agente Plan).

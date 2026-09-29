@@ -49,6 +49,8 @@ import { AthleteContextSection } from './AthleteContextSection';
 import type { ContextoAtleta } from './AthleteContextSection';
 import { GerarAcessoAluno } from '@/components/organisms/AcessoAlunoCard';
 import { alunoService } from '@/services/aluno.service';
+import { PlanosTreinoCard } from './athlete-details/PlanosTreinoCard';
+import type { PlanoTreino } from '@/services/calculations/treino';
 import { CardHistoricoTreinos } from '@/components/organisms/CardHistoricoTreinos/CardHistoricoTreinos';
 
 import { getObjetivoLabel } from '@/services/calculations/objetivos';
@@ -64,6 +66,9 @@ interface AthleteDetailsViewProps {
     onEditDiagnostico?: (plano: Record<string, unknown>) => void;
     onEditTreino?: (plano: Record<string, unknown>) => void;
     onEditDieta?: (plano: Record<string, unknown>) => void;
+    /** Editor de treino (planoId null = novo: do zero, cópia ou modelo). */
+    onAbrirEditorTreino?: (planoId: string | null, dados: PlanoTreino | null) => void;
+    onVisualizarTreino?: (dados: PlanoTreino) => void;
 }
 
 
@@ -83,7 +88,7 @@ const OBJETIVO_LABELS: Record<string, string> = {
 };
 
 
-export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete, onBack, onNewAssessment, onConsultAssessment, hideStatusControl = false, onDeleteAthlete, onViewPlan, onEditDiagnostico, onEditTreino, onEditDieta }) => {
+export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete, onBack, onNewAssessment, onConsultAssessment, hideStatusControl = false, onDeleteAthlete, onViewPlan, onEditDiagnostico, onEditTreino, onEditDieta, onAbrirEditorTreino, onVisualizarTreino }) => {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const { updateAthlete } = useDataStore();
@@ -205,15 +210,7 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                 }
             }
 
-            // 2. Delete por atleta_id (garante que registros sem diagnostico_id também sejam removidos)
-            deletePromises.push(
-                supabase.from('planos_treino').delete().eq('atleta_id', athlete.id)
-            );
-            deletePromises.push(
-                supabase.from('planos_dieta').delete().eq('atleta_id', athlete.id)
-            );
-
-            // 3. Fallback: tentar por diagnostico_id
+            // 2. Planos ligados a ESTE diagnóstico (nunca apagar por atleta_id — apagava todos os planos do aluno)
             deletePromises.push(
                 supabase.from('planos_treino').delete().eq('diagnostico_id' as string, planoId)
             );
@@ -819,6 +816,18 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                             </div>
                         </div>
                     </div>
+
+                    {/* Section 3.5: Treinos (todas as origens — do zero, cópia, modelo, Vitrúvio) */}
+                    {onAbrirEditorTreino && onVisualizarTreino && (
+                        <div className="pt-6">
+                            <PlanosTreinoCard
+                                atletaId={draftAthlete.id}
+                                nomeAluno={draftAthlete.name}
+                                onAbrirEditor={onAbrirEditorTreino}
+                                onVisualizar={onVisualizarTreino}
+                            />
+                        </div>
+                    )}
 
                     {/* Section 4: Histórico de Planos de Evolução */}
                     <div className="pt-6">

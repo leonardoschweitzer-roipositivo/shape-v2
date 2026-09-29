@@ -2,15 +2,21 @@
  * EditarTreinoScreen — Tela de edição de treinos (Mobile)
  *
  * Reutiliza SecaoTreinosEditavel com isEditing=true.
- * Salva via salvarPlanoTreino (insere novo registro no histórico).
+ * Edita o plano ATIVO do aluno; se ele ainda não tem plano, cria um do zero (3 treinos).
  */
 
 import React, { useState, useEffect } from 'react'
 import { ChevronLeft, Save, Loader2, Check, Dumbbell } from 'lucide-react'
 import { SecaoTreinosEditavel } from '@/components/organisms/SecaoTreinosEditavel/SecaoTreinosEditavel'
 import { ScreenHeader } from './ScreenHeader'
-import { salvarPlanoTreino } from '@/services/calculations/treino'
+import { derivarDivisao } from '@/services/calculations/treino'
 import type { PlanoTreino, TreinoDetalhado } from '@/services/calculations/treino'
+import {
+    atualizarPlanoTreino,
+    buscarPlanoTreinoAtivoMeta,
+    criarPlanoTreino,
+    criarPlanoTreinoVazio,
+} from '@/services/treino/planosTreino.service'
 
 // ═══════════════════════════════════════════════════════════
 // TYPES
@@ -18,8 +24,8 @@ import type { PlanoTreino, TreinoDetalhado } from '@/services/calculations/trein
 
 interface EditarTreinoScreenProps {
     atletaId: string
-    personalId: string
-    planoTreino: PlanoTreino
+    /** Plano ativo atual; null = aluno sem treino (cria um novo). */
+    planoTreino: PlanoTreino | null
     onVoltar: () => void
     onSalvo: () => void
 }
@@ -32,12 +38,12 @@ type SaveStatus = 'idle' | 'saving' | 'success' | 'error'
 
 export function EditarTreinoScreen({
     atletaId,
-    personalId,
     planoTreino,
     onVoltar,
     onSalvo,
 }: EditarTreinoScreenProps) {
-    const [treinos, setTreinos] = useState<TreinoDetalhado[]>(planoTreino.treinos)
+    const [planoBase] = useState<PlanoTreino>(() => planoTreino ?? criarPlanoTreinoVazio(atletaId, 3))
+    const [treinos, setTreinos] = useState<TreinoDetalhado[]>(planoBase.treinos)
     const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
 
     // Scroll ao topo ao montar
@@ -50,13 +56,17 @@ export function EditarTreinoScreen({
         setSaveStatus('saving')
 
         const planoAtualizado: PlanoTreino = {
-            ...planoTreino,
+            ...planoBase,
             treinos,
+            divisao: derivarDivisao(treinos, planoBase.origem === 'vitruvio' ? planoBase.divisao.tipo : undefined),
         }
 
-        const result = await salvarPlanoTreino(atletaId, personalId, planoAtualizado)
+        const ativo = await buscarPlanoTreinoAtivoMeta(atletaId)
+        const result = ativo
+            ? await atualizarPlanoTreino(ativo.id, planoAtualizado)
+            : await criarPlanoTreino(atletaId, planoAtualizado)
 
-        if (result) {
+        if (result.ok) {
             setSaveStatus('success')
             setTimeout(() => {
                 onSalvo()
@@ -75,7 +85,7 @@ export function EditarTreinoScreen({
             <div className="sticky top-0 z-30 bg-background-dark/90 backdrop-blur-md border-b border-white/5 px-4 pt-6 pb-2">
                 <ScreenHeader
                     icon={<Dumbbell size={16} className="text-indigo-400" />}
-                    titulo="Editar Treinos"
+                    titulo={planoTreino ? 'Editar Treinos' : 'Novo Treino'}
                     subtitulo={`${treinos.length} treino${treinos.length !== 1 ? 's' : ''}`}
                     comVoltar
                     onVoltar={onVoltar}

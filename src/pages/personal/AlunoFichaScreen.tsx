@@ -200,12 +200,11 @@ FORMATO:
     }
 
     // Sub-tela: Edição de Treinos
-    if (editandoTreino && ficha.planoTreino) {
+    if (editandoTreino) {
         return (
             <EditarTreinoScreen
                 atletaId={alunoId}
-                personalId={ficha.pessoalId}
-                planoTreino={ficha.planoTreino}
+                planoTreino={ficha.planoTreino ?? null}
                 onVoltar={() => setEditandoTreino(false)}
                 onSalvo={() => {
                     setEditandoTreino(false)
@@ -256,7 +255,7 @@ FORMATO:
                 <CardTreinosAccordion
                     planoTreino={ficha.planoTreino}
                     atletaId={alunoId}
-                    onEditar={ficha.planoTreino ? () => setEditandoTreino(true) : undefined}
+                    onEditar={() => setEditandoTreino(true)}
                 />
 
                 {/* 1.2 Histórico de Treinos (gráficos de carga e volume) */}

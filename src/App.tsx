@@ -37,6 +37,7 @@ import {
   LazyPersonalCoachView as PersonalCoachView,
   LazyDiagnosticoView as DiagnosticoView,
   LazyTreinoView as TreinoView,
+  LazyTreinoEditorView as TreinoEditorView,
   LazyDietaView as DietaView,
   LazyAthleteDetailsView as AthleteDetailsView,
   LazyAcademyDashboard as AcademyDashboard,
@@ -123,6 +124,8 @@ const App: React.FC = () => {
   const [consultaTreinoData, setConsultaTreinoData] = useState<PlanoTreino | null>(null);
   const [consultaDietaData, setConsultaDietaData] = useState<PlanoDieta | null>(null);
   const [consultaPlanoCompleto, setConsultaPlanoCompleto] = useState<any | null>(null);
+  const [treinoEditorCtx, setTreinoEditorCtx] = useState<{ planoId: string | null; dados: PlanoTreino | null } | null>(null);
+  const [retornoConsultaTreino, setRetornoConsultaTreino] = useState<ViewState>('coach');
   const [isNotificationDrawerOpen, setIsNotificationDrawerOpen] = useState(false);
   const [selectedNotifDetail, setSelectedNotifDetail] = useState<Notificacao | null>(null);
 
@@ -436,11 +439,19 @@ const App: React.FC = () => {
     setCurrentView('editar-diagnostico');
   };
 
-  const handleEditTreino = async (plano: any) => {
-    console.info('[App] ✏️ Editar Treino do plano:', plano.id);
+  /** Abre o editor de treino (planoId null = novo: do zero, cópia ou modelo). */
+  const abrirEditorTreino = (atletaId: string, planoId: string | null, dados: PlanoTreino | null) => {
+    setSelectedAthleteId(atletaId);
+    setTreinoEditorCtx({ planoId, dados });
+    setCurrentView('treino-editor');
+  };
+
+  // Linha do Plano de Evolução → edita o treino daquele diagnóstico no editor
+  const handleEditTreino = (plano: any) => {
+    const treino = plano.planos_treino?.[0];
+    if (!treino?.id) return;
     setConsultaPlanoCompleto(null);
-    await carregarDadosPlano(plano);
-    setCurrentView('editar-treino');
+    abrirEditorTreino(plano.atleta_id ?? selectedAthleteId, treino.id, treino.dados ?? null);
   };
 
   const handleEditDieta = async (plano: any) => {
@@ -710,6 +721,13 @@ const App: React.FC = () => {
               onEditTreino={handleEditTreino}
               onEditDieta={handleEditDieta}
               onDeleteAthlete={handleDeleteAthlete}
+              onAbrirEditorTreino={(planoId, dados) => abrirEditorTreino(selectedAthlete.id, planoId, dados)}
+              onVisualizarTreino={(dados) => {
+                setConsultaPlanoCompleto(null);
+                setConsultaTreinoData(dados);
+                setRetornoConsultaTreino('athlete-details');
+                setCurrentView('consulta-treino');
+              }}
             />
           );
         case 'assessment':
@@ -808,11 +826,17 @@ const App: React.FC = () => {
                 if (consultaPlanoCompleto) setCurrentView('consulta-diagnostico');
                 else {
                   setConsultaTreinoData(null);
-                  setCurrentView('coach');
+                  setCurrentView(retornoConsultaTreino);
+                  setRetornoConsultaTreino('coach');
                 }
               }}
               onNext={() => {
                 if (consultaPlanoCompleto) setCurrentView('consulta-dieta');
+                else {
+                  setConsultaTreinoData(null);
+                  setCurrentView(retornoConsultaTreino);
+                  setRetornoConsultaTreino('coach');
+                }
               }}
               readOnlyData={consultaTreinoData || undefined}
             />
@@ -846,17 +870,19 @@ const App: React.FC = () => {
               }}
             />
           ) : null;
-        case 'editar-treino':
-          return selectedAthleteId ? (
-            <TreinoView
+        case 'treino-editor':
+          return selectedAthleteId && treinoEditorCtx ? (
+            <TreinoEditorView
+              key={`${selectedAthleteId}-${treinoEditorCtx.planoId ?? 'novo'}`}
               atletaId={selectedAthleteId}
-              initialData={consultaTreinoData ?? undefined}
-              onBack={() => {
-                setConsultaTreinoData(null);
+              planoId={treinoEditorCtx.planoId}
+              planoInicial={treinoEditorCtx.dados}
+              onVoltar={() => {
+                setTreinoEditorCtx(null);
                 setCurrentView('athlete-details');
               }}
-              onNext={() => {
-                setConsultaTreinoData(null);
+              onSalvo={() => {
+                setTreinoEditorCtx(null);
                 setCurrentView('athlete-details');
               }}
             />

@@ -26,6 +26,7 @@ import { EditableField } from '@/components/atoms/EditableField/EditableField';
 import { BlocoPrescricaoSeries } from './BlocoPrescricaoSeries';
 import { sugerirPrescricaoIA } from '@/services/prescricao/gerarViaIA';
 import { gerarPrescricaoPadrao } from '@/services/prescricao/templates';
+import { ExercicioAutocomplete } from '@/components/molecules/ExercicioAutocomplete';
 
 // ═══════════════════════════════════════════════════════════
 // TYPES
@@ -53,17 +54,6 @@ const TECNICAS_OPCOES = [
     { value: 'Pausa no pico', label: 'Pausa no pico' },
     { value: 'Excêntrico lento', label: 'Excêntrico lento' },
     { value: 'Isometria', label: 'Isometria' },
-];
-
-const DESCANSO_OPCOES = [
-    { value: '30', label: '30s' },
-    { value: '45', label: '45s' },
-    { value: '60', label: '60s' },
-    { value: '75', label: '75s' },
-    { value: '90', label: '90s' },
-    { value: '120', label: '120s' },
-    { value: '150', label: '150s' },
-    { value: '180', label: '180s' },
 ];
 
 const PROXIMA_LETRA = (treinos: TreinoDetalhado[]): string => {
@@ -129,6 +119,11 @@ const ExercicioRow: React.FC<{
                         <p className="font-bold text-gray-200 text-base leading-tight mb-2">
                             <span className="text-gray-600 font-mono text-sm mr-2">{ex.ordem}.</span>
                             {ex.nome}
+                            {ex.tecnica && (
+                                <span className="ml-2 align-middle px-2 py-0.5 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-400 text-[10px] font-bold uppercase tracking-wider">
+                                    {ex.tecnica}
+                                </span>
+                            )}
                         </p>
                         <BlocoPrescricaoSeries ex={exParaExibir} onUpdate={onUpdate} readOnly />
                     </div>
@@ -163,16 +158,25 @@ const ExercicioRow: React.FC<{
                             </div>
                         </div>
 
-                        {/* Nome (a descrição do exercício é gerada no portal do aluno pela IA) */}
-                        <div className="flex-1 min-w-0">
-                            <EditableField
-                                type="text"
-                                isEditing
+                        {/* Nome com sugestões da Biblioteca (vídeo no portal do aluno) + técnica.
+                            A descrição do exercício é gerada no portal do aluno pela IA. */}
+                        <div className="flex-1 min-w-0 space-y-1.5">
+                            <ExercicioAutocomplete
                                 value={ex.nome}
-                                onChange={(v) => onUpdate({ ...ex, nome: v })}
-                                placeholder="Nome do exercício"
-                                inputClassName="!text-sm !py-2 !px-2 font-bold"
+                                bibliotecaId={ex.bibliotecaId}
+                                onChange={({ nome, bibliotecaId, urlVideo }) =>
+                                    onUpdate({ ...ex, nome, bibliotecaId, urlVideo })}
                             />
+                            <select
+                                value={ex.tecnica ?? ''}
+                                onChange={(e) => onUpdate({ ...ex, tecnica: e.target.value || undefined })}
+                                className="bg-white/5 border border-white/10 rounded-md px-2 py-1 text-[11px] text-gray-300 focus:outline-none focus:border-primary/50"
+                                aria-label="Técnica avançada"
+                            >
+                                {TECNICAS_OPCOES.map(t => (
+                                    <option key={t.value} value={t.value}>{t.value ? t.label : 'Técnica: nenhuma'}</option>
+                                ))}
+                            </select>
                         </div>
 
                         {/* Remove */}
@@ -211,7 +215,8 @@ export const SecaoTreinosEditavel: React.FC<SecaoTreinosEditavelProps> = ({
 }) => {
     const [activeTab, setActiveTab] = useState(treinos[0]?.id || '');
     const [iaBulkLoading, setIaBulkLoading] = useState(false);
-    const activeTreino = treinos.find(t => t.id === activeTab);
+    // Se a lista de treinos for trocada (cópia/modelo), cai no primeiro em vez de ficar sem ficha
+    const activeTreino = treinos.find(t => t.id === activeTab) ?? treinos[0];
 
     // ── Handlers de exercício ──
 
@@ -344,7 +349,7 @@ export const SecaoTreinosEditavel: React.FC<SecaoTreinosEditavelProps> = ({
         if (treinos.length <= 1) return; // Mínimo 1 treino
         const updated = treinos.filter(t => t.id !== treinoId);
         onUpdateTreinos(updated);
-        if (activeTab === treinoId) {
+        if (activeTreino?.id === treinoId) {
             setActiveTab(updated[0]?.id || '');
         }
     };
@@ -402,7 +407,7 @@ export const SecaoTreinosEditavel: React.FC<SecaoTreinosEditavelProps> = ({
                     <div key={t.id} className="relative flex-1 min-w-[120px]">
                         <button
                             onClick={() => setActiveTab(t.id)}
-                            className={`w-full px-4 py-3 rounded-xl font-bold text-sm uppercase transition-all ${activeTab === t.id
+                            className={`w-full px-4 py-3 rounded-xl font-bold text-sm uppercase transition-all ${activeTreino?.id === t.id
                                 ? 'bg-primary text-white shadow-lg shadow-primary/20'
                                 : 'text-gray-500 hover:text-white hover:bg-white/5'
                                 }`}

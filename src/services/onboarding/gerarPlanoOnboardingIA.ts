@@ -20,14 +20,15 @@ import {
 import {
     gerarPlanoTreino,
     salvarPlanoTreino,
-    enriquecerTreinoComIA,
+    derivarDivisao,
 } from '@/services/calculations/treino';
 import {
     gerarPlanoDieta,
     salvarPlanoDieta,
     enriquecerDietaComIA,
 } from '@/services/calculations/dieta';
-import { enriquecerPrescricaoComIA } from '@/services/prescricao/enriquecer';
+import { enriquecerPlanoTreinoCompleto } from '@/services/calculations/treinoPipeline';
+import { atualizarPlanoTreino } from '@/services/treino/planosTreino.service';
 import type { ObjetivoVitruvio } from '@/services/calculations/objetivos';
 import type { ContextoAtleta } from '@/services/calculations/potencial';
 import type { PerfilAtletaIA } from '@/services/vitruviusContext';
@@ -258,26 +259,13 @@ export async function gerarPlanoOnboardingIA(
     };
 
     if (treinoId) {
-        Promise.all([
-            enriquecerTreinoComIA(planoTreinoBase, perfilIA).catch(err => {
-                console.warn('[OnboardingIA] Enriquecimento treino falhou:', err);
-                return null;
-            }),
-            enriquecerPrescricaoComIA(planoTreinoBase).catch(err => {
-                console.warn('[OnboardingIA] Enriquecimento prescrição falhou:', err);
-                return null;
-            }),
-        ]).then(async ([comInsights, comPrescricao]) => {
-            if (!comInsights && !comPrescricao) return;
-            const merged = {
-                ...(comInsights ?? planoTreinoBase),
-                treinos: (comPrescricao ?? planoTreinoBase).treinos,
-            };
-            await supabase
-                .from('planos_treino')
-                .update({ dados: JSON.parse(JSON.stringify(merged)) } as Record<string, unknown>)
-                .eq('id', treinoId);
-        }).catch(err => console.warn('[OnboardingIA] Merge treino IA falhou:', err));
+        // Sequencial: exercícios da IA → prescrição sobre eles (ver treinoPipeline.ts)
+        enriquecerPlanoTreinoCompleto(planoTreinoBase, perfilIA)
+            .then(async (enriquecido) => {
+                enriquecido.divisao = derivarDivisao(enriquecido.treinos, enriquecido.divisao.tipo);
+                await atualizarPlanoTreino(treinoId, enriquecido);
+            })
+            .catch(err => console.warn('[OnboardingIA] Enriquecimento treino falhou:', err));
     }
 
     if (dietaId) {

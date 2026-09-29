@@ -10,6 +10,9 @@
  */
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { supabase } from '@/services/supabase';
+import type { Resultado } from '@/types/resultado';
+
+export type { Resultado };
 
 export type SexoAluno = 'M' | 'F';
 
@@ -37,8 +40,6 @@ export interface ResultadoCadastroAluno {
     erroAcesso?: string;
 }
 
-/** Resultado padronizado: nunca lança; `erro` já vem em português para a UI. */
-export type Resultado<T> = { ok: true; data: T } | { ok: false; erro: string; codigo: string };
 
 const MENSAGENS: Record<string, string> = {
     LIMITE_ALUNOS_ATINGIDO:

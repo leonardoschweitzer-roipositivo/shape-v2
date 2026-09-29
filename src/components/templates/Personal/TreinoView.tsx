@@ -47,11 +47,12 @@ import {
     gerarPlanoTreino,
     salvarPlanoTreino,
     enriquecerTreinoComIA,
+    derivarDivisao,
     type PlanoTreino,
     type TreinoDetalhado,
-    type VolumePorGrupo
 } from '@/services/calculations/treino';
-import { enriquecerPrescricaoComIA } from '@/services/prescricao/enriquecer';
+import { enriquecerPlanoTreinoCompleto } from '@/services/calculations/treinoPipeline';
+import { atualizarPlanoTreino } from '@/services/treino/planosTreino.service';
 import {
     calcularPotencialAtleta,
     type PotencialAtleta,
@@ -79,7 +80,6 @@ interface TreinoViewProps {
     onNext: () => void;
     diagnosticoId?: string;
     readOnlyData?: PlanoTreino;
-    initialData?: PlanoTreino;
 }
 
 type TreinoState = 'idle' | 'generating' | 'ready' | 'saving' | 'saved';
@@ -103,13 +103,12 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
     onNext,
     diagnosticoId,
     readOnlyData,
-    initialData,
 }) => {
     const { personalAthletes } = useDataStore();
     const atleta = useMemo(() => personalAthletes.find(a => a.id === atletaId), [personalAthletes, atletaId]);
 
     const isReadOnly = !!readOnlyData;
-    const preloadedData = readOnlyData ?? initialData ?? null;
+    const preloadedData = readOnlyData ?? null;
     // Pegar dados da última avaliação (mesmo que DiagnosticoView)
     const ultimaAvaliacao = useMemo(() => {
         if (!atleta || atleta.assessments.length === 0) return null;
@@ -153,6 +152,8 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
         return () => { cancelled = true; };
     }, [atletaId, isReadOnly]);
     const [toastStatus, setToastStatus] = useState<'success' | 'error' | null>(null);
+    // Id do plano gravado nesta sessão do wizard (edições depois de salvar vão direto para ele)
+    const [planoIdSalvo, setPlanoIdSalvo] = useState<string | null>(null);
     const [iaEnriching, setIaEnriching] = useState(false);
     const [isApplying, setIsApplying] = useState(false);
 
@@ -174,18 +175,14 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
     const handleSaveEdits = async () => {
         if (!plano) return;
         const editedTreinos = commitEditingTreino();
-        const updatedPlano = { ...plano, treinos: editedTreinos };
+        const updatedPlano = { ...plano, treinos: editedTreinos, divisao: derivarDivisao(editedTreinos, plano.divisao.tipo) };
         setPlano(updatedPlano);
 
-        if (isReadOnly) {
-            const personalId = atleta?.personalId ?? null;
-            const result = await salvarPlanoTreino(atletaId, personalId, updatedPlano, diagnosticoId);
-
-            if (result) {
-                setToastStatus('success');
-            } else {
-                setToastStatus('error');
-            }
+        // Antes de "Confirmar e Salvar" a edição fica local e vai junto no salvamento.
+        // Depois de salvo, persiste direto no plano gravado.
+        if (planoIdSalvo) {
+            const r = await atualizarPlanoTreino(planoIdSalvo, updatedPlano);
+            setToastStatus(r.ok ? 'success' : 'error');
             setTimeout(() => setToastStatus(null), 3000);
         }
     };
@@ -268,27 +265,14 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
             setPlano(resultado);
             setEstado('ready');
 
-            // Enriquecer com IA em background (insights + prescrição série-a-série em paralelo)
+            // Enriquecer com IA em background, EM SEQUÊNCIA: primeiro a IA escolhe os exercícios
+            // (respeitando as diretrizes do personal), depois prescreve série-a-série sobre ESSES exercícios.
+            // (Antes rodava em paralelo sobre o plano original e as escolhas da IA eram descartadas.)
             setIaEnriching(true);
             const perfil = buildPerfilIA(atleta.name, atleta.gender, atleta.birthDate, ultimaAvaliacao.measurements as Record<string, number>, ultimaAvaliacao.bf ?? 15, atleta.score, atleta.contexto ?? undefined);
-            console.info('[TreinoView] 🚀 Iniciando enriquecimento IA (insights + prescrição)...');
-            Promise.all([
-                enriquecerTreinoComIA(resultado, perfil, instrucoesTrim).catch(err => {
-                    console.error('[TreinoView] ❌ Erro insights IA:', err);
-                    return resultado;
-                }),
-                enriquecerPrescricaoComIA(resultado).catch(err => {
-                    console.error('[TreinoView] ❌ Erro prescrição IA:', err);
-                    return resultado;
-                }),
-            ])
-                .then(([comInsights, comPrescricao]) => {
-                    // Merge: prescricaoSeries de comPrescricao + insightsPorSecao/observacoes de comInsights.
-                    const final: PlanoTreino = {
-                        ...comInsights,
-                        treinos: comPrescricao.treinos,
-                    };
-                    console.info('[TreinoView] 🤖 Plano enriquecido (insights + prescrição série-a-série)');
+            enriquecerPlanoTreinoCompleto(resultado, perfil, instrucoesTrim)
+                .then(final => {
+                    final.divisao = derivarDivisao(final.treinos, final.divisao.tipo);
                     setPlano(final);
                 })
                 .finally(() => setIaEnriching(false));
@@ -312,6 +296,7 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
         }
 
         console.info('[Treino] ✅ Plano salvo:', result.id);
+        setPlanoIdSalvo(result.id);
         setToastStatus('success');
         setEstado('saved');
         setTimeout(() => setToastStatus(null), 3000);
@@ -506,7 +491,8 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
                         <SecaoDivisao treinos={isEditingTreino ? editTreinos : plano.treinos} />
                         {/* Seção 5: Treinos — editável */}
                         <SectionCard icon={BookOpen} title="Treinos da Semana" subtitle="Fichas detalhadas de exercícios e técnicas avançadas">
-                            <div className="flex justify-end mb-4">
+                            {/* Consulta é só leitura — editar um plano salvo é pelo editor de treino (ficha do aluno) */}
+                            {!isReadOnly && <div className="flex justify-end mb-4">
                                 <EditToolbar
                                     isEditing={isEditingTreino}
                                     hasChanges={hasTrainingChanges}
@@ -514,7 +500,7 @@ export const TreinoView: React.FC<TreinoViewProps> = ({
                                     onSave={handleSaveEdits}
                                     onDiscard={cancelEditingTreino}
                                 />
-                            </div>
+                            </div>}
                             <SecaoTreinosEditavel
                                 treinos={isEditingTreino ? editTreinos : plano.treinos}
                                 isEditing={isEditingTreino}

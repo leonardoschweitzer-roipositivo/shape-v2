@@ -171,4 +171,17 @@ pelo SQL Editor/GOD. Front só traduz o erro `LIMITE_ALUNOS_ATINGIDO`.
 
 ---
 
+### 2026-10-15 - Treinos: editor dedicado, 1 plano ativo e histórico
+
+**Contexto**: o personal só conseguia treino via wizard com IA (exige avaliação); salvar sobrescrevia o plano ativo;
+planos sem diagnóstico não apareciam; não havia cópia/modelos.
+**Decisão** (recomendada por agente de arquitetura): `TreinoView` fica só para o Plano de Evolução (IA);
+`TreinoEditorView` novo para criar do zero/copiar/modelo/editar. Planos manuais têm `origem` e não têm
+periodização. Criar = RPC `criar_plano_treino` (desativa + insere, atômico); editar = atualiza só `dados`.
+Índice único parcial garante 1 ativo por aluno. Modelos em `treino_modelos` (sem cargas; vídeo re-vinculado).
+IA em sequência (exercícios → prescrição).
+**Status**: Ativa
+
+---
+
 <!-- Novas decisões serão adicionadas acima desta linha -->
