@@ -105,3 +105,17 @@ const { register, isDirty, saveStatus } = useAutoSaveForm({
 Chaves de dia via `getFullYear/getMonth/getDate` (fuso local), não `toISOString()` (UTC). Se a janela cruza o
 ano, a query de dados também precisa cruzar.
 **Aplicar em**: `CardConsistencia`, `CalendarHeatmap`, qualquer gráfico de evolução.
+
+### 2026-10-15 - Privilégio nunca pelo e-mail do perfil nem do JWT sozinho
+
+**Contexto**: GOD era decidido por whitelist de e-mail (JWT/profile). Com confirmação de e-mail desligada, qualquer um
+se cadastra com um e-mail da lista ainda não registrado; `profiles.email` era editável pelo próprio usuário.
+**Padrão**: privilégio = linha em tabela administrada (`app_admins`) + função `SECURITY DEFINER`; no front, usar o
+e-mail do login (`authStore.user.email`), nunca `profile.email`, e travar colunas espelho do auth por trigger.
+**Aplicar em**: qualquer checagem de papel/admin (RLS e gates do App).
+
+### 2026-10-15 - Link de uso único: consumir só no submit
+
+**Padrão**: links de convite/recuperação apontam para a página do app com `token_hash`; `verifyOtp` só no envio do
+formulário (prévias de WhatsApp/e-mail fazem GET e queimariam `action_link`). Depois de consumir, seguir na sessão
+(retries não chamam `verifyOtp` de novo). Modo "sessão sem token" só se a página veio de um link de recuperação.

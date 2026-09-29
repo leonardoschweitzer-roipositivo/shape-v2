@@ -12,7 +12,7 @@ import type { ProfileType } from '@/components/organisms';
 export function redirecionarPosLogin(onDesktop: (perfil: ProfileType) => void = () => window.location.replace('/')): void {
     const state = useAuthStore.getState();
     const role = state.profile?.role?.toUpperCase();
-    const email = state.profile?.email || state.user?.email || '';
+    const email = state.user?.email || ''; // e-mail do login (não o do perfil)
     const mobile = isMobileDevice();
 
     if (email && isGodEmail(email)) {

@@ -172,8 +172,11 @@ const App: React.FC = () => {
 
   // Derived user profile from Auth Store
   // Se o email está na whitelist GOD, força o perfil para 'god'
+  // E-mail do LOGIN (auth.users), não o de profiles — o perfil não deve decidir privilégios.
+  const loginEmail = authUser?.email || '';
+  const isGodLogin = !!loginEmail && isGodEmail(loginEmail);
   const userProfile: ProfileType = (() => {
-    const email = authProfile?.email || '';
+    const email = loginEmail;
     if (email && isGodEmail(email)) return 'god';
     return (authProfile?.role?.toLowerCase() as ProfileType) || 'atleta';
   })();
@@ -447,11 +450,25 @@ const App: React.FC = () => {
   };
 
   // Linha do Plano de Evolução → edita o treino daquele diagnóstico no editor
-  const handleEditTreino = (plano: any) => {
-    const treino = plano.planos_treino?.[0];
-    if (!treino?.id) return;
+  // Prefere o plano ATIVO do diagnóstico (o que o aluno vê); senão o mais recente dele.
+  // Sem vínculo no join (planos antigos gravados sem diagnostico_id), abre o treino ativo do aluno.
+  const handleEditTreino = async (plano: any) => {
+    const atletaId: string | null = plano.atleta_id ?? selectedAthleteId;
+    if (!atletaId) return;
     setConsultaPlanoCompleto(null);
-    abrirEditorTreino(plano.atleta_id ?? selectedAthleteId, treino.id, treino.dados ?? null);
+
+    const doDiagnostico: Array<{ id: string; status: string; created_at: string; dados: PlanoTreino }> =
+      [...(plano.planos_treino ?? [])].sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+    const escolhido = doDiagnostico.find(p => p.status === 'ativo') ?? doDiagnostico[0];
+    if (escolhido?.id) {
+      abrirEditorTreino(atletaId, escolhido.id, escolhido.dados ?? null);
+      return;
+    }
+
+    const { listarPlanosTreino } = await import('@/services/treino/planosTreino.service');
+    const ativo = (await listarPlanosTreino(atletaId)).find(p => p.status === 'ativo');
+    if (ativo) abrirEditorTreino(atletaId, ativo.id, ativo.dados);
+    else alert('Este aluno não tem treino ativo para editar.');
   };
 
   const handleEditDieta = async (plano: any) => {
@@ -1120,15 +1137,13 @@ const App: React.FC = () => {
   // A2. Conta incompleta: logado, mas sem profile (ou PERSONAL/ACADEMIA sem entidade).
   // Antes caía no dashboard do atleta com dados de exemplo.
   if (isAuthenticated) {
-    const email = authProfile?.email || authUser?.email || '';
-    const isGod = !!email && isGodEmail(email);
     const semEntidade =
       (authProfile?.role === 'PERSONAL' && !entity?.personal) ||
       (authProfile?.role === 'ACADEMIA' && !entity?.academia);
-    if (!isGod && (!authProfile || semEntidade)) {
+    if (!isGodLogin && (!authProfile || semEntidade)) {
       return (
         <ContaIncompleta
-          email={email}
+          email={loginEmail}
           onSair={async () => {
             await signOut();
             window.location.replace('/');
@@ -1139,7 +1154,7 @@ const App: React.FC = () => {
   }
 
   // A3. Personal: conta suspensa/inativa ou onboarding pendente (vale para desktop e /personal/:id)
-  if (isAuthenticated && authProfile?.role === 'PERSONAL' && entity?.personal && !isGodEmail(authProfile.email || '')) {
+  if (isAuthenticated && authProfile?.role === 'PERSONAL' && entity?.personal && !isGodLogin) {
     const sair = async () => {
       await signOut();
       window.location.replace('/');

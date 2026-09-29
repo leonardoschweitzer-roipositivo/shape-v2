@@ -12,13 +12,22 @@
 import React, { useEffect, useState } from 'react';
 import { Eye, EyeOff, KeyRound, LogOut } from 'lucide-react';
 import { supabase } from '@/services/supabase';
-import { useAuthStore } from '@/stores/authStore';
+import { consumirMarcaRecuperacao, useAuthStore } from '@/stores/authStore';
 import { redirecionarPosLogin } from '@/utils/redirecionarPosLogin';
 
 type TipoLink = 'invite' | 'recovery';
 type Modo = 'carregando' | 'token' | 'sessao' | 'invalido';
 
 const SENHA_MIN = 8;
+
+/**
+ * Hash da URL no carregamento do app (antes do supabase-js processar e limpar).
+ * O modo "sessão" (sem token) só vale quando a página foi aberta por um link de
+ * recuperação/convite — nunca para uma sessão qualquer já aberta no navegador
+ * (senão alguém numa sessão esquecida trocaria a senha sem saber a atual).
+ */
+const HASH_INICIAL = typeof window !== 'undefined' ? window.location.hash : '';
+const VEIO_DE_LINK_DE_SENHA = /type=(recovery|invite)/.test(HASH_INICIAL);
 
 function lerParametros(): { tokenHash: string | null; tipo: TipoLink } {
     const params = new URLSearchParams(window.location.search);
@@ -45,7 +54,12 @@ export const DefinirSenhaPage: React.FC = () => {
             setModo('token');
             return;
         }
-        // Sem token: o supabase-js já processou o hash (#access_token...&type=recovery) se houver
+        // Sem token: só aceita a sessão criada pelo link de recuperação (#access_token...&type=recovery)
+        const veioDeRecuperacao = VEIO_DE_LINK_DE_SENHA || consumirMarcaRecuperacao();
+        if (!veioDeRecuperacao) {
+            setModo('invalido');
+            return;
+        }
         supabase.auth.getSession().then(({ data }) => setModo(data.session ? 'sessao' : 'invalido'));
     }, [tokenHash]);
 
@@ -73,6 +87,8 @@ export const DefinirSenhaPage: React.FC = () => {
                     setModo('invalido');
                     return;
                 }
+                // Token de uso único já consumido: novas tentativas (ex.: senha igual à antiga) usam a sessão
+                setModo('sessao');
             }
 
             const { error } = await supabase.auth.updateUser({ password: senha });

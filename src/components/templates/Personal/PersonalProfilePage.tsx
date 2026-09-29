@@ -123,7 +123,7 @@ const ProfileHeader: React.FC<{ profile: PersonalProfile; personal: Personal | n
                         </div>
                     )}
                 </div>
-                {plano !== 'UNLIMITED' && (
+                {plano !== 'UNLIMITED' && (SUPORTE_WHATSAPP_URL ? (
                     <a
                         href={SUPORTE_WHATSAPP_URL}
                         target="_blank"
@@ -132,7 +132,9 @@ const ProfileHeader: React.FC<{ profile: PersonalProfile; personal: Personal | n
                     >
                         Fazer upgrade <ChevronRight size={12} />
                     </a>
-                )}
+                ) : (
+                    <span className="text-[10px] text-gray-500">Para mais alunos, fale com o suporte.</span>
+                ))}
             </div>
         </div>
     );

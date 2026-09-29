@@ -28,23 +28,28 @@ export function normalizarNome(nome: string): string {
  * Cache local da biblioteca para evitar N+1 queries.
  * Carregada uma vez e reutilizada durante a vinculação.
  */
-let _cacheBiblioteca: ExercicioBiblioteca[] | null = null
+let _cacheBiblioteca: Promise<ExercicioBiblioteca[]> | null = null
 
-/** Biblioteca de exercícios ativa (cacheada) — também usada pelo autocomplete do editor. */
-export async function carregarBiblioteca(): Promise<ExercicioBiblioteca[]> {
+/**
+ * Biblioteca de exercícios ativa (cacheada) — também usada pelo autocomplete do editor.
+ * Cacheia a PROMISE: várias chamadas simultâneas (um campo por exercício) fazem uma única query.
+ */
+export function carregarBiblioteca(): Promise<ExercicioBiblioteca[]> {
     if (_cacheBiblioteca) return _cacheBiblioteca
 
-    const { data, error } = await supabase
-        .from('exercicios_biblioteca')
-        .select('id, nome, nome_alternativo, url_video, grupo_muscular')
-        .eq('ativo', true)
+    _cacheBiblioteca = (async () => {
+        const { data, error } = await supabase
+            .from('exercicios_biblioteca')
+            .select('id, nome, nome_alternativo, url_video, grupo_muscular')
+            .eq('ativo', true)
 
-    if (error) {
-        console.error('[vinculacao] Erro ao carregar biblioteca:', error.message)
-        return []
-    }
-
-    _cacheBiblioteca = (data || []) as ExercicioBiblioteca[]
+        if (error) {
+            console.error('[vinculacao] Erro ao carregar biblioteca:', error.message)
+            _cacheBiblioteca = null // permite tentar de novo
+            return []
+        }
+        return (data || []) as ExercicioBiblioteca[]
+    })()
     return _cacheBiblioteca
 }
 

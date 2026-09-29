@@ -36,6 +36,9 @@ interface TreinoEditorViewProps {
     onSalvo: () => void;
 }
 
+/** Planos antigos não têm `origem` — eram todos do Vitrúvio. */
+const ehVitruvio = (p: PlanoTreino) => (p.origem ?? 'vitruvio') === 'vitruvio';
+
 const ORIGEM_LABEL: Record<NonNullable<PlanoTreino['origem']>, string> = {
     vitruvio: 'Plano de Evolução (Vitrúvio IA)',
     manual: 'Criado do zero',
@@ -91,7 +94,7 @@ export const TreinoEditorView: React.FC<TreinoEditorViewProps> = ({
     };
 
     const atualizarTreinos = (treinos: TreinoDetalhado[]) =>
-        setPlano(p => (p ? { ...p, treinos, divisao: derivarDivisao(treinos, p.origem === 'vitruvio' ? p.divisao.tipo : undefined) } : p));
+        setPlano(p => (p ? { ...p, treinos, divisao: derivarDivisao(treinos, ehVitruvio(p) ? p.divisao.tipo : undefined) } : p));
 
     const salvar = async () => {
         if (!plano) return;
@@ -110,7 +113,7 @@ export const TreinoEditorView: React.FC<TreinoEditorViewProps> = ({
         const final: PlanoTreino = {
             ...plano,
             treinos,
-            divisao: derivarDivisao(treinos, plano.origem === 'vitruvio' ? plano.divisao.tipo : undefined),
+            divisao: derivarDivisao(treinos, ehVitruvio(plano) ? plano.divisao.tipo : undefined),
         };
         const r = criando ? await criarPlanoTreino(atletaId, final) : await atualizarPlanoTreino(planoId!, final);
         setSalvando(false);

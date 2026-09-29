@@ -44,13 +44,15 @@ export const ExercicioAutocomplete: React.FC<ExercicioAutocompleteProps> = ({
         };
     }, []);
 
+    // Listener de "clique fora" só enquanto a lista está aberta (o editor tem dezenas de campos)
     useEffect(() => {
+        if (!aberto) return;
         const fechar = (e: MouseEvent) => {
             if (!containerRef.current?.contains(e.target as Node)) setAberto(false);
         };
         document.addEventListener('mousedown', fechar);
         return () => document.removeEventListener('mousedown', fechar);
-    }, []);
+    }, [aberto]);
 
     const sugestoes = useMemo(() => {
         const termo = normalizarNome(value);

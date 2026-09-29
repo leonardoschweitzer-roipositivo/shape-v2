@@ -58,7 +58,8 @@ export function EditarTreinoScreen({
         const planoAtualizado: PlanoTreino = {
             ...planoBase,
             treinos,
-            divisao: derivarDivisao(treinos, planoBase.origem === 'vitruvio' ? planoBase.divisao.tipo : undefined),
+            // Planos antigos não têm `origem` (eram todos do Vitrúvio) — mantém o nome da divisão
+            divisao: derivarDivisao(treinos, (planoBase.origem ?? 'vitruvio') === 'vitruvio' ? planoBase.divisao.tipo : undefined),
         }
 
         const ativo = await buscarPlanoTreinoAtivoMeta(atletaId)

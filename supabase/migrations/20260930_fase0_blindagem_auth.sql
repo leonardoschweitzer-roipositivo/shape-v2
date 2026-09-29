@@ -42,15 +42,29 @@
 -- 1. FUNÇÕES AUXILIARES (SECURITY DEFINER → evitam recursão de RLS)
 -- =============================================
 
+-- GOD = lista explícita de usuários (por id), nunca por e-mail do JWT: com confirmação de e-mail
+-- desligada, qualquer um poderia se cadastrar com um e-mail da whitelist ainda não registrado.
+-- Só o SQL Editor / service_role mexe nesta tabela (RLS ligada, sem policies).
+CREATE TABLE IF NOT EXISTS public.app_admins (
+    user_id    uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    criado_em  timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE public.app_admins ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.app_admins FROM anon, authenticated;
+
+-- Semeia com as contas GOD que JÁ existem hoje (contas criadas depois não entram sozinhas).
+-- Para adicionar outro GOD: INSERT INTO app_admins(user_id) SELECT id FROM auth.users WHERE email = '...';
+INSERT INTO public.app_admins (user_id)
+SELECT id FROM auth.users
+WHERE lower(email) IN ('leonardo@schweitzer.ai', 'admin@vitruia.com', 'god@vitruia.com')
+ON CONFLICT DO NOTHING;
+
 CREATE OR REPLACE FUNCTION public.app_is_god()
 RETURNS boolean
-LANGUAGE sql STABLE
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
 AS $$
-    SELECT coalesce(auth.jwt() ->> 'email', '') IN (
-        'leonardo@schweitzer.ai',
-        'admin@vitruia.com',
-        'god@vitruia.com'
-    );
+    SELECT EXISTS (SELECT 1 FROM public.app_admins WHERE user_id = auth.uid());
 $$;
 
 -- "Contexto administrativo": SQL Editor (sem JWT), service_role (Edge Functions) ou GOD.
@@ -247,6 +261,10 @@ AS $$
 BEGIN
     IF NEW.role IS DISTINCT FROM OLD.role AND NOT public.app_is_admin_ctx() THEN
         RAISE EXCEPTION 'ROLE_IMUTAVEL: o papel do usuário só pode ser alterado pelo administrador';
+    END IF;
+    -- E-mail espelha o login (auth.users); o app usa esse campo em checagens
+    IF NEW.email IS DISTINCT FROM OLD.email AND NOT public.app_is_admin_ctx() THEN
+        RAISE EXCEPTION 'EMAIL_IMUTAVEL: o e-mail do perfil acompanha o login';
     END IF;
     IF NEW.id IS DISTINCT FROM OLD.id THEN
         RAISE EXCEPTION 'ID_IMUTAVEL';

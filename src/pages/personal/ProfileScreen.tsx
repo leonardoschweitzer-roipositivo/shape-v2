@@ -123,11 +123,13 @@ export function ProfileScreen({ contexto, onLogout }: ProfileScreenProps) {
                             <p className="text-zinc-500 text-[10px] mt-2">{ativos} de {limite} alunos ativos</p>
                         </div>
                     )}
-                    {plano !== 'UNLIMITED' && (
+                    {plano !== 'UNLIMITED' && (SUPORTE_WHATSAPP_URL ? (
                         <a href={SUPORTE_WHATSAPP_URL} target="_blank" rel="noreferrer" className="block mt-4 text-center text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400">
                             Fazer upgrade
                         </a>
-                    )}
+                    ) : (
+                        <p className="mt-4 text-center text-[10px] text-zinc-500">Para mais alunos, fale com o suporte VITRU IA.</p>
+                    ))}
                 </div>
 
                 <button

@@ -14,9 +14,16 @@ export const PLANO_PERSONAL_LABEL: Record<PlanoPersonal, string> = {
     UNLIMITED: 'Ilimitado',
 };
 
-/** WhatsApp do suporte para upgrade manual de plano (sem pagamento online). */
-export const SUPORTE_WHATSAPP_URL =
-    'https://wa.me/?text=' + encodeURIComponent('Olá! Quero fazer upgrade do meu plano no VITRU IA.');
+/**
+ * WhatsApp do suporte para upgrade manual de plano (sem pagamento online).
+ * Número em VITE_SUPORTE_WHATSAPP (só dígitos, com DDI: 5541999999999). Sem ele, o botão
+ * de upgrade some e a UI orienta a falar com o suporte.
+ */
+const SUPORTE_WHATSAPP = String(import.meta.env.VITE_SUPORTE_WHATSAPP ?? '').replace(/\D/g, '');
+
+export const SUPORTE_WHATSAPP_URL: string | null = SUPORTE_WHATSAPP
+    ? `https://wa.me/${SUPORTE_WHATSAPP}?text=${encodeURIComponent('Olá! Quero fazer upgrade do meu plano no VITRU IA.')}`
+    : null;
 
 export function formatarLimiteAlunos(limite: number | null | undefined): string {
     return limite == null ? 'Alunos ilimitados' : `Até ${limite} alunos`;

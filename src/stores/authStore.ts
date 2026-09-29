@@ -113,6 +113,19 @@ async function carregarEstadoUsuario(user: User): Promise<{ profile: Profile | n
 
 export const DEFINIR_SENHA_PATH = '/definir-senha';
 
+const MARCA_RECUPERACAO = 'vitru-recuperacao-senha';
+
+/** Lê e apaga a marca de "entrou por link de recuperação" (setada no evento PASSWORD_RECOVERY). */
+export function consumirMarcaRecuperacao(): boolean {
+    try {
+        const marcado = sessionStorage.getItem(MARCA_RECUPERACAO) === '1';
+        sessionStorage.removeItem(MARCA_RECUPERACAO);
+        return marcado;
+    } catch {
+        return false;
+    }
+}
+
 let authListenerAtivo = false;
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -244,6 +257,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                 } else if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
                     if (session?.user) set({ user: session.user });
                 } else if (event === 'PASSWORD_RECOVERY') {
+                    try {
+                        sessionStorage.setItem(MARCA_RECUPERACAO, '1');
+                    } catch {
+                        /* storage indisponível: a página ainda usa o hash da URL */
+                    }
                     if (!window.location.pathname.startsWith(DEFINIR_SENHA_PATH)) {
                         window.location.replace(DEFINIR_SENHA_PATH);
                     }

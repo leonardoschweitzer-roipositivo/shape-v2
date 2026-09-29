@@ -167,7 +167,9 @@ export const GerarAcessoAluno: React.FC<GerarAcessoAlunoProps> = ({
                 )}
             </div>
 
-            {!authUserId && !acesso && (
+            {/* Pede e-mail quando ainda não há login, ou quando o aluno antigo tem login mas nenhum e-mail no cadastro
+                (nesse caso precisa ser o e-mail do login dele — a Edge Function confere). */}
+            {(!authUserId || !emailAtual) && !acesso && (
                 <input
                     type="email"
                     value={email}
