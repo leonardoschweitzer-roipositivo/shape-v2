@@ -53,7 +53,7 @@ async function fetchEntityData(userId: string, role: UserRole): Promise<EntityDa
                 .from('personais')
                 .select('*')
                 .eq('auth_user_id', userId)
-                .single();
+                .maybeSingle();
             if (error) console.warn('[AuthStore] Erro ao buscar personal:', error.message);
             else console.info('[AuthStore] ✅ Personal encontrado:', data?.nome, 'id:', data?.id);
             entity.personal = data || null;
@@ -62,7 +62,7 @@ async function fetchEntityData(userId: string, role: UserRole): Promise<EntityDa
                 .from('atletas')
                 .select('*')
                 .eq('auth_user_id', userId)
-                .single();
+                .maybeSingle();
             if (error) console.warn('[AuthStore] Erro ao buscar atleta:', error.message);
             else console.info('[AuthStore] ✅ Atleta encontrado:', data?.nome);
             entity.atleta = data || null;
@@ -71,7 +71,7 @@ async function fetchEntityData(userId: string, role: UserRole): Promise<EntityDa
                 .from('academias')
                 .select('*')
                 .eq('auth_user_id', userId)
-                .single();
+                .maybeSingle();
             if (error) console.warn('[AuthStore] Erro ao buscar academia:', error.message);
             else console.info('[AuthStore] ✅ Academia encontrada:', data?.nome);
             entity.academia = data || null;
@@ -108,7 +108,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                     .from('profiles')
                     .select('*')
                     .eq('id', data.user.id)
-                    .single();
+                    .maybeSingle();
 
                 if (profileError) {
                     console.error('Error fetching profile:', profileError);
@@ -181,7 +181,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                     .from('profiles')
                     .select('*')
                     .eq('id', session.user.id)
-                    .single();
+                    .maybeSingle();
 
                 const profile = profileData as Profile;
 

@@ -133,4 +133,19 @@ ou manifest PWA `orientation: portrait` (Android, app instalado) — o projeto n
 
 ---
 
+### 2026-09-30 - Autorização no banco via funções `app_*` SECURITY DEFINER
+
+**Contexto**: RLS espalhada em scripts soltos, com subqueries `personais ↔ atletas` (risco de recursão) e policies
+de portal por token abertas para qualquer usuário. Papel (`role`) vinha do cliente no cadastro e podia ser alterado.
+**Decisão**: (1) funções `app_meu_personal_id()`, `app_meu_atleta_id()`, `app_personal_do_atleta()`,
+`app_atleta_eh_meu(id)`, `app_is_god()`, `app_is_admin_ctx()` como base de toda policy nova; (2) aluno acessa só
+por login (`self_*`), personal pelos próprios alunos (`dono_all_*`); (3) campos administrativos (role, plano,
+limite, status, vínculos) só mudam em contexto admin (SQL Editor, service_role ou GOD), via trigger;
+(4) cadastro público aceita só PERSONAL/ACADEMIA/ATLETA. Plano completo: `docs/plano-conta-personal-alunos-treinos.md`
+(acesso do aluno por convite com senha própria; limite de alunos no banco sem pagamento; cadastro aberto com onboarding).
+**Alternativas**: manter token do portal (código morto, inseguro); checar papel só no front (burlável).
+**Status**: Ativa
+
+---
+
 <!-- Novas decisões serão adicionadas acima desta linha -->

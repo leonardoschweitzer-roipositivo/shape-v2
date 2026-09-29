@@ -104,3 +104,25 @@ bate. Montado em `App.tsx` nas rotas `/atleta` (PortalLanding) e `/meu-portal` (
 Tablet deitado e desktop não são afetados (validado com Playwright: iPhone retrato ✗, iPhone deitado ✓,
 iPad deitado ✗, desktop ✗).
 **Motivo**: Leo pediu que o portal do aluno no celular nunca fique na horizontal (layout quebrava).
+
+### 2026-09-30 - Fase 0 do plano "Conta do Personal → Alunos → Treinos": blindagem do banco
+
+**Tipo**: Criação / Segurança
+**Mudança**:
+- Plano completo (Fases 0–4) salvo em `docs/plano-conta-personal-alunos-treinos.md`.
+- `supabase/migrations/20260930_fase0_blindagem_auth.sql`: funções `app_is_god`, `app_is_admin_ctx`,
+  `app_meu_personal_id`, `app_meu_atleta_id`, `app_personal_do_atleta`, `app_atleta_eh_meu`;
+  `handle_new_user` só aceita PERSONAL/ACADEMIA/ATLETA, não sobrescreve role e não engole erro;
+  backfill de órfãos; `profiles` sem INSERT/DELETE do cliente + trigger que trava `role`;
+  `personais` com UNIQUE(auth_user_id), sem INSERT do cliente, trigger protegendo plano/limite/status/vínculos;
+  índice único em `atletas.auth_user_id`; leitura GOD em academias/personais/atletas;
+  `link_existing_user_to_atleta` com checagem de dono.
+- `supabase/migrations/20260930_fase0b_portal_rls_self.sql`: policies `self_*` (aluno logado) e `dono_all_*`
+  (personal) em fichas/medidas/assessments/diagnosticos/planos_treino/planos_dieta/registros_diarios/chat_messages,
+  notificações e comentários; remove as policies de token (`portal_*`, `*_portal_*`, `notificacao_anon_*`,
+  `atleta_notificacao_*`, `atleta_comentario_*`) — incluindo `portal_select_personais USING (true)`.
+- `src/stores/authStore.ts`: `.single()` → `.maybeSingle()`.
+- `src/App.tsx`: guarda A2 — logado sem profile (ou PERSONAL/ACADEMIA sem entidade) vê
+  `src/components/templates/ContaIncompleta` em vez do dashboard do atleta com mocks.
+**Motivo**: análise do fluxo do personal achou escalada de papel no cadastro, sequestro de aluno via RPC,
+policies de token abertas para qualquer logado e contas órfãs silenciosas.

@@ -85,11 +85,12 @@ import { supabase } from '@/services/supabase';
 import { isGodEmail } from '@/types/auth';
 import { getPageTitle, type ViewState } from '@/utils/getPageTitle';
 import { PortraitLock } from '@/components/organisms/PortraitLock';
+import { ContaIncompleta } from '@/components/templates/ContaIncompleta';
 
 const App: React.FC = () => {
 
   // Auth Store
-  const { isAuthenticated, profile: authProfile, signOut, checkSession, isLoading: isAuthLoading, entity } = useAuthStore();
+  const { isAuthenticated, user: authUser, profile: authProfile, signOut, checkSession, isLoading: isAuthLoading, entity } = useAuthStore();
 
   // Local UI State
   const [isAssessmentOpen, setIsAssessmentOpen] = useState(false);
@@ -1158,6 +1159,27 @@ const App: React.FC = () => {
         </div>
       </div>
     );
+  }
+
+  // A2. Conta incompleta: logado, mas sem profile (ou PERSONAL/ACADEMIA sem entidade).
+  // Antes caía no dashboard do atleta com dados de exemplo.
+  if (isAuthenticated) {
+    const email = authProfile?.email || authUser?.email || '';
+    const isGod = !!email && isGodEmail(email);
+    const semEntidade =
+      (authProfile?.role === 'PERSONAL' && !entity?.personal) ||
+      (authProfile?.role === 'ACADEMIA' && !entity?.academia);
+    if (!isGod && (!authProfile || semEntidade)) {
+      return (
+        <ContaIncompleta
+          email={email}
+          onSair={async () => {
+            await signOut();
+            window.location.replace('/');
+          }}
+        />
+      );
+    }
   }
 
   // B. Dashboard Flash Guard (Mobile @ Root OR Atleta vinculado @ Root):
