@@ -3,7 +3,6 @@ export * from './AssessmentCharts';
 export * from './AssessmentForm';
 export * from './AssessmentList';
 export * from './AssessmentModal';
-export * from './AthleteInvitationModal';
 export * from './BodyHeatmap';
 export * from './CoachModal';
 export * from './DashboardError';

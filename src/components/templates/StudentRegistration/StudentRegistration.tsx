@@ -1,188 +1,25 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Check, User, Mail, Sparkles, UserPlus, Activity, KeyRound, Copy } from 'lucide-react';
-import { supabase } from '@/services/supabase';
+import React from 'react';
+import { ArrowLeft, Check, Sparkles, UserPlus, Activity, AlertTriangle } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useDataStore } from '@/stores/dataStore';
-
-export const DEFAULT_ATHLETE_PASSWORD = 'Shape2026!';
+import { useCadastroAluno } from '@/hooks/useCadastroAluno';
+import { AcessoAlunoCard } from '@/components/organisms/AcessoAlunoCard';
 
 interface StudentRegistrationProps {
     onBack: () => void;
     onComplete: (atletaId?: string) => void;
 }
 
-interface RegistrationData {
-    name: string;
-    email: string;
-    phone: string;
-    gender: 'MALE' | 'FEMALE';
-    sendInvite: boolean;
-}
-
-const initialData: RegistrationData = {
-    name: '',
-    email: '',
-    phone: '',
-    gender: 'MALE',
-    sendInvite: false,
-};
-
 export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack, onComplete }) => {
-    const [formData, setFormData] = useState<RegistrationData>(initialData);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [submitError, setSubmitError] = useState<string | null>(null);
-    const [loginLink, setLoginLink] = useState<string | null>(null);
-    const [linkCopied, setLinkCopied] = useState(false);
-    const [createdAtletaId, setCreatedAtletaId] = useState<string | null>(null);
-    const [athleteEmail, setAthleteEmail] = useState<string | null>(null);
-
     const { entity } = useAuthStore();
     const { loadFromSupabase } = useDataStore();
 
-    const handleInputChange = (field: keyof RegistrationData, value: string | number | boolean) => {
-        setFormData((prev) => ({ ...prev, [field]: value }));
-    };
-
-    const isFormValid = formData.name.trim().length >= 2 && formData.gender;
-
-    const handleSubmit = async () => {
-        if (!isFormValid) return;
-
-        setIsSubmitting(true);
-        setSubmitError(null);
-
+    const { form, atualizar, enviar, enviando, erro, erroValidacao, resultado } = useCadastroAluno(async () => {
         const personalId = entity.personal?.id;
-        if (!personalId) {
-            setSubmitError('Personal não identificado. Relogue e tente novamente.');
-            setIsSubmitting(false);
-            return;
-        }
+        if (personalId) await loadFromSupabase(personalId);
+    });
 
-        try {
-            console.info('[Cadastro Rápido] Criando atleta no Supabase...');
-
-            // 1. Inserir atleta (trigger auto-cria ficha)
-            const { data: atleta, error: atletaError } = await supabase
-                .from('atletas')
-                .insert({
-                    personal_id: personalId,
-                    academia_id: entity.personal?.academia_id || null,
-                    nome: formData.name.trim(),
-                    email: formData.email.trim() || null,
-                    telefone: formData.phone.trim() || null,
-                    status: 'ATIVO',
-                } as Record<string, unknown>)
-                .select()
-                .single();
-
-            if (atletaError) throw new Error(`Erro ao criar atleta: ${atletaError.message}`);
-            console.info('[Cadastro Rápido] ✅ Atleta criado:', atleta.id);
-
-            // 2. Atualizar ficha (auto-criada pelo trigger)
-            const sexo = formData.gender === 'MALE' ? 'M' : 'F';
-
-            const { error: fichaError } = await supabase
-                .from('fichas')
-                .update({
-                    sexo,
-                    objetivo: 'HIPERTROFIA',
-                    objetivo_vitruvio: 'RECOMP',
-                } as Record<string, unknown>)
-                .eq('atleta_id', atleta.id);
-
-            if (fichaError) console.warn('[Cadastro Rápido] Aviso ficha:', fichaError.message);
-            else console.info('[Cadastro Rápido] ✅ Ficha atualizada');
-
-            // 3. Criar conta de acesso ao Portal se o aluno tem email
-            const athleteEmailTrimmed = formData.email.trim();
-            if (formData.sendInvite && athleteEmailTrimmed) {
-                try {
-                    console.info('[Cadastro Rápido] Criando conta Auth para o aluno...');
-
-                    // Salvar sessão do Personal
-                    const { data: { session: personalSession } } = await supabase.auth.getSession();
-
-                    // Criar conta do aluno via signUp
-                    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-                        email: athleteEmailTrimmed,
-                        password: DEFAULT_ATHLETE_PASSWORD,
-                        options: {
-                            data: {
-                                full_name: formData.name.trim(),
-                                role: 'ATLETA',
-                            },
-                        },
-                    });
-
-                    // Restaurar sessão do Personal IMEDIATAMENTE
-                    if (personalSession) {
-                        await supabase.auth.setSession({
-                            access_token: personalSession.access_token,
-                            refresh_token: personalSession.refresh_token,
-                        });
-                        console.info('[Cadastro Rápido] ✅ Sessão do Personal restaurada');
-                    }
-
-                    const baseUrl = window.location.origin;
-
-                    if (signUpError) {
-                        if (signUpError.message.includes('already registered')) {
-                            console.info('[Cadastro Rápido] Usuário já existe, tentando vinculação (RPC)...');
-                            const { data: linkedUserId, error: linkError } = await supabase
-                                .rpc('link_existing_user_to_atleta', {
-                                    p_email: athleteEmailTrimmed,
-                                    p_atleta_id: atleta.id,
-                                });
-
-                            if (linkError || !linkedUserId) {
-                                console.warn('[Cadastro Rápido] Erro ao vincular conta existente:', linkError);
-                            } else {
-                                console.info('[Cadastro Rápido] ✅ Conta Auth existente recuperada e vinculada:', linkedUserId);
-                                // Gerar link de login sem a senha, pois ele já tem conta e senha.
-                                const loginUrl = `${baseUrl}/atleta?email=${encodeURIComponent(athleteEmailTrimmed)}`;
-                                setLoginLink(loginUrl);
-                                setAthleteEmail(athleteEmailTrimmed);
-                            }
-                        } else {
-                            console.warn('[Cadastro Rápido] Aviso ao criar conta:', signUpError.message);
-                        }
-                    } else if (signUpData?.user) {
-                        // Vincular auth_user_id ao atleta
-                        await supabase
-                            .from('atletas')
-                            .update({ auth_user_id: signUpData.user.id } as Record<string, unknown>)
-                            .eq('id', atleta.id);
-
-                        console.info('[Cadastro Rápido] ✅ Conta Auth criada e vinculada:', signUpData.user.id);
-
-                        // Gerar link de login com credenciais pré-preenchidas
-                        const loginUrl = `${baseUrl}/atleta?email=${encodeURIComponent(athleteEmailTrimmed)}&p=${encodeURIComponent(DEFAULT_ATHLETE_PASSWORD).replace(/!/g, '%21')}`;
-                        setLoginLink(loginUrl);
-                        setAthleteEmail(athleteEmailTrimmed);
-                    }
-                } catch (tokenErr) {
-                    console.warn('[Cadastro Rápido] Aviso ao criar conta:', tokenErr);
-                    // Restaurar sessão do Personal em caso de erro
-                    const { data: { session: fallbackSession } } = await supabase.auth.getSession();
-                    if (!fallbackSession) {
-                        console.error('[Cadastro Rápido] ❌ Sessão do Personal perdida! Recarregue a página.');
-                    }
-                }
-            }
-
-            // 4. Recarregar dados no store
-            await loadFromSupabase(personalId);
-            console.info('[Cadastro Rápido] ✅ Store atualizado — novo atleta visível!');
-
-            setCreatedAtletaId(atleta.id);
-            setIsSubmitting(false);
-
-        } catch (err: unknown) {
-            console.error('[Cadastro Rápido] ❌ Erro:', err);
-            setSubmitError(err instanceof Error ? err.message : 'Erro ao cadastrar aluno.');
-            setIsSubmitting(false);
-        }
-    };
+    const createdAtletaId = resultado?.atletaId ?? null;
 
     // ===== SUCCESS SCREEN =====
     if (createdAtletaId) {
@@ -215,85 +52,18 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                                     Aluno Cadastrado!
                                 </h2>
                                 <p className="text-gray-400 text-sm max-w-md mx-auto">
-                                    <span className="text-white font-bold">{formData.name}</span> foi cadastrado(a) com sucesso.
+                                    <span className="text-white font-bold">{form.nome}</span> foi cadastrado(a) com sucesso.
                                     Agora você pode realizar a primeira avaliação IA.
                                 </p>
                             </div>
 
-                            {/* Login Credentials (if account created) */}
-                            {loginLink && athleteEmail && (
-                                <div className="p-6 bg-background-dark border border-indigo-500/30 rounded-2xl space-y-4">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <KeyRound className="text-indigo-400" size={16} />
-                                        <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider">Acesso ao Portal do Aluno</span>
-                                    </div>
-
-                                    {/* Credentials */}
-                                    <div className="space-y-2">
-                                        <div className="flex items-center gap-3 p-3 bg-white/[0.03] rounded-lg border border-white/5">
-                                            <Mail size={14} className="text-gray-500" />
-                                            <div className="flex-1">
-                                                <span className="text-[10px] text-gray-500 uppercase tracking-wider">Email</span>
-                                                <p className="text-white text-sm font-mono">{athleteEmail}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-3 p-3 bg-white/[0.03] rounded-lg border border-white/5">
-                                            <KeyRound size={14} className="text-gray-500" />
-                                            <div className="flex-1">
-                                                <span className="text-[10px] text-gray-500 uppercase tracking-wider">Senha</span>
-                                                <p className="text-white text-sm font-mono">{DEFAULT_ATHLETE_PASSWORD}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Login Link */}
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="text"
-                                            readOnly
-                                            value={loginLink}
-                                            className="flex-1 bg-background-dark border border-white/10 rounded-lg px-4 py-3 text-white text-xs font-mono truncate"
-                                        />
-                                        <button
-                                            onClick={() => {
-                                                navigator.clipboard.writeText(loginLink);
-                                                setLinkCopied(true);
-                                                setTimeout(() => setLinkCopied(false), 2000);
-                                            }}
-                                            className={`px-5 py-3 rounded-lg font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1 ${linkCopied
-                                                ? 'bg-emerald-500 text-white'
-                                                : 'bg-indigo-600 hover:bg-indigo-500 text-white'
-                                                }`}
-                                        >
-                                            <Copy size={12} />
-                                            {linkCopied ? 'Copiado!' : 'Copiar'}
-                                        </button>
-                                    </div>
-
-                                    {/* Share buttons */}
-                                    <div className="flex items-center gap-3 pt-2">
-                                        <a
-                                            href={`https://wa.me/?text=${encodeURIComponent(`Olá ${formData.name}! 🏋️\n\nSeu acesso ao Portal VITRU IA foi criado!\n\n📧 Email: ${athleteEmail}\n🔑 Senha: ${DEFAULT_ATHLETE_PASSWORD}\n\nAcesse aqui:\n${loginLink}`)}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex items-center gap-2 px-4 py-2 bg-emerald-600/20 border border-emerald-600/30 rounded-lg text-emerald-400 hover:bg-emerald-600/30 transition-all text-xs font-bold"
-                                        >
-                                            📱 WhatsApp
-                                        </a>
-                                        <a
-                                            href={`mailto:${athleteEmail}?subject=Acesso VITRU IA&body=${encodeURIComponent(`Olá ${formData.name}!\n\nSeu acesso ao Portal VITRU IA foi criado!\n\nEmail: ${athleteEmail}\nSenha: ${DEFAULT_ATHLETE_PASSWORD}\n\nAcesse aqui: ${loginLink}`)}`}
-                                            className="flex items-center gap-2 px-4 py-2 bg-blue-500/20 border border-blue-500/30 rounded-lg text-blue-400 hover:bg-blue-500/30 transition-all text-xs font-bold"
-                                        >
-                                            ✉️ Email
-                                        </a>
-                                    </div>
-
-                                    <div className="p-3 bg-indigo-500/5 border border-indigo-500/20 rounded-xl flex items-start gap-3">
-                                        <Sparkles className="text-indigo-400 mt-0.5" size={14} />
-                                        <p className="text-xs text-gray-400 leading-relaxed">
-                                            O aluno pode alterar a senha a qualquer momento pelo <span className="text-white font-bold">"Esqueci minha senha"</span> na tela de login.
-                                        </p>
-                                    </div>
+                            {resultado?.acesso && (
+                                <AcessoAlunoCard nomeAluno={form.nome} acesso={resultado.acesso} />
+                            )}
+                            {resultado?.erroAcesso && (
+                                <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-3 text-sm text-amber-300">
+                                    <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+                                    <p>O aluno foi cadastrado, mas o link de acesso não foi gerado: {resultado.erroAcesso} Você pode gerar depois na ficha do aluno.</p>
                                 </div>
                             )}
 
@@ -360,8 +130,8 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                                         type="text"
                                         className="w-full bg-background-dark border border-white/10 rounded-lg px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder-gray-700"
                                         placeholder="Ex: Maria Oliveira Santos"
-                                        value={formData.name}
-                                        onChange={(e) => handleInputChange('name', e.target.value)}
+                                        value={form.nome}
+                                        onChange={(e) => atualizar('nome', e.target.value)}
                                         autoFocus
                                     />
                                 </div>
@@ -372,21 +142,21 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                                     <div className="grid grid-cols-2 gap-4">
                                         <button
                                             type="button"
-                                            className={`flex items-center justify-center gap-2 py-3 rounded-lg border transition-all font-bold text-sm uppercase tracking-wide ${formData.gender === 'MALE'
+                                            className={`flex items-center justify-center gap-2 py-3 rounded-lg border transition-all font-bold text-sm uppercase tracking-wide ${form.sexo === 'M'
                                                 ? 'bg-primary/20 border-primary text-primary shadow-[0_0_15px_rgba(99,102,241,0.2)]'
                                                 : 'bg-background-dark border-white/10 text-gray-500 hover:bg-white/5'
                                                 }`}
-                                            onClick={() => handleInputChange('gender', 'MALE')}
+                                            onClick={() => atualizar('sexo', 'M')}
                                         >
                                             ♂ Masculino
                                         </button>
                                         <button
                                             type="button"
-                                            className={`flex items-center justify-center gap-2 py-3 rounded-lg border transition-all font-bold text-sm uppercase tracking-wide ${formData.gender === 'FEMALE'
+                                            className={`flex items-center justify-center gap-2 py-3 rounded-lg border transition-all font-bold text-sm uppercase tracking-wide ${form.sexo === 'F'
                                                 ? 'bg-pink-500/20 border-pink-500 text-pink-400 shadow-[0_0_15px_rgba(236,72,153,0.2)]'
                                                 : 'bg-background-dark border-white/10 text-gray-500 hover:bg-white/5'
                                                 }`}
-                                            onClick={() => handleInputChange('gender', 'FEMALE')}
+                                            onClick={() => atualizar('sexo', 'F')}
                                         >
                                             ♀ Feminino
                                         </button>
@@ -400,8 +170,8 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                                         type="email"
                                         className="w-full bg-background-dark border border-white/10 rounded-lg px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder-gray-700"
                                         placeholder="atleta@dominio.com"
-                                        value={formData.email}
-                                        onChange={(e) => handleInputChange('email', e.target.value)}
+                                        value={form.email}
+                                        onChange={(e) => atualizar('email', e.target.value)}
                                     />
                                 </div>
 
@@ -412,8 +182,8 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                                         type="tel"
                                         className="w-full bg-background-dark border border-white/10 rounded-lg px-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder-gray-700"
                                         placeholder="(00) 00000-0000"
-                                        value={formData.phone}
-                                        onChange={(e) => handleInputChange('phone', e.target.value)}
+                                        value={form.telefone}
+                                        onChange={(e) => atualizar('telefone', e.target.value)}
                                     />
                                 </div>
                             </div>
@@ -422,19 +192,19 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                         {/* Invite Toggle */}
                         <div className="mt-8 pt-6 border-t border-white/5">
                             <label
-                                className={`flex items-center gap-4 p-5 rounded-xl border cursor-pointer transition-all ${formData.sendInvite
+                                className={`flex items-center gap-4 p-5 rounded-xl border cursor-pointer transition-all ${form.gerarAcesso
                                     ? 'bg-primary/10 border-primary/40 shadow-[0_0_15px_rgba(99,102,241,0.1)]'
                                     : 'bg-background-dark border-white/10 hover:bg-white/5'
                                     }`}
-                                onClick={() => handleInputChange('sendInvite', !formData.sendInvite)}
+                                onClick={() => atualizar('gerarAcesso', !form.gerarAcesso)}
                             >
-                                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${formData.sendInvite ? 'border-primary bg-primary text-white' : 'border-gray-700'
+                                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${form.gerarAcesso ? 'border-primary bg-primary text-white' : 'border-gray-700'
                                     }`}>
-                                    {formData.sendInvite && <Check size={12} strokeWidth={3} />}
+                                    {form.gerarAcesso && <Check size={12} strokeWidth={3} />}
                                 </div>
                                 <div className="space-y-0.5">
                                     <span className="text-white font-bold block text-sm uppercase tracking-wider">Criar Acesso ao Portal</span>
-                                    <span className="text-gray-500 text-xs">Cria login com email e senha padrão (<strong className="text-gray-300">{DEFAULT_ATHLETE_PASSWORD}</strong>). Requer email preenchido.</span>
+                                    <span className="text-gray-500 text-xs">Gera um link para o aluno criar a própria senha (válido por 24h). Requer e-mail.</span>
                                 </div>
                             </label>
                         </div>
@@ -448,23 +218,27 @@ export const StudentRegistration: React.FC<StudentRegistrationProps> = ({ onBack
                         </div>
 
                         {/* Error Display */}
-                        {submitError && (
+                        {erro && (
                             <div className="mt-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
-                                ❌ {submitError}
+                                ❌ {erro}
                             </div>
                         )}
 
                         {/* Submit Button */}
+                        {!erro && form.nome.trim().length >= 2 && erroValidacao && (
+                            <p className="mt-6 text-xs text-amber-400 text-right">{erroValidacao}</p>
+                        )}
                         <div className="mt-10 flex items-center justify-end">
                             <button
-                                onClick={handleSubmit}
-                                disabled={isSubmitting || !isFormValid}
-                                className={`flex items-center gap-3 px-10 py-4 rounded-xl font-bold text-sm uppercase tracking-widest transition-all transform active:scale-[0.98] ${isSubmitting || !isFormValid
+                                onClick={enviar}
+                                disabled={enviando || !!erroValidacao}
+                                title={erroValidacao ?? undefined}
+                                className={`flex items-center gap-3 px-10 py-4 rounded-xl font-bold text-sm uppercase tracking-widest transition-all transform active:scale-[0.98] ${enviando || !!erroValidacao
                                     ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
                                     : 'bg-primary hover:bg-primary/90 text-white shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:shadow-[0_0_30px_rgba(99,102,241,0.5)] hover:scale-[1.02]'
                                     }`}
                             >
-                                {isSubmitting ? (
+                                {enviando ? (
                                     <>
                                         <div className="w-4 h-4 border-2 border-gray-500 border-t-transparent rounded-full animate-spin" />
                                         Salvando...

@@ -5,170 +5,27 @@
  * mas com layout otimizado para mobile com botão Voltar.
  */
 
-import React, { useState } from 'react'
-import { ChevronLeft, UserPlus, Check, KeyRound, Copy, Mail, Sparkles, Loader2 } from 'lucide-react'
+import React from 'react'
+import { UserPlus, Check, Sparkles, Loader2, AlertTriangle } from 'lucide-react'
 import { ScreenHeader } from './components/ScreenHeader'
-import { supabase } from '@/services/supabase'
-import { useAuthStore } from '@/stores/authStore'
-import { useDataStore } from '@/stores/dataStore'
-
-// ═══════════════════════════════════════════════════════════
-// TYPES
-// ═══════════════════════════════════════════════════════════
-
-const DEFAULT_ATHLETE_PASSWORD = 'Shape2026!'
+import { useCadastroAluno } from '@/hooks/useCadastroAluno'
+import { AcessoAlunoCard } from '@/components/organisms/AcessoAlunoCard'
 
 interface NovoAlunoScreenProps {
     onVoltar: () => void
     onCadastrado: () => void
+    /** Chamado logo após criar o aluno (recarregar a lista do portal). */
+    onAlunoCriado?: () => void
 }
 
-interface FormData {
-    nome: string
-    email: string
-    telefone: string
-    sexo: 'MALE' | 'FEMALE'
-    criarAcesso: boolean
-}
-
-const FORM_INICIAL: FormData = {
-    nome: '',
-    email: '',
-    telefone: '',
-    sexo: 'MALE',
-    criarAcesso: false,
-}
-
-// ═══════════════════════════════════════════════════════════
-// COMPONENT
-// ═══════════════════════════════════════════════════════════
-
-export function NovoAlunoScreen({ onVoltar, onCadastrado }: NovoAlunoScreenProps) {
-    const [form, setForm] = useState<FormData>(FORM_INICIAL)
-    const [salvando, setSalvando] = useState(false)
-    const [erro, setErro] = useState<string | null>(null)
-
-    // Estado de sucesso
-    const [sucesso, setSucesso] = useState(false)
-    const [loginLink, setLoginLink] = useState<string | null>(null)
-    const [emailAluno, setEmailAluno] = useState<string | null>(null)
-    const [linkCopiado, setLinkCopiado] = useState(false)
-
-    const { entity } = useAuthStore()
-    const { loadFromSupabase } = useDataStore()
-
-    const formValido = form.nome.trim().length >= 2
-
-    const handleChange = (campo: keyof FormData, valor: string | boolean) => {
-        setForm(prev => ({ ...prev, [campo]: valor }))
-    }
-
-    // ─── Submissão ───────────────────────────────────────
-    const handleSubmit = async () => {
-        if (!formValido || salvando) return
-
-        setSalvando(true)
-        setErro(null)
-
-        const personalId = entity.personal?.id
-        if (!personalId) {
-            setErro('Personal não identificado. Relogue e tente novamente.')
-            setSalvando(false)
-            return
-        }
-
-        try {
-            // 1. Inserir atleta (trigger auto-cria ficha)
-            const { data: atleta, error: atletaErr } = await supabase
-                .from('atletas')
-                .insert({
-                    personal_id: personalId,
-                    academia_id: entity.personal?.academia_id || null,
-                    nome: form.nome.trim(),
-                    email: form.email.trim() || null,
-                    telefone: form.telefone.trim() || null,
-                    status: 'ATIVO',
-                } as Record<string, unknown>)
-                .select()
-                .single()
-
-            if (atletaErr) throw new Error(`Erro ao criar atleta: ${atletaErr.message}`)
-
-            // 2. Atualizar ficha (auto-criada pelo trigger)
-            const sexoBD = form.sexo === 'MALE' ? 'M' : 'F'
-            await supabase
-                .from('fichas')
-                .update({
-                    sexo: sexoBD,
-                    objetivo: 'HIPERTROFIA',
-                    objetivo_vitruvio: 'RECOMP',
-                } as Record<string, unknown>)
-                .eq('atleta_id', atleta.id)
-
-            // 3. Criar conta Auth se solicitado
-            const emailTrimmed = form.email.trim()
-            if (form.criarAcesso && emailTrimmed) {
-                try {
-                    const { data: { session: personalSession } } = await supabase.auth.getSession()
-
-                    const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
-                        email: emailTrimmed,
-                        password: DEFAULT_ATHLETE_PASSWORD,
-                        options: {
-                            data: {
-                                full_name: form.nome.trim(),
-                                role: 'ATLETA',
-                            },
-                        },
-                    })
-
-                    // Restaurar sessão do Personal imediatamente
-                    if (personalSession) {
-                        await supabase.auth.setSession({
-                            access_token: personalSession.access_token,
-                            refresh_token: personalSession.refresh_token,
-                        })
-                    }
-
-                    const baseUrl = window.location.origin
-
-                    if (signUpErr) {
-                        if (signUpErr.message.includes('already registered')) {
-                            const { data: linkedUserId } = await supabase
-                                .rpc('link_existing_user_to_atleta', {
-                                    p_email: emailTrimmed,
-                                    p_atleta_id: atleta.id,
-                                })
-                            if (linkedUserId) {
-                                setLoginLink(`${baseUrl}/atleta?email=${encodeURIComponent(emailTrimmed)}`)
-                                setEmailAluno(emailTrimmed)
-                            }
-                        }
-                    } else if (signUpData?.user) {
-                        await supabase
-                            .from('atletas')
-                            .update({ auth_user_id: signUpData.user.id } as Record<string, unknown>)
-                            .eq('id', atleta.id)
-
-                        setLoginLink(`${baseUrl}/atleta?email=${encodeURIComponent(emailTrimmed)}&p=${encodeURIComponent(DEFAULT_ATHLETE_PASSWORD).replace(/!/g, '%21')}`)
-                        setEmailAluno(emailTrimmed)
-                    }
-                } catch {
-                    // Erro não-crítico: aluno já criado, apenas acesso falhou
-                    console.warn('[NovoAluno] Aviso ao criar conta Auth')
-                }
-            }
-
-            // 4. Recarregar dados no store
-            await loadFromSupabase(personalId)
-
-            setSucesso(true)
-        } catch (err: unknown) {
-            setErro(err instanceof Error ? err.message : 'Erro ao cadastrar aluno.')
-        } finally {
-            setSalvando(false)
-        }
-    }
+export function NovoAlunoScreen({ onVoltar, onCadastrado, onAlunoCriado }: NovoAlunoScreenProps) {
+    const { form, atualizar, enviar, enviando: salvando, erro, erroValidacao, resultado } = useCadastroAluno(() => {
+        onAlunoCriado?.()
+    })
+    const sucesso = !!resultado
+    const handleChange = atualizar
+    const handleSubmit = enviar
+    const formValido = !erroValidacao
 
     // ═══════════════════════════════════════════════════════
     // TELA DE SUCESSO
@@ -201,58 +58,11 @@ export function NovoAlunoScreen({ onVoltar, onCadastrado }: NovoAlunoScreenProps
                         </p>
                     </div>
 
-                    {/* Credenciais de Acesso */}
-                    {loginLink && emailAluno && (
-                        <div className="bg-surface-deep rounded-3xl p-5 border border-indigo-500/20 space-y-4">
-                            <div className="flex items-center gap-2">
-                                <KeyRound className="text-indigo-400" size={14} />
-                                <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Acesso ao Portal</span>
-                            </div>
-
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-3 p-3 bg-white/[0.03] rounded-xl border border-white/5">
-                                    <Mail size={14} className="text-zinc-500" />
-                                    <div className="flex-1 min-w-0">
-                                        <span className="text-[9px] text-zinc-500 uppercase tracking-wider">Email</span>
-                                        <p className="text-white text-xs font-mono truncate">{emailAluno}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3 p-3 bg-white/[0.03] rounded-xl border border-white/5">
-                                    <KeyRound size={14} className="text-zinc-500" />
-                                    <div className="flex-1 min-w-0">
-                                        <span className="text-[9px] text-zinc-500 uppercase tracking-wider">Senha</span>
-                                        <p className="text-white text-xs font-mono">{DEFAULT_ATHLETE_PASSWORD}</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Copiar Link */}
-                            <button
-                                onClick={() => {
-                                    navigator.clipboard.writeText(loginLink)
-                                    setLinkCopiado(true)
-                                    setTimeout(() => setLinkCopiado(false), 2000)
-                                }}
-                                className={`w-full py-3 rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${linkCopiado
-                                    ? 'bg-emerald-500 text-white'
-                                    : 'bg-indigo-600 hover:bg-indigo-500 text-white'
-                                    }`}
-                            >
-                                <Copy size={12} />
-                                {linkCopiado ? 'Link Copiado!' : 'Copiar Link de Acesso'}
-                            </button>
-
-                            {/* WhatsApp */}
-                            <a
-                                href={`https://wa.me/?text=${encodeURIComponent(
-                                    `Olá ${form.nome}! 🏋️\n\nSeu acesso ao Portal VITRU IA foi criado!\n\n📧 Email: ${emailAluno}\n🔑 Senha: ${DEFAULT_ATHLETE_PASSWORD}\n\nAcesse aqui:\n${loginLink}`
-                                )}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="w-full py-3 rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 bg-emerald-600/20 border border-emerald-600/30 text-emerald-400 active:scale-95 transition-all"
-                            >
-                                📱 Enviar via WhatsApp
-                            </a>
+                    {resultado?.acesso && <AcessoAlunoCard nomeAluno={form.nome} acesso={resultado.acesso} />}
+                    {resultado?.erroAcesso && (
+                        <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-start gap-3 text-xs text-amber-300">
+                            <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+                            <p>Aluno cadastrado, mas o link não foi gerado: {resultado.erroAcesso} Gere depois na ficha do aluno.</p>
                         </div>
                     )}
 
@@ -314,8 +124,8 @@ export function NovoAlunoScreen({ onVoltar, onCadastrado }: NovoAlunoScreenProps
                         <div className="grid grid-cols-2 gap-3">
                             <button
                                 type="button"
-                                onClick={() => handleChange('sexo', 'MALE')}
-                                className={`py-3 rounded-xl border font-black text-xs uppercase tracking-widest transition-all ${form.sexo === 'MALE'
+                                onClick={() => handleChange('sexo', 'M')}
+                                className={`py-3 rounded-xl border font-black text-xs uppercase tracking-widest transition-all ${form.sexo === 'M'
                                     ? 'bg-indigo-600/20 border-indigo-500/40 text-indigo-400 shadow-[0_0_12px_rgba(99,102,241,0.15)]'
                                     : 'bg-background-dark border-white/5 text-zinc-600'
                                     }`}
@@ -324,8 +134,8 @@ export function NovoAlunoScreen({ onVoltar, onCadastrado }: NovoAlunoScreenProps
                             </button>
                             <button
                                 type="button"
-                                onClick={() => handleChange('sexo', 'FEMALE')}
-                                className={`py-3 rounded-xl border font-black text-xs uppercase tracking-widest transition-all ${form.sexo === 'FEMALE'
+                                onClick={() => handleChange('sexo', 'F')}
+                                className={`py-3 rounded-xl border font-black text-xs uppercase tracking-widest transition-all ${form.sexo === 'F'
                                     ? 'bg-pink-500/20 border-pink-500/40 text-pink-400 shadow-[0_0_12px_rgba(236,72,153,0.15)]'
                                     : 'bg-background-dark border-white/5 text-zinc-600'
                                     }`}
@@ -363,20 +173,20 @@ export function NovoAlunoScreen({ onVoltar, onCadastrado }: NovoAlunoScreenProps
                 {/* Toggle: Criar Acesso */}
                 <button
                     type="button"
-                    onClick={() => handleChange('criarAcesso', !form.criarAcesso)}
-                    className={`w-full flex items-center gap-4 p-5 rounded-2xl border transition-all ${form.criarAcesso
+                    onClick={() => handleChange('gerarAcesso', !form.gerarAcesso)}
+                    className={`w-full flex items-center gap-4 p-5 rounded-2xl border transition-all ${form.gerarAcesso
                         ? 'bg-indigo-600/10 border-indigo-500/30 shadow-[0_0_12px_rgba(99,102,241,0.1)]'
                         : 'bg-surface-deep border-white/5'
                         }`}
                 >
-                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all shrink-0 ${form.criarAcesso ? 'border-indigo-500 bg-indigo-500' : 'border-zinc-700'
+                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all shrink-0 ${form.gerarAcesso ? 'border-indigo-500 bg-indigo-500' : 'border-zinc-700'
                         }`}>
-                        {form.criarAcesso && <Check size={12} strokeWidth={3} className="text-white" />}
+                        {form.gerarAcesso && <Check size={12} strokeWidth={3} className="text-white" />}
                     </div>
                     <div className="text-left">
                         <span className="text-white font-black text-xs uppercase tracking-wider block">Criar Acesso ao Portal</span>
                         <span className="text-zinc-500 text-[10px]">
-                            Login com email e senha padrão (<span className="text-zinc-300 font-bold">{DEFAULT_ATHLETE_PASSWORD}</span>). Requer email.
+                            O aluno recebe um link para criar a própria senha. Requer e-mail.
                         </span>
                     </div>
                 </button>
@@ -394,6 +204,10 @@ export function NovoAlunoScreen({ onVoltar, onCadastrado }: NovoAlunoScreenProps
                     <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-xs font-bold">
                         ❌ {erro}
                     </div>
+                )}
+
+                {!erro && form.nome.trim().length >= 2 && erroValidacao && (
+                    <p className="text-[11px] text-amber-400 px-1">{erroValidacao}</p>
                 )}
 
                 {/* Botão Cadastrar */}

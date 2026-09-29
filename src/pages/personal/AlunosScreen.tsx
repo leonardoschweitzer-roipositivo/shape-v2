@@ -19,6 +19,7 @@ interface AlunosScreenProps {
     onVoltar?: () => void
     alunoInicialId?: string          // navega direto para a ficha ao montar
     onAlunoFechou?: () => void       // notifica quando a ficha fecha
+    onAlunoCriado?: () => void       // recarrega a lista após cadastro
 }
 
 function getStatusConfig(status: StatusAluno) {
@@ -38,7 +39,7 @@ function formatarUltimaMedicao(iso: string | null): string {
     return `Há ${dias} dias`
 }
 
-export function AlunosScreen({ alunos, onVoltar, alunoInicialId, onAlunoFechou }: AlunosScreenProps) {
+export function AlunosScreen({ alunos, onVoltar, alunoInicialId, onAlunoFechou, onAlunoCriado }: AlunosScreenProps) {
     const [busca, setBusca] = useState('')
     const [filtro, setFiltro] = useState<FiltroStatus>('todos')
     const [alunoSelecionado, setAlunoSelecionado] = useState<string | null>(alunoInicialId ?? null)
@@ -71,6 +72,7 @@ export function AlunosScreen({ alunos, onVoltar, alunoInicialId, onAlunoFechou }
             <NovoAlunoScreen
                 onVoltar={() => setCadastrando(false)}
                 onCadastrado={() => setCadastrando(false)}
+                onAlunoCriado={onAlunoCriado}
             />
         )
     }

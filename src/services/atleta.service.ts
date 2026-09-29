@@ -26,29 +26,6 @@ export interface AtletaResumo {
     score_geral: number | null;
 }
 
-export interface CriarAtletaInput {
-    personal_id: string;
-    academia_id?: string;
-    nome: string;
-    email?: string;
-    telefone?: string;
-    foto_url?: string;
-}
-
-export interface CriarFichaInput {
-    atleta_id: string;
-    sexo: 'M' | 'F';
-    data_nascimento?: string;
-    altura?: number;
-    punho?: number;
-    tornozelo?: number;
-    joelho?: number;
-    pelve?: number;
-    objetivo?: string;
-    categoria_preferida?: string;
-    observacoes?: string;
-}
-
 // ===== SERVICE =====
 
 export const atletaService = {
@@ -114,42 +91,6 @@ export const atletaService = {
     },
 
     /**
-     * Criar novo atleta
-     */
-    async criar(input: CriarAtletaInput): Promise<Atleta | null> {
-        const { data, error } = await supabase
-            .from('atletas')
-            .insert(input)
-            .select()
-            .single();
-
-        if (error) {
-            console.error('[AtletaService] Erro ao criar atleta:', error.message);
-            return null;
-        }
-
-        return data;
-    },
-
-    /**
-     * Criar ficha do atleta
-     */
-    async criarFicha(input: CriarFichaInput): Promise<Ficha | null> {
-        const { data, error } = await supabase
-            .from('fichas')
-            .insert(input)
-            .select()
-            .single();
-
-        if (error) {
-            console.error('[AtletaService] Erro ao criar ficha:', error.message);
-            return null;
-        }
-
-        return data;
-    },
-
-    /**
      * Atualizar dados do atleta
      */
     async atualizar(id: string, updates: Partial<Atleta>): Promise<Atleta | null> {
@@ -185,23 +126,6 @@ export const atletaService = {
         }
 
         return data;
-    },
-
-    /**
-     * Deletar atleta (soft delete - marca como inativo)
-     */
-    async deletar(id: string): Promise<boolean> {
-        const { error } = await supabase
-            .from('atletas')
-            .update({ status: 'INATIVO', updated_at: new Date().toISOString() })
-            .eq('id', id);
-
-        if (error) {
-            console.error('[AtletaService] Erro ao deletar atleta:', error.message);
-            return false;
-        }
-
-        return true;
     },
 
     /**

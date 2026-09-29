@@ -180,6 +180,9 @@ export function mapAtletaToPersonalAthlete(
         phone: atleta.telefone || undefined,
         contexto: (ficha?.contexto as unknown as PersonalAthlete['contexto']) || null,
         objetivo: (ficha as Record<string, unknown>)?.objetivo as string || null,
+        authUserId: atleta.auth_user_id,
+        conviteEnviadoEm: atleta.convite_enviado_em ?? null,
+        acessoAtivadoEm: atleta.acesso_ativado_em ?? null,
     };
 }
 

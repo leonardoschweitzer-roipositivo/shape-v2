@@ -42,6 +42,10 @@ export interface FichaAlunoResumo {
     nome: string
     email: string
     telefone?: string | null
+    /** Acesso ao portal (convite) */
+    authUserId?: string | null
+    conviteEnviadoEm?: string | null
+    acessoAtivadoEm?: string | null
     fotoUrl?: string | null
     score: number
     nivel: string | null

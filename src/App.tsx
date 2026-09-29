@@ -12,7 +12,6 @@ import {
   PersonalCoachDashboard,
   PersonalAthletesList,
   PersonalProfilePage,
-  AthleteInvitationModal,
   PersonalInvitationModal,
   StudentRegistration,
   DebugAccess,
@@ -66,8 +65,6 @@ import {
   LazyAcademiaPortal as AcademiaPortal,
   LazyGodPortal as GodPortal,
 } from '@/lazyPages';
-// DEPRECATED: AthleteLogin removido — login unificado via Login.tsx
-// import { AthleteLogin } from '@/pages/athlete/AthleteLogin';
 // import { GamificationPage } from './pages/GamificationPage'; // DISABLED - Feature para depois
 
 import { calculateAge } from '@/utils/dateUtils';
@@ -81,7 +78,6 @@ import { PersonalAthlete, MeasurementHistory } from '@/mocks/personal';
 import { buscarDiagnostico, type DiagnosticoDados } from '@/services/calculations/diagnostico';
 import { buscarPlanoTreino, type PlanoTreino } from '@/services/calculations/treino';
 import { buscarPlanoDieta, type PlanoDieta } from '@/services/calculations/dieta';
-import { supabase } from '@/services/supabase';
 import { isGodEmail } from '@/types/auth';
 import { getPageTitle, type ViewState } from '@/utils/getPageTitle';
 import { PortraitLock } from '@/components/organisms/PortraitLock';
@@ -89,6 +85,7 @@ import { ContaIncompleta } from '@/components/templates/ContaIncompleta';
 import { DefinirSenhaPage } from '@/pages/auth/DefinirSenhaPage';
 import { PersonalOnboarding } from '@/pages/onboarding/PersonalOnboarding';
 import { isMobileDevice } from '@/utils/mobileDetect';
+import { alunoService } from '@/services/aluno.service';
 
 const App: React.FC = () => {
 
@@ -98,7 +95,6 @@ const App: React.FC = () => {
   // Local UI State
   const [isAssessmentOpen, setIsAssessmentOpen] = useState(false);
   const [isCoachModalOpen, setIsCoachModalOpen] = useState(false);
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isPersonalInviteModalOpen, setIsPersonalInviteModalOpen] = useState(false);
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
   const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(null);
@@ -454,10 +450,6 @@ const App: React.FC = () => {
     setCurrentView('editar-dieta');
   };
 
-  const handleInviteAthlete = () => {
-    setIsInviteModalOpen(true);
-  };
-
   const handleInvitePersonal = () => {
     setIsPersonalInviteModalOpen(true);
   };
@@ -493,74 +485,18 @@ const App: React.FC = () => {
   };
 
   const handleDeleteAthlete = async (athleteId: string) => {
-    try {
-      console.info('[App] 🗑️ Iniciando exclusão do atleta:', athleteId);
-      const personalId = useAuthStore.getState().entity?.personal?.id;
-      const authUserId = useAuthStore.getState().user?.id;
-      console.info('[App] personalId:', personalId, 'authUserId:', authUserId);
-
-      // 1. Deletar planos de treino
-      const r1 = await supabase.from('planos_treino').delete().eq('atleta_id', athleteId);
-      console.info('[App] planos_treino:', r1.error ? `❌ ${r1.error.message}` : '✅');
-
-      // 2. Deletar planos de dieta
-      const r2 = await supabase.from('planos_dieta').delete().eq('atleta_id', athleteId);
-      console.info('[App] planos_dieta:', r2.error ? `❌ ${r2.error.message}` : '✅');
-
-      // 3. Deletar diagnósticos
-      const r3 = await supabase.from('diagnosticos').delete().eq('atleta_id', athleteId);
-      console.info('[App] diagnosticos:', r3.error ? `❌ ${r3.error.message}` : '✅');
-
-      // 4. Deletar medidas
-      const r4 = await supabase.from('medidas').delete().eq('atleta_id', athleteId);
-      console.info('[App] medidas:', r4.error ? `❌ ${r4.error.message}` : '✅');
-
-      // 5. Deletar assessments
-      const r5 = await supabase.from('assessments').delete().eq('atleta_id', athleteId);
-      console.info('[App] assessments:', r5.error ? `❌ ${r5.error.message}` : '✅');
-
-      // 6. Deletar ficha do atleta
-      const r6 = await supabase.from('fichas').delete().eq('atleta_id', athleteId);
-      console.info('[App] fichas:', r6.error ? `❌ ${r6.error.message}` : '✅');
-
-      // 7. Deletar registros diários (logs de treino, água, sono, etc)
-      const r_logs = await supabase.from('registros_diarios').delete().eq('atleta_id', athleteId);
-      console.info('[App] registros_diarios:', r_logs.error ? `❌ ${r_logs.error.message}` : '✅');
-
-      // 8. Deletar notificações vinculadas ao atleta
-      const r_notif = await supabase.from('notificacoes').delete().eq('atleta_id', athleteId);
-      console.info('[App] notificacoes:', r_notif.error ? `❌ ${r_notif.error.message}` : '✅');
-
-      // 9. Deletar o atleta
-      const r7 = await supabase.from('atletas').delete().eq('id', athleteId).select('id');
-      console.info('[App] atletas delete result:', JSON.stringify({ error: r7.error, data: r7.data }));
-
-      if (r7.error) {
-        console.error('[App] ❌ atletas delete ERRO:', r7.error.code, r7.error.message);
-        alert(`Erro ao excluir aluno:\n${r7.error.message}`);
-        return;
-      }
-
-      if (!r7.data || r7.data.length === 0) {
-        console.error('[App] ❌ atletas delete: nenhuma linha deletada');
-        alert('Falha ao excluir: RLS pode estar bloqueando a operação.');
-        return;
-      }
-
-      console.info('[App] ✅ Atleta excluído com sucesso:', athleteId);
-
-      // 8. Recarregar dados e navegar
-      if (personalId) {
-        await useDataStore.getState().loadFromSupabase(personalId);
-      }
-      setCurrentView('students');
-    } catch (error) {
-      console.error('[App] ❌ Exceção ao excluir atleta:', error);
-      alert('Erro ao excluir aluno.');
+    // Exclusão definitiva no servidor (dados + login do aluno) — Edge Function excluir-aluno
+    const r = await alunoService.excluirAluno(athleteId);
+    if (!r.ok) {
+      alert(`Erro ao excluir aluno: ${r.erro}`);
+      return;
     }
+    const personalId = useAuthStore.getState().entity?.personal?.id;
+    if (personalId) {
+      await useDataStore.getState().loadFromSupabase(personalId);
+    }
+    setCurrentView('students');
   };
-
-
 
   const renderContent = () => {
     // Shared views
@@ -743,7 +679,6 @@ const App: React.FC = () => {
                 setSelectedAthleteId(id);
                 setCurrentView('evolution');
               }}
-              onInviteAthlete={handleInviteAthlete}
               onRegisterStudent={() => setCurrentView('student-registration')}
               onRegisterMeasurement={(id) => {
                 setSelectedAthleteId(id);
@@ -1376,14 +1311,6 @@ const App: React.FC = () => {
       <CoachModal
         isOpen={isCoachModalOpen}
         onClose={() => setIsCoachModalOpen(false)}
-      />
-      <AthleteInvitationModal
-        isOpen={isInviteModalOpen}
-        onClose={() => setIsInviteModalOpen(false)}
-        onInvite={(data) => {
-
-          alert(`Convite enviado/Gerado! (Verifique o console para detalhes)`);
-        }}
       />
       <PersonalInvitationModal
         isOpen={isPersonalInviteModalOpen}

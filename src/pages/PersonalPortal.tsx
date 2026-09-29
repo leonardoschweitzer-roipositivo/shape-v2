@@ -61,6 +61,16 @@ export function PersonalPortal({ personalId, onLogout }: PersonalPortalProps) {
         loadCritical()
     }, [personalId])
 
+    // Recarrega contexto (contadores) + lista após cadastrar aluno
+    const recarregarAlunos = useCallback(async () => {
+        const [ctx, alunosData] = await Promise.all([
+            carregarContextoPersonal(personalId),
+            listarAlunos(personalId),
+        ])
+        if (ctx) setContexto(ctx)
+        setAlunos(alunosData)
+    }, [personalId])
+
     // Fase 2: carrega dados secundários em background
     useEffect(() => {
         if (!contexto) return
@@ -151,6 +161,7 @@ export function PersonalPortal({ personalId, onLogout }: PersonalPortalProps) {
                 return (
                     <AlunosScreen
                         alunos={alunos}
+                        onAlunoCriado={recarregarAlunos}
                         alunoInicialId={alunoSelecionadoId ?? undefined}
                         onAlunoFechou={() => setAlunoSelecionadoId(null)}
                     />

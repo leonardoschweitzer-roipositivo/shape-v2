@@ -35,6 +35,7 @@ import {
     CheckCircle,
     Smartphone,
     Target,
+    KeyRound,
 } from 'lucide-react';
 import { PersonalAthlete } from '@/mocks/personal';
 import { Button } from '@/components/atoms/Button/Button';
@@ -44,10 +45,10 @@ import { useDataStore } from '@/stores/dataStore';
 import { atletaService } from '@/services/atleta.service';
 import { medidasService } from '@/services/medidas.service';
 import { supabase } from '@/services/supabase';
-import { portalService } from '@/services/portalService';
 import { AthleteContextSection } from './AthleteContextSection';
 import type { ContextoAtleta } from './AthleteContextSection';
-import { DEFAULT_ATHLETE_PASSWORD } from '@/components/templates/StudentRegistration/StudentRegistration';
+import { GerarAcessoAluno } from '@/components/organisms/AcessoAlunoCard';
+import { alunoService } from '@/services/aluno.service';
 import { CardHistoricoTreinos } from '@/components/organisms/CardHistoricoTreinos/CardHistoricoTreinos';
 
 import { getObjetivoLabel } from '@/services/calculations/objetivos';
@@ -92,20 +93,6 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
     const [evolutionPlans, setEvolutionPlans] = useState<Record<string, unknown>[]>([]);
     const [loadingPlans, setLoadingPlans] = useState(false);
 
-    // Portal do Aluno
-    const [showPortalModal, setShowPortalModal] = useState(false);
-    const [portalLoading, setPortalLoading] = useState(false);
-    const [portalLink, setPortalLink] = useState<string | null>(null);
-    const [portalCopied, setPortalCopied] = useState(false);
-    const [portalError, setPortalError] = useState<string | null>(null);
-
-    // Link de Contexto
-    const [showContextoLinkModal, setShowContextoLinkModal] = useState(false);
-    const [contextoLinkLoading, setContextoLinkLoading] = useState(false);
-    const [contextoLinkValue, setContextoLinkValue] = useState<string | null>(null);
-    const [contextoLinkCopied, setContextoLinkCopied] = useState(false);
-    const [contextoLinkError, setContextoLinkError] = useState<string | null>(null);
-
     // Fetch evolution plans (diagnosticos + relacionados)
     const fetchPlans = React.useCallback(async () => {
         setLoadingPlans(true);
@@ -132,167 +119,6 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
     React.useEffect(() => {
         fetchPlans();
     }, [fetchPlans]);
-
-    const handleGeneratePortalAccess = async () => {
-        setPortalLoading(true);
-        setPortalError(null);
-        setPortalLink(null);
-        setPortalCopied(false);
-
-        try {
-            const baseUrl = window.location.origin;
-            let finalLink = '';
-
-            if (athlete.auth_user_id) {
-                // Aluno já tem Auth ID: fornecer o link direto
-                finalLink = `${baseUrl}/atleta`;
-            } else {
-                // Sessão swap para criar conta Auth para aluno antigo
-                console.info('[AthleteDetails] Criando conta Auth para aluno antigo...');
-                const athleteEmailTrimmed = athlete.email?.trim() || '';
-
-                if (!athleteEmailTrimmed) {
-                    throw new Error('Aluno sem email cadastrado! Edite os dados primeiro.');
-                }
-
-                const { data: { session: personalSession } } = await supabase.auth.getSession();
-
-                const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-                    email: athleteEmailTrimmed,
-                    password: DEFAULT_ATHLETE_PASSWORD,
-                    options: {
-                        data: {
-                            full_name: athlete.name.trim(),
-                            role: 'ATLETA',
-                        },
-                    },
-                });
-
-                // Restaurar sessão
-                if (personalSession) {
-                    await supabase.auth.setSession({
-                        access_token: personalSession.access_token,
-                        refresh_token: personalSession.refresh_token,
-                    });
-                }
-
-                if (signUpError) {
-                    // Tratar erro comum onde conta já existe mas auth_user_id não está no bd local
-                    if (signUpError.message.includes('already registered')) {
-                        console.info('[AthleteDetails] Usuário já existe, tentando vinculação (RPC)...');
-                        const { data: linkedUserId, error: linkError } = await supabase
-                            .rpc('link_existing_user_to_atleta', {
-                                p_email: athleteEmailTrimmed,
-                                p_atleta_id: athlete.id,
-                            });
-
-                        if (linkError || !linkedUserId) {
-                            throw new Error('Este email já está registrado, mas não foi possível vinculá-lo. Peça para o aluno acessar o Portal com a senha que ele já havia criado.');
-                        }
-
-                        console.info('[AthleteDetails] ✅ Conta Auth existente recuperada e vinculada:', linkedUserId);
-
-                        // Update store locally
-                        updateAthlete({ ...athlete, auth_user_id: linkedUserId } as any);
-                        setDraftAthlete(prev => ({ ...prev, auth_user_id: linkedUserId } as any));
-
-                        // Redirecionar apenas com email (sem a senha, para não subscrever a senha real dele)
-                        finalLink = `${baseUrl}/atleta?email=${encodeURIComponent(athleteEmailTrimmed)}`;
-
-                    } else {
-                        throw new Error(signUpError.message);
-                    }
-                } else if (signUpData?.user) {
-                    await supabase
-                        .from('atletas')
-                        .update({ auth_user_id: signUpData.user.id } as Record<string, unknown>)
-                        .eq('id', athlete.id);
-
-                    // Update store locally
-                    // Type bypass simply to attach auth_user_id easily
-                    updateAthlete({ ...athlete, auth_user_id: signUpData.user.id } as any);
-                    setDraftAthlete(prev => ({ ...prev, auth_user_id: signUpData.user.id } as any));
-
-                    finalLink = `${baseUrl}/atleta?email=${encodeURIComponent(athleteEmailTrimmed)}&p=${encodeURIComponent(DEFAULT_ATHLETE_PASSWORD).replace(/!/g, '%21')}`;
-                } else {
-                    throw new Error('Falha na criação da conta.');
-                }
-            }
-
-            setPortalLink(finalLink);
-        } catch (err: any) {
-            console.error('[AthleteDetails] Erro ao gerar acesso:', err);
-            setPortalError(err.message || 'Erro ao gerar acesso.');
-        } finally {
-            setPortalLoading(false);
-        }
-    };
-
-    const handleGerarLinkContexto = async () => {
-        setContextoLinkLoading(true);
-        setContextoLinkError(null);
-        setContextoLinkValue(null);
-        setContextoLinkCopied(false);
-
-        try {
-            const baseUrl = window.location.origin;
-            const athleteEmailTrimmed = athlete.email?.trim() || '';
-
-            if (!athleteEmailTrimmed) {
-                throw new Error('Aluno sem email cadastrado! Edite os dados primeiro.');
-            }
-
-            let finalLink = '';
-
-            if (draftAthlete.auth_user_id) {
-                finalLink = `${baseUrl}/atleta?email=${encodeURIComponent(athleteEmailTrimmed)}&tab=contexto`;
-            } else {
-                const { data: { session: personalSession } } = await supabase.auth.getSession();
-
-                const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-                    email: athleteEmailTrimmed,
-                    password: DEFAULT_ATHLETE_PASSWORD,
-                    options: { data: { full_name: athlete.name.trim(), role: 'ATLETA' } },
-                });
-
-                if (personalSession) {
-                    await supabase.auth.setSession({
-                        access_token: personalSession.access_token,
-                        refresh_token: personalSession.refresh_token,
-                    });
-                }
-
-                if (signUpError) {
-                    if (signUpError.message.includes('already registered')) {
-                        const { data: linkedUserId, error: linkError } = await supabase
-                            .rpc('link_existing_user_to_atleta', { p_email: athleteEmailTrimmed, p_atleta_id: athlete.id });
-                        if (linkError || !linkedUserId) {
-                            finalLink = `${baseUrl}/atleta?email=${encodeURIComponent(athleteEmailTrimmed)}&tab=contexto`;
-                        } else {
-                            updateAthlete({ ...athlete, auth_user_id: linkedUserId } as any);
-                            setDraftAthlete(prev => ({ ...prev, auth_user_id: linkedUserId } as any));
-                            finalLink = `${baseUrl}/atleta?email=${encodeURIComponent(athleteEmailTrimmed)}&tab=contexto`;
-                        }
-                    } else {
-                        throw new Error(signUpError.message);
-                    }
-                } else if (signUpData?.user) {
-                    await supabase.from('atletas').update({ auth_user_id: signUpData.user.id } as Record<string, unknown>).eq('id', athlete.id);
-                    updateAthlete({ ...athlete, auth_user_id: signUpData.user.id } as any);
-                    setDraftAthlete(prev => ({ ...prev, auth_user_id: signUpData.user.id } as any));
-                    finalLink = `${baseUrl}/atleta?email=${encodeURIComponent(athleteEmailTrimmed)}&p=${encodeURIComponent(DEFAULT_ATHLETE_PASSWORD).replace(/!/g, '%21')}&tab=contexto`;
-                } else {
-                    throw new Error('Falha na criação da conta.');
-                }
-            }
-
-            setContextoLinkValue(finalLink);
-        } catch (err: any) {
-            setContextoLinkError(err.message || 'Erro ao gerar link.');
-        } finally {
-            setContextoLinkLoading(false);
-        }
-    };
 
     const handleDeleteAssessment = async (assessmentId: string, source?: string) => {
         if (!confirm('Tem certeza que deseja excluir esta avaliação? Esta ação não pode ser desfeita.')) return;
@@ -474,8 +300,20 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                 nome: draftAthlete.name,
                 email: draftAthlete.email,
                 telefone: draftAthlete.phone || null,
-                status: draftAthlete.status === 'inactive' ? 'INATIVO' : 'ATIVO',
             });
+
+            // Arquivar/reativar à parte: reativar pode esbarrar no limite do plano
+            const estaArquivado = (st: string) => st === 'inactive' || st === 'archived';
+            if (estaArquivado(draftAthlete.status) !== estaArquivado(athlete.status)) {
+                const r = estaArquivado(draftAthlete.status)
+                    ? await alunoService.arquivarAluno(draftAthlete.id)
+                    : await alunoService.reativarAluno(draftAthlete.id);
+                if (!r.ok) {
+                    alert(r.erro);
+                    updateAthlete({ ...draftAthlete, status: athlete.status });
+                    setDraftAthlete(prev => ({ ...prev, status: athlete.status }));
+                }
+            }
 
             // 2. Ficha do Atleta (Gênero, objetivo e medidas fixas)
             await atletaService.atualizarFicha(draftAthlete.id, {
@@ -737,21 +575,29 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                         </div>
                     </div>
 
+                    {/* Section 1.4: Acesso ao Portal do Aluno (convite com senha própria) */}
+                    <Accordion
+                        title="Portal do Aluno"
+                        icon={KeyRound}
+                        isOpen={openAccordion === 'portal'}
+                        onToggle={() => toggleAccordion('portal')}
+                    >
+                        <GerarAcessoAluno
+                            atletaId={draftAthlete.id}
+                            nomeAluno={draftAthlete.name}
+                            emailAtual={draftAthlete.email}
+                            authUserId={draftAthlete.authUserId}
+                            conviteEnviadoEm={draftAthlete.conviteEnviadoEm}
+                            acessoAtivadoEm={draftAthlete.acessoAtivadoEm}
+                        />
+                    </Accordion>
+
                     {/* Section 1.5: Contexto do Atleta */}
                     <Accordion
                         title="Contexto"
                         icon={ClipboardList}
                         isOpen={openAccordion === 'context'}
                         onToggle={() => toggleAccordion('context')}
-                        rightElement={
-                            <button
-                                onClick={(e) => { e.stopPropagation(); setShowContextoLinkModal(true); handleGerarLinkContexto(); }}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/40 border border-indigo-500/30 text-indigo-300 hover:text-white rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all"
-                            >
-                                <Link2 size={12} />
-                                Gerar Link
-                            </button>
-                        }
                     >
                         <AthleteContextSection
                             athleteId={draftAthlete.id}
@@ -1148,11 +994,32 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                             </div>
                             <h3 className="text-xl font-bold text-white uppercase tracking-wide">Excluir Aluno</h3>
                             <p className="text-gray-400 text-sm leading-relaxed">
-                                Tem certeza que deseja excluir <span className="text-white font-bold">{draftAthlete.name}</span>?
+                                Excluir <span className="text-white font-bold">{draftAthlete.name}</span> apaga avaliações, planos,
+                                registros e o login do aluno.
                                 <br />
                                 <span className="text-red-400 font-medium">Esta ação não pode ser desfeita.</span>
                             </p>
-                            <div className="flex items-center gap-3 w-full mt-4">
+                            {draftAthlete.status !== 'inactive' && (
+                                <button
+                                    onClick={async () => {
+                                        setIsDeleting(true);
+                                        const r = await alunoService.arquivarAluno(draftAthlete.id);
+                                        setIsDeleting(false);
+                                        setShowDeleteConfirm(false);
+                                        if (!r.ok) {
+                                            alert(r.erro);
+                                            return;
+                                        }
+                                        updateAthlete({ ...draftAthlete, status: 'inactive' });
+                                        setDraftAthlete(prev => ({ ...prev, status: 'inactive' }));
+                                    }}
+                                    disabled={isDeleting}
+                                    className="w-full px-6 py-3 bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500/20 rounded-xl font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                                >
+                                    <Archive size={14} /> Arquivar (libera a vaga, mantém o histórico)
+                                </button>
+                            )}
+                            <div className="flex items-center gap-3 w-full mt-2">
                                 <button
                                     onClick={() => setShowDeleteConfirm(false)}
                                     className="flex-1 px-6 py-3 bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 rounded-xl font-bold text-xs uppercase tracking-widest transition-all"
@@ -1172,234 +1039,9 @@ export const AthleteDetailsView: React.FC<AthleteDetailsViewProps> = ({ athlete,
                                     disabled={isDeleting}
                                     className="flex-1 px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(239,68,68,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    {isDeleting ? 'Excluindo...' : 'Sim, Excluir'}
+                                    {isDeleting ? 'Aguarde...' : 'Excluir definitivamente'}
                                 </button>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-            {/* Modal: Link de Contexto */}
-            {showContextoLinkModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-surface border border-white/10 rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden animate-in zoom-in-95 duration-200">
-                        <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center">
-                                    <ClipboardList size={20} className="text-indigo-400" />
-                                </div>
-                                <div>
-                                    <h3 className="text-base font-bold text-white uppercase tracking-wider">Link de Contexto</h3>
-                                    <p className="text-xs text-gray-500">Para {draftAthlete.name} preencher</p>
-                                </div>
-                            </div>
-                            <button onClick={() => setShowContextoLinkModal(false)} className="p-2 hover:bg-white/10 rounded-lg text-gray-500 hover:text-white transition-all">
-                                <X size={18} />
-                            </button>
-                        </div>
-
-                        <div className="px-6 py-6 space-y-4">
-                            {contextoLinkLoading && (
-                                <div className="text-center py-8">
-                                    <Loader2 size={32} className="text-indigo-400 mx-auto animate-spin mb-3" />
-                                    <p className="text-gray-400 text-sm">Gerando link...</p>
-                                </div>
-                            )}
-                            {contextoLinkError && !contextoLinkLoading && (
-                                <div className="text-center py-4 space-y-3">
-                                    <p className="text-red-400 text-sm font-bold">{contextoLinkError}</p>
-                                    <button onClick={handleGerarLinkContexto} className="px-5 py-2 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white text-xs font-bold uppercase tracking-wider transition-all">
-                                        Tentar novamente
-                                    </button>
-                                </div>
-                            )}
-                            {contextoLinkValue && !contextoLinkLoading && (
-                                <>
-                                    <p className="text-xs text-gray-500 leading-relaxed">
-                                        Envie esse link para <strong className="text-white">{draftAthlete.name}</strong> preencher o histórico de saúde, lesões, estilo de vida e outros dados de contexto.
-                                    </p>
-                                    <div className="bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 flex items-center gap-3">
-                                        <Link2 size={14} className="text-indigo-400 shrink-0" />
-                                        <span className="text-xs text-gray-300 font-mono truncate flex-1">{contextoLinkValue}</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <button
-                                            onClick={async () => {
-                                                try {
-                                                    await navigator.clipboard.writeText(contextoLinkValue);
-                                                } catch {
-                                                    const t = document.createElement('textarea');
-                                                    t.value = contextoLinkValue;
-                                                    document.body.appendChild(t);
-                                                    t.select();
-                                                    document.execCommand('copy');
-                                                    document.body.removeChild(t);
-                                                }
-                                                setContextoLinkCopied(true);
-                                                setTimeout(() => setContextoLinkCopied(false), 3000);
-                                            }}
-                                            className={`flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${contextoLinkCopied
-                                                ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400'
-                                                : 'bg-indigo-600 text-white hover:bg-indigo-500 active:scale-95 shadow-[0_0_20px_rgba(99,102,241,0.3)]'
-                                            }`}
-                                        >
-                                            {contextoLinkCopied ? <><CheckCircle size={16} /> Copiado!</> : <><Copy size={16} /> Copiar Link</>}
-                                        </button>
-                                        {typeof navigator.share === 'function' && (
-                                            <button
-                                                onClick={() => navigator.share({ title: `Contexto — ${draftAthlete.name}`, text: 'Preencha seu contexto para personalizar seu plano:', url: contextoLinkValue })}
-                                                className="flex items-center justify-center gap-2 px-5 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition-all font-bold text-xs uppercase tracking-widest"
-                                            >
-                                                <Share2 size={16} />
-                                            </button>
-                                        )}
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Modal: Portal do Aluno */}
-            {showPortalModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-surface border border-white/10 rounded-2xl shadow-2xl max-w-lg w-full mx-4 overflow-hidden animate-in zoom-in-95 duration-200">
-                        {/* Header */}
-                        <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                                    <Smartphone size={22} className="text-primary" />
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-bold text-white uppercase tracking-wider">Portal do Aluno</h3>
-                                    <p className="text-xs text-gray-500">Gerar link de acesso para {draftAthlete.name}</p>
-                                </div>
-                            </div>
-                            <button
-                                onClick={() => setShowPortalModal(false)}
-                                className="p-2 hover:bg-white/10 rounded-lg text-gray-500 hover:text-white transition-all"
-                            >
-                                <X size={18} />
-                            </button>
-                        </div>
-
-                        {/* Body */}
-                        <div className="px-6 py-6 space-y-5">
-                            {portalLoading ? (
-                                <div className="text-center py-8">
-                                    <Loader2 size={32} className="text-primary mx-auto animate-spin mb-3" />
-                                    <p className="text-gray-400 text-sm">Gerando link de acesso...</p>
-                                </div>
-                            ) : portalError ? (
-                                <div className="text-center py-6 space-y-3">
-                                    <div className="w-14 h-14 bg-red-500/10 rounded-full flex items-center justify-center mx-auto">
-                                        <X size={24} className="text-red-400" />
-                                    </div>
-                                    <p className="text-red-400 text-sm font-bold">{portalError}</p>
-                                    <button
-                                        onClick={handleGeneratePortalAccess}
-                                        className="px-5 py-2 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white text-xs font-bold uppercase tracking-wider transition-all"
-                                    >
-                                        Tentar novamente
-                                    </button>
-                                </div>
-                            ) : portalLink ? (
-                                <>
-                                    {athlete.auth_user_id ? (
-                                        <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-center mb-4">
-                                            <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                                                <User size={20} className="text-primary" />
-                                            </div>
-                                            <p className="text-sm text-gray-300 font-medium mb-1">
-                                                O aluno já possui acesso ativo com o email
-                                            </p>
-                                            <p className="text-base text-white font-bold">{athlete.email}</p>
-                                        </div>
-                                    ) : (
-                                        <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-4">
-                                            <p className="text-[10px] text-amber-500 font-bold uppercase tracking-widest mb-1">Novo Acesso Gerado!</p>
-                                            <p className="text-sm text-gray-300">
-                                                Foi criada uma conta para <strong className="text-white">{athlete.email}</strong> com a senha <strong className="text-primary font-mono bg-white/5 px-2 py-0.5 rounded">{DEFAULT_ATHLETE_PASSWORD}</strong>.
-                                            </p>
-                                            <p className="text-xs text-gray-400 mt-2">
-                                                Envie o link abaixo para ele. A credencial já está anexada no link para login automático inicial.
-                                            </p>
-                                        </div>
-                                    )}
-
-                                    <div>
-                                        <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-2">Link de Acesso</p>
-                                        <div className="bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 flex items-center gap-3">
-                                            <Link2 size={16} className="text-primary shrink-0" />
-                                            <span className="text-sm text-gray-300 font-mono truncate flex-1">{portalLink}</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center gap-3">
-                                        <button
-                                            onClick={async () => {
-                                                try {
-                                                    await navigator.clipboard.writeText(portalLink);
-                                                    setPortalCopied(true);
-                                                    setTimeout(() => setPortalCopied(false), 3000);
-                                                } catch {
-                                                    // Fallback para browsers que não suportam clipboard API
-                                                    const textarea = document.createElement('textarea');
-                                                    textarea.value = portalLink;
-                                                    document.body.appendChild(textarea);
-                                                    textarea.select();
-                                                    document.execCommand('copy');
-                                                    document.body.removeChild(textarea);
-                                                    setPortalCopied(true);
-                                                    setTimeout(() => setPortalCopied(false), 3000);
-                                                }
-                                            }}
-                                            className={`flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${portalCopied
-                                                ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400'
-                                                : 'bg-primary text-background-dark hover:scale-[1.02] active:scale-95 shadow-[0_0_20px_rgba(79,70,229,0.3)]'
-                                                }`}
-                                        >
-                                            {portalCopied ? (
-                                                <>
-                                                    <CheckCircle size={16} />
-                                                    Link Copiado!
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Copy size={16} />
-                                                    Copiar Link
-                                                </>
-                                            )}
-                                        </button>
-
-                                        {typeof navigator.share === 'function' && (
-                                            <button
-                                                onClick={async () => {
-                                                    try {
-                                                        await navigator.share({
-                                                            title: `Portal do Aluno - ${draftAthlete.name}`,
-                                                            text: `Acesse seu Portal do Aluno Shape-V:`,
-                                                            url: portalLink,
-                                                        });
-                                                    } catch (err) {
-                                                        // Usuário cancelou o share — ok
-                                                    }
-                                                }}
-                                                className="flex items-center justify-center gap-2 px-5 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition-all font-bold text-xs uppercase tracking-widest"
-                                            >
-                                                <Share2 size={16} />
-                                                Enviar
-                                            </button>
-                                        )}
-                                    </div>
-
-                                    <div className="flex items-center gap-2 text-[10px] text-gray-600 uppercase tracking-widest font-bold pt-1">
-                                        <Clock size={10} />
-                                        Link válido por 30 dias
-                                    </div>
-                                </>
-                            ) : null}
                         </div>
                     </div>
                 </div>

@@ -146,3 +146,23 @@ policies de token abertas para qualquer logado e contas órfãs silenciosas.
 - `PersonalProfilePage` / `ProfileScreen` (mobile): plano, limite e uso reais, dados editáveis, alterar senha.
   `PersonalDashboard` usa `limite_atletas` real. `PersonalPortal` mostra erro em vez de spinner infinito.
 **Motivo**: Fase 1 do plano `docs/plano-conta-personal-alunos-treinos.md`.
+
+### 2026-10-08 - Fase 2: alunos por convite (fim da senha padrão) + limite do plano
+
+**Tipo**: Criação / Segurança / Remoção
+**Mudança**:
+- `supabase/migrations/20261008_fase2_alunos_convite.sql`: `atletas.convite_enviado_em/acesso_ativado_em`; e-mail
+  normalizado (trigger) + único por personal; `trg_atletas_limite_plano` (arquivados não contam; trava o personal
+  com FOR UPDATE); `trg_atletas_proteger_campos` (auth_user_id/personal_id só em contexto admin); RPC
+  `cadastrar_aluno` (atleta + ficha numa transação); `app_auth_user_id_por_email` e `app_excluir_aluno_dados`
+  (só service_role); `app_marcar_acesso_ativado`; DROP `link_existing_user_to_atleta`.
+- Edge Functions `supabase/functions/convidar-aluno` e `excluir-aluno` (+ `_shared/acesso_aluno.ts`, import
+  `npm:@supabase/supabase-js@2`, checagem de dono, `generateLink` invite/recovery → link `/definir-senha?th=...`).
+- Front: `src/services/aluno.service.ts` (Resultado tipado + mensagens em PT), `src/hooks/useCadastroAluno.ts`,
+  organism `AcessoAlunoCard` (+ `GerarAcessoAluno`). `StudentRegistration` e `NovoAlunoScreen` usam o hook;
+  `AthleteDetailsView` ganha seção "Portal do Aluno", arquivar grava INATIVO (reativar respeita limite), modal de
+  exclusão oferece "Arquivar"; `AlunoFichaScreen` troca "Link de Contexto" por acesso ao portal; exclusão via
+  Edge Function; lista mobile recarrega após cadastro.
+- Removidos: `DEFAULT_ATHLETE_PASSWORD` (3 cópias), troca de sessão no navegador (5 cópias), `AthleteLogin.tsx`,
+  `AthleteInvitationModal` (mock), estado `portalToken` do App, `atletaService.criar/criarFicha/deletar`.
+**Motivo**: Fase 2 do plano `docs/plano-conta-personal-alunos-treinos.md`.

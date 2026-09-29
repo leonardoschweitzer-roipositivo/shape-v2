@@ -17,7 +17,7 @@ export { profileService } from './profile.service';
 export type { Profile, ProfileUpdate } from './profile.service';
 
 export { atletaService } from './atleta.service';
-export type { AtletaComFicha, AtletaResumo, CriarAtletaInput, CriarFichaInput } from './atleta.service';
+export type { AtletaComFicha, AtletaResumo } from './atleta.service';
 
 export { medidasService } from './medidas.service';
 export type { CriarMedidaInput } from './medidas.service';

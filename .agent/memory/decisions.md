@@ -148,4 +148,27 @@ limite, status, vínculos) só mudam em contexto admin (SQL Editor, service_role
 
 ---
 
+### 2026-10-08 - Acesso do aluno por link de uso único gerado no servidor
+
+**Contexto**: alunos recebiam a senha padrão `Shape2026!` na URL; a conta era criada no navegador do personal
+trocando a sessão (frágil) e a RPC de vínculo permitia sequestro de aluno.
+**Decisão**: Edge Function `convidar-aluno` (service_role, após checar que o aluno é do personal) usa
+`auth.admin.generateLink` (`invite` p/ novo login, `recovery` p/ reenvio) e devolve um link do **app**
+`/definir-senha?th=<hashed_token>&type=...`. O token só é consumido no submit (`verifyOtp`) — prévia de link do
+WhatsApp não queima o convite. Sem SMTP: o personal envia por WhatsApp/cópia. E-mail de outra conta → 409.
+**Alternativas**: `inviteUserByEmail` (depende de SMTP), `action_link` do Supabase (GET consome o token),
+senha temporária aleatória (ainda trafega senha).
+**Status**: Ativa
+
+---
+
+### 2026-10-08 - Limite de alunos aplicado no banco (sem pagamento)
+
+**Decisão**: trigger `trg_atletas_limite_plano` conta alunos com status ≠ INATIVO (arquivar libera vaga);
+`limite_atletas` NULL = ilimitado; plano ajusta limite via trigger (FREE 10 · PRO 50 · UNLIMITED). Upgrade manual
+pelo SQL Editor/GOD. Front só traduz o erro `LIMITE_ALUNOS_ATINGIDO`.
+**Status**: Ativa
+
+---
+
 <!-- Novas decisões serão adicionadas acima desta linha -->
