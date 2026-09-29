@@ -12,7 +12,6 @@ import {
   PersonalCoachDashboard,
   PersonalAthletesList,
   PersonalProfilePage,
-  AthleteInvitationModal,
   PersonalInvitationModal,
   StudentRegistration,
   DebugAccess,
@@ -38,6 +37,7 @@ import {
   LazyPersonalCoachView as PersonalCoachView,
   LazyDiagnosticoView as DiagnosticoView,
   LazyTreinoView as TreinoView,
+  LazyTreinoEditorView as TreinoEditorView,
   LazyDietaView as DietaView,
   LazyAthleteDetailsView as AthleteDetailsView,
   LazyAcademyDashboard as AcademyDashboard,
@@ -66,8 +66,6 @@ import {
   LazyAcademiaPortal as AcademiaPortal,
   LazyGodPortal as GodPortal,
 } from '@/lazyPages';
-// DEPRECATED: AthleteLogin removido — login unificado via Login.tsx
-// import { AthleteLogin } from '@/pages/athlete/AthleteLogin';
 // import { GamificationPage } from './pages/GamificationPage'; // DISABLED - Feature para depois
 
 import { calculateAge } from '@/utils/dateUtils';
@@ -81,24 +79,26 @@ import { PersonalAthlete, MeasurementHistory } from '@/mocks/personal';
 import { buscarDiagnostico, type DiagnosticoDados } from '@/services/calculations/diagnostico';
 import { buscarPlanoTreino, type PlanoTreino } from '@/services/calculations/treino';
 import { buscarPlanoDieta, type PlanoDieta } from '@/services/calculations/dieta';
-import { supabase } from '@/services/supabase';
 import { isGodEmail } from '@/types/auth';
 import { getPageTitle, type ViewState } from '@/utils/getPageTitle';
 import { PortraitLock } from '@/components/organisms/PortraitLock';
+import { ContaIncompleta } from '@/components/templates/ContaIncompleta';
+import { DefinirSenhaPage } from '@/pages/auth/DefinirSenhaPage';
+import { PersonalOnboarding } from '@/pages/onboarding/PersonalOnboarding';
+import { isMobileDevice } from '@/utils/mobileDetect';
+import { alunoService } from '@/services/aluno.service';
 
 const App: React.FC = () => {
 
   // Auth Store
-  const { isAuthenticated, profile: authProfile, signOut, checkSession, isLoading: isAuthLoading, entity } = useAuthStore();
+  const { isAuthenticated, user: authUser, profile: authProfile, signOut, checkSession, initAuthListener, isLoading: isAuthLoading, entity } = useAuthStore();
 
   // Local UI State
   const [isAssessmentOpen, setIsAssessmentOpen] = useState(false);
   const [isCoachModalOpen, setIsCoachModalOpen] = useState(false);
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isPersonalInviteModalOpen, setIsPersonalInviteModalOpen] = useState(false);
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
   const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(null);
-  const [portalToken, setPortalToken] = useState<string | null>(null);
 
   // Personal Portal URL detection (/personal/:personalId)
   const personalPortalId = (() => {
@@ -108,13 +108,9 @@ const App: React.FC = () => {
 
   // Athlete Portal URL detection (/atleta)
   const isAtletaRoute = window.location.pathname.startsWith('/atleta');
-  const atletaUrlParams = (() => {
-    const params = new URLSearchParams(window.location.search);
-    return {
-      email: params.get('email') || undefined,
-      password: params.get('p') || undefined,
-    };
-  })();
+
+  // Definir senha (convite do aluno / recuperação de senha)
+  const isDefinirSenhaRoute = window.location.pathname.startsWith('/definir-senha');
 
   // New Portal Route Detection
   const isMeuPortalRoute = window.location.pathname.startsWith('/meu-portal');
@@ -128,11 +124,13 @@ const App: React.FC = () => {
   const [consultaTreinoData, setConsultaTreinoData] = useState<PlanoTreino | null>(null);
   const [consultaDietaData, setConsultaDietaData] = useState<PlanoDieta | null>(null);
   const [consultaPlanoCompleto, setConsultaPlanoCompleto] = useState<any | null>(null);
+  const [treinoEditorCtx, setTreinoEditorCtx] = useState<{ planoId: string | null; dados: PlanoTreino | null } | null>(null);
+  const [retornoConsultaTreino, setRetornoConsultaTreino] = useState<ViewState>('coach');
   const [isNotificationDrawerOpen, setIsNotificationDrawerOpen] = useState(false);
   const [selectedNotifDetail, setSelectedNotifDetail] = useState<Notificacao | null>(null);
 
   // Mobile detection for redirection logic
-  const isMobile = window.innerWidth < 768;
+  const isMobile = isMobileDevice();
 
   // Notifications hook (polling + state)
   const {
@@ -174,8 +172,11 @@ const App: React.FC = () => {
 
   // Derived user profile from Auth Store
   // Se o email está na whitelist GOD, força o perfil para 'god'
+  // E-mail do LOGIN (auth.users), não o de profiles — o perfil não deve decidir privilégios.
+  const loginEmail = authUser?.email || '';
+  const isGodLogin = !!loginEmail && isGodEmail(loginEmail);
   const userProfile: ProfileType = (() => {
-    const email = authProfile?.email || '';
+    const email = loginEmail;
     if (email && isGodEmail(email)) return 'god';
     return (authProfile?.role?.toLowerCase() as ProfileType) || 'atleta';
   })();
@@ -186,6 +187,9 @@ const App: React.FC = () => {
   useEffect(() => {
     checkSession();
   }, [checkSession]);
+
+  // Listener único de auth: logout em outra aba, evento de recuperação de senha
+  useEffect(() => initAuthListener(), [initAuthListener]);
 
   // 🛡️ Redirecionamento Automático Proativo para Portais
   // Garante que o usuário vá direto ao portal se cair na raiz por engano ou refresh.
@@ -227,16 +231,6 @@ const App: React.FC = () => {
 
     if (purged) {
       console.info('[App] 🧹 Caches de dados antigos/mocks limpos automaticamente com a nova versão.');
-    }
-  }, []);
-
-  // Detect portal token in URL (?token=XXX)
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get('token');
-    if (token) {
-      console.info('[App] 🔗 Portal token detectado na URL:', token.substring(0, 8) + '...');
-      setPortalToken(token);
     }
   }, []);
 
@@ -448,11 +442,33 @@ const App: React.FC = () => {
     setCurrentView('editar-diagnostico');
   };
 
+  /** Abre o editor de treino (planoId null = novo: do zero, cópia ou modelo). */
+  const abrirEditorTreino = (atletaId: string, planoId: string | null, dados: PlanoTreino | null) => {
+    setSelectedAthleteId(atletaId);
+    setTreinoEditorCtx({ planoId, dados });
+    setCurrentView('treino-editor');
+  };
+
+  // Linha do Plano de Evolução → edita o treino daquele diagnóstico no editor
+  // Prefere o plano ATIVO do diagnóstico (o que o aluno vê); senão o mais recente dele.
+  // Sem vínculo no join (planos antigos gravados sem diagnostico_id), abre o treino ativo do aluno.
   const handleEditTreino = async (plano: any) => {
-    console.info('[App] ✏️ Editar Treino do plano:', plano.id);
+    const atletaId: string | null = plano.atleta_id ?? selectedAthleteId;
+    if (!atletaId) return;
     setConsultaPlanoCompleto(null);
-    await carregarDadosPlano(plano);
-    setCurrentView('editar-treino');
+
+    const doDiagnostico: Array<{ id: string; status: string; created_at: string; dados: PlanoTreino }> =
+      [...(plano.planos_treino ?? [])].sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+    const escolhido = doDiagnostico.find(p => p.status === 'ativo') ?? doDiagnostico[0];
+    if (escolhido?.id) {
+      abrirEditorTreino(atletaId, escolhido.id, escolhido.dados ?? null);
+      return;
+    }
+
+    const { listarPlanosTreino } = await import('@/services/treino/planosTreino.service');
+    const ativo = (await listarPlanosTreino(atletaId)).find(p => p.status === 'ativo');
+    if (ativo) abrirEditorTreino(atletaId, ativo.id, ativo.dados);
+    else alert('Este aluno não tem treino ativo para editar.');
   };
 
   const handleEditDieta = async (plano: any) => {
@@ -460,10 +476,6 @@ const App: React.FC = () => {
     setConsultaPlanoCompleto(null);
     await carregarDadosPlano(plano);
     setCurrentView('editar-dieta');
-  };
-
-  const handleInviteAthlete = () => {
-    setIsInviteModalOpen(true);
   };
 
   const handleInvitePersonal = () => {
@@ -501,74 +513,18 @@ const App: React.FC = () => {
   };
 
   const handleDeleteAthlete = async (athleteId: string) => {
-    try {
-      console.info('[App] 🗑️ Iniciando exclusão do atleta:', athleteId);
-      const personalId = useAuthStore.getState().entity?.personal?.id;
-      const authUserId = useAuthStore.getState().user?.id;
-      console.info('[App] personalId:', personalId, 'authUserId:', authUserId);
-
-      // 1. Deletar planos de treino
-      const r1 = await supabase.from('planos_treino').delete().eq('atleta_id', athleteId);
-      console.info('[App] planos_treino:', r1.error ? `❌ ${r1.error.message}` : '✅');
-
-      // 2. Deletar planos de dieta
-      const r2 = await supabase.from('planos_dieta').delete().eq('atleta_id', athleteId);
-      console.info('[App] planos_dieta:', r2.error ? `❌ ${r2.error.message}` : '✅');
-
-      // 3. Deletar diagnósticos
-      const r3 = await supabase.from('diagnosticos').delete().eq('atleta_id', athleteId);
-      console.info('[App] diagnosticos:', r3.error ? `❌ ${r3.error.message}` : '✅');
-
-      // 4. Deletar medidas
-      const r4 = await supabase.from('medidas').delete().eq('atleta_id', athleteId);
-      console.info('[App] medidas:', r4.error ? `❌ ${r4.error.message}` : '✅');
-
-      // 5. Deletar assessments
-      const r5 = await supabase.from('assessments').delete().eq('atleta_id', athleteId);
-      console.info('[App] assessments:', r5.error ? `❌ ${r5.error.message}` : '✅');
-
-      // 6. Deletar ficha do atleta
-      const r6 = await supabase.from('fichas').delete().eq('atleta_id', athleteId);
-      console.info('[App] fichas:', r6.error ? `❌ ${r6.error.message}` : '✅');
-
-      // 7. Deletar registros diários (logs de treino, água, sono, etc)
-      const r_logs = await supabase.from('registros_diarios').delete().eq('atleta_id', athleteId);
-      console.info('[App] registros_diarios:', r_logs.error ? `❌ ${r_logs.error.message}` : '✅');
-
-      // 8. Deletar notificações vinculadas ao atleta
-      const r_notif = await supabase.from('notificacoes').delete().eq('atleta_id', athleteId);
-      console.info('[App] notificacoes:', r_notif.error ? `❌ ${r_notif.error.message}` : '✅');
-
-      // 9. Deletar o atleta
-      const r7 = await supabase.from('atletas').delete().eq('id', athleteId).select('id');
-      console.info('[App] atletas delete result:', JSON.stringify({ error: r7.error, data: r7.data }));
-
-      if (r7.error) {
-        console.error('[App] ❌ atletas delete ERRO:', r7.error.code, r7.error.message);
-        alert(`Erro ao excluir aluno:\n${r7.error.message}`);
-        return;
-      }
-
-      if (!r7.data || r7.data.length === 0) {
-        console.error('[App] ❌ atletas delete: nenhuma linha deletada');
-        alert('Falha ao excluir: RLS pode estar bloqueando a operação.');
-        return;
-      }
-
-      console.info('[App] ✅ Atleta excluído com sucesso:', athleteId);
-
-      // 8. Recarregar dados e navegar
-      if (personalId) {
-        await useDataStore.getState().loadFromSupabase(personalId);
-      }
-      setCurrentView('students');
-    } catch (error) {
-      console.error('[App] ❌ Exceção ao excluir atleta:', error);
-      alert('Erro ao excluir aluno.');
+    // Exclusão definitiva no servidor (dados + login do aluno) — Edge Function excluir-aluno
+    const r = await alunoService.excluirAluno(athleteId);
+    if (!r.ok) {
+      alert(`Erro ao excluir aluno: ${r.erro}`);
+      return;
     }
+    const personalId = useAuthStore.getState().entity?.personal?.id;
+    if (personalId) {
+      await useDataStore.getState().loadFromSupabase(personalId);
+    }
+    setCurrentView('students');
   };
-
-
 
   const renderContent = () => {
     // Shared views
@@ -751,7 +707,6 @@ const App: React.FC = () => {
                 setSelectedAthleteId(id);
                 setCurrentView('evolution');
               }}
-              onInviteAthlete={handleInviteAthlete}
               onRegisterStudent={() => setCurrentView('student-registration')}
               onRegisterMeasurement={(id) => {
                 setSelectedAthleteId(id);
@@ -783,6 +738,13 @@ const App: React.FC = () => {
               onEditTreino={handleEditTreino}
               onEditDieta={handleEditDieta}
               onDeleteAthlete={handleDeleteAthlete}
+              onAbrirEditorTreino={(planoId, dados) => abrirEditorTreino(selectedAthlete.id, planoId, dados)}
+              onVisualizarTreino={(dados) => {
+                setConsultaPlanoCompleto(null);
+                setConsultaTreinoData(dados);
+                setRetornoConsultaTreino('athlete-details');
+                setCurrentView('consulta-treino');
+              }}
             />
           );
         case 'assessment':
@@ -881,11 +843,17 @@ const App: React.FC = () => {
                 if (consultaPlanoCompleto) setCurrentView('consulta-diagnostico');
                 else {
                   setConsultaTreinoData(null);
-                  setCurrentView('coach');
+                  setCurrentView(retornoConsultaTreino);
+                  setRetornoConsultaTreino('coach');
                 }
               }}
               onNext={() => {
                 if (consultaPlanoCompleto) setCurrentView('consulta-dieta');
+                else {
+                  setConsultaTreinoData(null);
+                  setCurrentView(retornoConsultaTreino);
+                  setRetornoConsultaTreino('coach');
+                }
               }}
               readOnlyData={consultaTreinoData || undefined}
             />
@@ -919,17 +887,19 @@ const App: React.FC = () => {
               }}
             />
           ) : null;
-        case 'editar-treino':
-          return selectedAthleteId ? (
-            <TreinoView
+        case 'treino-editor':
+          return selectedAthleteId && treinoEditorCtx ? (
+            <TreinoEditorView
+              key={`${selectedAthleteId}-${treinoEditorCtx.planoId ?? 'novo'}`}
               atletaId={selectedAthleteId}
-              initialData={consultaTreinoData ?? undefined}
-              onBack={() => {
-                setConsultaTreinoData(null);
+              planoId={treinoEditorCtx.planoId}
+              planoInicial={treinoEditorCtx.dados}
+              onVoltar={() => {
+                setTreinoEditorCtx(null);
                 setCurrentView('athlete-details');
               }}
-              onNext={() => {
-                setConsultaTreinoData(null);
+              onSalvo={() => {
+                setTreinoEditorCtx(null);
                 setCurrentView('athlete-details');
               }}
             />
@@ -966,9 +936,8 @@ const App: React.FC = () => {
         case 'design-system':
           return <DesignSystem />;
         case 'profile':
+        case 'settings': // configurações do personal = perfil profissional (plano, senha, dados)
           return <PersonalProfilePage />;
-        case 'settings':
-          return <AthleteSettingsPage />;
         case 'trainers-ranking':
           return <RankingPersonaisPage />;
         case 'student-registration':
@@ -1160,6 +1129,44 @@ const App: React.FC = () => {
     );
   }
 
+  // A1. Definir senha (convite / recuperação) — funciona logado ou não
+  if (isDefinirSenhaRoute) {
+    return <DefinirSenhaPage />;
+  }
+
+  // A2. Conta incompleta: logado, mas sem profile (ou PERSONAL/ACADEMIA sem entidade).
+  // Antes caía no dashboard do atleta com dados de exemplo.
+  if (isAuthenticated) {
+    const semEntidade =
+      (authProfile?.role === 'PERSONAL' && !entity?.personal) ||
+      (authProfile?.role === 'ACADEMIA' && !entity?.academia);
+    if (!isGodLogin && (!authProfile || semEntidade)) {
+      return (
+        <ContaIncompleta
+          email={loginEmail}
+          onSair={async () => {
+            await signOut();
+            window.location.replace('/');
+          }}
+        />
+      );
+    }
+  }
+
+  // A3. Personal: conta suspensa/inativa ou onboarding pendente (vale para desktop e /personal/:id)
+  if (isAuthenticated && authProfile?.role === 'PERSONAL' && entity?.personal && !isGodLogin) {
+    const sair = async () => {
+      await signOut();
+      window.location.replace('/');
+    };
+    if (entity.personal.status === 'SUSPENSO' || entity.personal.status === 'INATIVO') {
+      return <ContaIncompleta variante="suspensa" email={authProfile.email} onSair={sair} />;
+    }
+    if (!entity.personal.onboarding_completo) {
+      return <PersonalOnboarding onSair={sair} />;
+    }
+  }
+
   // B. Dashboard Flash Guard (Mobile @ Root OR Atleta vinculado @ Root):
   // Evita montar o Dashboard desktop antes do redirect
   if (isAuthenticated && window.location.pathname === '/') {
@@ -1178,7 +1185,7 @@ const App: React.FC = () => {
   }
 
   // C. General Unauthenticated: Renderiza Login se não houver sessão ativa
-  if (!isAuthenticated && !personalPortalId && !academiaPortalId && !isGodRoute && !isMeuPortalRoute) {
+  if (!isAuthenticated && !isGodRoute && !isMeuPortalRoute) {
     // Inclui /atleta — Login vai auto-preencher credenciais da URL se presentes
     return <Login onLogin={() => { }} />;
   }
@@ -1207,8 +1214,17 @@ const App: React.FC = () => {
 
   }
 
-  // Portal do Personal via URL (/personal/:personalId) — requer auth p/ RLS funcionar
+  // Portal do Personal via URL (/personal/:personalId) — só o próprio personal
   if (personalPortalId) {
+    const meuPersonalId = entity?.personal?.id;
+    if (!meuPersonalId) {
+      window.location.replace('/');
+      return null;
+    }
+    if (meuPersonalId !== personalPortalId) {
+      window.location.replace(`/personal/${meuPersonalId}`);
+      return null;
+    }
     return (
       <Suspense fallback={
         <div className="flex h-screen w-full items-center justify-center bg-black text-white">
@@ -1336,14 +1352,6 @@ const App: React.FC = () => {
       <CoachModal
         isOpen={isCoachModalOpen}
         onClose={() => setIsCoachModalOpen(false)}
-      />
-      <AthleteInvitationModal
-        isOpen={isInviteModalOpen}
-        onClose={() => setIsInviteModalOpen(false)}
-        onInvite={(data) => {
-
-          alert(`Convite enviado/Gerado! (Verifique o console para detalhes)`);
-        }}
       />
       <PersonalInvitationModal
         isOpen={isPersonalInviteModalOpen}

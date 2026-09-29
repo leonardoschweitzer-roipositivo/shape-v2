@@ -130,7 +130,7 @@ export function treinoParaTexto(treino: PlanoTreino): string {
         `### Divisão: ${treino.divisao.tipo} (${treino.divisao.frequenciaSemanal}x/semana)`,
         '',
         '### Volume por Grupo',
-        ...treino.trimestreAtual.volumePorGrupo.map(v =>
+        ...(treino.trimestreAtual?.volumePorGrupo ?? []).map(v =>
             `- ${v.grupo}: ${v.seriesPlano} séries/semana (${v.prioridade})`
         ),
         '',

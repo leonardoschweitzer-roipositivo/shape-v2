@@ -118,13 +118,18 @@ export interface ObservacoesTreino {
     mensagemFinal: string;
 }
 
+/** De onde veio o plano. Ausente = 'vitruvio' (gerado pelo Plano de Evolução). */
+export type OrigemPlanoTreino = 'vitruvio' | 'manual' | 'copia' | 'modelo';
+
 export interface PlanoTreino {
     id: string;
     planoEvolucaoId: string;
     atletaId: string;
     objetivo: ObjetivoVitruvio;
-    visaoAnual: VisaoAnual;
-    trimestreAtual: TrimestreAtual;
+    origem?: OrigemPlanoTreino;
+    /** Só planos do Vitrúvio têm periodização anual/trimestral. */
+    visaoAnual?: VisaoAnual;
+    trimestreAtual?: TrimestreAtual;
     divisao: DivisaoTreino;
     treinos: TreinoDetalhado[];
     observacoes: ObservacoesTreino;
@@ -345,38 +350,6 @@ export const gerarPlanoTreino = (
     });
 
 
-    const estruturaSemanal: EstruturaSemanal[] = isFemale ? (isIniciante ? [
-        { letra: 'A', grupos: ['Membros Inferiores', 'Glúteo'], duracaoMinutos: 65 },
-        { letra: 'B', grupos: ['Superiores', 'Costas', 'Ombros'], duracaoMinutos: 55 },
-        { letra: 'C', grupos: ['Glúteo Isolado', 'Posterior'], duracaoMinutos: 60 },
-    ] : isIntermediario ? [
-        { letra: 'A', grupos: ['Quadríceps', 'Panturrilha'], duracaoMinutos: 65 },
-        { letra: 'B', grupos: ['Superiores', 'Ombros', 'Costas'], duracaoMinutos: 55 },
-        { letra: 'C', grupos: ['Glúteo', 'Posterior'], duracaoMinutos: 65 },
-        { letra: 'D', grupos: ['Ombros', 'Superiores'], duracaoMinutos: 55 },
-    ] : [
-        { letra: 'A', grupos: ['Quadríceps', 'Panturrilha'], duracaoMinutos: 65 },
-        { letra: 'B', grupos: ['Costas', 'Deltóide Posterior', 'Bíceps'], duracaoMinutos: 60 },
-        { letra: 'C', grupos: ['Glúteo Isolado', 'Panturrilha'], duracaoMinutos: 65 },
-        { letra: 'D', external: true, grupos: ['Ombros', 'Tríceps'], duracaoMinutos: 60 } as unknown as EstruturaSemanal,
-        { letra: 'E', grupos: ['Posterior de Coxa', 'Panturrilha'], duracaoMinutos: 60 },
-    ]) : (isIniciante ? [
-        { letra: 'A', grupos: ['Peito', 'Ombros', 'Tríceps'], duracaoMinutos: 60 },
-        { letra: 'B', grupos: ['Costas', 'Bíceps', 'Panturrilha'], duracaoMinutos: 60 },
-        { letra: 'C', grupos: ['Pernas', 'Panturrilha'], duracaoMinutos: 65 },
-    ] : isIntermediario ? [
-        { letra: 'A', grupos: ['Peito', 'Tríceps'], duracaoMinutos: 60 },
-        { letra: 'B', grupos: ['Costas', 'Bíceps'], duracaoMinutos: 60 },
-        { letra: 'C', grupos: ['Ombros', 'Panturrilha'], duracaoMinutos: 60 },
-        { letra: 'D', grupos: ['Pernas', 'Panturrilha'], duracaoMinutos: 65 },
-    ] : [
-        { letra: 'A', grupos: ['Peito', 'Tríceps'], duracaoMinutos: 60 },
-        { letra: 'B', grupos: ['Costas', 'Bíceps'], duracaoMinutos: 60 },
-        { letra: 'C', grupos: ['Ombros', 'Panturrilha'], duracaoMinutos: 65 },
-        { letra: 'D', grupos: ['Pernas', 'Panturrilha'], duracaoMinutos: 70 },
-        { letra: 'E', grupos: ['Braços', 'Panturrilha'], duracaoMinutos: 55 },
-    ]);
-
     // 5. Treinos Detalhados — séries alinhadas com o Checkmate
     // Helpers para buscar volume e prioridade dinâmicos
     const getSeries = (grupoCheckmate: string): number => {
@@ -467,7 +440,7 @@ export const gerarPlanoTreino = (
     const dI = cfg.descIsolado;
     const dF = cfg.descFinalizador;
 
-    const treinos: TreinoDetalhado[] = isFemale ? [
+    const todosTreinos: TreinoDetalhado[] = isFemale ? [
         // FEMININO: A (Quadríceps), B (Superiores), C (Glúteo), D (Ombros/Braços), E (Posterior)
         {
             id: 'treino-a',
@@ -628,7 +601,7 @@ export const gerarPlanoTreino = (
                 }
             ]
         }
-    ].slice(0, freq) : [
+    ] : [
         // MASCULINO: A (Peito/Tri), B (Costas/Bi), C (Ombros), D (Pernas), E (Braços)
         {
             id: 'treino-a',
@@ -794,7 +767,10 @@ export const gerarPlanoTreino = (
                 }
             ]
         }
-    ].slice(0, freq);
+    ];
+
+    // Seleção por frequência: masculino 3x junta ombro no A e mantém Pernas (antes o slice cortava as pernas)
+    const treinos = isFemale ? todosTreinos.slice(0, freq) : selecionarTreinosMasculinos(todosTreinos, freq);
 
     // 6. Observações — alinhadas com o objetivo
     const alertasContexto = potencial.observacoesContexto;
@@ -835,16 +811,53 @@ export const gerarPlanoTreino = (
             mesociclos,
             volumePorGrupo
         },
-        divisao: {
-            tipo: tipoDivisao,
-            frequenciaSemanal: freq,
-            estruturaSemanal
-        },
+        origem: 'vitruvio',
+        // Estrutura derivada dos treinos finais — divisão exibida e fichas nunca divergem
+        divisao: derivarDivisao(treinos, tipoDivisao),
         treinos: aplicarPrescricaoPadraoAoPlano(treinos),
         observacoes,
         geradoEm: dataRef
     };
 };
+
+/**
+ * Monta a divisão semanal a partir dos treinos finais (letra, grupos dos blocos, duração).
+ * Usada pelo gerador e pelos planos manuais/copiados.
+ */
+export function derivarDivisao(treinos: TreinoDetalhado[], tipo?: string): DivisaoTreino {
+    return {
+        tipo: tipo ?? (treinos.map(t => t.letra).join('') || 'Personalizada'),
+        frequenciaSemanal: treinos.length,
+        estruturaSemanal: treinos.map(t => ({
+            letra: t.letra,
+            grupos: t.blocos.map(b => b.nomeGrupo).filter(Boolean),
+            duracaoMinutos: t.duracaoMinutos,
+        })),
+    };
+}
+
+/**
+ * Masculino A (Peito/Tri) · B (Costas/Bi) · C (Ombros/Pant.) · D (Pernas) · E (Braços).
+ * 3x/semana: A recebe os blocos de ombro do C e as Pernas (D) viram o treino C.
+ */
+function selecionarTreinosMasculinos(treinos: TreinoDetalhado[], freq: 3 | 4 | 5): TreinoDetalhado[] {
+    if (freq !== 3) return treinos.slice(0, freq);
+    const [a, b, c, d] = treinos;
+    const blocosOmbro = c.blocos.filter(bl => /ombro|delt/i.test(bl.nomeGrupo));
+    const treinoA: TreinoDetalhado = {
+        ...a,
+        nome: 'Treino A - Peito, Ombros e Tríceps',
+        duracaoMinutos: a.duracaoMinutos + 10,
+        blocos: [...a.blocos, ...blocosOmbro],
+    };
+    const treinoPernas: TreinoDetalhado = {
+        ...d,
+        id: 'treino-c',
+        letra: 'C',
+        nome: d.nome.replace(/^Treino D/, 'Treino C'),
+    };
+    return [treinoA, b, treinoPernas];
+}
 
 /**
  * Pós-processa o plano recém-gerado: para cada exercício sem prescrição detalhada,
@@ -913,7 +926,8 @@ export async function enriquecerTreinoComIA(
         }>(prompt);
 
         if (resultado) {
-            const planoEnriquecido = { ...plano };
+            // Cópia profunda: nunca mutar o plano recebido (o chamador pode seguir usando o original)
+            const planoEnriquecido: PlanoTreino = structuredClone(plano);
 
             // Atualizar exercícios se a IA retornou
             if (resultado.exerciciosPorBloco) {
@@ -947,7 +961,7 @@ export async function enriquecerTreinoComIA(
             }
 
             // Atualizar descrições dos mesociclos
-            if (resultado.descricoesMesociclos?.length === 3) {
+            if (resultado.descricoesMesociclos?.length === 3 && planoEnriquecido.trimestreAtual) {
                 for (let i = 0; i < 3; i++) {
                     if (planoEnriquecido.trimestreAtual.mesociclos[i]) {
                         planoEnriquecido.trimestreAtual.mesociclos[i].descricao =
@@ -975,80 +989,31 @@ export async function enriquecerTreinoComIA(
 // ═══════════════════════════════════════════════════════════
 
 /**
- * Salva plano de treino no Supabase (tabela planos_treino).
- * Cada chamada insere um novo registro (histórico) — nunca sobrescreve.
+ * Salva o plano gerado pelo Plano de Evolução (wizard / onboarding).
+ *
+ * - Se o plano ativo é do MESMO diagnóstico (re-salvar dentro do wizard) → atualiza os dados no lugar.
+ * - Caso contrário → cria um plano novo e o anterior vira histórico (criar_plano_treino, atômico).
+ * Nunca apaga o diagnostico_id de um plano existente.
  */
 export async function salvarPlanoTreino(
     atletaId: string,
-    personalId: string | null,
+    _personalId: string | null,
     dados: PlanoTreino,
     diagnosticoId?: string
 ): Promise<{ id: string } | null> {
-    try {
-        const safeDados = JSON.parse(JSON.stringify(dados,
-            (_, v) => typeof v === 'number' && !isFinite(v) ? 0 : v
-        ));
+    const { buscarPlanoTreinoAtivoMeta, atualizarPlanoTreino, criarPlanoTreino } = await import('@/services/treino/planosTreino.service');
 
-        // Busca plano ativo anterior
-        const { data: planoAnterior } = await supabase
-            .from('planos_treino')
-            .select('id')
-            .eq('atleta_id', atletaId)
-            .eq('status', 'ativo')
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single();
+    const ativo = await buscarPlanoTreinoAtivoMeta(atletaId);
+    const mesmoDiagnostico =
+        ativo && (ativo.origem ?? 'vitruvio') === 'vitruvio' && (ativo.diagnosticoId ?? null) === (diagnosticoId ?? null);
 
-        // Se existe plano anterior, atualiza ao invés de inserir
-        if (planoAnterior?.id) {
-            const { data, error } = await supabase
-                .from('planos_treino')
-                .update({
-                    personal_id: personalId,
-                    diagnostico_id: diagnosticoId ?? null,
-                    dados: safeDados,
-                } as Record<string, unknown>)
-                .eq('id', planoAnterior.id)
-                .select('id')
-                .single();
-
-            if (error) {
-                console.error('[Treino] Erro ao atualizar:', error.message);
-                return null;
-            }
-            console.info('[Treino] ✏️ Plano atualizado:', planoAnterior.id);
-            return data as { id: string };
-        }
-
-        // Se não existe plano anterior, insere novo
-        const { data, error } = await supabase
-            .from('planos_treino')
-            .insert({
-                atleta_id: atletaId,
-                personal_id: personalId,
-                diagnostico_id: diagnosticoId ?? null,
-                dados: safeDados,
-                status: 'ativo',
-            } as Record<string, unknown>)
-            .select('id')
-            .single();
-
-        if (error) {
-            console.error('[Treino] Erro ao salvar:', error.message);
-            return null;
-        }
-        console.info('[Treino] ✨ Plano criado:', data?.id);
-
-        // Limpeza automática de planos duplicados (em background)
-        limparPlanosTreinoDuplicados(atletaId).catch(err =>
-            console.warn('[Treino] Aviso: limpeza automática falhou (não crítico):', err)
-        );
-
-        return data as { id: string };
-    } catch (err) {
-        console.error('[Treino] Exceção ao salvar:', err);
-        return null;
+    if (ativo && mesmoDiagnostico) {
+        const ok = await atualizarPlanoTreino(ativo.id, dados);
+        return ok.ok ? { id: ativo.id } : null;
     }
+
+    const criado = await criarPlanoTreino(atletaId, { ...dados, origem: dados.origem ?? 'vitruvio' }, diagnosticoId);
+    return criado.ok ? { id: criado.data } : null;
 }
 
 /**
@@ -1084,41 +1049,3 @@ export async function buscarPlanoTreino(atletaId: string): Promise<PlanoTreino |
     }
 }
 
-/**
- * Remove planos de treino duplicados, mantendo apenas o mais recente ativo.
- * Útil para limpar planos órfãos criados antes da correção de duplicação.
- */
-export async function limparPlanosTreinoDuplicados(atletaId: string): Promise<number> {
-    try {
-        // Busca todos os planos ativos deste atleta
-        const { data: planos, error: selectError } = await supabase
-            .from('planos_treino')
-            .select('id, created_at')
-            .eq('atleta_id', atletaId)
-            .eq('status', 'ativo')
-            .order('created_at', { ascending: false });
-
-        if (selectError || !planos || planos.length <= 1) {
-            return 0;
-        }
-
-        // Mantém o mais recente, desativa os antigos
-        const idsParaDesativar = planos.slice(1).map(p => p.id);
-
-        const { error: updateError } = await supabase
-            .from('planos_treino')
-            .update({ status: 'inativo' })
-            .in('id', idsParaDesativar);
-
-        if (updateError) {
-            console.error('[Treino] Erro ao limpar duplicados:', updateError);
-            return 0;
-        }
-
-        console.info(`[Treino] 🧹 ${idsParaDesativar.length} plano(s) duplicado(s) desativado(s) para atleta ${atletaId}`);
-        return idsParaDesativar.length;
-    } catch (err) {
-        console.error('[Treino] Exceção ao limpar duplicados:', err);
-        return 0;
-    }
-}

@@ -24,6 +24,14 @@ export function CardTreinosAccordion({ planoTreino, atletaId, onEditar }: CardTr
             <div className="bg-surface-deep rounded-3xl p-6 border border-white/5 text-center">
                 <Dumbbell className="mx-auto text-gray-600 mb-2" size={24} />
                 <p className="text-gray-500 text-sm italic">Nenhum plano de treino ativo para este aluno.</p>
+                {onEditar && (
+                    <button
+                        onClick={onEditar}
+                        className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
+                    >
+                        <Pencil size={12} /> Criar treino
+                    </button>
+                )}
             </div>
         )
     }

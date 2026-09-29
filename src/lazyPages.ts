@@ -46,6 +46,9 @@ export const LazyDiagnosticoView = lazy(() =>
 export const LazyTreinoView = lazy(() =>
     import('@/components/templates/Personal/TreinoView').then(m => ({ default: m.TreinoView }))
 );
+export const LazyTreinoEditorView = lazy(() =>
+    import('@/components/templates/Personal/TreinoEditorView').then(m => ({ default: m.TreinoEditorView }))
+);
 export const LazyDietaView = lazy(() =>
     import('@/components/templates/Personal/DietaView').then(m => ({ default: m.DietaView }))
 );

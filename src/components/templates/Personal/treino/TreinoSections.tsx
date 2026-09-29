@@ -70,6 +70,7 @@ export const SecaoResumoDiagnostico: React.FC<{ diagnostico: DiagnosticoDados; p
 
 /** Seção 2: Visão Geral do Plano Anual */
 export const SecaoVisaoAnual: React.FC<{ plano: PlanoTreino }> = ({ plano }) => {
+    if (!plano.visaoAnual?.trimestres?.length) return null; // planos manuais/copiados não têm periodização
     return (
         <SectionCard icon={Calendar} title="Visão Geral do Plano Anual" subtitle="Macro-objetivos de longo prazo para atingir as proporções áureas">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -102,6 +103,7 @@ export const SecaoVisaoAnual: React.FC<{ plano: PlanoTreino }> = ({ plano }) => 
 
 /** Seção 3: Trimestre Atual */
 export const SecaoTrimestreAtual: React.FC<{ plano: PlanoTreino }> = ({ plano }) => {
+    if (!plano.trimestreAtual) return null;
     return (
         <SectionCard icon={TrendingUp} title="Trimestre Atual" subtitle="Periodização detalhada das próximas 12 semanas">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

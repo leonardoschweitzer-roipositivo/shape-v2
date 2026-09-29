@@ -69,10 +69,12 @@ export async function carregarContextoPersonal(
     // Buscar atletas (query simples, sem join problemático)
     const { data: atletas } = await supabase
         .from('atletas')
-        .select('id')
+        .select('id, status')
         .eq('personal_id', personalId)
 
     const atletaIds = (atletas ?? []).map(a => a.id)
+    // Alunos que ocupam vaga no plano (arquivados = INATIVO não contam)
+    const alunosNoPlano = (atletas ?? []).filter(a => a.status !== 'INATIVO').length
 
     // Para cada atleta, buscar última medição para classificar status
     let ativos = 0
@@ -144,6 +146,7 @@ export async function carregarContextoPersonal(
         alunosAtivos: ativos,
         alunosAtencao: atencaoCount,
         alunosInativos: inativos,
+        alunosNoPlano,
         scoreMedio,
     }
 }
@@ -245,7 +248,7 @@ export async function buscarFichaAluno(atletaId: string): Promise<FichaAlunoResu
     // 1. Buscar atleta
     const { data: atleta, error } = await supabase
         .from('atletas')
-        .select('id, nome, email, foto_url, personal_id')
+        .select('id, nome, email, telefone, foto_url, personal_id, auth_user_id, convite_enviado_em, acesso_ativado_em')
         .eq('id', atletaId)
         .single()
 
@@ -412,7 +415,10 @@ export async function buscarFichaAluno(atletaId: string): Promise<FichaAlunoResu
         id: atleta.id,
         nome: atleta.nome,
         email: atleta.email ?? '',
-        telefone: ficha?.telefone ?? null,
+        telefone: atleta.telefone ?? null,
+        authUserId: atleta.auth_user_id ?? null,
+        conviteEnviadoEm: atleta.convite_enviado_em ?? null,
+        acessoAtivadoEm: atleta.acesso_ativado_em ?? null,
         fotoUrl: atleta.foto_url ?? null,
         score: scoreAtual,
         nivel: scoreParaNivel(scoreAtual),

@@ -133,4 +133,55 @@ ou manifest PWA `orientation: portrait` (Android, app instalado) — o projeto n
 
 ---
 
+### 2026-09-30 - Autorização no banco via funções `app_*` SECURITY DEFINER
+
+**Contexto**: RLS espalhada em scripts soltos, com subqueries `personais ↔ atletas` (risco de recursão) e policies
+de portal por token abertas para qualquer usuário. Papel (`role`) vinha do cliente no cadastro e podia ser alterado.
+**Decisão**: (1) funções `app_meu_personal_id()`, `app_meu_atleta_id()`, `app_personal_do_atleta()`,
+`app_atleta_eh_meu(id)`, `app_is_god()`, `app_is_admin_ctx()` como base de toda policy nova; (2) aluno acessa só
+por login (`self_*`), personal pelos próprios alunos (`dono_all_*`); (3) campos administrativos (role, plano,
+limite, status, vínculos) só mudam em contexto admin (SQL Editor, service_role ou GOD), via trigger;
+(4) cadastro público aceita só PERSONAL/ACADEMIA/ATLETA. Plano completo: `docs/plano-conta-personal-alunos-treinos.md`
+(acesso do aluno por convite com senha própria; limite de alunos no banco sem pagamento; cadastro aberto com onboarding).
+**Alternativas**: manter token do portal (código morto, inseguro); checar papel só no front (burlável).
+**Status**: Ativa
+
+---
+
+### 2026-10-08 - Acesso do aluno por link de uso único gerado no servidor
+
+**Contexto**: alunos recebiam a senha padrão `Shape2026!` na URL; a conta era criada no navegador do personal
+trocando a sessão (frágil) e a RPC de vínculo permitia sequestro de aluno.
+**Decisão**: Edge Function `convidar-aluno` (service_role, após checar que o aluno é do personal) usa
+`auth.admin.generateLink` (`invite` p/ novo login, `recovery` p/ reenvio) e devolve um link do **app**
+`/definir-senha?th=<hashed_token>&type=...`. O token só é consumido no submit (`verifyOtp`) — prévia de link do
+WhatsApp não queima o convite. Sem SMTP: o personal envia por WhatsApp/cópia. E-mail de outra conta → 409.
+**Alternativas**: `inviteUserByEmail` (depende de SMTP), `action_link` do Supabase (GET consome o token),
+senha temporária aleatória (ainda trafega senha).
+**Status**: Ativa
+
+---
+
+### 2026-10-08 - Limite de alunos aplicado no banco (sem pagamento)
+
+**Decisão**: trigger `trg_atletas_limite_plano` conta alunos com status ≠ INATIVO (arquivar libera vaga);
+`limite_atletas` NULL = ilimitado; plano ajusta limite via trigger (FREE 10 · PRO 50 · UNLIMITED). Upgrade manual
+pelo SQL Editor/GOD. Front só traduz o erro `LIMITE_ALUNOS_ATINGIDO`.
+**Status**: Ativa
+
+---
+
+### 2026-10-15 - Treinos: editor dedicado, 1 plano ativo e histórico
+
+**Contexto**: o personal só conseguia treino via wizard com IA (exige avaliação); salvar sobrescrevia o plano ativo;
+planos sem diagnóstico não apareciam; não havia cópia/modelos.
+**Decisão** (recomendada por agente de arquitetura): `TreinoView` fica só para o Plano de Evolução (IA);
+`TreinoEditorView` novo para criar do zero/copiar/modelo/editar. Planos manuais têm `origem` e não têm
+periodização. Criar = RPC `criar_plano_treino` (desativa + insere, atômico); editar = atualiza só `dados`.
+Índice único parcial garante 1 ativo por aluno. Modelos em `treino_modelos` (sem cargas; vídeo re-vinculado).
+IA em sequência (exercícios → prescrição).
+**Status**: Ativa
+
+---
+
 <!-- Novas decisões serão adicionadas acima desta linha -->

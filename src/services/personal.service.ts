@@ -17,15 +17,10 @@ export interface PersonalComKPIs extends Personal {
     score_medio?: number;
 }
 
-export interface CriarPersonalInput {
-    academia_id?: string;
-    nome: string;
-    email: string;
-    telefone?: string;
-    cpf?: string;
-    cref?: string;
-    foto_url?: string;
-}
+export type DadosProfissionaisPayload = Pick<
+    Personal,
+    'nome' | 'cref' | 'telefone' | 'cidade' | 'estado' | 'especialidades' | 'bio'
+>;
 
 // ===== SERVICE =====
 
@@ -90,60 +85,30 @@ export const personalService = {
     },
 
     /**
-     * Criar novo personal
+     * Salva os dados profissionais do personal logado (perfil / onboarding).
+     * Campos administrativos (plano, limite, status, vínculos) são bloqueados no banco.
      */
-    async criar(input: CriarPersonalInput): Promise<Personal | null> {
+    async atualizarDadosProfissionais(
+        id: string,
+        dados: DadosProfissionaisPayload,
+        opcoes: { concluirOnboarding?: boolean } = {}
+    ): Promise<{ data: Personal | null; error: string | null }> {
         const { data, error } = await supabase
             .from('personais')
-            .insert(input)
-            .select()
-            .single();
-
-        if (error) {
-            console.error('[PersonalService] Erro ao criar personal:', error.message);
-            return null;
-        }
-
-        return data;
-    },
-
-    /**
-     * Atualizar dados do personal
-     */
-    async atualizar(id: string, updates: Partial<Personal>): Promise<Personal | null> {
-        const { data, error } = await supabase
-            .from('personais')
-            .update({ ...updates, updated_at: new Date().toISOString() })
+            .update({
+                ...dados,
+                ...(opcoes.concluirOnboarding ? { onboarding_completo: true } : {}),
+                updated_at: new Date().toISOString(),
+            })
             .eq('id', id)
             .select()
             .single();
 
         if (error) {
-            console.error('[PersonalService] Erro ao atualizar personal:', error.message);
-            return null;
+            console.error('[PersonalService] Erro ao salvar dados profissionais:', error.message);
+            return { data: null, error: error.message };
         }
 
-        return data;
+        return { data, error: null };
     },
-
-    /**
-     * Vincular personal a uma academia
-     */
-    async vincularAcademia(personalId: string, academiaId: string): Promise<boolean> {
-        const { error } = await supabase
-            .from('personais')
-            .update({
-                academia_id: academiaId,
-                data_vinculo: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-            })
-            .eq('id', personalId);
-
-        if (error) {
-            console.error('[PersonalService] Erro ao vincular academia:', error.message);
-            return false;
-        }
-
-        return true;
-    }
 };

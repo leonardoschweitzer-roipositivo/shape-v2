@@ -42,6 +42,10 @@ export interface FichaAlunoResumo {
     nome: string
     email: string
     telefone?: string | null
+    /** Acesso ao portal (convite) */
+    authUserId?: string | null
+    conviteEnviadoEm?: string | null
+    acessoAtivadoEm?: string | null
     fotoUrl?: string | null
     score: number
     nivel: string | null
@@ -110,6 +114,8 @@ export interface PersonalPortalContext {
     alunosAtivos: number
     alunosAtencao: number
     alunosInativos: number
+    /** Alunos com status diferente de INATIVO — ocupam vaga no plano */
+    alunosNoPlano: number
     scoreMedio: number
 }
 

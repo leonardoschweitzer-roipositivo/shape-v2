@@ -3,7 +3,8 @@ import type { ContextoAtleta } from '@/components/templates/Personal/AthleteCont
 
 export interface PersonalStats {
     totalAthletes: number;
-    maxAthletes: number;
+    /** null = ilimitado */
+    maxAthletes: number | null;
     measuredThisWeek: number;
     averageScore: number;
     scoreVariation: number;
@@ -99,6 +100,10 @@ export interface PersonalAthlete {
     phone?: string; // telefone from atletas table
     contexto?: ContextoAtleta | null; // Contexto geral do atleta (saúde, medicações, etc)
     objetivo?: string | null; // Objetivo do aluno (preenchido no onboarding, substituído pelo plano de evolução)
+    /** Acesso ao portal (convite com senha própria) */
+    authUserId?: string | null;
+    conviteEnviadoEm?: string | null;
+    acessoAtivadoEm?: string | null;
 }
 
 export interface PersonalProfile {

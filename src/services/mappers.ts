@@ -180,6 +180,9 @@ export function mapAtletaToPersonalAthlete(
         phone: atleta.telefone || undefined,
         contexto: (ficha?.contexto as unknown as PersonalAthlete['contexto']) || null,
         objetivo: (ficha as Record<string, unknown>)?.objetivo as string || null,
+        authUserId: atleta.auth_user_id,
+        conviteEnviadoEm: atleta.convite_enviado_em ?? null,
+        acessoAtivadoEm: atleta.acesso_ativado_em ?? null,
     };
 }
 
@@ -193,8 +196,8 @@ export function mapPersonalToProfile(personal: Personal): PersonalProfile {
         gender: 'MALE', // Default, não temos no schema
         avatarUrl: personal.foto_url,
         cref: personal.cref || '',
-        specialties: [],
-        bio: '',
+        specialties: personal.especialidades ?? [],
+        bio: personal.bio ?? '',
         createdAt: personal.created_at,
         stats: {
             totalAthletes: 0,

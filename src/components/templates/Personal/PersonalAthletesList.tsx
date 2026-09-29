@@ -5,7 +5,6 @@ import { mockPersonalAthletes, PersonalAthlete } from '@/mocks/personal';
 interface PersonalAthletesListProps {
     onSelectAthlete: (athleteId: string) => void;
     onViewEvolution: (athleteId: string) => void;
-    onInviteAthlete: () => void;
     onRegisterStudent: () => void;
     onRegisterMeasurement: (athleteId: string) => void;
     onViewLatestAssessment: (athleteId: string) => void;
@@ -18,7 +17,6 @@ type AthleteStatus = 'all' | 'active' | 'inactive' | 'attention';
 export const PersonalAthletesList: React.FC<PersonalAthletesListProps> = ({
     onSelectAthlete,
     onViewEvolution,
-    onInviteAthlete,
     onRegisterStudent,
     onRegisterMeasurement,
     onViewLatestAssessment,
